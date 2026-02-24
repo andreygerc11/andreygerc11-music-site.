@@ -13,7 +13,7 @@
         :root {
             --accent: #ff4d4d;
             --dark: #0a0a0b;
-            --glass: rgba(0, 0, 0, 0.75);
+            --glass: rgba(0, 0, 0, 0.85);
             --text: #ffffff;
         }
 
@@ -27,7 +27,7 @@
             overflow-x: hidden;
         }
 
-        /* Відео-фон для Hero Section */
+        /* Відео-фон (Твій орел) */
         .hero {
             position: relative;
             height: 100vh;
@@ -43,10 +43,9 @@
             position: absolute;
             top: 50%; left: 50%;
             min-width: 100%; min-height: 100%;
-            width: auto; height: auto;
             transform: translate(-50%, -50%);
             z-index: -1;
-            filter: brightness(0.4) contrast(1.2);
+            filter: brightness(0.4) contrast(1.1);
             object-fit: cover;
         }
 
@@ -71,37 +70,60 @@
         .hero-subtitle {
             font-size: clamp(1rem, 3vw, 1.4rem);
             font-weight: 300;
-            color: #eee;
             margin-bottom: 40px;
-            background: rgba(0,0,0,0.4);
-            padding: 10px;
-            display: inline-block;
-            border-radius: 8px;
+            color: #eee;
         }
 
-        /* КНОПКИ */
-        .btn-group { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        /* ГРУПА КНОПОК */
+        .btn-group { 
+            display: flex; 
+            gap: 20px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        }
 
         .btn {
-            padding: 18px 40px;
+            padding: 18px 35px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 700;
             text-transform: uppercase;
             font-size: 0.9rem;
             transition: all 0.4s ease;
-            border: 2px solid transparent;
+            display: inline-block;
         }
 
-        .btn-main { background: var(--accent); color: white; box-shadow: 0 10px 20px rgba(255, 77, 77, 0.4); }
-        .btn-main:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(255, 77, 77, 0.6); background: white; color: var(--accent); }
+        .btn-main { 
+            background: var(--accent); 
+            color: white; 
+            box-shadow: 0 10px 20px rgba(255, 77, 77, 0.4); 
+            border: 2px solid var(--accent);
+        }
+        
+        .btn-main:hover { 
+            transform: translateY(-5px); 
+            background: white; 
+            color: var(--accent); 
+        }
 
-        /* КОНТЕНТ (Скляний стиль) */
+        .btn-outline { 
+            border: 2px solid white; 
+            color: white; 
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-outline:hover { 
+            background: white; 
+            color: var(--dark); 
+            transform: translateY(-5px);
+        }
+
+        /* КОНТЕНТ */
         section { padding: 80px 20px; max-width: 1100px; margin: auto; }
 
         .glass-card {
             background: var(--glass);
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.1);
             padding: 40px;
             border-radius: 35px;
@@ -110,9 +132,9 @@
             z-index: 10;
         }
 
-        h2 { font-size: 2.5rem; margin-bottom: 30px; color: var(--accent); text-transform: uppercase; }
+        h2 { font-size: 2.2rem; margin-bottom: 25px; color: var(--accent); text-transform: uppercase; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 50px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 50px; }
 
         .info-item {
             background: rgba(255,255,255,0.05);
@@ -121,21 +143,19 @@
             border-left: 4px solid var(--accent);
         }
 
-        /* РЕКВІЗИТИ */
-        .rekv-list { list-style: none; margin-top: 20px; }
+        .rekv-list { list-style: none; }
         .rekv-list li {
             padding: 15px 0;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             font-family: monospace;
             display: flex;
             justify-content: space-between;
-            align-items: center;
             font-size: 1.1rem;
         }
 
-        .label { color: #ffcc00; font-weight: bold; margin-right: 15px; }
+        .bank-label { color: #ffcc00; font-weight: bold; }
 
-        footer { text-align: center; padding: 60px 20px; color: #666; font-size: 0.9rem; }
+        footer { text-align: center; padding: 60px 20px; color: #555; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -145,50 +165,50 @@
         <source src="grok_video_2026-01-25-18-39-38.mp4" type="video/mp4">
     </video>
 
-    <div class="hero-content" data-aos="fade-up">
+    <div class="hero-content" data-aos="zoom-out">
         <h1 class="hero-title">Голос проти раку</h1>
-        <p class="hero-subtitle">Ми звикли перемагати ворога в пікселі. Тепер треба перемогти ворога в крові. Творчий проєкт Герц Андрія.</p>
+        <p class="hero-subtitle">Ми звикли перемагати ворога в пікселі. Тепер переможемо ворога в крові. Проєкт Андрія Герца.</p>
+        
         <div class="btn-group">
             <a href="#support" class="btn btn-main">Підтримати проєкт</a>
+            <a href="music.html" class="btn btn-outline">Слухати музику</a>
         </div>
     </div>
 </header>
 
 <section id="about">
     <div class="glass-card" data-aos="fade-up">
-        <h2>Місія проєкту</h2>
+        <h2>Наша місія</h2>
         <div class="grid">
             <div class="info-item">
-                <i class="fas fa-music fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
-                <h3>Музика як зброя</h3>
-                <p>Платформа, де кожна пісня зі шпиталю стає інструментом допомоги. Це простір творчості та сповіді.</p>
+                <i class="fas fa-shield-alt fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
+                <h3>Боротьба триває</h3>
+                <p>Допомога військовим побратимам, які проходять лікування від онкологічних захворювань.</p>
             </div>
             <div class="info-item">
-                <i class="fas fa-hand-holding-medical fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
-                <h3>Братерська допомога</h3>
-                <p>Усі зібрані кошти спрямовуються на допомогу військовим, що борються з онкозахворюваннями крові.</p>
+                <i class="fas fa-microphone-alt fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
+                <h3>Сила слова</h3>
+                <p>Творчість, що народжується в стінах шпиталю, стає зброєю у боротьбі за життя.</p>
             </div>
         </div>
 
-        <h2 id="support">Стартовий збір</h2>
-        <p>Для запуску сайту та придбання техніки для запису музики мені потрібна ваша підтримка на старті.</p>
-        
+        <h2 id="support">Реквізити для допомоги</h2>
         <ul class="rekv-list">
-            <li><span><span class="label">ПУМБ:</span> 4314 1402 0779 7173</span></li>
-            <li><span><span class="label">Monobank:</span> 4441 1110 0278 2815</span></li>
-            <li><span><span class="label">Credit Agricole:</span> 5167 5904 1488 3718</span></li>
-            <li><span><span class="label">PayPal:</span> andriyherts11@gmail.com</span></li>
+            <li><span><span class="bank-label">ПУМБ:</span> 4314 1402 0779 7173</span></li>
+            <li><span><span class="bank-label">Monobank:</span> 4441 1110 0278 2815</span></li>
+            <li><span><span class="bank-label">Credit Agricole:</span> 5167 5904 1488 3718</span></li>
+            <li><span><span class="bank-label">PayPal:</span> andriyherts11@gmail.com</span></li>
         </ul>
     </div>
 </section>
 
 <footer>
-    <p>© 2026 Проєкт «Голос проти раку». Автор Андрій Герц.<br>СЛАВА УКРАЇНІ! ГЕРОЯМ СЛАВА!</p>
+    <p>© 2026 Проєкт «Голос проти раку». Андрій Герц. Слава Україні! 🇺🇦</p>
 </footer>
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-  AOS.init({ duration: 1200, once: true });
+  AOS.init({ duration: 1000, once: true });
 </script>
 
 </body>
