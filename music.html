@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музична Сповідь | Андрій Герц</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root { --accent: #ff4d4d; --dark: #050505; --glass: rgba(255, 255, 255, 0.05); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; line-height: 1.6; }
+        
+        .header-simple { padding: 40px 20px; text-align: center; background: linear-gradient(to bottom, #1a1a1a, var(--dark)); }
+        .nav-back { text-decoration: none; color: var(--accent); font-weight: bold; display: inline-block; margin-bottom: 20px; }
+        
+        .container { max-width: 900px; margin: auto; padding: 20px; }
+        .music-card { 
+            background: var(--glass); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 20px; 
+            padding: 25px; 
+            margin-bottom: 30px; 
+            backdrop-filter: blur(10px);
+        }
+        
+        .audio-player { width: 100%; margin: 15px 0; filter: invert(100%); opacity: 0.8; }
+        
+        .buy-notice { 
+            display: none; 
+            background: rgba(255, 77, 77, 0.15); 
+            border: 1px dashed var(--accent); 
+            padding: 15px; 
+            border-radius: 12px; 
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .btn-buy { 
+            display: inline-block; 
+            padding: 10px 25px; 
+            background: var(--accent); 
+            color: #fff; 
+            text-decoration: none; 
+            border-radius: 50px; 
+            margin-top: 10px; 
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-simple">
+    <a href="index.html" class="nav-back"><i class="fas fa-arrow-left"></i> На головну</a>
+    <h1>Музична Сповідь</h1>
+    <p>Купуючи повну версію, ви даруєте шанс на життя</p>
+</div>
+
+<div class="container" id="music-list">
+    <div class="music-card" data-aos="fade-up">
+        <h3>Назва пісні №1</h3>
+        <p style="font-size: 0.8rem; color: #888;">Автор: Андрій Герц</p>
+        <audio class="track" controls>
+            <source src="https://docs.google.com/uc?export=download&id=ID_ПІСНІ_1" type="audio/mpeg">
+        </audio>
+        <div class="buy-notice">
+            <p>⏱ Демо-режим завершено (перші 45 сек).</p>
+            <p>Повна версія доступна за внесок <strong>200 грн</strong>.</p>
+            <a href="https://t.me/andriyherts" class="btn-buy">Купити повну версію</a>
+        </div>
+    </div>
+    
+    </div>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init();
+    
+    // Скрипт обмеження часу прослуховування
+    const listenLimit = 45; // Час у секундах (куплет + приспів)
+    
+    document.addEventListener('timeupdate', function(e){
+        if(e.target.classList.contains('track')){
+            const audio = e.target;
+            const notice = audio.nextElementSibling;
+            
+            if(audio.currentTime >= listenLimit){
+                audio.pause();
+                audio.currentTime = listenLimit;
+                notice.style.display = 'block';
+            }
+        }
+    }, true);
+</script>
+
+</body>
+</html>
