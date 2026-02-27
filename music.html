@@ -67,7 +67,7 @@
 </div>
 
 <script>
-    // ВИПРАВЛЕНО: Додано лапки навколо посилання
+    // ВИПРАВЛЕНО: додано лапки навколо адреси
     const apiURL = "https://script.google.com/macros/s/AKfycbwbNNLK7LAR-q0n7fgUrPvqOXsZLEWc2WHAZWrvE1-UUzVUy4wl3Ao14c9PrBXy72GS/exec";
     const listenLimit = 45; 
 
@@ -96,7 +96,7 @@
                 card.innerHTML = `
                     <h3>${song.name}</h3>
                     <audio class="player" controls controlsList="nodownload">
-                        <source src="https://docs.google.com/uc?export=download&id=${song.id}" type="audio/mpeg">
+                        <source src="https://drive.google.com/uc?id=${song.id}&export=open" type="audio/mpeg">
                     </audio>
                     <div class="buy-msg">
                         <p style="font-weight: bold; color: #ff4d4d;">⏱ ЧАС ДЕМО-ВЕРСІЇ ВИЙШОВ</p>
