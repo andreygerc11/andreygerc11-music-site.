@@ -67,9 +67,9 @@
 </div>
 
 <script>
-    // ВАШ НОВИЙ ПРАЦЮЮЧИЙ ЛІНК НА СКРИПТ
-    const apiURL = https://script.google.com/macros/s/AKfycbwbNNLK7LAR-q0n7fgUrPvqOXsZLEWc2WHAZWrvE1-UUzVUy4wl3Ao14c9PrBXy72GS/exec
-    const listenLimit = 45; // Час обмеження в секундах
+    // ВИПРАВЛЕНО: Додано лапки навколо посилання
+    const apiURL = "https://script.google.com/macros/s/AKfycbwbNNLK7LAR-q0n7fgUrPvqOXsZLEWc2WHAZWrvE1-UUzVUy4wl3Ao14c9PrBXy72GS/exec";
+    const listenLimit = 45; 
 
     async function getMusic() {
         const container = document.getElementById('music-container');
@@ -78,16 +78,16 @@
             const data = await response.json();
 
             if (data.error) {
-                container.innerHTML = `<div class="error-box"><h3>Помилка доступу</h3><p>${data.details}</p></div>`;
+                container.innerHTML = `<div class="error-box"><h3>Помилка скрипта</h3><p>${data.error}</p></div>`;
                 return;
             }
 
             if (data.length === 0) {
-                container.innerHTML = `<div class="error-box"><h3>Папка порожня</h3><p>Додайте .mp3 файли в папку на Google Диску та перевірте права доступу.</p></div>`;
+                container.innerHTML = `<div class="error-box"><h3>Папка порожня</h3><p>Перевірте, чи мають файли на Диску розширення .mp3</p></div>`;
                 return;
             }
 
-            container.innerHTML = ''; // Очищуємо завантажувач
+            container.innerHTML = ''; 
 
             data.forEach(song => {
                 const card = document.createElement('div');
@@ -107,7 +107,6 @@
                 container.appendChild(card);
             });
 
-            // Налаштування обмеження часу для кожного плеєра
             const players = document.querySelectorAll('.player');
             players.forEach(p => {
                 p.addEventListener('timeupdate', () => {
@@ -120,7 +119,7 @@
             });
 
         } catch (e) {
-            container.innerHTML = `<div class="error-box"><h3>Помилка завантаження</h3><p>Не вдалося отримати список пісень. Спробуйте оновити сторінку.</p></div>`;
+            container.innerHTML = `<div class="error-box"><h3>Помилка завантаження</h3><p>Перевірте з'єднання або налаштування Google Script.</p></div>`;
         }
     }
 
