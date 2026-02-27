@@ -23,31 +23,48 @@
             margin-bottom: 25px;
             border: 1px solid rgba(255,255,255,0.1);
             border-left: 6px solid var(--accent);
+            position: relative;
+            overflow: hidden;
         }
 
         h3 { margin-bottom: 15px; font-size: 1.2rem; font-weight: 700; }
         
-        audio { 
-            width: 100%; 
-            height: 45px; 
-            border-radius: 30px;
-            background: #f1f3f4;
-        }
-        
-        .buy-msg { 
-            display: none; 
-            margin-top: 15px; 
-            padding: 20px; 
-            background: rgba(255, 77, 77, 0.15); 
-            border-radius: 15px; 
-            text-align: center; 
-            border: 1px dashed var(--accent);
+        /* Контейнер для плеера с ограничением высоты */
+        .player-wrapper {
+            width: 100%;
+            height: 60px;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
         }
 
-        .btn-buy { display: inline-block; margin-top: 10px; background: var(--accent); color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: 900; text-transform: uppercase; font-size: 0.9rem; }
+        iframe {
+            width: 100%;
+            height: 150px; /* Google плеер требует высоты, мы его смещаем */
+            border: none;
+            position: absolute;
+            top: -45px; /* Прячем лишние элементы управления Google */
+        }
+
+        /* Заглушка поверх плеера для блокировки после 45 сек */
+        .blocker {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 11, 0.9);
+            z-index: 10;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .buy-msg { 
+            margin-top: 10px;
+        }
+
+        .btn-buy { display: inline-block; margin-top: 10px; background: var(--accent); color: #fff; text-transform: uppercase; text-decoration: none; padding: 10px 25px; border-radius: 50px; font-weight: 900; font-size: 0.8rem; }
         
         #loader { text-align: center; padding: 50px; color: var(--accent); }
-        .error-text { color: #ffb347; font-size: 0.85rem; margin-top: 10px; display: block; }
     </style>
 </head>
 <body>
@@ -66,17 +83,16 @@
 
 <script>
     const apiURL = "https://script.google.com/macros/s/AKfycbwbNNLK7LAR-q0n7fgUrPvqOXsZLEWc2WHAZWrvE1-UUzVUy4wl3Ao14c9PrBXy72GS/exec";
-    const listenLimit = 45; 
+    const listenLimit = 45000; // 45 секунд в миллисекундах
 
     async function getMusic() {
         const container = document.getElementById('music-container');
         try {
             const response = await fetch(apiURL);
-            if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
 
             if (!data || data.length === 0) {
-                container.innerHTML = "<p style='text-align:center;'>Пісень поки що немає в папці.</p>";
+                container.innerHTML = "<p style='text-align:center;'>Пісень поки що немає.</p>";
                 return;
             }
 
@@ -86,47 +102,33 @@
                 const card = document.createElement('div');
                 card.className = 'music-card';
                 
-                // Исправленная ссылка для прямого стриминга
-                const audioSrc = `https://drive.google.com/uc?export=download&id=${song.id}`;
+                // Используем preview ссылку (она обходит CORB)
+                const embedSrc = `https://drive.google.com/file/d/${song.id}/preview`;
                 
                 card.innerHTML = `
                     <h3>${song.name}</h3>
-                    <audio class="player" controls controlsList="nodownload" preload="metadata">
-                        <source src="${audioSrc}" type="audio/mpeg">
-                        Ваш браузер не підтримує плеєр.
-                    </audio>
-                    <div class="error-info"></div>
-                    <div class="buy-msg">
-                        <p style="font-weight: bold; color: #ff4d4d; font-size: 1.1rem;">⏱ ДЕМО-ВЕРСІЯ ЗАКІНЧИЛАСЬ</p>
-                        <p style="margin-bottom: 10px;">Підтримайте Андрія, щоб отримати повну пісню.</p>
-                        <a href="https://t.me/andriyherts" target="_blank" class="btn-buy">Купити повну версію</a>
+                    <div class="player-wrapper">
+                        <iframe src="${embedSrc}" allow="autoplay"></iframe>
+                        <div class="blocker" id="blocker-${song.id}">
+                             <p style="font-weight: bold; color: #ff4d4d;">⏱ ДЕМО-ВЕРСІЯ ЗАКІНЧИЛАСЬ</p>
+                             <a href="https://t.me/andriyherts" target="_blank" class="btn-buy">Купити повну версію</a>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
-            });
 
-            // Логика управления плеерами
-            const players = document.querySelectorAll('.player');
-            players.forEach(p => {
-                // Обработка ошибок загрузки (частая проблема с Google Drive)
-                p.addEventListener('error', () => {
-                    const info = p.parentElement.querySelector('.error-info');
-                    info.innerHTML = '<span class="error-text">⚠️ Помилка доступу до файлу. Спробуйте оновити сторінку або перевірте права доступу в Drive.</span>';
-                });
-
-                p.addEventListener('timeupdate', () => {
-                    if (p.currentTime >= listenLimit) {
-                        p.pause();
-                        p.currentTime = listenLimit;
-                        const card = p.closest('.music-card');
-                        card.querySelector('.buy-msg').style.display = 'block';
-                    }
-                });
+                // Логика блокировки: так как мы в iframe, мы не видим время проигрывания,
+                // поэтому запускаем таймер при первом взаимодействии с карточкой.
+                card.addEventListener('click', function startTimer() {
+                    setTimeout(() => {
+                        document.getElementById(`blocker-${song.id}`).style.display = 'block';
+                    }, listenLimit);
+                    card.removeEventListener('click', startTimer);
+                }, { once: true });
             });
 
         } catch (e) {
-            console.error("Помилка:", e);
-            container.innerHTML = "<p style='text-align:center;'>Помилка завантаження. Перевірте з'єднання або скрипт.</p>";
+            container.innerHTML = "<p style='text-align:center;'>Помилка завантаження архіву.</p>";
         }
     }
 
