@@ -7,157 +7,60 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { 
-            --accent: #ff4d4d; 
-            --dark: #0a0a0b; 
-            --glass: rgba(255, 255, 255, 0.07);
-            --glass-hover: rgba(255, 255, 255, 0.12);
-        }
-
+        :root { --accent: #ff4d4d; --dark: #0a0a0b; --glass: rgba(255, 255, 255, 0.05); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; line-height: 1.6; }
         
-        body { 
-            font-family: 'Montserrat', sans-serif; 
-            background: var(--dark); 
-            color: #fff; 
-            line-height: 1.6;
-            background: radial-gradient(circle at top right, #1a1a1d, #0a0a0b);
-            min-height: 100vh;
-        }
+        .header-nav { padding: 30px; text-align: center; background: #151515; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .btn-back { text-decoration: none; color: var(--accent); font-weight: bold; border: 1px solid var(--accent); padding: 8px 25px; border-radius: 50px; transition: 0.3s; display: inline-block; margin-bottom: 15px; }
+        .btn-back:hover { background: var(--accent); color: #fff; }
 
-        .header-nav { 
-            padding: 40px 20px; 
-            text-align: center; 
-            background: rgba(21, 21, 21, 0.8); 
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .btn-back { 
-            text-decoration: none; 
-            color: #fff; 
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border: 1px solid var(--accent); 
-            padding: 10px 25px; 
-            border-radius: 50px; 
-            transition: 0.4s; 
-            display: inline-block; 
-            margin-bottom: 20px; 
-        }
-
-        .btn-back:hover { 
-            background: var(--accent); 
-            box-shadow: 0 0 20px rgba(255, 77, 77, 0.4);
-        }
-
-        h1 { 
-            text-transform: uppercase; 
-            font-weight: 900; 
-            letter-spacing: 3px;
-            font-size: 1.8rem;
-        }
-
-        .container { 
-            max-width: 700px; 
-            margin: auto; 
-            padding: 40px 20px; 
-        }
-
+        .container { max-width: 800px; margin: auto; padding: 40px 20px; }
         .music-card { 
             background: var(--glass); 
-            border-radius: 24px;
-            padding: 30px;
-            margin-bottom: 30px;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
             border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
+            border-left: 6px solid var(--accent);
         }
 
-        .music-card:hover {
-            background: var(--glass-hover);
-            border-color: var(--accent);
-        }
-
-        h3 { 
-            margin-bottom: 20px; 
-            font-size: 1.2rem; 
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-        }
-
-        h3 i {
-            margin-right: 15px;
-            color: var(--accent);
-        }
-
-        /* Контейнер плеєра без зайвих фільтрів */
-        .player-container {
-            background: #f1f3f4;
-            padding: 5px;
-            border-radius: 50px;
-            overflow: hidden;
-        }
-
+        h3 { margin-bottom: 15px; font-size: 1.2rem; font-weight: 700; }
+        
         audio { 
             width: 100%; 
-            height: 40px;
-            display: block;
+            height: 45px; 
+            border-radius: 30px;
+            background: #f1f3f4;
         }
-
+        
         .buy-msg { 
             display: none; 
-            margin-top: 20px; 
-            padding: 25px; 
-            background: rgba(255, 77, 77, 0.1); 
-            border-radius: 20px; 
+            margin-top: 15px; 
+            padding: 20px; 
+            background: rgba(255, 77, 77, 0.15); 
+            border-radius: 15px; 
             text-align: center; 
             border: 1px dashed var(--accent);
-            animation: fadeIn 0.4s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .btn-buy { 
-            display: inline-block; 
-            margin-top: 15px; 
-            background: var(--accent); 
-            color: #fff; 
-            text-decoration: none; 
-            padding: 12px 30px; 
-            border-radius: 50px; 
-            font-weight: 900; 
-            text-transform: uppercase; 
-            font-size: 0.8rem; 
-            transition: 0.3s;
-        }
-
-        #loader { 
-            text-align: center; 
-            padding: 100px 0; 
-            color: var(--accent); 
-        }
+        .btn-buy { display: inline-block; margin-top: 10px; background: var(--accent); color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: 900; text-transform: uppercase; font-size: 0.9rem; }
+        
+        #loader { text-align: center; padding: 50px; color: var(--accent); }
+        .error-msg { color: #ffb347; font-size: 0.8rem; margin-top: 10px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="header-nav">
     <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
-    <h1>Музична Сповідь</h1>
+    <h1 style="text-transform: uppercase; font-weight: 900; letter-spacing: 1px;">Музична Сповідь</h1>
 </div>
 
 <div class="container" id="music-container">
     <div id="loader">
-        <i class="fas fa-compact-disc fa-spin fa-4x"></i>
-        <p style="margin-top:15px; letter-spacing: 2px;">ЗАВАНТАЖЕННЯ...</p>
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <p style="margin-top: 20px;">Завантаження аудіоархіву...</p>
     </div>
 </div>
 
@@ -172,7 +75,7 @@
             const data = await response.json();
 
             if (!data || data.length === 0) {
-                container.innerHTML = "<p style='text-align:center;'>Пісень не знайдено.</p>";
+                container.innerHTML = "<p style='text-align:center;'>Пісень поки що немає.</p>";
                 return;
             }
 
@@ -182,29 +85,31 @@
                 const card = document.createElement('div');
                 card.className = 'music-card';
                 
-                // Використовуємо пряме посилання для скачування, воно працювало найкраще
+                // Используем альтернативный способ формирования ссылки для обхода блокировок
                 const audioSrc = `https://docs.google.com/uc?export=download&id=${song.id}`;
                 
                 card.innerHTML = `
-                    <h3><i class="fas fa-music"></i> ${song.name}</h3>
-                    <div class="player-container">
-                        <audio class="player" controls controlsList="nodownload">
-                            <source src="${audioSrc}" type="audio/mpeg">
-                            Ваш браузер не підтримує плеєр.
-                        </audio>
-                    </div>
+                    <h3>${song.name}</h3>
+                    <audio class="player" controls controlsList="nodownload">
+                        <source src="${audioSrc}" type="audio/mpeg">
+                        Ваш браузер не підтримує плеєр.
+                    </audio>
+                    <div class="error-msg" style="display:none;">⚠️ Помилка завантаження. Спробуйте оновити.</div>
                     <div class="buy-msg">
-                        <p style="font-weight: 900; color: var(--accent);">ДЕМО-ВЕРСІЯ ЗАВЕРШЕНА</p>
-                        <p style="font-size: 0.85rem; margin-bottom: 15px;">Підтримайте Андрія Герца, щоб почути пісню повністю.</p>
-                        <a href="https://t.me/andriyherts" target="_blank" class="btn-buy">Отримати повний трек</a>
+                        <p style="font-weight: bold; color: #ff4d4d; font-size: 1.1rem;">⏱ ДЕМО-ВЕРСІЯ ЗАКІНЧИЛАСЬ</p>
+                        <p style="margin-bottom: 10px;">Підтримайте Андрія, щоб отримати повну пісню.</p>
+                        <a href="https://t.me/andriyherts" target="_blank" class="btn-buy">Купити повну версію</a>
                     </div>
                 `;
                 container.appendChild(card);
             });
 
-            // Логіка 45 секунд
             const players = document.querySelectorAll('.player');
             players.forEach(p => {
+                p.addEventListener('error', () => {
+                    p.parentElement.querySelector('.error-msg').style.display = 'block';
+                });
+
                 p.addEventListener('timeupdate', () => {
                     if (p.currentTime >= listenLimit) {
                         p.pause();
