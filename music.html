@@ -4,48 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Музична Сповідь | Андрій Герц</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --accent: #ff4d4d; --dark: #0a0a0b; --glass: rgba(255, 255, 255, 0.05); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; }
         
-        .header-nav { padding: 30px; text-align: center; background: linear-gradient(to bottom, #1a1a1a, var(--dark)); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .header-nav { padding: 30px; text-align: center; background: #1a1a1a; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .btn-back { text-decoration: none; color: var(--accent); font-weight: bold; border: 1px solid var(--accent); padding: 8px 25px; border-radius: 50px; transition: 0.3s; display: inline-block; }
-        
+        .btn-back:hover { background: var(--accent); color: #fff; }
+
         .container { max-width: 800px; margin: auto; padding: 40px 20px; }
         .music-card { 
             background: var(--glass); 
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 25px;
+            border-radius: 20px;
             padding: 25px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border-left: 5px solid var(--accent);
         }
 
-        h3 { margin-bottom: 15px; font-weight: 700; color: #fff; font-size: 1.1rem; }
+        h3 { margin-bottom: 15px; font-size: 1.1rem; }
         
-        /* ВИПРАВЛЕНИЙ ПЛЕЄР: без інверсії кольорів, щоб було видно кнопки */
+        /* НОВИЙ СТИЛЬ ПЛЕЄРА */
+        .player-wrapper {
+            background: #222;
+            border-radius: 50px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+        }
+
         audio { 
             width: 100%; 
-            height: 40px;
-            border-radius: 20px;
-            background: #f1f3f4;
+            height: 40px; 
+            outline: none;
         }
         
         .buy-msg { 
             display: none; 
-            margin-top: 20px; 
-            padding: 20px; 
-            background: rgba(255, 77, 77, 0.15); 
-            border-radius: 15px; 
+            margin-top: 15px; 
+            padding: 15px; 
+            background: rgba(255, 77, 77, 0.1); 
+            border-radius: 12px; 
             text-align: center; 
             border: 1px dashed var(--accent);
         }
 
-        .btn-buy { display: inline-block; margin-top: 15px; background: var(--accent); color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; }
+        .btn-buy { display: inline-block; margin-top: 10px; background: var(--accent); color: #fff; text-decoration: none; padding: 10px 25px; border-radius: 50px; font-weight: 700; font-size: 0.8rem; }
         
         #loader { text-align: center; color: var(--accent); margin-top: 50px; }
     </style>
@@ -54,13 +60,13 @@
 
 <div class="header-nav">
     <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
-    <h1 style="margin-top: 20px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900;">Музична Сповідь</h1>
+    <h1 style="margin-top: 20px; text-transform: uppercase;">Музична Сповідь</h1>
 </div>
 
 <div class="container" id="music-container">
     <div id="loader">
         <i class="fas fa-spinner fa-spin fa-2x"></i>
-        <p style="margin-top: 15px;">Завантаження пісень...</p>
+        <p>Завантаження плеєрів...</p>
     </div>
 </div>
 
@@ -74,8 +80,8 @@
             const response = await fetch(apiURL);
             const data = await response.json();
 
-            if (data.length === 0) {
-                container.innerHTML = "<p style='text-align:center;'>Пісень не знайдено. Перевірте папку на Диску.</p>";
+            if (!data || data.length === 0) {
+                container.innerHTML = "<p style='text-align:center;'>Файли не знайдено. Перевірте доступ до папки.</p>";
                 return;
             }
 
@@ -86,12 +92,14 @@
                 card.className = 'music-card';
                 card.innerHTML = `
                     <h3>${song.name}</h3>
-                    <audio class="player" controls controlsList="nodownload" preload="metadata">
-                        <source src="https://drive.google.com/uc?id=${song.id}&export=media" type="audio/mpeg">
-                    </audio>
+                    <div class="player-wrapper">
+                        <audio class="player" controls controlsList="nodownload">
+                            <source src="https://docs.google.com/uc?id=${song.id}&export=open" type="audio/mpeg">
+                            Ваш браузер не підтримує аудіо.
+                        </audio>
+                    </div>
                     <div class="buy-msg">
                         <p style="font-weight: bold; color: #ff4d4d;">⏱ ЧАС ДЕМО-ВЕРСІЇ ВИЙШОВ</p>
-                        <p style="font-size: 0.9rem; margin-top: 5px;">Щоб отримати повну пісню, підтримайте збір.</p>
                         <a href="https://t.me/andriyherts" class="btn-buy">Придбати повну версію</a>
                     </div>
                 `;
@@ -104,18 +112,22 @@
                     if (p.currentTime >= listenLimit) {
                         p.pause();
                         p.currentTime = listenLimit;
-                        p.parentElement.querySelector('.buy-msg').style.display = 'block';
+                        p.parentElement.parentElement.querySelector('.buy-msg').style.display = 'block';
                     }
                 });
                 
-                // Додаткова перевірка на помилки завантаження
-                p.addEventListener('error', () => {
-                   console.error("Помилка завантаження файлу з Google Drive");
+                // Якщо Google блокує пряме посилання, спробуємо альтернативний формат
+                p.addEventListener('error', function() {
+                    const source = this.querySelector('source');
+                    if (source.src.includes('export=open')) {
+                        source.src = source.src.replace('export=open', 'export=media');
+                        this.load();
+                    }
                 });
             });
 
         } catch (e) {
-            container.innerHTML = "<div style='text-align:center;'><h3>Помилка завантаження</h3><p>Спробуйте оновити сторінку.</p></div>";
+            container.innerHTML = "<p style='text-align:center;'>Помилка зв'язку з Google Drive. Спробуйте оновити сторінку.</p>";
         }
     }
 
