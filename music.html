@@ -27,12 +27,11 @@
 
         h3 { margin-bottom: 15px; font-size: 1.2rem; font-weight: 700; }
         
-        /* ПЛЕЄР ТЕПЕР СВІТЛИЙ ДЛЯ ВИДИМОСТІ КНОПОК */
         audio { 
             width: 100%; 
             height: 45px; 
             border-radius: 30px;
-            background: #f1f3f4; /* Світлий фон гарантує видимість кнопок */
+            background: #f1f3f4;
         }
         
         .buy-msg { 
@@ -48,6 +47,7 @@
         .btn-buy { display: inline-block; margin-top: 10px; background: var(--accent); color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: 900; text-transform: uppercase; font-size: 0.9rem; }
         
         #loader { text-align: center; padding: 50px; color: var(--accent); }
+        .error-text { color: #ffb347; font-size: 0.85rem; margin-top: 10px; display: block; }
     </style>
 </head>
 <body>
@@ -72,6 +72,7 @@
         const container = document.getElementById('music-container');
         try {
             const response = await fetch(apiURL);
+            if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
 
             if (!data || data.length === 0) {
@@ -84,15 +85,17 @@
             data.forEach(song => {
                 const card = document.createElement('div');
                 card.className = 'music-card';
-                // Використовуємо формат "open", він найкраще працює для стрімінгу
-                const audioSrc = `https://drive.google.com/uc?id=${song.id}&export=open`;
+                
+                // Исправленная ссылка для прямого стриминга
+                const audioSrc = `https://drive.google.com/uc?export=download&id=${song.id}`;
                 
                 card.innerHTML = `
                     <h3>${song.name}</h3>
-                    <audio class="player" controls controlsList="nodownload">
+                    <audio class="player" controls controlsList="nodownload" preload="metadata">
                         <source src="${audioSrc}" type="audio/mpeg">
                         Ваш браузер не підтримує плеєр.
                     </audio>
+                    <div class="error-info"></div>
                     <div class="buy-msg">
                         <p style="font-weight: bold; color: #ff4d4d; font-size: 1.1rem;">⏱ ДЕМО-ВЕРСІЯ ЗАКІНЧИЛАСЬ</p>
                         <p style="margin-bottom: 10px;">Підтримайте Андрія, щоб отримати повну пісню.</p>
@@ -102,9 +105,15 @@
                 container.appendChild(card);
             });
 
-            // Логіка зупинки на 45 секунді
+            // Логика управления плеерами
             const players = document.querySelectorAll('.player');
             players.forEach(p => {
+                // Обработка ошибок загрузки (частая проблема с Google Drive)
+                p.addEventListener('error', () => {
+                    const info = p.parentElement.querySelector('.error-info');
+                    info.innerHTML = '<span class="error-text">⚠️ Помилка доступу до файлу. Спробуйте оновити сторінку або перевірте права доступу в Drive.</span>';
+                });
+
                 p.addEventListener('timeupdate', () => {
                     if (p.currentTime >= listenLimit) {
                         p.pause();
@@ -116,7 +125,8 @@
             });
 
         } catch (e) {
-            container.innerHTML = "<p style='text-align:center;'>Помилка завантаження. Спробуйте ще раз.</p>";
+            console.error("Помилка:", e);
+            container.innerHTML = "<p style='text-align:center;'>Помилка завантаження. Перевірте з'єднання або скрипт.</p>";
         }
     }
 
