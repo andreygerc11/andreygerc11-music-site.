@@ -7,27 +7,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --accent: #ff4d4d; --dark: #0a0a0b; --card: #161618; --success: #4dff8c; }
+        :root { --accent: #ff4d4d; --dark: #0a0a0b; --card: #161618; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; background: radial-gradient(circle at top right, #1a1a1d, #0a0a0b); min-height: 100vh; }
-        .header-nav { padding: 40px 20px; text-align: center; background: rgba(21, 21, 21, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 100; }
-        .btn-back { text-decoration: none; color: #fff; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; border: 1px solid var(--accent); padding: 10px 25px; border-radius: 50px; transition: 0.3s; display: inline-block; margin-bottom: 15px; }
-        .btn-back:hover { background: var(--accent); }
+        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; min-height: 100vh; }
+        .header-nav { padding: 40px 20px; text-align: center; background: #151515; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .btn-back { text-decoration: none; color: #fff; border: 1px solid var(--accent); padding: 10px 25px; border-radius: 50px; display: inline-block; margin-bottom: 15px; }
         .container { max-width: 800px; margin: auto; padding: 40px 20px; }
-        .music-card { background: var(--card); border-radius: 24px; padding: 25px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid var(--accent); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
-        h3 { font-size: 1.1rem; font-weight: 700; flex: 1; }
-        .btn-buy { background: var(--accent); color: #fff; border: none; padding: 12px 22px; border-radius: 50px; font-weight: 900; font-size: 0.75rem; text-decoration: none; text-transform: uppercase; transition: 0.3s; display: inline-block; }
-        .btn-buy:hover { background: #fff; color: var(--accent); transform: translateY(-2px); }
-        .player-wrapper { width: 100%; height: 54px; background: #222; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); }
+        .music-card { background: var(--card); border-radius: 24px; padding: 25px; margin-bottom: 30px; border-left: 5px solid var(--accent); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; }
+        .btn-buy { background: var(--accent); color: #fff; padding: 12px 22px; border-radius: 50px; text-decoration: none; font-weight: 900; }
+        .player-wrapper { width: 100%; height: 54px; background: #222; border-radius: 14px; margin-top: 20px; display: flex; align-items: center; justify-content: center; }
         iframe { width: 100%; height: 160px; border: none; filter: invert(0.9) hue-rotate(180deg); }
-        .play-btn { background: none; border: none; color: #fff; cursor: pointer; width: 100%; height: 100%; font-family: 'Montserrat', sans-serif; font-weight: 700; }
+        .play-btn { background: none; border: none; color: #fff; cursor: pointer; width: 100%; height: 100%; font-weight: 700; }
     </style>
 </head>
 <body>
 
 <div class="header-nav">
-    <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
+    <a href="index.html" class="btn-back">На головну</a>
     <h1>Музична Сповідь</h1>
 </div>
 
@@ -45,41 +42,33 @@
             const data = await response.json();
             
             if (!data || data.length === 0) {
-                container.innerHTML = "<p style='text-align:center;'>Пісень поки що немає у папці.</p>";
+                container.innerHTML = "<p style='text-align:center;'>Список пісень порожній. Перевірте Google Script.</p>";
                 return;
             }
 
             container.innerHTML = '';
-
             data.forEach(song => {
                 const card = document.createElement('div');
                 card.className = 'music-card';
-                // Перевірка на наявність посилання, щоб уникнути помилки 404/undefined
-                const payLink = song.payUrl ? song.payUrl : "#";
-                
                 card.innerHTML = `
                     <div class="card-header">
                         <h3>${song.name}</h3>
-                        <a href="${payLink}" target="_blank" class="btn-buy" ${!song.payUrl ? 'onclick="return false;"' : ''}>
-                            <i class="fas fa-lock"></i> 200 грн
-                        </a>
+                        <a href="${song.payUrl}" target="_blank" class="btn-buy">200 грн</a>
                     </div>
                     <div class="player-wrapper" id="player-${song.id}">
-                        <button class="play-btn" onclick="loadPlayer('${song.id}')">
-                            <i class="fas fa-play"></i> СЛУХАТИ ПРЕВ'Ю
-                        </button>
+                        <button class="play-btn" onclick="loadPlayer('${song.id}')">СЛУХАТИ ПРЕВ'Ю</button>
                     </div>
                 `;
                 container.appendChild(card);
             });
         } catch (e) {
-            container.innerHTML = "<p style='text-align:center;'>Музика тимчасово недоступна. Спробуйте оновити сторінку.</p>";
+            container.innerHTML = "<p style='text-align:center;'>Помилка зв'язку з сервером Render.</p>";
         }
     }
 
     function loadPlayer(id) {
         const wrapper = document.getElementById('player-' + id);
-        wrapper.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allow="autoplay"></iframe>`;
+        wrapper.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview"></iframe>`;
     }
 
     getMusic();
