@@ -3,25 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Завантаження | Андрій Герц</title>
+    <title>Завантаження | Голос проти раку</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --accent: #4dff8c; --dark: #0a0a0b; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; text-align: center; padding: 100px 20px; margin: 0; }
-        .success-card { background: #161618; max-width: 500px; margin: auto; padding: 40px; border-radius: 32px; border: 1px solid var(--accent); }
+        :root { --accent: #ff4d4d; --dark: #0a0a0b; --text: #ffffff; }
+        body { font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 20px; }
+        .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); padding: 40px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.1); max-width: 600px; width: 100%; }
         h1 { color: var(--accent); margin-bottom: 20px; text-transform: uppercase; }
-        .btn-download { display: inline-block; background: var(--accent); color: #000; padding: 18px 35px; border-radius: 50px; text-decoration: none; font-weight: 900; margin-top: 30px; text-transform: uppercase; }
+        .download-btn { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; text-decoration: none; color: white; margin-bottom: 15px; transition: 0.3s; border: 1px solid transparent; }
+        .download-btn:hover { background: var(--accent); transform: translateY(-3px); border-color: white; }
+        .btn-home { margin-top: 30px; display: inline-block; color: #888; text-decoration: none; font-weight: 700; }
     </style>
 </head>
 <body>
-    <div class="success-card">
-        <h1>Дякуємо!</h1>
-        <p>Твій внесок допоможе у боротьбі з хворобою. Твій трек чекає за посиланням нижче:</p>
+    <div class="card">
+        <i class="fas fa-check-circle fa-4x" style="color: var(--accent); margin-bottom: 20px;"></i>
+        <h1>Дякуємо за підтримку!</h1>
+        <p>Ваш внесок допомагає мені та побратимам у боротьбі. Тисніть на кнопки нижче, щоб завантажити треки:</p>
         
-        <a href="https://drive.google.com/drive/folders/ТВІЙ_ID_ПАПКИ" class="btn-download">СКАЧАТИ МУЗИКУ</a>
-        
-        <br><br>
-        <a href="index.html" style="color: #555; text-decoration: none; font-size: 0.8rem;">На головну</a>
+        <a href="Ланцюг добра (Remastered) (1).mp3" download class="download-btn">
+            <span><i class="fas fa-music"></i> Ланцюг добра (Частина 1)</span>
+            <i class="fas fa-download"></i>
+        </a>
+
+        <a href="Ланцюг добра (Remastered) (2).mp3" download class="download-btn">
+            <span><i class="fas fa-music"></i> Ланцюг добра (Частина 2)</span>
+            <i class="fas fa-download"></i>
+        </a>
+
+        <a href="index.html" class="btn-home">На головну</a>
     </div>
 </body>
 </html>
