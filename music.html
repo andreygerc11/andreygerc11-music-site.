@@ -43,15 +43,24 @@
         try {
             const response = await fetch(apiURL);
             const data = await response.json();
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = "<p style='text-align:center;'>Пісень поки що немає у папці.</p>";
+                return;
+            }
+
             container.innerHTML = '';
 
             data.forEach(song => {
                 const card = document.createElement('div');
                 card.className = 'music-card';
+                // Перевірка на наявність посилання, щоб уникнути помилки 404/undefined
+                const payLink = song.payUrl ? song.payUrl : "#";
+                
                 card.innerHTML = `
                     <div class="card-header">
                         <h3>${song.name}</h3>
-                        <a href="${song.payUrl}" target="_blank" class="btn-buy">
+                        <a href="${payLink}" target="_blank" class="btn-buy" ${!song.payUrl ? 'onclick="return false;"' : ''}>
                             <i class="fas fa-lock"></i> 200 грн
                         </a>
                     </div>
@@ -64,7 +73,7 @@
                 container.appendChild(card);
             });
         } catch (e) {
-            container.innerHTML = "<p style='text-align:center;'>Музика тимчасово недоступна.</p>";
+            container.innerHTML = "<p style='text-align:center;'>Музика тимчасово недоступна. Спробуйте оновити сторінку.</p>";
         }
     }
 
