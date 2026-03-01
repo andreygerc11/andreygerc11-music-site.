@@ -35,7 +35,6 @@
 </div>
 
 <script>
-    // Виправлена адреса вашого сервера на Render
     const apiURL = "https://andreygerc11-music-site.onrender.com/api/music";
 
     async function getMusic() {
@@ -43,12 +42,6 @@
         try {
             const response = await fetch(apiURL);
             const data = await response.json();
-            
-            if (data.error) {
-                container.innerHTML = `<p style='text-align:center;'>Помилка сервера: ${data.error}</p>`;
-                return;
-            }
-
             container.innerHTML = '';
 
             data.forEach(song => {
@@ -68,7 +61,7 @@
                 container.appendChild(card);
             });
         } catch (e) {
-            container.innerHTML = "<p style='text-align:center;'>Музика тимчасово недоступна. Перевірте з'єднання.</p>";
+            container.innerHTML = "<p style='text-align:center;'>Музика тимчасово недоступна. Оновіть сторінку пізніше.</p>";
         }
     }
     getMusic();
