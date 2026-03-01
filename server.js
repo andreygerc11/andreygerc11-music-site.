@@ -5,14 +5,18 @@ const app = express();
 
 app.use(cors());
 
-// Адреса вашого Google Apps Script
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwbNNLK7LAR-q0n7fgUrPvqOXsZLEWc2WHAZWrvE1-UUzVUy4wl3Ao14c9PrBXy72GS/exec";
+// Вставлено ваше нове посилання на Google Apps Script
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzckoWMzXxnM77giiiGoL9yXe_DTZ0YX7dRRNLJCjAqVBFEqYDvmAMAr5RBrJq7iQwn/exec";
 
 app.get('/api/music', async (req, res) => {
     try {
-        const response = await axios.get(GOOGLE_SCRIPT_URL);
+        // Додано перенаправлення (follow redirects), щоб axios точно отримав дані
+        const response = await axios.get(GOOGLE_SCRIPT_URL, {
+            maxRedirects: 5
+        });
         res.json(response.data);
     } catch (error) {
+        console.error("Помилка:", error.message);
         res.status(500).json({ error: "Помилка зв'язку з Google Scripts" });
     }
 });
