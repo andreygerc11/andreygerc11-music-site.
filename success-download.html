@@ -2,37 +2,36 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Завантаження | Голос проти раку</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Завантаження... | Голос проти раку</title>
     <style>
-        :root { --accent: #ff4d4d; --dark: #0a0a0b; --text: #ffffff; }
-        body { font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 20px; }
-        .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); padding: 40px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.1); max-width: 600px; width: 100%; }
-        h1 { color: var(--accent); margin-bottom: 20px; text-transform: uppercase; }
-        .download-btn { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; text-decoration: none; color: white; margin-bottom: 15px; transition: 0.3s; border: 1px solid transparent; }
-        .download-btn:hover { background: var(--accent); transform: translateY(-3px); border-color: white; }
-        .btn-home { margin-top: 30px; display: inline-block; color: #888; text-decoration: none; font-weight: 700; }
+        body { background: #0a0a0b; color: white; font-family: sans-serif; text-align: center; padding-top: 100px; }
+        .accent { color: #ff4d4d; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <i class="fas fa-check-circle fa-4x" style="color: var(--accent); margin-bottom: 20px;"></i>
-        <h1>Дякуємо за підтримку!</h1>
-        <p>Ваш внесок допомагає мені та побратимам у боротьбі. Тисніть на кнопки нижче, щоб завантажити треки:</p>
-        
-        <a href="Ланцюг добра (Remastered) (1).mp3" download class="download-btn">
-            <span><i class="fas fa-music"></i> Ланцюг добра (Частина 1)</span>
-            <i class="fas fa-download"></i>
-        </a>
+    <h1>Дякуємо за підтримку!</h1>
+    <p id="status">Визначаємо ваш трек...</p>
 
-        <a href="Ланцюг добра (Remastered) (2).mp3" download class="download-btn">
-            <span><i class="fas fa-music"></i> Ланцюг добра (Частина 2)</span>
-            <i class="fas fa-download"></i>
-        </a>
+    <script>
+        // Беремо параметри з посилання (наприклад, ?file=song1.mp3)
+        const params = new URLSearchParams(window.location.search);
+        const fileName = params.get('file');
 
-        <a href="index.html" class="btn-home">На головну</a>
-    </div>
+        if (fileName) {
+            document.getElementById('status').innerHTML = `Завантаження <b>${fileName}</b> почнеться зараз.`;
+            
+            const link = document.createElement('a');
+            link.href = fileName; // Файл береться з кореня вашого GitHub
+            link.download = fileName;
+            document.body.appendChild(link);
+            
+            setTimeout(() => {
+                link.click(); // Автоматичне скачування
+                document.body.removeChild(link);
+            }, 1500);
+        } else {
+            document.getElementById('status').innerText = "Помилка: файл не вказано.";
+        }
+    </script>
 </body>
 </html>
