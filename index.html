@@ -27,7 +27,7 @@
             overflow-x: hidden;
         }
 
-        /* Відео-фон (Твій орел) */
+        /* Відео-фон */
         .hero {
             position: relative;
             height: 100vh;
@@ -132,18 +132,33 @@
             z-index: 10;
         }
 
-        h2 { font-size: 2.2rem; margin-bottom: 25px; color: var(--accent); text-transform: uppercase; }
+        h2 { font-size: 1.8rem; margin: 35px 0 20px; color: var(--accent); text-transform: uppercase; }
+        h2:first-child { margin-top: 0; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 50px; }
+        p { margin-bottom: 15px; font-size: 1.1rem; color: #ddd; }
+
+        .quote {
+            border-left: 4px solid var(--accent);
+            padding-left: 20px;
+            font-style: italic;
+            margin: 30px 0;
+            color: #fff;
+        }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin: 40px 0; }
 
         .info-item {
             background: rgba(255,255,255,0.05);
             padding: 30px;
             border-radius: 20px;
-            border-left: 4px solid var(--accent);
+            border-bottom: 3px solid var(--accent);
         }
 
-        .rekv-list { list-style: none; }
+        .info-item h3 { margin-bottom: 10px; color: #fff; }
+
+        audio { width: 100%; margin-top: 15px; border-radius: 5px; }
+
+        .rekv-list { list-style: none; margin-top: 20px; }
         .rekv-list li {
             padding: 15px 0;
             border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -151,51 +166,81 @@
             display: flex;
             justify-content: space-between;
             font-size: 1.1rem;
+            flex-wrap: wrap;
         }
 
-        .bank-label { color: #ffcc00; font-weight: bold; }
+        .bank-label { color: #ffcc00; font-weight: bold; margin-right: 10px; }
 
         footer { text-align: center; padding: 60px 20px; color: #555; font-size: 0.9rem; }
+        
+        @media (max-width: 600px) {
+            .glass-card { padding: 25px; margin-top: -50px; }
+            .rekv-list li { font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body>
 
 <header class="hero">
     <video autoplay muted loop playsinline id="bg-video">
-        <source src="grok_video_2026-01-25-18-39-38.mp4" type="video/mp4">
+        <source src="hero-bg.mp4" type="video/mp4">
     </video>
 
     <div class="hero-content" data-aos="zoom-out">
         <h1 class="hero-title">Голос проти раку</h1>
-        <p class="hero-subtitle">Ми звикли перемагати ворога в пікселі. Тепер переможемо ворога в крові. Проєкт Герц Андрія.</p>
+        <p class="hero-subtitle">Мій бій триває — і в шпиталі, і в строю. Я не складаю зброю і залишаюся на службі до нашої Перемоги.</p>
         
         <div class="btn-group">
             <a href="#support" class="btn btn-main">Підтримати проєкт</a>
-            <a href="music.html" class="btn btn-outline">Слухати музику</a>
+            <a href="#music" class="btn btn-outline">Слухати музику</a>
         </div>
     </div>
 </header>
 
 <section id="about">
     <div class="glass-card" data-aos="fade-up">
-        <h2>Наша місія</h2>
+        <h2>Мій бій за життя</h2>
+        <p>Вітаю. Я — автор пісень і військовослужбовець, який зараз веде власну війну з раком крові. Мені пощастило: хворобу виявили випадково і на ранній стадії. Це дає мені реальний шанс не просто вистояти, а й допомогти іншим побороти цю хворобу.</p>
+        
+        <p><strong>Я не збираюся залишати армію.</strong> Попри діагноз, я продовжую службу і буду залишатися в строю до нашої Перемоги. Але я бачу іншу сторону цієї біди.</p>
+
         <div class="grid">
             <div class="info-item">
-                <i class="fas fa-shield-alt fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
-                <h3>Боротьба триває</h3>
-                <p>Допомога військовим побратимам, які проходять лікування від онкологічних захворювань.</p>
+                <i class="fas fa-heart-broken fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
+                <h3>Сам-на-сам із хворобою</h3>
+                <p>Є військові, яких списали за станом здоров'я. Вони залишилися без підтримки, опинившись один на один із важким діагнозом.</p>
             </div>
             <div class="info-item">
                 <i class="fas fa-microphone-alt fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
-                <h3>Сила слова</h3>
-                <p>Творчість, що народжується в стінах шпиталю, стає зброєю у боротьбі за життя.</p>
+                <h3>Творча зброя</h3>
+                <p>Я створюю цей сайт як інструмент. Кожен ваш донат за музику — це внесок у моє лікування та допомогу побратимам.</p>
+            </div>
+        </div>
+
+        <div class="quote">
+            "Будь-яка ваша підтримка — це мій шанс не просто вистояти, а й допомогти іншим з цією хворобою."
+        </div>
+
+        <h2 id="music">Музика проєкту</h2>
+        <div class="grid">
+            <div class="info-item">
+                <h3>Ланцюг добра (Ч. 1)</h3>
+                <audio controls>
+                    <source src="Ланцюг добра (Remastered) (1).mp3" type="audio/mpeg">
+                </audio>
+            </div>
+            <div class="info-item">
+                <h3>Ланцюг добра (Ч. 2)</h3>
+                <audio controls>
+                    <source src="Ланцюг добра (Remastered) (2).mp3" type="audio/mpeg">
+                </audio>
             </div>
         </div>
 
         <h2 id="support">Реквізити для допомоги</h2>
         <ul class="rekv-list">
-            <li><span><span class="bank-label">ПУМБ:</span> 4314 1402 0779 7173</span></li>
             <li><span><span class="bank-label">Monobank:</span> 4441 1110 0278 2815</span></li>
+            <li><span><span class="bank-label">ПУМБ:</span> 4314 1402 0779 7173</span></li>
             <li><span><span class="bank-label">Credit Agricole:</span> 5167 5904 1488 3718</span></li>
             <li><span><span class="bank-label">PayPal:</span> andriyherts11@gmail.com</span></li>
         </ul>
