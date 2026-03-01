@@ -9,22 +9,21 @@
     <style>
         :root { --accent: #ff4d4d; --dark: #0a0a0b; --card: #161618; --success: #4dff8c; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; line-height: 1.6; background: radial-gradient(circle at top right, #1a1a1d, #0a0a0b); min-height: 100vh; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; background: radial-gradient(circle at top right, #1a1a1d, #0a0a0b); min-height: 100vh; }
         .header-nav { padding: 40px 20px; text-align: center; background: rgba(21, 21, 21, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 100; }
         .btn-back { text-decoration: none; color: #fff; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; border: 1px solid var(--accent); padding: 10px 25px; border-radius: 50px; transition: 0.3s; display: inline-block; margin-bottom: 15px; }
         .btn-back:hover { background: var(--accent); }
         .container { max-width: 800px; margin: auto; padding: 40px 20px; }
-        .music-card { background: var(--card); border-radius: 24px; padding: 25px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid var(--accent); display: flex; flex-direction: column; gap: 20px; }
+        .music-card { background: var(--card); border-radius: 24px; padding: 25px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid var(--accent); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
         .card-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
         h3 { font-size: 1.1rem; font-weight: 700; flex: 1; }
         .btn-buy-trigger { background: var(--accent); color: #fff; border: none; padding: 12px 22px; border-radius: 50px; font-weight: 900; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .player-wrapper { width: 100%; height: 54px; background: #222; border-radius: 14px; overflow: hidden; position: relative; }
+        .player-wrapper { width: 100%; height: 54px; background: #222; border-radius: 14px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.05); }
         iframe { width: 100%; height: 160px; border: none; position: absolute; top: -53px; filter: invert(0.9) hue-rotate(180deg); }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(12px); padding: 20px; }
         .modal { background: #1c1c1e; width: 100%; max-width: 450px; border-radius: 32px; padding: 40px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        .btn-pay-option { display: block; padding: 18px; border-radius: 50px; text-decoration: none; font-weight: 900; text-transform: uppercase; font-size: 0.85rem; margin-top: 15px; transition: 0.3s; }
-        .btn-liqpay { background: #fff; color: #000; }
-        .btn-mono { background: #4dff8c; color: #000; }
+        .btn-action { background: var(--success); color: #000; padding: 18px; border-radius: 50px; display: block; text-decoration: none; font-weight: 900; text-transform: uppercase; font-size: 0.85rem; margin-top: 20px; transition: 0.3s; }
+        .btn-action:hover { background: #fff; transform: translateY(-3px); }
     </style>
 </head>
 <body>
@@ -35,19 +34,19 @@
 </div>
 
 <div class="container" id="music-container">
-    <p style="text-align:center;">Отримання списку треків...</p>
+    <p style="text-align:center;">Завантаження музики...</p>
 </div>
 
 <div class="overlay" id="payOverlay">
     <div class="modal">
-        <h2 style="color:var(--accent);">ОБЕРІТЬ ОПЛАТУ</h2>
-        <p style="font-size:0.85rem; margin-top:10px; opacity:0.8;">Вартість — 200 грн. Після оплати завантаження розпочнеться автоматично.</p>
+        <h2 style="color:var(--accent); text-transform:uppercase;">Придбати трек</h2>
+        <p style="font-size:0.85rem; margin-top:15px; opacity:0.8;">Вартість — <b>200 грн</b>. Після оплати на Банку ви миттєво отримаєте посилання на завантаження в повідомленні-подяці.</p>
         
-        <a href="https://www.liqpay.ua/api/3/checkout?data=eyJwdWJsaWNfa2V5IjoiaTE1NTc3NjY0MzA5IiwiYW1vdW50IjoiMjAwIiwiY3VycmVuY3kiOiJVQUgiLCJkZXNjcmlwdGlvbiI6Ik9wbGF0YSBtdXNpYyIsInZlcnNpb24iOiIzIiwicmVzdWx0X3VybCI6Imh0dHBzOi8vYW5kcmV5Z2VyYzExLW11c2ljLXNpdGUub25yZW5kZXIuY29tL3N1Y2Nlc3MtZG93bmxvYWQuaHRtbCJ9&signature=ГЕНЕРУЄТЬСЯ_В_КАБІНЕТІ" class="btn-pay-option btn-liqpay">ОПЛАТИТИ КАРТКОЮ (LiqPay)</a>
-
-        <a href="https://send.monobank.ua/jar/9UrhoP4T7P" target="_blank" class="btn-pay-option btn-mono">MONOBANK (Посилання в подяці)</a>
+        <a href="https://send.monobank.ua/jar/9UrhoP4T7P" target="_blank" class="btn-action">
+            <i class="fas fa-university"></i> Оплатити через Monobank
+        </a>
         
-        <button onclick="document.getElementById('payOverlay').style.display='none'" style="background:none; border:none; color:#555; margin-top:20px; cursor:pointer; text-transform:uppercase; font-size:0.7rem;">Скасувати</button>
+        <button onclick="document.getElementById('payOverlay').style.display='none'" style="background:none; border:none; color:#555; margin-top:20px; cursor:pointer; text-transform:uppercase; font-size:0.7rem; font-weight:bold;">Скасувати</button>
     </div>
 </div>
 
@@ -78,7 +77,7 @@
                 container.appendChild(card);
             });
         } catch (e) {
-            container.innerHTML = "<p>Помилка завантаження.</p>";
+            container.innerHTML = "<p style='text-align:center;'>Помилка завантаження.</p>";
         }
     }
     getMusic();
