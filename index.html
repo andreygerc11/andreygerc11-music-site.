@@ -1,244 +1,264 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Голос проти раку | Андрій Герц</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Голос проти раку | Андрій Герц</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
-    <style>
-        :root {
-            --accent: #ff4d4d;
-            --dark: #0a0a0b;
-            --glass: rgba(0, 0, 0, 0.85);
-            --text: #ffffff;
-        }
+    <style>
+        :root {
+            --accent: #ff4d4d;
+            --dark: #0a0a0b;
+            --glass: rgba(0, 0, 0, 0.85);
+            --text: #ffffff;
+        }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: var(--dark);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
 
-        /* Відео-фон */
-        .hero {
-            position: relative;
-            height: 100vh;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            text-align: center;
-        }
+        /* Відео-фон */
+        .hero {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-align: center;
+            background: #000;
+        }
 
-        #bg-video {
-            position: absolute;
-            top: 50%; left: 50%;
-            min-width: 100%; min-height: 100%;
-            transform: translate(-50%, -50%);
-            z-index: -1;
-            filter: brightness(0.4) contrast(1.1);
-            object-fit: cover;
-        }
+        #bg-video {
+            position: absolute;
+            top: 50%; left: 50%;
+            min-width: 100%; min-height: 100%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            filter: brightness(0.4) contrast(1.1);
+            object-fit: cover;
+        }
 
-        .hero-content {
-            z-index: 1;
-            padding: 20px;
-            max-width: 900px;
-        }
+        .hero-content {
+            z-index: 1;
+            padding: 20px;
+            max-width: 900px;
+        }
 
-        .hero-title {
-            font-size: clamp(2.5rem, 8vw, 5rem);
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            background: linear-gradient(to right, #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            text-shadow: 0 0 30px rgba(255, 77, 77, 0.5);
-        }
+        .hero-title {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 77, 77, 0.5);
+        }
 
-        .hero-subtitle {
-            font-size: clamp(1rem, 3vw, 1.4rem);
-            font-weight: 300;
-            margin-bottom: 40px;
-            color: #eee;
-        }
+        .hero-subtitle {
+            font-size: clamp(1rem, 3vw, 1.4rem);
+            font-weight: 300;
+            margin-bottom: 40px;
+            color: #eee;
+        }
 
-        /* ГРУПА КНОПОК */
-        .btn-group { 
-            display: flex; 
-            gap: 20px; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-        }
+        .btn-group { 
+            display: flex; 
+            gap: 20px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        }
 
-        .btn {
-            padding: 18px 35px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            transition: all 0.4s ease;
-            display: inline-block;
-        }
+        .btn {
+            padding: 18px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: all 0.4s ease;
+            display: inline-block;
+        }
 
-        .btn-main { 
-            background: var(--accent); 
-            color: white; 
-            box-shadow: 0 10px 20px rgba(255, 77, 77, 0.4); 
-            border: 2px solid var(--accent);
-        }
-        
-        .btn-main:hover { 
-            transform: translateY(-5px); 
-            background: white; 
-            color: var(--accent); 
-        }
+        .btn-main { 
+            background: var(--accent); 
+            color: white; 
+            box-shadow: 0 10px 20px rgba(255, 77, 77, 0.4); 
+            border: 2px solid var(--accent);
+        }
+        
+        .btn-main:hover { 
+            transform: translateY(-5px); 
+            background: white; 
+            color: var(--accent); 
+        }
 
-        .btn-outline { 
-            border: 2px solid white; 
-            color: white; 
-            backdrop-filter: blur(10px);
-        }
+        .btn-outline { 
+            border: 2px solid white; 
+            color: white; 
+            backdrop-filter: blur(10px);
+        }
 
-        .btn-outline:hover { 
-            background: white; 
-            color: var(--dark); 
-            transform: translateY(-5px);
-        }
+        .btn-outline:hover { 
+            background: white; 
+            color: var(--dark); 
+            transform: translateY(-5px);
+        }
 
-        /* КОНТЕНТ */
-        section { padding: 80px 20px; max-width: 1100px; margin: auto; }
+        section { padding: 80px 20px; max-width: 1100px; margin: auto; }
 
-        .glass-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 40px;
-            border-radius: 35px;
-            margin-top: -100px;
-            position: relative;
-            z-index: 10;
-        }
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 35px;
+            margin-top: -100px;
+            position: relative;
+            z-index: 10;
+        }
 
-        h2 { font-size: 1.8rem; margin: 35px 0 20px; color: var(--accent); text-transform: uppercase; }
-        h2:first-child { margin-top: 0; }
+        h2 { font-size: 1.8rem; margin: 35px 0 20px; color: var(--accent); text-transform: uppercase; }
+        h2:first-child { margin-top: 0; }
 
-        p { margin-bottom: 15px; font-size: 1.1rem; color: #ddd; }
+        p { margin-bottom: 15px; font-size: 1.1rem; color: #ddd; }
 
-        .quote {
-            border-left: 4px solid var(--accent);
-            padding-left: 20px;
-            font-style: italic;
-            margin: 30px 0;
-            color: #fff;
-        }
+        .quote {
+            border-left: 4px solid var(--accent);
+            padding-left: 20px;
+            font-style: italic;
+            margin: 30px 0;
+            color: #fff;
+        }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin: 40px 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin: 40px 0; }
 
-        .info-item {
-            background: rgba(255,255,255,0.05);
-            padding: 30px;
-            border-radius: 20px;
-            border-bottom: 3px solid var(--accent);
-        }
+        .info-item {
+            background: rgba(255,255,255,0.05);
+            padding: 30px;
+            border-radius: 20px;
+            border-bottom: 3px solid var(--accent);
+        }
 
-        .info-item h3 { margin-bottom: 10px; color: #fff; }
+        .info-item h3 { margin-bottom: 10px; color: #fff; }
 
-        .rekv-list { list-style: none; margin-top: 20px; }
-        .rekv-list li {
-            padding: 15px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            font-family: monospace;
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.1rem;
-            flex-wrap: wrap;
-        }
+        audio { width: 100%; margin-top: 15px; }
 
-        .bank-label { color: #ffcc00; font-weight: bold; margin-right: 10px; }
+        .rekv-list { list-style: none; margin-top: 20px; }
+        .rekv-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            flex-wrap: wrap;
+        }
 
-        footer { text-align: center; padding: 60px 20px; color: #555; font-size: 0.9rem; }
-        
-        @media (max-width: 600px) {
-            .glass-card { padding: 25px; margin-top: -50px; }
-            .rekv-list li { font-size: 0.9rem; }
-        }
-    </style>
+        .bank-label { color: #ffcc00; font-weight: bold; margin-right: 10px; }
+
+        footer { text-align: center; padding: 60px 20px; color: #555; font-size: 0.9rem; }
+        
+        @media (max-width: 600px) {
+            .glass-card { padding: 25px; margin-top: -50px; }
+            .rekv-list li { font-size: 0.9rem; }
+        }
+    </style>
 </head>
 <body>
 
 <header class="hero">
-    <video autoplay muted loop playsinline id="bg-video">
-        <source src="grok_video_2026-01-25-18-39-38.mp4" type="video/mp4">
-    </video>
+    <video autoplay muted loop playsinline id="bg-video">
+        <source src="grok_video_2026-01-25-18-39-38.mp4" type="video/mp4">
+    </video>
 
-    <div class="hero-content" data-aos="zoom-out">
-        <h1 class="hero-title">Голос проти раку</h1>
-        <p class="hero-subtitle">Мій бій триває — і в шпиталі, і в строю. Я не складаю зброю і залишаюся на службі до нашої Перемоги.</p>
-        
-        <div class="btn-group">
-            <a href="#support" class="btn btn-main">Підтримати проєкт</a>
-            <a href="music.html" class="btn btn-outline">Слухати музику</a>
-        </div>
-    </div>
+    <div class="hero-content" data-aos="zoom-out">
+        <h1 class="hero-title">Голос проти раку</h1>
+        <p class="hero-subtitle">Мій бій триває — і в шпиталі, і в строю. Я не складаю зброю і залишаюся на службі до нашої Перемоги.</p>
+        
+        <div class="btn-group">
+            <a href="#support" class="btn btn-main">Підтримати проєкт</a>
+            <a href="music.html" class="btn btn-outline">Слухати музику</a>
+        </div>
+    </div>
 </header>
 
 <section id="about">
-    <div class="glass-card" data-aos="fade-up">
-        <h2>Мій бій за життя</h2>
-        <p>Вітаю. Я — автор пісень і військовослужбовець, який зараз веде власну війну з важким діагнозом — раком крові. Мені пощастило більше, ніж багатьом: хворобу виявили випадково і на ранній стадії. Це дає мені реальний шанс не просто вистояти, а й бути корисним іншим.</p>
-        
-        <p><strong>Я не збираюся залишати армію.</strong> Попри діагноз, я продовжую службу і буду залишатися в строю до кінця війни. Але я бачу іншу сторону цієї біди.</p>
+    <div class="glass-card" data-aos="fade-up">
+        <h2>Мій бій за життя</h2>
+        <p>Вітаю. Я — автор пісень і військовослужбовець, який зараз веде власну війну з раком крові. Мені пощастило більше, ніж багатьом: хворобу виявили випадково і на ранній стадії. Це дає мені реальний шанс не просто вистояти, а й допомогти іншим побороти цю хворобу.</p>
+        
+        <p><strong>Я не збираюся залишати армію.</strong> Попри діагноз, я продовжую службу і буду залишатися в строю до нашої Перемоги. Але я бачу іншу сторону цієї біди.</p>
 
-        <div class="grid">
-            <div class="info-item">
-                <i class="fas fa-heart-broken fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
-                <h3>Забуті герої</h3>
-                <p>Багато побратимів після списання за станом здоров'я залишаються сам на сам із хворобою, без жодної підтримки.</p>
-            </div>
-            <div class="info-item">
-                <i class="fas fa-music fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
-                <h3>Творча сповідь</h3>
-                <p>Тут я розміщую свої пісні. Кожен ваш донат за музику — це внесок у лікування онкохворих захисників.</p>
-            </div>
-        </div>
+        <div class="grid">
+            <div class="info-item">
+                <i class="fas fa-heart-broken fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
+                <h3>Забуті герої</h3>
+                <p>Багато побратимів після списання за станом здоров'я залишаються сам на сам із хворобою, без жодної підтримки.</p>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-laptop fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
+                <h3>Стартовий пакет</h3>
+                <p>Я створюю цей сайт сам, але мені потрібен ноутбук, щоб працювати в шпиталі та техніка для запису. Це інструмент для допомоги іншим.</p>
+            </div>
+        </div>
 
-        <p>Я створюю цей сайт самотужки, щоб він став інструментом допомоги. Для роботи в умовах лікарні мені потрібен «стартовий пакет»: ноутбук для розробки, техніка для запису та ресурси на медикаменти.</p>
+        <div class="quote">
+            "Будь-яка ваша підтримка — це мій шанс не просто вистояти, а й допомогти іншим з цією хворобою."
+        </div>
 
-        <div class="quote">
-            "Я не прошу просто «на життя» — я прошу допомогти збудувати інструмент, який працюватиме для тих, кого суспільство часто перестає помічати."
-        </div>
+        <h2 id="music">Музика проєкту</h2>
+        <div class="grid">
+            <div class="info-item">
+                <h3>Ланцюг добра (Ч. 1)</h3>
+                <audio controls>
+                    <source src="Ланцюг добра (Remastered) (1).mp3" type="audio/mpeg">
+                </audio>
+            </div>
+            <div class="info-item">
+                <h3>Ланцюг добра (Ч. 2)</h3>
+                <audio controls>
+                    <source src="Ланцюг добра (Remastered) (2).mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
 
-        <h2 id="support">Реквізити для підтримки</h2>
-        <p>Будь-яка допомога — це мій шанс вистояти і допомогти іншим побороти цю хворобу.</p>
-        <ul class="rekv-list">
-            <li><span><span class="bank-label">Monobank:</span> 4441 1110 0278 2815</span></li>
-            <li><span><span class="bank-label">ПУМБ:</span> 4314 1402 0779 7173</span></li>
-            <li><span><span class="bank-label">Credit Agricole:</span> 5167 5904 1488 3718</span></li>
-            <li><span><span class="bank-label">PayPal:</span> andriyherts11@gmail.com</span></li>
-        </ul>
-    </div>
+        <h2 id="support">Реквізити для допомоги</h2>
+        <ul class="rekv-list">
+            <li><span><span class="bank-label">Monobank:</span> 4441 1110 0278 2815</span></li>
+            <li><span><span class="bank-label">PayPal:</span> andriyherts11@gmail.com</span></li>
+            <li><span><span class="bank-label">ПУМБ:</span> 4314 1402 0779 7173</span></li>
+            <li><span><span class="bank-label">Credit Agricole:</span> 5167 5904 1488 3718</span></li>
+        </ul>
+    </div>
 </section>
 
 <footer>
-    <p>© 2026 Проєкт «Голос проти раку». Андрій Герц. Слава Україні! 🇺🇦</p>
+    <p>© 2026 Проєкт «Голос проти раку». Андрій Герц. Слава Україні! 🇺🇦</p>
 </footer>
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-  AOS.init({ duration: 1000, once: true });
+    AOS.init({ duration: 1000, once: true });
+    window.addEventListener('load', function() {
+        var video = document.getElementById('bg-video');
+        video.play().catch(function(error) {
+            console.log("Автозапуск заблоковано браузером");
+        });
+    });
 </script>
 
 </body>
