@@ -7,105 +7,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { 
-            --accent: #ff4d4d; 
-            --dark: #0a0a0b; 
-            --card-bg: #161618;
-        }
-
+        :root { --accent: #ff4d4d; --dark: #0a0a0b; --card: #161618; --success: #4dff8c; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Montserrat', sans-serif; 
-            background: var(--dark); 
-            color: #fff; 
-            background: radial-gradient(circle at top right, #1a1a1d, #0a0a0b);
-            min-height: 100vh;
-        }
+        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; line-height: 1.6; background: radial-gradient(circle at top right, #1a1a1d, #0a0a0b); min-height: 100vh; }
         
-        .header-nav { padding: 40px 20px; text-align: center; background: rgba(21, 21, 21, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 100; }
-        .btn-back { text-decoration: none; color: #fff; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; border: 1px solid var(--accent); padding: 10px 25px; border-radius: 50px; transition: 0.4s; display: inline-block; margin-bottom: 20px; }
+        .header-nav { padding: 40px 20px; text-align: center; background: rgba(21, 21, 21, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 100; }
+        .btn-back { text-decoration: none; color: #fff; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; border: 1px solid var(--accent); padding: 10px 25px; border-radius: 50px; transition: 0.3s; display: inline-block; margin-bottom: 15px; }
         .btn-back:hover { background: var(--accent); }
-
-        .container { max-width: 700px; margin: auto; padding: 40px 20px; }
-
-        .music-card { 
-            background: var(--card-bg); 
-            border-radius: 24px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255,255,255,0.05);
-            border-left: 5px solid var(--accent);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        h3 { margin-bottom: 20px; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; }
-        h3 i { margin-right: 12px; color: var(--accent); }
         
-        .player-wrapper {
-            width: 100%;
-            height: 54px;
-            background: #222;
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+        .container { max-width: 800px; margin: auto; padding: 40px 20px; }
+        .music-card { background: var(--card); border-radius: 24px; padding: 25px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid var(--accent); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+        h3 { font-size: 1.1rem; font-weight: 700; flex: 1; }
+        
+        .btn-buy-trigger { background: var(--accent); color: #fff; border: none; padding: 12px 22px; border-radius: 50px; font-weight: 900; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .btn-buy-trigger:hover { transform: scale(1.05); background: #fff; color: var(--accent); }
+        
+        .player-wrapper { width: 100%; height: 54px; background: #222; border-radius: 14px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.05); }
+        iframe { width: 100%; height: 160px; border: none; position: absolute; top: -53px; filter: invert(0.9) hue-rotate(180deg); }
+        
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(12px); padding: 20px; }
+        .modal { background: #1c1c1e; width: 100%; max-width: 450px; border-radius: 32px; padding: 40px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        
+        .rekv-box { text-align: left; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; margin: 20px 0; border: 1px solid rgba(255,255,255,0.1); }
+        .rekv-item { margin-bottom: 10px; font-family: monospace; font-size: 0.95rem; color: var(--success); }
+        .rekv-label { font-size: 0.65rem; color: #888; text-transform: uppercase; display: block; margin-bottom: 2px; }
 
-        iframe {
-            width: 100%;
-            height: 160px;
-            border: none;
-            position: absolute;
-            top: -53px; 
-            filter: invert(0.9) hue-rotate(180deg);
-        }
-
-        /* Блокувальник */
-        .blocker {
-            display: none; /* З'являється через JS */
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 11, 0.98);
-            z-index: 100;
-            padding: 20px;
-            text-align: center;
-            backdrop-filter: blur(8px);
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .buy-msg-text { font-weight: 900; color: var(--accent); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 10px; }
-
-        .btn-buy { 
-            display: inline-block; 
-            background: var(--accent); 
-            color: #fff; 
-            text-transform: uppercase; 
-            text-decoration: none; 
-            padding: 12px 25px; 
-            border-radius: 50px; 
-            font-weight: 900; 
-            font-size: 0.8rem; 
-            cursor: pointer;
-            border: none;
-        }
-
-        /* Секція після "покупки" */
-        .download-zone {
-            display: none;
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(77, 255, 140, 0.1);
-            border: 1px solid #4dff8c;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .btn-download { color: #4dff8c; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
-
-        #loader { text-align: center; padding: 100px 0; color: var(--accent); }
+        .btn-action { background: #4dff8c; color: #000; padding: 16px; border-radius: 50px; display: block; text-decoration: none; font-weight: 900; text-transform: uppercase; font-size: 0.85rem; margin-top: 15px; transition: 0.3s; }
+        .btn-action:hover { background: #fff; transform: translateY(-3px); }
+        .btn-tg { background: #0088cc; color: #fff; padding: 12px; border-radius: 50px; display: block; text-decoration: none; font-weight: 700; margin-top: 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -116,86 +47,63 @@
 </div>
 
 <div class="container" id="music-container">
-    <div id="loader">
-        <i class="fas fa-compact-disc fa-spin fa-3x"></i>
-        <p style="margin-top: 20px;">ЗАВАНТАЖЕННЯ...</p>
+    <p style="text-align:center;">Отримання списку треків...</p>
+</div>
+
+<div class="overlay" id="payOverlay">
+    <div class="modal">
+        <h2 style="color:var(--accent); text-transform:uppercase; margin-bottom:10px;">Придбати трек</h2>
+        <p style="font-size:0.85rem; opacity:0.8;">Вартість — <b>200 грн</b>. Оплатіть на Банку «На ліки» та надішліть скріншот у Telegram для отримання файлу.</p>
+        
+        <div class="rekv-box">
+            <div class="rekv-item"><span class="rekv-label">Monobank (Андрій Г.)</span>4441 1110 0278 2815</div>
+            <div class="rekv-item" style="border:none;"><span class="rekv-label">PayPal</span>andriyherts11@gmail.com</div>
+        </div>
+
+        <a href="https://send.monobank.ua/jar/9UrhoP4T7P" target="_blank" class="btn-action">
+            <i class="fas fa-wallet"></i> ПЕРЕЙТИ ДО ОПЛАТИ
+        </a>
+        
+        <a href="https://t.me/andriyherts" target="_blank" class="btn-tg">
+            <i class="fab fa-telegram-plane"></i> ПІДТВЕРДИТИ В TELEGRAM
+        </a>
+        
+        <button onclick="document.getElementById('payOverlay').style.display='none'" style="background:none; border:none; color:#555; margin-top:20px; cursor:pointer; text-transform:uppercase; font-size:0.7rem; font-weight:bold;">Скасувати</button>
     </div>
 </div>
 
 <script>
     const apiURL = "https://script.google.com/macros/s/AKfycbwbNNLK7LAR-q0n7fgUrPvqOXsZLEWc2WHAZWrvE1-UUzVUy4wl3Ao14c9PrBXy72GS/exec";
-    const listenLimit = 45000; // 45 секунд
 
     async function getMusic() {
         const container = document.getElementById('music-container');
         try {
             const response = await fetch(apiURL);
             const data = await response.json();
-
-            if (!data || data.length === 0) {
-                container.innerHTML = "<p>Пісень не знайдено.</p>";
-                return;
-            }
-
-            container.innerHTML = ''; 
+            container.innerHTML = '';
 
             data.forEach(song => {
                 const card = document.createElement('div');
                 card.className = 'music-card';
-                card.id = `card-${song.id}`;
-                const embedSrc = `https://drive.google.com/file/d/${song.id}/preview`;
-                const directLink = `https://drive.google.com/uc?export=download&id=${song.id}`;
+                const embedUrl = `https://drive.google.com/file/d/${song.id}/preview`;
                 
                 card.innerHTML = `
-                    <h3><i class="fas fa-play-circle"></i> ${song.name}</h3>
-                    <div class="player-wrapper" id="wrapper-${song.id}">
-                        <iframe src="${embedSrc}" allow="autoplay" id="iframe-${song.id}"></iframe>
-                        <div class="blocker" id="blocker-${song.id}">
-                             <p class="buy-msg-text">⏱ ДЕМО-ВЕРСІЯ ЗАКІНЧИЛАСЬ</p>
-                             <p style="font-size: 0.8rem; margin-bottom: 15px; opacity: 0.8;">Щоб дослухати та завантажити пісню, натисніть кнопку нижче:</p>
-                             <a href="https://t.me/andriyherts" target="_blank" class="btn-buy" onclick="showDownload('${song.id}')">Придбати повну версію</a>
-                        </div>
+                    <div class="card-header">
+                        <h3>${song.name}</h3>
+                        <button class="btn-buy-trigger" onclick="document.getElementById('payOverlay').style.display='flex'">
+                            <i class="fas fa-lock"></i> 200 грн
+                        </button>
                     </div>
-                    <div class="download-zone" id="download-${song.id}">
-                        <i class="fas fa-check-circle" style="color: #4dff8c;"></i> 
-                        <a href="${directLink}" class="btn-download" target="_blank">ЗАВАНТАЖИТИ ПОВНУ ПІСНЮ</a>
+                    <div class="player-wrapper">
+                        <iframe src="${embedUrl}"></iframe>
                     </div>
                 `;
                 container.appendChild(card);
-
-                // ЛОГІКА ТАЙМЕРА:
-                // Оскільки ми не знаємо, коли натиснуто Play в iframe, 
-                // ми запускаємо таймер при будь-якому кліку по картці.
-                card.addEventListener('mousedown', function startTimer() {
-                    console.log("Таймер запущено для: " + song.name);
-                    setTimeout(() => {
-                        // Показуємо блокувальник
-                        const blocker = document.getElementById(`blocker-${song.id}`);
-                        blocker.style.display = 'flex';
-                        
-                        // Видаляємо iframe, щоб музика фізично зупинилася
-                        const iframe = document.getElementById(`iframe-${song.id}`);
-                        if(iframe) iframe.remove();
-                        
-                        console.log("Час вичерпано. Плеєр видалено.");
-                    }, listenLimit);
-                }, { once: true });
             });
-
         } catch (e) {
-            container.innerHTML = "<p>Помилка завантаження.</p>";
+            container.innerHTML = "<p style='text-align:center;'>Помилка завантаження. Спробуйте оновити сторінку.</p>";
         }
     }
-
-    // Функція імітації появи посилання після кліку на "Купити"
-    function showDownload(id) {
-        // У реальному житті тут має бути перевірка оплати, 
-        // але зараз ми просто показуємо приховану кнопку завантаження.
-        setTimeout(() => {
-            document.getElementById(`download-${id}`).style.display = 'block';
-        }, 2000);
-    }
-
     getMusic();
 </script>
 </body>
