@@ -19,8 +19,9 @@
         h3 { font-size: 1.1rem; font-weight: 700; flex: 1; }
         .btn-buy { background: var(--accent); color: #fff; border: none; padding: 12px 22px; border-radius: 50px; font-weight: 900; font-size: 0.75rem; text-decoration: none; text-transform: uppercase; transition: 0.3s; display: inline-block; }
         .btn-buy:hover { background: #fff; color: var(--accent); transform: translateY(-2px); }
-        .player-wrapper { width: 100%; height: 54px; background: #222; border-radius: 14px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.05); }
-        iframe { width: 100%; height: 160px; border: none; position: absolute; top: -53px; filter: invert(0.9) hue-rotate(180deg); }
+        .player-wrapper { width: 100%; height: 54px; background: #222; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); }
+        iframe { width: 100%; height: 160px; border: none; filter: invert(0.9) hue-rotate(180deg); }
+        .play-btn { background: none; border: none; color: #fff; cursor: pointer; font-size: 1rem; width: 100%; height: 100%; font-family: 'Montserrat', sans-serif; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -54,16 +55,24 @@
                             <i class="fas fa-lock"></i> 200 грн
                         </a>
                     </div>
-                    <div class="player-wrapper">
-                        <iframe src="https://drive.google.com/file/d/${song.id}/preview"></iframe>
+                    <div class="player-wrapper" id="player-${song.id}">
+                        <button class="play-btn" onclick="loadPlayer('${song.id}')">
+                            <i class="fas fa-play"></i> СЛУХАТИ ПРЕВ'Ю
+                        </button>
                     </div>
                 `;
                 container.appendChild(card);
             });
         } catch (e) {
-            container.innerHTML = "<p style='text-align:center;'>Музика тимчасово недоступна. Оновіть сторінку пізніше.</p>";
+            container.innerHTML = "<p style='text-align:center;'>Музика тимчасово недоступна.</p>";
         }
     }
+
+    function loadPlayer(id) {
+        const wrapper = document.getElementById('player-' + id);
+        wrapper.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allow="autoplay"></iframe>`;
+    }
+
     getMusic();
 </script>
 </body>
