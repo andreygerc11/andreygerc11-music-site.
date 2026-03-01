@@ -75,29 +75,109 @@
             color: #eee;
         }
 
-        /* Кнопки */
-        .btn-group { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .btn { padding: 18px 35px; border-radius: 50px; text-decoration: none; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; transition: all 0.4s ease; display: inline-block; }
-        .btn-main { background: var(--accent); color: white; box-shadow: 0 10px 20px rgba(255, 77, 77, 0.4); border: 2px solid var(--accent); }
-        .btn-main:hover { transform: translateY(-5px); background: white; color: var(--accent); }
-        .btn-outline { border: 2px solid white; color: white; backdrop-filter: blur(10px); }
-        .btn-outline:hover { background: white; color: var(--dark); transform: translateY(-5px); }
+        /* ГРУПА КНОПОК */
+        .btn-group { 
+            display: flex; 
+            gap: 20px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        }
 
-        /* Контент */
+        .btn {
+            padding: 18px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: all 0.4s ease;
+            display: inline-block;
+        }
+
+        .btn-main { 
+            background: var(--accent); 
+            color: white; 
+            box-shadow: 0 10px 20px rgba(255, 77, 77, 0.4); 
+            border: 2px solid var(--accent);
+        }
+        
+        .btn-main:hover { 
+            transform: translateY(-5px); 
+            background: white; 
+            color: var(--accent); 
+        }
+
+        .btn-outline { 
+            border: 2px solid white; 
+            color: white; 
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-outline:hover { 
+            background: white; 
+            color: var(--dark); 
+            transform: translateY(-5px);
+        }
+
+        /* КОНТЕНТ */
         section { padding: 80px 20px; max-width: 1100px; margin: auto; }
-        .glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 40px; border-radius: 35px; margin-top: -100px; position: relative; z-index: 10; }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 35px;
+            margin-top: -100px;
+            position: relative;
+            z-index: 10;
+        }
+
         h2 { font-size: 1.8rem; margin: 35px 0 20px; color: var(--accent); text-transform: uppercase; }
+        h2:first-child { margin-top: 0; }
+
         p { margin-bottom: 15px; font-size: 1.1rem; color: #ddd; }
+
+        .quote {
+            border-left: 4px solid var(--accent);
+            padding-left: 20px;
+            font-style: italic;
+            margin: 30px 0;
+            color: #fff;
+        }
+
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin: 40px 0; }
-        .info-item { background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; border-bottom: 3px solid var(--accent); }
+
+        .info-item {
+            background: rgba(255,255,255,0.05);
+            padding: 30px;
+            border-radius: 20px;
+            border-bottom: 3px solid var(--accent);
+        }
+
+        .info-item h3 { margin-bottom: 10px; color: #fff; }
+
         audio { width: 100%; margin-top: 15px; }
-        
+
         .rekv-list { list-style: none; margin-top: 20px; }
-        .rekv-list li { padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-family: monospace; display: flex; justify-content: space-between; font-size: 1.1rem; flex-wrap: wrap; }
+        .rekv-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            flex-wrap: wrap;
+        }
+
         .bank-label { color: #ffcc00; font-weight: bold; margin-right: 10px; }
-        
-        .quote { border-left: 4px solid var(--accent); padding-left: 20px; font-style: italic; margin: 30px 0; color: #fff; }
+
         footer { text-align: center; padding: 60px 20px; color: #555; font-size: 0.9rem; }
+        
+        @media (max-width: 600px) {
+            .glass-card { padding: 25px; margin-top: -50px; }
+            .rekv-list li { font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body>
@@ -106,12 +186,14 @@
     <video autoplay muted loop playsinline id="bg-video">
         <source src="hero-bg.mp4" type="video/mp4">
     </video>
+
     <div class="hero-content" data-aos="zoom-out">
         <h1 class="hero-title">Голос проти раку</h1>
         <p class="hero-subtitle">Мій бій триває — і в шпиталі, і в строю. Я не списаний і залишаюся на службі до нашої Перемоги.</p>
+        
         <div class="btn-group">
             <a href="#support" class="btn btn-main">Підтримати проєкт</a>
-            <a href="#music" class="btn btn-outline">Слухати музику</a>
+            <a href="music.html" class="btn btn-outline">Слухати музику</a>
         </div>
     </div>
 </header>
@@ -121,7 +203,7 @@
         <h2>Мій бій за життя</h2>
         <p>Вітаю. Я — автор пісень і військовослужбовець, який зараз веде власну війну з раком крові. Мені пощастило більше, ніж багатьом: хворобу виявили випадково і на ранній стадії. Це дає мені реальний шанс не просто вистояти, а й допомогти іншим побороти цю хворобу.</p>
         
-        <p><strong>Я не збираюся залишати армію.</strong> Попри діагноз, я продовжую службу і буду залишатися в строю до кінця війни. Але я бачу іншу сторону цієї біди.</p>
+        <p><strong>Я не збираюся залишати армію.</strong> Попри діагноз, я продовжую службу і буду залишатися в строю до нашої Перемоги. Але я бачу іншу сторону цієї біди.</p>
 
         <div class="grid">
             <div class="info-item">
@@ -176,7 +258,7 @@
     window.addEventListener('load', function() {
         var video = document.getElementById('bg-video');
         video.play().catch(function(error) {
-            console.log("Автозапуск заблоковано");
+            console.log("Автозапуск заблоковано браузером");
         });
     });
 </script>
