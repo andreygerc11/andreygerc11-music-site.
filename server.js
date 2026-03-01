@@ -5,7 +5,6 @@ const app = express();
 
 app.use(cors());
 
-// ТВОЄ ОСТАННЄ ПОСИЛАННЯ БЕЗ ПОМИЛОК
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzckoWMzXxnM77giiiGoL9yXe_DTZ0YX7dRRNLJCjAqVBFEqYDvmAMAr5RBrJq7iQwn/exec";
 
 app.get('/api/music', async (req, res) => {
@@ -18,4 +17,4 @@ app.get('/api/music', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Сервер працює на порту ${PORT}`));
+app.listen(PORT, () => console.log(`Сервер працює`));
