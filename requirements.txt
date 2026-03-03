@@ -1,4 +1,4 @@
-aiogram==3.17.0
-python-dotenv==1.0.1
-google-api-python-client==2.160.0
-flask==3.0.3
+aiogram
+python-dotenv
+google-api-python-client
+flask
