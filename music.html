@@ -52,11 +52,10 @@
                 const card = document.createElement('div');
                 card.className = 'music-card';
                 
-                // ТУТ ВАЖЛИВО: використовуємо ТІЛЬКИ song.payUrl, який приходить з сервера
                 card.innerHTML = `
                     <div class="card-header">
                         <h3>${song.name}</h3>
-                        <a href="${song.payUrl}" target="_blank" class="btn-buy">Купити за 200 грн</a>
+                        <a href="https://t.me/golosprotyraku_bot?start=buy_${song.id}" target="_blank" class="btn-buy">Купити за 50 грн</a>
                     </div>
                     <div class="player-wrapper" id="player-${song.id}">
                         <button class="play-btn" onclick="loadPlayer('${song.id}')">СЛУХАТИ ПРЕВ'Ю</button>
