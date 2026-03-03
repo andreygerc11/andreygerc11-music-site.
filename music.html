@@ -9,36 +9,62 @@
         :root { --accent: #ff4d4d; --dark: #0a0a0b; --card: #161618; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; min-height: 100vh; }
+        
         .header-nav { padding: 40px 20px; text-align: center; background: #151515; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .btn-back { text-decoration: none; color: #fff; border: 1px solid var(--accent); padding: 10px 25px; border-radius: 50px; display: inline-block; margin-bottom: 15px; }
-        .container { max-width: 800px; margin: auto; padding: 40px 20px; }
+        .btn-back { text-decoration: none; color: #fff; border: 1px solid var(--accent); padding: 10px 25px; border-radius: 50px; display: inline-block; margin-bottom: 15px; transition: 0.3s; }
+        .btn-back:hover { background: var(--accent); }
+
+        .container { max-width: 800px; margin: auto; padding: 20px; }
+
+        /* Блок інструкції */
+        .instructions { background: rgba(255, 77, 77, 0.1); border: 1px dashed var(--accent); border-radius: 20px; padding: 20px; margin-bottom: 40px; }
+        .instructions h2 { font-size: 1.2rem; margin-bottom: 15px; color: var(--accent); text-transform: uppercase; }
+        .instructions ol { padding-left: 20px; line-height: 1.6; }
+        .instructions li { margin-bottom: 10px; color: #ccc; }
+        .instructions b { color: #fff; }
+
         .music-card { background: var(--card); border-radius: 24px; padding: 25px; margin-bottom: 30px; border-left: 5px solid var(--accent); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .btn-buy { background: var(--accent); color: #fff; padding: 12px 22px; border-radius: 50px; text-decoration: none; font-weight: 900; white-space: nowrap; }
-        .player-wrapper { width: 100%; min-height: 54px; background: #222; border-radius: 14px; margin-top: 20px; overflow: hidden; }
-        iframe { width: 100%; height: 160px; border: none; filter: invert(0.9) hue-rotate(180deg); }
-        .play-btn { background: none; border: none; color: #fff; cursor: pointer; width: 100%; padding: 15px; font-weight: 700; font-family: inherit; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+        .card-header h3 { font-size: 1.1rem; flex-grow: 1; }
+        
+        .btn-buy { background: var(--accent); color: #fff; padding: 12px 22px; border-radius: 50px; text-decoration: none; font-weight: 900; white-space: nowrap; transition: 0.3s; font-size: 0.9rem; }
+        .btn-buy:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255, 77, 77, 0.3); }
+
+        .player-wrapper { width: 100%; min-height: 54px; background: #222; border-radius: 14px; margin-top: 20px; overflow: hidden; position: relative; }
+        iframe { width: 100%; height: 160px; border: none; filter: invert(0.9) hue-rotate(180deg); display: block; }
+        
+        .play-btn { background: none; border: none; color: #fff; cursor: pointer; width: 100%; padding: 15px; font-weight: 700; font-family: inherit; font-size: 1rem; }
     </style>
 </head>
 <body>
 
 <div class="header-nav">
-    <a href="index.html" class="btn-back">На головну</a>
+    <a href="index.html" class="btn-back">← На головну</a>
     <h1>Музична Сповідь</h1>
 </div>
 
-<div class="container" id="music-container">
-    <p style="text-align:center;">Оновлюємо список пісень та посилання...</p>
+<div class="container">
+    <div class="instructions">
+        <h2>Як отримати повну версію:</h2>
+        <ol>
+            <li>Прослухайте <b>Прев'ю</b> треку в плеєрі нижче.</li>
+            <li>Натисніть кнопку <b>"Придбати"</b> — вас перекине в наш офіційний Telegram-бот.</li>
+            <li>Дотримуйтесь інструкцій у боті для оплати через Monobank (<b>50 грн</b>).</li>
+            <li>Після оплати бот автоматично надішле вам <b>посилання на скачування</b> повної версії у форматі MP3.</li>
+        </ol>
+    </div>
+
+    <div id="music-container">
+        <p style="text-align:center;">Завантаження списку пісень...</p>
+    </div>
 </div>
 
 <script>
-    // Твій сервер на Render
     const apiURL = "https://andreygerc11-music-site.onrender.com/api/music";
 
     async function getMusic() {
         const container = document.getElementById('music-container');
         try {
-            // Додаємо ?nocache= з часом, щоб браузер НЕ БРАВ СТАРІ ПОСИЛАННЯ з пам'яті
             const response = await fetch(apiURL + "?nocache=" + new Date().getTime());
             const data = await response.json();
             
@@ -52,10 +78,11 @@
                 const card = document.createElement('div');
                 card.className = 'music-card';
                 
+                // Кнопка тепер веде в БОТ за посиланням з bot.py
                 card.innerHTML = `
                     <div class="card-header">
                         <h3>${song.name}</h3>
-                        <a href="https://t.me/golosprotyraku_bot?start=buy_${song.id}" target="_blank" class="btn-buy">Купити за 50 грн</a>
+                        <a href="https://t.me/golosprotyraku_bot?start=buy_${song.id}" target="_blank" class="btn-buy">Придбати (50 грн)</a>
                     </div>
                     <div class="player-wrapper" id="player-${song.id}">
                         <button class="play-btn" onclick="loadPlayer('${song.id}')">СЛУХАТИ ПРЕВ'Ю</button>
@@ -64,16 +91,16 @@
                 container.appendChild(card);
             });
         } catch (e) {
-            container.innerHTML = "<p style='text-align:center;'>Помилка завантаження. Спробуйте оновити сторінку через Ctrl+F5.</p>";
+            container.innerHTML = "<p style='text-align:center;'>Помилка зв'язку. Спробуйте оновити сторінку.</p>";
         }
     }
 
     function loadPlayer(id) {
         const wrapper = document.getElementById('player-' + id);
+        // Відображаємо плеєр Google Drive для прослуховування прямо на сторінці
         wrapper.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview"></iframe>`;
     }
 
-    // Запускаємо завантаження
     getMusic();
 </script>
 </body>
