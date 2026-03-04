@@ -8,25 +8,121 @@
     <style>
         :root { --accent: #ff4d4d; --dark: #0a0a0b; --card: #161618; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: #fff; min-height: 100vh; }
-        .header-nav { padding: 40px 20px; text-align: center; background: #151515; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .btn-back { text-decoration: none; color: #fff; border: 1px solid var(--accent); padding: 10px 25px; border-radius: 50px; display: inline-block; margin-bottom: 15px; }
-        .container { max-width: 800px; margin: auto; padding: 20px; }
         
-        /* Блок опису */
-        .download-info { background: var(--card); border: 1px solid var(--accent); border-radius: 15px; padding: 20px; margin-bottom: 30px; }
-        .download-info h2 { color: var(--accent); font-size: 1.1rem; margin-bottom: 10px; }
-        .download-info p { font-size: 0.9rem; line-height: 1.4; color: #ccc; }
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background: var(--dark); 
+            color: #fff; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-        .music-card { background: var(--card); border-radius: 24px; padding: 25px; margin-bottom: 30px; border-left: 5px solid var(--accent); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; }
+        /* Анімація появи */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header-nav { 
+            padding: 40px 20px; 
+            text-align: center; 
+            background: #151515; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+        }
+
+        .btn-back { 
+            text-decoration: none; 
+            color: #fff; 
+            border: 1px solid var(--accent); 
+            padding: 10px 25px; 
+            border-radius: 50px; 
+            display: inline-block; 
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+        .btn-back:hover { background: var(--accent); }
+
+        .container { max-width: 1000px; margin: auto; padding: 20px; }
         
-        /* Тільки одна кнопка */
-        .btn-buy { background: var(--accent); color: #fff; padding: 12px 22px; border-radius: 50px; text-decoration: none; font-weight: 900; }
+        .download-info { 
+            background: var(--card); 
+            border: 1px solid var(--accent); 
+            border-radius: 15px; 
+            padding: 20px; 
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Сітка у два ряди */
+        #music-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
+            gap: 20px; 
+        }
+
+        .music-card { 
+            background: var(--card); 
+            border-radius: 20px; 
+            padding: 20px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.4s;
+            animation: fadeInUp 0.8s ease-out backwards;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .music-card:hover { 
+            transform: translateY(-5px); 
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px rgba(255, 77, 77, 0.1);
+        }
+
+        .card-header { margin-bottom: 15px; }
+        .card-header h3 { font-size: 1.1rem; margin-bottom: 10px; min-height: 44px; }
         
-        .player-wrapper { width: 100%; height: 54px; background: #222; border-radius: 14px; margin-top: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        iframe { width: 100%; height: 160px; border: none; filter: invert(0.9) hue-rotate(180deg); }
-        .play-btn { background: none; border: none; color: #fff; cursor: pointer; width: 100%; height: 100%; font-weight: 700; font-family: inherit; }
+        .btn-buy { 
+            background: var(--accent); 
+            color: #fff; 
+            padding: 10px 0; 
+            border-radius: 12px; 
+            text-decoration: none; 
+            font-weight: 900; 
+            display: block;
+            text-align: center;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .btn-buy:hover { opacity: 0.8; }
+        
+        /* Менший плеєр */
+        .player-wrapper { 
+            width: 100%; 
+            height: 45px; 
+            background: #222; 
+            border-radius: 10px; 
+            margin-top: 15px; 
+            overflow: hidden; 
+        }
+        iframe { width: 100%; height: 120px; border: none; filter: invert(0.9) hue-rotate(180deg); margin-top: -38px; }
+        
+        .play-btn { 
+            background: #2a2a2c; 
+            border: none; 
+            color: #fff; 
+            cursor: pointer; 
+            width: 100%; 
+            height: 100%; 
+            font-weight: 700; 
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+        .play-btn:hover { background: #333; color: var(--accent); }
+
+        /* Мобільна адаптація */
+        @media (max-width: 600px) {
+            #music-container { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -38,10 +134,8 @@
 
 <div class="container">
     <div class="download-info">
-        <h2>ℹ️ Як завантажити трек?</h2>
-        <p>1. Послухайте прев'ю в плеєрі.<br>
-           2. Натисніть <b>"Придбати"</b> — вас перекине в Telegram-бот.<br>
-           3. Після оплати зачекайте 5 хвилин і бот надішле файл для скачування.</p>
+        <h2>ℹ️ Як отримати трек?</h2>
+        <p>Слухайте прев'ю, натискайте <b>"Придбати"</b>. Вас перекине в бот, де після оплати ви отримаєте посилання на файл.</p>
     </div>
 
     <div id="music-container">
@@ -59,16 +153,19 @@
             const data = await response.json();
             
             container.innerHTML = '';
-            data.forEach(song => {
+            data.forEach((song, index) => {
                 const card = document.createElement('div');
                 card.className = 'music-card';
+                // Додаємо затримку анімації для кожної картки
+                card.style.animationDelay = (index * 0.1) + 's';
+                
                 card.innerHTML = `
                     <div class="card-header">
                         <h3>${song.name}</h3>
                         <a href="https://t.me/golosprotyraku_bot?start=buy_${song.id}" target="_blank" class="btn-buy">Придбати</a>
                     </div>
                     <div class="player-wrapper" id="player-${song.id}">
-                        <button class="play-btn" onclick="loadPlayer('${song.id}')">СЛУХАТИ ПРЕВ'Ю</button>
+                        <button class="play-btn" onclick="loadPlayer('${song.id}')">▶ СЛУХАТИ ПРЕВ'Ю</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -80,6 +177,7 @@
 
     function loadPlayer(id) {
         const wrapper = document.getElementById('player-' + id);
+        // Використовуємо мінімальну висоту для компактності
         wrapper.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview"></iframe>`;
     }
 
