@@ -9,7 +9,7 @@ import os
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# === ДОДАНО ДЛЯ ТЕХПІДТРИМКИ ===
+# === ДОДАНО ДЛЯ ТЕХПІДТРИМКИ ТА САЙТУ ===
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import threading
@@ -31,28 +31,6 @@ dp = Dispatcher()
 # === НАЛАШТУВАННЯ СЕРВЕРА ДЛЯ САЙТУ ===
 app = Flask(__name__)
 CORS(app)
-
-@app.route('/api/support', methods=['POST'])
-def support_handler():
-    data = request.json
-    name = data.get('name', 'Анонім')
-    message = data.get('message', '')
-    
-    admin_text = f"📩 **Нове запитання з сайту!**\n\n👤 Від: {name}\n💬 Текст: {message}"
-    
-    # Відправка через прямий запит, щоб не конфліктувати з ботом
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    req = urllib.request.Request(url, method="POST")
-    req.add_header('Content-Type', 'application/json')
-    payload = json.dumps({"chat_id": ADMIN_ID, "text": admin_text}).encode('utf-8')
-    
-    try:
-        urllib.request.urlopen(req, data=payload)
-        return jsonify({"status": "ok"}), 200
-    except Exception as e:
-        logging.error(f"Помилка відправки техпідтримки: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-# ======================================
 
 FOLDER_ID = "1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j"
 PRICE = 50
@@ -85,6 +63,34 @@ def get_tracks():
         return []
 
 TRACKS = get_tracks()
+
+# === ШЛЯХ ДЛЯ МУЗИКИ (виправлення помилки 404) ===
+@app.route('/api/music', methods=['GET'])
+def music_api():
+    return jsonify(TRACKS)
+# =================================================
+
+# === ШЛЯХ ДЛЯ ТЕХПІДТРИМКИ ===
+@app.route('/api/support', methods=['POST'])
+def support_handler():
+    data = request.json
+    name = data.get('name', 'Анонім')
+    message = data.get('message', '')
+    
+    admin_text = f"📩 **Нове запитання з сайту!**\n\n👤 Від: {name}\n💬 Текст: {message}"
+    
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    req = urllib.request.Request(url, method="POST")
+    req.add_header('Content-Type', 'application/json')
+    payload = json.dumps({"chat_id": ADMIN_ID, "text": admin_text}).encode('utf-8')
+    
+    try:
+        urllib.request.urlopen(req, data=payload)
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        logging.error(f"Помилка відправки техпідтримки: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+# =================================================
 
 @dp.message(CommandStart())
 async def start(message: Message):
@@ -119,7 +125,7 @@ async def buy_track(callback: types.CallbackQuery):
     except:
         await callback.answer("Трек не знайдено", show_alert=True)
         return
-    user_id = callback.from_user.id
+    user_id = callback.fromuser.id
     key = f"{user_id}_{index}"
     payment_timers[key] = datetime.now()
     kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -137,7 +143,6 @@ async def check_timers():
         await asyncio.sleep(30)
         now = datetime.now()
         for key, start_time in list(payment_timers.items()):
-            # Якщо пройшло 3 хвилини і ми ще не показували кнопку
             if now - start_time >= timedelta(minutes=3) and now - start_time < timedelta(minutes=4):
                 user_id, track_index = map(int, key.split("_"))
                 track = TRACKS[track_index]
@@ -161,12 +166,10 @@ async def paid_track(callback: types.CallbackQuery):
     await callback.answer()
 
 async def main():
-    # === ЗАПУСК СЕРВЕРА У ФОНІ ===
     def run_flask():
         app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
     threading.Thread(target=run_flask, daemon=True).start()
     
-    # Видаляємо старі конфлікти, якщо бот перезапускається
     await bot.delete_webhook(drop_pending_updates=True)
     
     asyncio.create_task(check_timers())
