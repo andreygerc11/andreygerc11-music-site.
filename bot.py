@@ -71,12 +71,19 @@ def support_handler():
     name = data.get('name', 'Анонім')
     message = data.get('message', '')
     
-    admin_text = f"📩 **Нове запитання з сайту!**\n\n👤 Від: {name}\n💬 Текст: {message}"
+    # Виправлено форматування тексту для Telegram (одна зірочка замість двох)
+    admin_text = f"📩 *Нове запитання з сайту!*\n\n👤 Від: {name}\n💬 Текст: {message}"
     
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     req = urllib.request.Request(url, method="POST")
     req.add_header('Content-Type', 'application/json')
-    payload = json.dumps({"chat_id": ADMIN_ID, "text": admin_text}).encode('utf-8')
+    
+    # Додано parse_mode="Markdown", щоб Telegram правильно зрозумів текст
+    payload = json.dumps({
+        "chat_id": ADMIN_ID, 
+        "text": admin_text,
+        "parse_mode": "Markdown"
+    }).encode('utf-8')
     
     try:
         urllib.request.urlopen(req, data=payload)
