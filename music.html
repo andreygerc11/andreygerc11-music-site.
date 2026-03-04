@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Музична Сповідь | Андрій Герц</title>
+    <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --accent: #ff4d4d; --dark: #0a0a0b; --card: #161618; }
@@ -77,34 +78,35 @@
         }
 
         .card-header { margin-bottom: 15px; }
-        .card-header h3 { font-size: 1.1rem; margin-bottom: 10px; min-height: 44px; }
+        .card-header h3 { font-size: 1.1rem; margin-bottom: 15px; min-height: 44px; }
         
         .btn-buy { 
             background: var(--accent); 
             color: #fff; 
-            padding: 10px 0; 
-            border-radius: 12px; 
+            padding: 12px 0; 
+            border-radius: 10px; 
             text-decoration: none; 
             font-weight: 900; 
             display: block;
             text-align: center;
             width: 100%;
             transition: 0.3s;
+            text-transform: uppercase;
+            font-size: 0.9rem;
         }
         .btn-buy:hover { opacity: 0.8; }
         
-        /* Контейнер плеєра */
+        /* Блок плеєра */
         .player-wrapper { 
             width: 100%; 
-            height: 50px; 
+            height: 45px; 
             margin-top: 15px; 
-            background: #222;
-            border-radius: 10px;
         }
         
+        /* Кнопка активації плеєра */
         .play-btn { 
             background: #2a2a2c; 
-            border: none; 
+            border: 1px solid rgba(255,255,255,0.1); 
             color: #fff; 
             cursor: pointer; 
             width: 100%; 
@@ -114,7 +116,15 @@
             font-size: 0.8rem;
             transition: 0.3s;
         }
-        .play-btn:hover { background: #333; color: var(--accent); }
+        .play-btn:hover { background: #333; border-color: var(--accent); color: var(--accent); }
+
+        /* Стилі для системного плеєра */
+        audio {
+            width: 100%;
+            height: 45px;
+            border-radius: 10px;
+            outline: none;
+        }
 
         @media (max-width: 600px) {
             #music-container { grid-template-columns: 1fr; }
@@ -131,7 +141,7 @@
 <div class="container">
     <div class="download-info">
         <h2>ℹ️ Як отримати трек?</h2>
-        <p>Слухайте прев'ю, натискайте <b>"Придбати"</b>. Вас перекине в бот, де після оплати ви отримаєте посилання на файл.</p>
+        <p>Слухайте прев'ю, натискайте <b>"ПРИДБАТИ"</b>. Вас перекине в бот, де після оплати ви отримаєте посилання на файл.</p>
     </div>
 
     <div id="music-container">
@@ -170,14 +180,14 @@
         }
     }
 
+    // Завантаження чистого системного плеєра без iframe
     function loadPlayer(id) {
         const wrapper = document.getElementById('player-' + id);
-        // Тут використовується хитрий CSS: iframe завантажується, але поверх кнопки лежить "глухий" блок
+        // controlsList="nodownload" вимикає кнопку завантаження
         wrapper.innerHTML = `
-            <div style="position: relative; width: 100%; height: 50px; overflow: hidden; border-radius: 10px;">
-                <iframe src="https://drive.google.com/file/d/${id}/preview" style="position: absolute; top: -10px; left: 0; width: 100%; height: 100px; border: none; filter: invert(0.9) hue-rotate(180deg);"></iframe>
-                <div style="position: absolute; top: 0; right: 0; width: 65px; height: 60px; background: #222; z-index: 10;"></div>
-            </div>
+            <audio controls controlsList="nodownload" autoplay>
+                <source src="https://drive.google.com/uc?export=download&id=${id}" type="audio/mpeg">
+            </audio>
         `;
     }
 
