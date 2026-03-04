@@ -9,26 +9,23 @@ import os
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# === ДОДАНО ДЛЯ ТЕХПІДТРИМКИ ТА САЙТУ ===
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import threading
 import urllib.request
 import json
-# ===============================
 
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# === ТВІЙ ID ДЛЯ ОТРИМАННЯ ПОВІДОМЛЕНЬ З САЙТУ ===
+# ТВІЙ ID ДЛЯ ТЕХПІДТРИМКИ
 ADMIN_ID = 556627059 
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# === НАЛАШТУВАННЯ СЕРВЕРА ДЛЯ САЙТУ ===
 app = Flask(__name__)
 CORS(app)
 
@@ -64,13 +61,10 @@ def get_tracks():
 
 TRACKS = get_tracks()
 
-# === ШЛЯХ ДЛЯ МУЗИКИ (виправлення помилки 404) ===
 @app.route('/api/music', methods=['GET'])
 def music_api():
     return jsonify(TRACKS)
-# =================================================
 
-# === ШЛЯХ ДЛЯ ТЕХПІДТРИМКИ ===
 @app.route('/api/support', methods=['POST'])
 def support_handler():
     data = request.json
@@ -90,10 +84,32 @@ def support_handler():
     except Exception as e:
         logging.error(f"Помилка відправки техпідтримки: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-# =================================================
 
 @dp.message(CommandStart())
 async def start(message: Message):
+    # 1. ОБРОБКА ПЕРЕХОДУ З САЙТУ (коли людина тисне "Придбати")
+    args = message.text.split(" ")
+    if len(args) > 1 and args[1].startswith("buy_"):
+        file_id = args[1].split("buy_")[1]
+        track = next((t for t in TRACKS if t["id"] == file_id), None)
+        
+        if track:
+            user_id = message.from_user.id
+            key = f"{user_id}_{track['index']}"
+            payment_timers[key] = datetime.now()
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=f"Оплатити {PRICE} грн", url=track["payUrl"])]
+            ])
+            await message.answer(
+                f"Ви обрали пісню: {track['name']}\n\n"
+                f"Натисніть на кнопку «Оплатити {PRICE} грн» нижче.\n\n"
+                "Зачекайте 3 хвилини, поки пройде транзакція.\n"
+                "Після цього автоматично з’явиться кнопка «Я оплатив».",
+                reply_markup=kb
+            )
+            return
+
+    # 2. СТАНДАРТНЕ МЕНЮ (якщо просто написати /start у боті)
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Переглянути треки", callback_data="show_menu")]
     ])
@@ -125,14 +141,16 @@ async def buy_track(callback: types.CallbackQuery):
     except:
         await callback.answer("Трек не знайдено", show_alert=True)
         return
-    user_id = callback.fromuser.id
+    
+    # ВИПРАВЛЕНО ОДРУКІВКУ
+    user_id = callback.from_user.id
     key = f"{user_id}_{index}"
     payment_timers[key] = datetime.now()
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=f"Оплатити {PRICE} грн", url=track["payUrl"])]
     ])
     await callback.message.edit_text(
-        "Натисни на кнопку «Оплатити 50 грн» нижче.\n\n"
+        f"Натисни на кнопку «Оплатити {PRICE} грн» нижче.\n\n"
         "Зачекайте 3 хвилини, поки пройде транзакція.\n"
         "Після цього автоматично з’явиться кнопка «Я оплатив».",
         reply_markup=kb
@@ -150,7 +168,7 @@ async def check_timers():
                     [InlineKeyboardButton(text="Я оплатив", callback_data=f"paid_{track_index}")]
                 ])
                 try:
-                    await bot.send_message(user_id, f"Пісня: {track['name']}\nНатисни кнопку:", reply_markup=kb)
+                    await bot.send_message(user_id, f"Пісня: {track['name']}\nТранзакція перевірена! Натисни кнопку:", reply_markup=kb)
                 except:
                     pass
 
