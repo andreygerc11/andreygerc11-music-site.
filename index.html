@@ -181,7 +181,7 @@
         .support-widget {
             position: fixed;
             top: 50%;
-            right: -320px; /* Сховано за екраном */
+            right: -320px;
             transform: translateY(-50%);
             width: 320px;
             background: var(--glass);
@@ -195,11 +195,11 @@
             box-shadow: -5px 0 20px rgba(0,0,0,0.5);
         }
         .support-widget.open {
-            right: 0; /* Випливає при кліку */
+            right: 0; 
         }
         .support-btn {
             position: absolute;
-            left: -45px; /* Виступаюча частина */
+            left: -45px; 
             top: 50%;
             transform: translateY(-50%);
             background: var(--accent);
@@ -336,6 +336,7 @@
     <h3>Написати мені</h3>
     <form id="supportForm">
         <input type="text" id="supName" name="Ім'я" placeholder="Ваше ім'я" required>
+        <input type="text" id="supContact" name="Контактні дані" placeholder="Ваш Email, Telegram, Viber, WhatsApp, Teams чи Signal" required>
         <textarea id="supMessage" name="Повідомлення" placeholder="Якщо виникли питання чи проблеми із завантаженням пісні — пишіть сюди..." required></textarea>
         <button type="submit">Відправити</button>
     </form>
@@ -366,6 +367,7 @@
         const statusDiv = document.getElementById('support-status');
         const btn = this.querySelector('button');
         const name = document.getElementById('supName').value;
+        const contact = document.getElementById('supContact').value;
         const message = document.getElementById('supMessage').value;
 
         btn.disabled = true;
@@ -380,7 +382,7 @@
                     'Accept': 'application/json',
                     'Content-Type': 'application/json' 
                 },
-                body: JSON.stringify({ name: name, message: message })
+                body: JSON.stringify({ name: name, contact: contact, message: message })
             });
 
             if (response.ok) {
@@ -390,7 +392,7 @@
                 setTimeout(() => {
                     toggleSupport();
                     statusDiv.innerText = '';
-                }, 4000); // Віджет сховається сам через 4 секунди
+                }, 4000);
             } else {
                 throw new Error('Помилка сервера');
             }
