@@ -335,8 +335,8 @@
     </div>
     <h3>Написати мені</h3>
     <form id="supportForm">
-        <input type="text" id="supName" placeholder="Ваше ім'я" required>
-        <textarea id="supMessage" placeholder="Якщо виникли питання чи проблеми із завантаженням пісні — пишіть сюди..." required></textarea>
+        <input type="text" id="supName" name="Ім'я" placeholder="Ваше ім'я" required>
+        <textarea id="supMessage" name="Повідомлення" placeholder="Якщо виникли питання чи проблеми із завантаженням пісні — пишіть сюди..." required></textarea>
         <button type="submit">Відправити</button>
     </form>
     <div id="support-status"></div>
@@ -373,10 +373,13 @@
         statusDiv.innerText = '';
 
         try {
-            // Запит на ваш бекенд на Render
-            const response = await fetch('https://andreygerc11-music-site.onrender.com/api/support', {
+            // Запит на Formspree
+            const response = await fetch('https://formspree.io/f/mnjgapgj', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json' 
+                },
                 body: JSON.stringify({ name: name, message: message })
             });
 
