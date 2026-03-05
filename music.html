@@ -6,8 +6,14 @@
     <title>Музична Сповідь | Андрій Герц</title>
     <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --accent: #ff4d4d; --dark: #0a0a0b; --card: #161618; }
+        :root { 
+            --accent: #ff4d4d; 
+            --dark: #0a0a0b; 
+            --card: #161618;
+            --glass: rgba(0, 0, 0, 0.85); 
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
@@ -113,7 +119,6 @@
         }
         .btn-buy:hover { opacity: 0.8; }
         
-        /* ПОВЕРНУВ КОНТЕЙНЕР ДЛЯ IFRAME З ОБРІЗКОЮ */
         .player-wrapper { 
             width: 100%; 
             height: 45px; 
@@ -146,6 +151,88 @@
             #music-container { grid-template-columns: 1fr; }
             .card-header-row h3 { font-size: 0.95rem; }
         }
+
+        /* ====== СТИЛІ ДЛЯ ВІДЖЕТА ПІДТРИМКИ (ЧАТ) ====== */
+        .support-widget {
+            position: fixed;
+            top: 50%;
+            right: -320px;
+            transform: translateY(-50%);
+            width: 320px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--accent);
+            border-right: none;
+            border-radius: 20px 0 0 20px;
+            padding: 25px;
+            transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+        }
+        .support-widget.open {
+            right: 0; 
+        }
+        .support-btn {
+            position: absolute;
+            left: -45px; 
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent);
+            color: white;
+            padding: 20px 10px;
+            border-radius: 15px 0 0 15px;
+            cursor: pointer;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            font-weight: 900;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            box-shadow: -5px 0 15px rgba(255, 77, 77, 0.4);
+            animation: pulse-support 2s infinite;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        @keyframes pulse-support {
+            0% { box-shadow: -2px 0 10px rgba(255, 77, 77, 0.4); }
+            50% { box-shadow: -2px 0 25px rgba(255, 77, 77, 0.8); }
+            100% { box-shadow: -2px 0 10px rgba(255, 77, 77, 0.4); }
+        }
+        .support-widget h3 { margin-bottom: 15px; color: #fff; font-size: 1.2rem; margin-top: 0;}
+        .support-widget input, .support-widget textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            font-family: inherit;
+            outline: none;
+            transition: 0.3s;
+        }
+        .support-widget input:focus, .support-widget textarea:focus {
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.1);
+        }
+        .support-widget textarea { resize: none; height: 100px; }
+        .support-widget button[type="submit"] {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        .support-widget button[type="submit"]:hover { 
+            background: white; 
+            color: var(--accent); 
+        }
+        #support-status { margin-top: 15px; font-size: 0.9rem; text-align: center; font-weight: bold;}
     </style>
 </head>
 <body>
@@ -166,6 +253,20 @@
     </div>
 </div>
 
+<div class="support-widget" id="supportWidget">
+    <div class="support-btn" onclick="toggleSupport()">
+        <i class="fas fa-envelope" style="transform: rotate(90deg);"></i>
+        ЧАТ
+    </div>
+    <h3>Написати мені</h3>
+    <form id="supportForm">
+        <input type="text" id="supName" name="Ім'я" placeholder="Ваше ім'я" required>
+        <input type="text" id="supContact" name="Контактні дані" placeholder="Ваш Email, Telegram, Viber, WhatsApp, Teams чи Signal" required>
+        <textarea id="supMessage" name="Повідомлення" placeholder="Якщо виникли питання чи проблеми із завантаженням пісні — пишіть сюди..." required></textarea>
+        <button type="submit">Відправити</button>
+    </form>
+    <div id="support-status"></div>
+</div>
 <script>
     const apiURL = "https://andreygerc11-music-site.onrender.com/api/music";
 
@@ -197,7 +298,6 @@
         }
     }
 
-    // ПОВЕРНУВ ГУГЛІВСЬКИЙ IFRAME З ОБРІЗКОЮ НА 70PX
     function loadPlayer(id) {
         const wrapper = document.getElementById('player-' + id);
         wrapper.innerHTML = `
@@ -208,6 +308,54 @@
     }
 
     getMusic();
+
+    // ====== ЛОГІКА ВІДЖЕТА ПІДТРИМКИ ======
+    function toggleSupport() {
+        document.getElementById('supportWidget').classList.toggle('open');
+    }
+
+    document.getElementById('supportForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const statusDiv = document.getElementById('support-status');
+        const btn = this.querySelector('button');
+        const name = document.getElementById('supName').value;
+        const contact = document.getElementById('supContact').value;
+        const message = document.getElementById('supMessage').value;
+
+        btn.disabled = true;
+        btn.innerText = 'Відправка...';
+        statusDiv.innerText = '';
+
+        try {
+            const response = await fetch('https://formspree.io/f/mnjgapgj', {
+                method: 'POST',
+                headers: { 
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({ name: name, contact: contact, message: message })
+            });
+
+            if (response.ok) {
+                statusDiv.innerText = '✅ Повідомлення відправлено!';
+                statusDiv.style.color = '#4CAF50';
+                this.reset();
+                setTimeout(() => {
+                    toggleSupport();
+                    statusDiv.innerText = '';
+                }, 4000);
+            } else {
+                throw new Error('Помилка сервера');
+            }
+        } catch (error) {
+            statusDiv.innerText = '❌ Помилка. Спробуйте пізніше.';
+            statusDiv.style.color = 'var(--accent)';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Відправити';
+        }
+    });
 </script>
+
 </body>
 </html>
