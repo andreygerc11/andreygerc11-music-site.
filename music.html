@@ -66,11 +66,43 @@
             border: 1px solid var(--accent); 
             border-radius: 15px; 
             padding: 20px; 
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             animation: fadeInUp 0.6s ease-out;
         }
         .download-info h2 { font-size: 1.3rem; margin-bottom: 10px; }
         .download-info p { font-size: 1rem; color: #ccc; }
+
+        /* СТИЛІ ПОШУКУ */
+        .search-box {
+            position: relative;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.7s ease-out backwards;
+        }
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 1.1rem;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: 0.3s;
+        }
+        .search-box input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(255, 77, 77, 0.2);
+            background: rgba(255,255,255,0.05);
+        }
 
         #music-container { 
             display: grid; 
@@ -257,8 +289,13 @@
         <p>Слухайте прев'ю, натискайте <b>"ПРИДБАТИ"</b>. Вас перекине в бот, де після оплати ви отримаєте посилання на файл.</p>
     </div>
 
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Знайти пісню за назвою...">
+    </div>
+
     <div id="music-container">
-        <p style="text-align:center;"> Зачекайте йде оновленя сторінки сайту обо автор пісень завантажує нові пісі...</p>
+        <p style="text-align:center;"> Зачекайте йде оновлення сторінки сайту або автор пісень завантажує нові пісні...</p>
     </div>
 </div>
 
@@ -317,6 +354,21 @@
     }
 
     getMusic();
+
+    // ====== ЛОГІКА ПОШУКУ ПІСЕНЬ ======
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const cards = document.querySelectorAll('.music-card');
+        
+        cards.forEach(card => {
+            const title = card.querySelector('h3').innerText.toLowerCase();
+            if (title.includes(term)) {
+                card.style.display = 'flex'; // Показуємо картку, якщо збігається
+            } else {
+                card.style.display = 'none'; // Ховаємо, якщо не збігається
+            }
+        });
+    });
 
     // ====== ЛОГІКА ВІДЖЕТА ПІДТРИМКИ ======
     function toggleSupport() {
