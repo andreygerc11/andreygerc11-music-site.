@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DHLXH7C8QT"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-DHLXH7C8QT');
-    </script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Голос проти раку | Андрій Герц</title>
@@ -127,6 +118,19 @@
             transform: translateY(-5px);
         }
 
+        /* Кнопка WhatsApp */
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
+            border: 2px solid #25D366;
+        }
+        .btn-whatsapp:hover {
+            background: white;
+            color: #25D366;
+            transform: translateY(-5px);
+        }
+
         section { padding: 80px 20px; max-width: 1100px; margin: auto; }
 
         .glass-card {
@@ -185,88 +189,6 @@
             .glass-card { padding: 25px; margin-top: -50px; }
             .rekv-list li { font-size: 0.9rem; }
         }
-
-        /* Віджет підтримки */
-        .support-widget {
-            position: fixed;
-            top: 50%;
-            right: -320px;
-            transform: translateY(-50%);
-            width: 320px;
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--accent);
-            border-right: none;
-            border-radius: 20px 0 0 20px;
-            padding: 25px;
-            transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 9999;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
-        }
-        .support-widget.open {
-            right: 0; 
-        }
-        .support-btn {
-            position: absolute;
-            left: -45px; 
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--accent);
-            color: white;
-            padding: 20px 10px;
-            border-radius: 15px 0 0 15px;
-            cursor: pointer;
-            writing-mode: vertical-rl;
-            text-orientation: upright;
-            font-weight: 900;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            box-shadow: -5px 0 15px rgba(255, 77, 77, 0.4);
-            animation: pulse-support 2s infinite;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        @keyframes pulse-support {
-            0% { box-shadow: -2px 0 10px rgba(255, 77, 77, 0.4); }
-            50% { box-shadow: -2px 0 25px rgba(255, 77, 77, 0.8); }
-            100% { box-shadow: -2px 0 10px rgba(255, 77, 77, 0.4); }
-        }
-        .support-widget h3 { margin-bottom: 15px; color: #fff; font-size: 1.2rem; margin-top: 0;}
-        .support-widget input, .support-widget textarea {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 8px;
-            font-family: inherit;
-            outline: none;
-            transition: 0.3s;
-        }
-        .support-widget input:focus, .support-widget textarea:focus {
-            border-color: var(--accent);
-            background: rgba(255,255,255,0.1);
-        }
-        .support-widget textarea { resize: none; height: 100px; }
-        .support-widget button[type="submit"] {
-            width: 100%;
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.3s ease;
-        }
-        .support-widget button[type="submit"]:hover { 
-            background: white; 
-            color: var(--accent); 
-        }
-        #support-status { margin-top: 15px; font-size: 0.9rem; text-align: center; font-weight: bold;}
     </style>
 </head>
 <body>
@@ -281,8 +203,9 @@
         <p class="hero-subtitle">Мій бій триває — і в шпиталі, і в строю. Я не складаю зброю і залишаюся на службі до нашої Перемоги.</p>
         
         <div class="btn-group">
-            <a href="#support" class="btn btn-main">Підтримати проєкт</a>
+            <a href="#support" class="btn btn-main">Підтримати</a>
             <a href="music.html" class="btn btn-outline">Слухати музику</a>
+            <a href="https://chat.whatsapp.com/GbGbFxDZftZCQNyTDZOfu2" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> Чат WhatsApp</a>
         </div>
     </div>
 </header>
@@ -303,12 +226,12 @@
             <div class="info-item">
                 <i class="fas fa-laptop fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
                 <h3>Стартовий пакет</h3>
-                <p>Я створюю цей сайт самотужки, але мені потрібена ваша допомога, щоб працювати надалі заходьте на сторінку і купуйте пісні які я створюю. Це інструмент для допомоги іншим.</p>
+                <p>Я створюю цей сайт сам, але мені потрібен ноутбук, щоб працювати в шпиталі та техніка для запису. Це інструмент для допомоги іншим.</p>
             </div>
         </div>
 
         <div class="quote">
-            "Будь-яка ваша підтримка — це мій шанс не прото вистояти, а й допомогти іншим з цією хворобою."
+            "Будь-яка ваша підтримка — це мій шанс не просто вистояти, а й допомогти іншим з цією хворобою."
         </div>
 
         <h2 id="music">Музика проєкту</h2>
@@ -337,21 +260,6 @@
     </div>
 </section>
 
-<div class="support-widget" id="supportWidget">
-    <div class="support-btn" onclick="toggleSupport()">
-        <i class="fas fa-envelope" style="transform: rotate(90deg);"></i>
-        ЧАТ
-    </div>
-    <h3>Написати мені</h3>
-    <form id="supportForm">
-        <input type="text" id="supName" name="Ім'я" placeholder="Ваше ім'я" required>
-        <input type="text" id="supContact" name="Контактні дані" placeholder="Ваш Email, Telegram, Viber, WhatsApp, Teams чи Signal" required>
-        <textarea id="supMessage" name="Повідомлення" placeholder="Якщо виникли питання чи проблеми із завантаженням пісні — пишіть сюди..." required></textarea>
-        <button type="submit">Відправити</button>
-    </form>
-    <div id="support-status"></div>
-</div>
-
 <footer>
     <p>© 2026 Проєкт «Голос проти раку». Андрій Герц. Слава Україні! 🇺🇦</p>
 </footer>
@@ -364,54 +272,6 @@
         video.play().catch(function(error) {
             console.log("Автозапуск заблоковано браузером");
         });
-    });
-
-    // Логіка віджета підтримки
-    function toggleSupport() {
-        document.getElementById('supportWidget').classList.toggle('open');
-    }
-
-    document.getElementById('supportForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const statusDiv = document.getElementById('support-status');
-        const btn = this.querySelector('button');
-        const name = document.getElementById('supName').value;
-        const contact = document.getElementById('supContact').value;
-        const message = document.getElementById('supMessage').value;
-
-        btn.disabled = true;
-        btn.innerText = 'Відправка...';
-        statusDiv.innerText = '';
-
-        try {
-            // Запит на Formspree
-            const response = await fetch('https://formspree.io/f/mnjgapgj', {
-                method: 'POST',
-                headers: { 
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({ name: name, contact: contact, message: message })
-            });
-
-            if (response.ok) {
-                statusDiv.innerText = '✅ Повідомлення відправлено!';
-                statusDiv.style.color = '#4CAF50';
-                this.reset();
-                setTimeout(() => {
-                    toggleSupport();
-                    statusDiv.innerText = '';
-                }, 4000);
-            } else {
-                throw new Error('Помилка сервера');
-            }
-        } catch (error) {
-            statusDiv.innerText = '❌ Помилка. Спробуйте пізніше.';
-            statusDiv.style.color = 'var(--accent)';
-        } finally {
-            btn.disabled = false;
-            btn.innerText = 'Відправити';
-        }
     });
 </script>
 
