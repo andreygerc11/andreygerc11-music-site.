@@ -12,7 +12,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Музична Сповідь | Андрій Герц</title>
-    <link rel="icon" type="image/png" href="https://i.ibb.co/p6f8699/DALL-E-2025-02-13-17-47-59-A-modern-and-elegant-logo-for-a-project-titled-Music-Confession-The-logo-fe.webp">
+    <link rel="icon" type="image/png" href="favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -322,7 +322,7 @@
             </iframe>
         `;
 
-        // Встановлюємо таймер на 60 секунд (60000 мілісекунд)
+        // Встановлюємо таймер на 90 секунд (90000 мілісекунд)
         playerTimers[id] = setTimeout(() => {
             // Зупиняємо музику: замінюємо плеєр назад на кнопку
             wrapper.innerHTML = `<button class="play-btn" onclick="loadPlayer('${id}')">▶ СЛУХАТИ ПРЕВ'Ю (Продовжити)</button>`;
@@ -332,7 +332,7 @@
             
             // Показуємо модальне вікно
             document.getElementById('limitModal').style.display = 'flex';
-        }, 60000); // 60 секунд
+        }, 90000); // 90 секунд (1 хв 30 сек)
     }
 
     function closeModal() {
