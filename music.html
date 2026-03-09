@@ -13,6 +13,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Музична Сповідь | Андрій Герц</title>
     <link rel="icon" type="image/png" href="favicon.png">
+    
+    <script src="https://unpkg.com/browser-id3-writer@4.4.0/dist/browser-id3-writer.min.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -133,7 +136,7 @@
             background: var(--accent); color: #fff; padding: 8px 16px; 
             border-radius: 8px; text-decoration: none; font-weight: 900; 
             text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;
-            transition: 0.3s; white-space: nowrap; 
+            transition: 0.3s; white-space: nowrap; border: none; cursor: pointer; font-family: inherit;
         }
         .btn-buy:hover { opacity: 0.8; }
         
@@ -279,6 +282,51 @@
     // Зберігаємо ідентифікатори таймерів, щоб їх можна було очистити
     let playerTimers = {};
 
+    // ФУНКЦІЯ ЗАХИСТУ: ДОДАВАННЯ ЛОГО ТА АВТОРСТВА ПРИ ЗАВАНТАЖЕННІ
+    async function applyCopyrightAndBuy(songId, songName) {
+        // Відкриваємо Telegram-бот для оплати
+        window.open(`https://t.me/golosprotyraku_bot?start=buy_${songId}`, '_blank');
+        
+        try {
+            // Формуємо пряме посилання на завантаження з Google Drive
+            const fileUrl = `https://drive.google.com/uc?export=download&id=${songId}`;
+            
+            const [songRes, coverRes] = await Promise.all([
+                fetch(fileUrl),
+                fetch('favicon.png') 
+            ]);
+
+            if (songRes.ok && coverRes.ok) {
+                const songBuffer = await songRes.arrayBuffer();
+                const coverBuffer = await coverRes.arrayBuffer();
+
+                const writer = new ID3Writer(songBuffer);
+                writer.setFrame('TIT2', songName)
+                      .setFrame('TPE1', ['Андрій Герц | Музична Сповідь'])
+                      .setFrame('TALB', 'Музична Сповідь')
+                      .setFrame('APIC', {
+                          type: 3,
+                          data: coverBuffer,
+                          description: 'Logo'
+                      });
+
+                writer.addTag();
+                const taggedUrl = writer.getURL();
+                
+                const a = document.createElement('a');
+                a.href = taggedUrl;
+                a.download = `${songName}_Музична_Сповідь.mp3`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                URL.revokeObjectURL(taggedUrl);
+            }
+        } catch (e) {
+            console.log('Помилка вшивання тегів. Транзакція продовжиться через бот.');
+        }
+    }
+
     async function getMusic() {
         const container = document.getElementById('music-container');
         try {
@@ -291,10 +339,13 @@
                 card.className = 'music-card';
                 card.style.animationDelay = (index * 0.1) + 's';
                 
+                // Екрануємо одинарні лапки у назві для безпечної передачі у функцію
+                const safeSongName = song.name.replace(/'/g, "\\'");
+                
                 card.innerHTML = `
                     <div class="card-header-row">
                         <h3>${song.name}</h3>
-                        <a href="https://t.me/golosprotyraku_bot?start=buy_${song.id}" target="_blank" class="btn-buy">Придбати</a>
+                        <button class="btn-buy" onclick="applyCopyrightAndBuy('${song.id}', '${safeSongName}')">Придбати</button>
                     </div>
                     <div class="player-wrapper" id="player-${song.id}">
                         <button class="play-btn" onclick="loadPlayer('${song.id}')">▶ СЛУХАТИ ПРЕВ'Ю</button>
