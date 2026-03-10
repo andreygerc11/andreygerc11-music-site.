@@ -133,14 +133,6 @@
 
         audio { width: 100%; margin-top: 15px; }
 
-        .rekv-list { list-style: none; margin-top: 20px; }
-        .rekv-list li {
-            padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
-            font-family: monospace; display: flex; justify-content: space-between;
-            font-size: 1.1rem; flex-wrap: wrap;
-        }
-        .bank-label { color: #ffcc00; font-weight: bold; margin-right: 10px; }
-
         /* ====== ЮРИДИЧНИЙ ПІДВАЛ ====== */
         footer { text-align: center; padding: 60px 20px; background: #0a0a0b; border-top: 1px solid rgba(255,255,255,0.05); }
         .footer-content { max-width: 800px; margin: auto; display: flex; flex-direction: column; gap: 15px; }
@@ -152,7 +144,6 @@
 
         @media (max-width: 600px) {
             .glass-card { padding: 25px; margin-top: -50px; }
-            .rekv-list li { font-size: 0.9rem; }
         }
 
         /* ====== СТИЛІ ДЛЯ ВІДЖЕТА ПІДТРИМКИ (ЧАТ) ====== */
@@ -267,13 +258,12 @@
             </div>
         </div>
 
-        <h2 id="support">Реквізити для допомоги</h2>
-        <ul class="rekv-list">
-            <li><span><span class="bank-label">Monobank:</span> 4441 1110 0278 2815</span></li>
-            <li><span><span class="bank-label">PayPal:</span> andreygerc11@gmail.com</span></li>
-            <li><span><span class="bank-label">ПУМБ:</span> 4314 1402 0779 7173</span></li>
-            <li><span><span class="bank-label">Credit Agricole:</span> 5167 5904 1488 3718</span></li>
-        </ul>
+        <h2 id="support">Як підтримати проєкт?</h2>
+        <div class="info-item" style="text-align: center; border-bottom: none;">
+            <p>Найкраща підтримка моєї боротьби — це ваша увага до моєї творчості.</p>
+            <a href="music.html" class="btn btn-main" style="margin: 15px 0;">Перейти до магазину музики</a>
+            <p style="font-size: 0.9rem; color: #aaa;">Усі офіційні реквізити для прямої фінансової підтримки вказані у нашій <a href="public_offer.html" style="color: var(--accent); text-decoration: underline;">Публічній оферті</a>.</p>
+        </div>
     </div>
 </section>
 
