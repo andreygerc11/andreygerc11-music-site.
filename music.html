@@ -31,6 +31,8 @@
             color: #fff; 
             min-height: 100vh;
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         @keyframes fadeInUp {
@@ -80,7 +82,7 @@
 
         h1 { font-size: 1.8rem; }
 
-        .container { max-width: 1000px; margin: auto; padding: 20px; }
+        .container { flex: 1; max-width: 1000px; margin: 0 auto; padding: 20px; width: 100%; }
         
         .download-info { 
             background: var(--card); 
@@ -114,6 +116,7 @@
 
         #music-container { 
             display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; 
+            margin-bottom: 40px;
         }
 
         .music-card { 
@@ -157,6 +160,15 @@
             .card-header-row h3 { font-size: 0.95rem; }
         }
 
+        /* ====== ЮРИДИЧНИЙ ПІДВАЛ ====== */
+        footer { text-align: center; padding: 60px 20px; background: #0a0a0b; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto; }
+        .footer-content { max-width: 800px; margin: auto; display: flex; flex-direction: column; gap: 15px; }
+        .footer-copy { color: #fff; font-weight: bold; font-size: 1rem; }
+        .footer-details { color: #888; font-size: 0.85rem; line-height: 1.5; }
+        .footer-links { display: flex; justify-content: center; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
+        .footer-links a { color: var(--accent); text-decoration: none; font-size: 0.85rem; transition: 0.3s; }
+        .footer-links a:hover { text-decoration: underline; color: #fff; }
+
         /* СТИЛІ ДЛЯ ВІДЖЕТА ПІДТРИМКИ (ЧАТ) */
         .support-widget {
             position: fixed; top: 50%; right: -320px; transform: translateY(-50%);
@@ -198,6 +210,14 @@
         }
         .support-widget button[type="submit"]:hover { background: white; color: var(--accent); }
         #support-status { margin-top: 15px; font-size: 0.9rem; text-align: center; font-weight: bold;}
+        
+        /* Стиль для галочки згоди */
+        .gdpr-checkbox {
+            display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px;
+            font-size: 0.8rem; color: #ccc; text-align: left;
+        }
+        .gdpr-checkbox input { width: auto; margin-top: 3px; }
+        .gdpr-checkbox a { color: var(--accent); text-decoration: underline; }
 
         /* СТИЛІ ДЛЯ МОДАЛЬНОГО ВІКНА (ЛІМІТ ЧАСУ) */
         .modal-overlay {
@@ -260,10 +280,31 @@
         <input type="text" id="supName" name="Ім'я" placeholder="Ваше ім'я" required>
         <input type="text" id="supContact" name="Контактні дані" placeholder="Ваш Email, Telegram, Viber, WhatsApp" required>
         <textarea id="supMessage" name="Повідомлення" placeholder="Якщо виникли питання чи проблеми із завантаженням пісні — пишіть сюди..." required></textarea>
+        
+        <label class="gdpr-checkbox">
+            <input type="checkbox" required>
+            <span>Я даю згоду на обробку моїх персональних даних згідно з <a href="privacy_policy.html">Політикою конфіденційності</a></span>
+        </label>
+
         <button type="submit">Відправити</button>
     </form>
     <div id="support-status"></div>
 </div>
+
+<footer>
+    <div class="footer-content">
+        <div class="footer-copy">© 2026 Проєкт «Голос проти раку». Музична Сповідь. Слава Україні! 🇺🇦</div>
+        <div class="footer-details">
+            Автор проєкту: Андрій Герц<br>
+            Офіційна інформація про статус продавця та умови придбання цифрового контенту міститься у Публічній оферті.<br>
+            Email: andreygerc11@gmail.com
+        </div>
+        <div class="footer-links">
+            <a href="public_offer.html">Публічна оферта</a>
+            <a href="privacy_policy.html">Політика конфіденційності</a>
+        </div>
+    </div>
+</footer>
 
 <div class="modal-overlay" id="limitModal">
     <div class="modal-content">
