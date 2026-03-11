@@ -140,6 +140,7 @@
             transition: 0.3s; white-space: nowrap; border: none; cursor: pointer; font-family: inherit;
         }
         .btn-buy:hover { opacity: 0.8; }
+        .btn-buy:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .player-wrapper { 
             width: 100%; height: 45px; margin-top: 5px; 
@@ -257,7 +258,7 @@
 <div class="container">
     <div class="download-info">
         <h2>ℹ️ Як отримати трек?</h2>
-        <p>Слухайте прев'ю, натискайте <b>"ПРИДБАТИ"</b>. Вас перекине в бот, де після оплати ви отримаєте посилання на файл.</p>
+        <p>Слухайте прев'ю, натискайте <b>"ПРИДБАТИ"</b>. Вас перекине на сторінку безпечної оплати, після якої ви одразу отримаєте свій файл.</p>
     </div>
 
     <div class="search-box">
@@ -309,8 +310,8 @@
 <div class="modal-overlay" id="limitModal">
     <div class="modal-content">
         <h3>Час прев'ю вичерпано ⏱️</h3>
-        <p>Сподобалась пісня? Перейдіть до нашого Telegram-бота, щоб придбати повну версію у високій якості та завантажити її на свій пристрій.</p>
-        <a href="#" id="modalBuyBtn" target="_blank" class="modal-btn">Придбати повну версію</a>
+        <p>Сподобалась пісня? Натисніть кнопку нижче, щоб безпечно оплатити та завантажити повну версію у високій якості на свій пристрій.</p>
+        <button id="modalBuyBtn" class="modal-btn" style="border: none; cursor: pointer; font-family: inherit;">Придбати повну версію</button>
         <button class="close-modal" onclick="closeModal()">Закрити</button>
     </div>
 </div>
@@ -320,6 +321,7 @@
     
     // Зберігаємо ідентифікатори таймерів, щоб їх можна було очистити
     let playerTimers = {};
+    let currentSongForModal = null; // Для модального вікна
 
     async function getMusic() {
         const container = document.getElementById('music-container');
@@ -333,13 +335,16 @@
                 card.className = 'music-card';
                 card.style.animationDelay = (index * 0.1) + 's';
                 
+                // Екрануємо можливі апострофи в назві пісні для передачі у функцію
+                const safeName = song.name.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+
                 card.innerHTML = `
                     <div class="card-header-row">
                         <h3>${song.name}</h3>
-                        <button class="btn-buy" onclick="window.open('https://t.me/golosprotyraku_bot?start=buy_${song.id}', '_blank')">Придбати</button>
+                        <button class="btn-buy" onclick="buyTrack('${song.id}', '${safeName}', this)">Придбати</button>
                     </div>
                     <div class="player-wrapper" id="player-${song.id}">
-                        <button class="play-btn" onclick="loadPlayer('${song.id}')">▶ СЛУХАТИ ПРЕВ'Ю</button>
+                        <button class="play-btn" onclick="loadPlayer('${song.id}', '${safeName}')">▶ СЛУХАТИ ПРЕВ'Ю</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -349,32 +354,33 @@
         }
     }
 
-    function loadPlayer(id) {
+    function loadPlayer(id, name) {
         const wrapper = document.getElementById('player-' + id);
         
-        // Очищаємо попередній таймер, якщо він був
         if (playerTimers[id]) {
             clearTimeout(playerTimers[id]);
         }
 
-        // Вставляємо iframe
         wrapper.innerHTML = `
             <iframe src="https://drive.google.com/file/d/${id}/preview" 
                     style="width: calc(100% + 70px); height: 60px; border: none; position: absolute; top: -7px; left: -15px; filter: invert(0.9) hue-rotate(180deg);">
             </iframe>
         `;
 
-        // Встановлюємо таймер на 90 секунд (90000 мілісекунд)
         playerTimers[id] = setTimeout(() => {
-            // Зупиняємо музику: замінюємо плеєр назад на кнопку
-            wrapper.innerHTML = `<button class="play-btn" onclick="loadPlayer('${id}')">▶ СЛУХАТИ ПРЕВ'Ю (Продовжити)</button>`;
+            wrapper.innerHTML = `<button class="play-btn" onclick="loadPlayer('${id}', '${name}')">▶ СЛУХАТИ ПРЕВ'Ю (Продовжити)</button>`;
             
-            // Налаштовуємо посилання в модальному вікні
-            document.getElementById('modalBuyBtn').href = `https://t.me/golosprotyraku_bot?start=buy_${id}`;
+            // Зберігаємо дані пісні для кнопки в модальному вікні
+            currentSongForModal = { id: id, name: name };
             
-            // Показуємо модальне вікно
+            // Оновлюємо дію кнопки в модальному вікні
+            const modalBtn = document.getElementById('modalBuyBtn');
+            modalBtn.onclick = function() {
+                buyTrack(currentSongForModal.id, currentSongForModal.name, this);
+            };
+            
             document.getElementById('limitModal').style.display = 'flex';
-        }, 90000); // 90 секунд (1 хв 30 сек)
+        }, 90000); // 90 секунд
     }
 
     function closeModal() {
@@ -430,6 +436,36 @@
             btn.disabled = false; btn.innerText = 'Відправити';
         }
     });
+
+    // НОВА ФУНКЦІЯ ДЛЯ ОПЛАТИ ЧЕРЕЗ МОНОБАНК
+    async function buyTrack(songId, songName, btnElement) {
+        const originalText = btnElement.innerText;
+        btnElement.innerText = 'Зачекайте...';
+        btnElement.disabled = true;
+
+        try {
+            const res = await fetch('https://andreygerc11-music-site.onrender.com/api/pay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ songId, songName })
+            });
+            
+            const data = await res.json();
+            
+            if (data.url) {
+                // Перекидаємо покупця на сторінку оплати Монобанку
+                window.location.href = data.url; 
+            } else {
+                alert('Не вдалося створити платіж. Спробуйте пізніше.');
+                btnElement.innerText = originalText;
+                btnElement.disabled = false;
+            }
+        } catch (err) {
+            alert('Помилка з\'єднання із сервером.');
+            btnElement.innerText = originalText;
+            btnElement.disabled = false;
+        }
+    }
 </script>
 
 </body>
