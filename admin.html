@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адмін-панель | Музика</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://unpkg.com/browser-id3-writer@3.0.0"></script>
+    <style>
+        :root { --accent: #ff4d4d; --bg: #0a0a0b; --card: #161618; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .admin-panel { background: var(--card); padding: 40px; border-radius: 20px; border: 1px solid var(--accent); width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(255, 77, 77, 0.2); max-height: 90vh; overflow-y: auto; }
+        h1 { text-align: center; text-transform: uppercase; font-size: 1.5rem; margin-top: 0; margin-bottom: 20px;}
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #ccc; font-size: 0.9rem; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-family: inherit; box-sizing: border-box; }
+        .btn { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn:hover { background: white; color: var(--accent); }
+        #logArea { margin-top: 20px; background: #000; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; color: #4CAF50; height: 150px; overflow-y: auto; border: 1px solid #333; }
+        .log-error { color: #ff4d4d; }
+        .log-wait { color: #ffcc00; }
+        
+        #logoStatus { background: rgba(76, 175, 80, 0.2); border: 1px solid #4CAF50; padding: 10px; border-radius: 8px; color: #4CAF50; font-size: 0.9rem; display: none; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .btn-small { background: #333; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+        .btn-small:hover { background: #ff4d4d; }
+    </style>
+</head>
+<body>
+
+<div class="admin-panel">
+    <h1>Завантажувач Треків</h1>
+    
+    <div class="form-group">
+        <label>Назва пісні:</label>
+        <input type="text" id="songName" placeholder="Наприклад: Моя пісня">
+    </div>
+
+    <div id="logoStatus">
+        <span>✅ Логотип завантажено з пам'яті</span>
+        <button class="btn-small" onclick="clearLogo()">Змінити</button>
+    </div>
+
+    <div class="form-group" id="logoGroup">
+        <label>Обери логотип (один раз назавжди):</label>
+        <input type="file" id="coverFile" accept="image/jpeg, image/png">
+    </div>
+
+    <div class="form-group">
+        <label>Обери пісню (MP3):</label>
+        <input type="file" id="audioFile" accept="audio/mp3">
+    </div>
+
+    <button class="btn" onclick="startProcess()">Прошити та Завантажити</button>
+
+    <div id="logArea">
+        > Система готова. Виберіть файл та натисніть кнопку.<br>
+    </div>
+</div>
+
+<script>
+    const CLIENT_ID = '724333690730-kjj7rl1tn72vq452flbdhb1ngq3q7dqd.apps.googleusercontent.com';
+    const FOLDER_FULL = '1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j';
+    const FOLDER_PREV = '1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S';
+    const ARTIST_NAME = 'Andriy Hertz';
+
+    const logArea = document.getElementById('logArea');
+    let finalCoverBuffer = null; 
+
+    function log(msg, type = 'normal') {
+        const span = document.createElement('span');
+        if (type === 'error') span.className = 'log-error';
+        if (type === 'wait') span.className = 'log-wait';
+        span.innerHTML = `> ${msg}<br>`;
+        logArea.appendChild(span);
+        logArea.scrollTop = logArea.scrollHeight;
+    }
+
+    function base64ToArrayBuffer(base64) {
+        const binaryString = window.atob(base64.split(',')[1]);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
+        return bytes.buffer;
+    }
+
+    const savedLogo = localStorage.getItem('myCoverLogo');
+    if (savedLogo) {
+        finalCoverBuffer = base64ToArrayBuffer(savedLogo);
+        document.getElementById('logoGroup').style.display = 'none';
+        document.getElementById('logoStatus').style.display = 'flex';
+    }
+
+    function clearLogo() {
+        localStorage.removeItem('myCoverLogo');
+        finalCoverBuffer = null;
+        document.getElementById('logoGroup').style.display = 'block';
+        document.getElementById('logoStatus').style.display = 'none';
+    }
+
+    document.getElementById('coverFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const base64String = event.target.result;
+            localStorage.setItem('myCoverLogo', base64String); 
+            finalCoverBuffer = base64ToArrayBuffer(base64String);
+            log("✅ Логотип збережено в пам'ять браузера!", "wait");
+            document.getElementById('logoGroup').style.display = 'none';
+            document.getElementById('logoStatus').style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Оновлений обробник: тепер назва змінюється завжди при виборі нового файлу
+    document.getElementById('audioFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            let cleanName = file.name.replace('.mp3', '');
+            document.getElementById('songName').value = cleanName;
+            log(`Назву оновлено на: "${cleanName}"`, "wait");
+        }
+    });
+
+    async function readFileAsArrayBuffer(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    async function tagAudio(fileInput, songName) {
+        const audioBuffer = await readFileAsArrayBuffer(fileInput);
+        const writer = new ID3Writer(audioBuffer);
+        writer.setFrame('TIT2', songName) 
+              .setFrame('TPE1', [ARTIST_NAME]) 
+              .setFrame('APIC', {
+                  type: 3, 
+                  data: finalCoverBuffer, 
+                  description: 'Логотип'
+              });
+        writer.addTag();
+        return writer.getBlob();
+    }
+
+    async function startProcess() {
+        let name = document.getElementById('songName').value.trim();
+        const fileInput = document.getElementById('audioFile').files[0];
+
+        if (!name || !fileInput) {
+            log("Помилка: Заповніть назву та виберіть аудіофайл!", "error");
+            return;
+        }
+        
+        if (!finalCoverBuffer) {
+            log("Помилка: Виберіть логотип хоча б один раз!", "error");
+            return;
+        }
+
+        // Прибираємо .mp3 якщо користувач випадково ввів, щоб не дублювалося
+        name = name.replace('.mp3', '');
+
+        log(`Починаю обробку: "${name}"...`, "wait");
+        
+        try {
+            if (typeof ID3Writer === 'undefined') {
+                log("Помилка: Інструмент для прошивки не зміг завантажитись. Оновіть сторінку.", "error");
+                return;
+            }
+
+            log(`Прошиваю трек логотипом...`);
+            const blobAudio = await tagAudio(fileInput, name);
+
+            log("Файл прошито! Авторизація в Google...", "wait");
+
+            const client = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/drive.file',
+                callback: (response) => {
+                    if (response.error) {
+                        log("Помилка доступу до Диску", "error");
+                        return;
+                    }
+                    log("Доступ отримано! Завантажую на Диск...", "wait");
+                    uploadFilesToDrive(blobAudio, name, response.access_token);
+                },
+            });
+            client.requestAccessToken();
+
+        } catch (error) {
+            log("Помилка: " + error.message, "error");
+        }
+    }
+
+    async function uploadFilesToDrive(fileBlob, name, token) {
+        try {
+            // 1. Завантажуємо в ПОВНУ папку
+            log(`Завантажую в закриту папку (Повна версія)...`);
+            let metadataFull = { name: `${name}.mp3`, parents: [FOLDER_FULL] };
+            let formFull = new FormData();
+            formFull.append('metadata', new Blob([JSON.stringify(metadataFull)], { type: 'application/json' }));
+            formFull.append('file', fileBlob, `${name}.mp3`);
+
+            let resFull = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formFull
+            });
+            let dataFull = await resFull.json();
+            if(dataFull.id) log("✅ Повний трек збережено в сейфі!");
+
+            // 2. Завантажуємо в ПРЕВ'Ю папку з припискою
+            log(`Завантажую у відкриту папку (Прев'ю)...`, "wait");
+            let metadataPrev = { name: `${name} (Прев'ю).mp3`, parents: [FOLDER_PREV] };
+            let formPrev = new FormData();
+            formPrev.append('metadata', new Blob([JSON.stringify(metadataPrev)], { type: 'application/json' }));
+            formPrev.append('file', fileBlob, `${name}_preview.mp3`);
+
+            let resPrev = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formPrev
+            });
+            let dataPrev = await resPrev.json();
+            if(dataPrev.id) {
+                log("✅ Прев'ю успішно завантажено!");
+                log("🎉 УСЕ ГОТОВО! Трек з'явиться на сайті.", "normal");
+            }
+        } catch (e) {
+            log("Сталася помилка при завантаженні на Гугл Диск.", "error");
+        }
+    }
+</script>
+
+</body>
+</html>
