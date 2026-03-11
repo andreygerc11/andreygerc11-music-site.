@@ -17,9 +17,11 @@
         input[type="text"], input[type="file"] { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-family: inherit; box-sizing: border-box; }
         .btn { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn:hover { background: white; color: var(--accent); }
-        #logArea { margin-top: 20px; background: #000; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; color: #4CAF50; height: 150px; overflow-y: auto; border: 1px solid #333; }
+        .btn:disabled { background: #555; cursor: not-allowed; color: #aaa; }
+        #logArea { margin-top: 20px; background: #000; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; color: #4CAF50; height: 200px; overflow-y: auto; border: 1px solid #333; }
         .log-error { color: #ff4d4d; }
         .log-wait { color: #ffcc00; }
+        .log-header { color: #00bcd4; font-weight: bold; margin-top: 10px; display: block; }
         
         #logoStatus { background: rgba(76, 175, 80, 0.2); border: 1px solid #4CAF50; padding: 10px; border-radius: 8px; color: #4CAF50; font-size: 0.9rem; display: none; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .btn-small { background: #333; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
@@ -29,13 +31,8 @@
 <body>
 
 <div class="admin-panel">
-    <h1>Завантажувач Треків</h1>
+    <h1>Масове Завантаження</h1>
     
-    <div class="form-group">
-        <label>Назва пісні:</label>
-        <input type="text" id="songName" placeholder="Наприклад: Моя пісня">
-    </div>
-
     <div id="logoStatus">
         <span>✅ Логотип завантажено з пам'яті</span>
         <button class="btn-small" onclick="clearLogo()">Змінити</button>
@@ -47,14 +44,14 @@
     </div>
 
     <div class="form-group">
-        <label>Обери пісню (MP3):</label>
-        <input type="file" id="audioFile" accept="audio/mp3">
+        <label>Обери пісні (можна виділити багато):</label>
+        <input type="file" id="audioFiles" accept="audio/mp3" multiple>
     </div>
 
-    <button class="btn" onclick="startProcess()">Прошити та Завантажити</button>
+    <button class="btn" id="startBtn" onclick="startProcess()">Прошити та Завантажити ВСІ</button>
 
     <div id="logArea">
-        > Система готова. Виберіть файл та натисніть кнопку.<br>
+        > Система готова. Виділіть файли та натисніть кнопку.<br>
     </div>
 </div>
 
@@ -65,13 +62,16 @@
     const ARTIST_NAME = 'Andriy Hertz';
 
     const logArea = document.getElementById('logArea');
+    const startBtn = document.getElementById('startBtn');
     let finalCoverBuffer = null; 
 
     function log(msg, type = 'normal') {
         const span = document.createElement('span');
         if (type === 'error') span.className = 'log-error';
         if (type === 'wait') span.className = 'log-wait';
-        span.innerHTML = `> ${msg}<br>`;
+        if (type === 'header') span.className = 'log-header';
+        
+        span.innerHTML = type === 'header' ? `${msg}<br>` : `> ${msg}<br>`;
         logArea.appendChild(span);
         logArea.scrollTop = logArea.scrollHeight;
     }
@@ -113,13 +113,10 @@
         reader.readAsDataURL(file);
     });
 
-    // Оновлений обробник: тепер назва змінюється завжди при виборі нового файлу
-    document.getElementById('audioFile').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            let cleanName = file.name.replace('.mp3', '');
-            document.getElementById('songName').value = cleanName;
-            log(`Назву оновлено на: "${cleanName}"`, "wait");
+    document.getElementById('audioFiles').addEventListener('change', function(e) {
+        const filesCount = e.target.files.length;
+        if (filesCount > 0) {
+            log(`Вибрано файлів для обробки: ${filesCount}`, "wait");
         }
     });
 
@@ -132,8 +129,8 @@
         });
     }
 
-    async function tagAudio(fileInput, songName) {
-        const audioBuffer = await readFileAsArrayBuffer(fileInput);
+    async function tagAudio(file, songName) {
+        const audioBuffer = await readFileAsArrayBuffer(file);
         const writer = new ID3Writer(audioBuffer);
         writer.setFrame('TIT2', songName) 
               .setFrame('TPE1', [ARTIST_NAME]) 
@@ -147,11 +144,10 @@
     }
 
     async function startProcess() {
-        let name = document.getElementById('songName').value.trim();
-        const fileInput = document.getElementById('audioFile').files[0];
+        const files = document.getElementById('audioFiles').files;
 
-        if (!name || !fileInput) {
-            log("Помилка: Заповніть назву та виберіть аудіофайл!", "error");
+        if (files.length === 0) {
+            log("Помилка: Виберіть хоча б один аудіофайл!", "error");
             return;
         }
         
@@ -160,62 +156,79 @@
             return;
         }
 
-        // Прибираємо .mp3 якщо користувач випадково ввів, щоб не дублювалося
-        name = name.replace('.mp3', '');
-
-        log(`Починаю обробку: "${name}"...`, "wait");
-        
         try {
             if (typeof ID3Writer === 'undefined') {
                 log("Помилка: Інструмент для прошивки не зміг завантажитись. Оновіть сторінку.", "error");
                 return;
             }
 
-            log(`Прошиваю трек логотипом...`);
-            const blobAudio = await tagAudio(fileInput, name);
-
-            log("Файл прошито! Авторизація в Google...", "wait");
+            startBtn.disabled = true;
+            startBtn.innerText = "Обробка...";
+            log(`Авторизація в Google для завантаження ${files.length} файлів...`, "wait");
 
             const client = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: 'https://www.googleapis.com/auth/drive.file',
-                callback: (response) => {
+                callback: async (response) => {
                     if (response.error) {
                         log("Помилка доступу до Диску", "error");
+                        startBtn.disabled = false;
+                        startBtn.innerText = "Прошити та Завантажити ВСІ";
                         return;
                     }
-                    log("Доступ отримано! Завантажую на Диск...", "wait");
-                    uploadFilesToDrive(blobAudio, name, response.access_token);
+                    
+                    log("Доступ отримано! Починаю масову обробку...", "wait");
+
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        // Залишаємо назву файлу без змін, разом із розширенням
+                        const name = file.name.trim(); 
+                        
+                        log(`--- Файл ${i + 1} з ${files.length}: "${name}" ---`, "header");
+                        log(`Прошиваю трек логотипом...`);
+                        
+                        const blobAudio = await tagAudio(file, name);
+                        await uploadFilesToDrive(blobAudio, name, response.access_token);
+                    }
+
+                    log("🎉 УСІ ТРЕКИ УСПІШНО ОБРОБЛЕНО ТА ЗАВАНТАЖЕНО!", "header");
+                    startBtn.disabled = false;
+                    startBtn.innerText = "Прошити та Завантажити ВСІ";
+                    document.getElementById('audioFiles').value = ''; 
                 },
             });
             client.requestAccessToken();
 
         } catch (error) {
             log("Помилка: " + error.message, "error");
+            startBtn.disabled = false;
+            startBtn.innerText = "Прошити та Завантажити ВСІ";
         }
     }
 
     async function uploadFilesToDrive(fileBlob, name, token) {
         try {
-            // 1. Завантажуємо в ПОВНУ папку
             log(`Завантажую в закриту папку (Повна версія)...`);
-            let metadataFull = { name: `${name}.mp3`, parents: [FOLDER_FULL] };
+            let metadataFull = { name: name, parents: [FOLDER_FULL] };
             let formFull = new FormData();
             formFull.append('metadata', new Blob([JSON.stringify(metadataFull)], { type: 'application/json' }));
-            formFull.append('file', fileBlob, `${name}.mp3`);
+            formFull.append('file', fileBlob, name);
 
             let resFull = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                 method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formFull
             });
             let dataFull = await resFull.json();
-            if(dataFull.id) log("✅ Повний трек збережено в сейфі!");
+            if(dataFull.id) log("✅ Повний трек збережено!");
 
-            // 2. Завантажуємо в ПРЕВ'Ю папку з припискою
-            log(`Завантажую у відкриту папку (Прев'ю)...`, "wait");
-            let metadataPrev = { name: `${name} (Прев'ю).mp3`, parents: [FOLDER_PREV] };
+            log(`Завантажую у відкриту папку (Прев'ю)...`);
+            // Вставляємо приписку "(Прев'ю)" перед .mp3
+            let prevName = name.replace('.mp3', ' (Прев\'ю).mp3');
+            if (!name.toLowerCase().endsWith('.mp3')) prevName += ' (Прев\'ю).mp3';
+            
+            let metadataPrev = { name: prevName, parents: [FOLDER_PREV] };
             let formPrev = new FormData();
             formPrev.append('metadata', new Blob([JSON.stringify(metadataPrev)], { type: 'application/json' }));
-            formPrev.append('file', fileBlob, `${name}_preview.mp3`);
+            formPrev.append('file', fileBlob, prevName);
 
             let resPrev = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                 method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formPrev
@@ -223,10 +236,9 @@
             let dataPrev = await resPrev.json();
             if(dataPrev.id) {
                 log("✅ Прев'ю успішно завантажено!");
-                log("🎉 УСЕ ГОТОВО! Трек з'явиться на сайті.", "normal");
             }
         } catch (e) {
-            log("Сталася помилка при завантаженні на Гугл Диск.", "error");
+            log("❌ Сталася помилка при завантаженні на Гугл Диск.", "error");
         }
     }
 </script>
