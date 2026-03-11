@@ -25,19 +25,36 @@
         }
         h1 { color: #4CAF50; margin-bottom: 20px; font-size: 1.8rem; }
         p { font-size: 1.1rem; color: #ccc; margin-bottom: 30px; line-height: 1.6; }
-        .btn { 
+        .btn-home { 
             display: inline-block;
-            background: #ff4d4d; 
+            background: transparent;
+            border: 1px solid #ff4d4d; 
             color: #fff; 
             padding: 12px 30px; 
             text-decoration: none; 
             border-radius: 50px; 
             font-weight: 700; 
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        .btn-home:hover { background: #ff4d4d; color: #fff; }
+        .btn-download {
+            display: none; /* Прихована, поки не отримає лінк */
+            background: #4CAF50; 
+            color: #fff; 
+            padding: 15px 35px; 
+            text-decoration: none; 
+            border-radius: 50px; 
+            font-weight: 900; 
             text-transform: uppercase;
             transition: 0.3s; 
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
         }
-        .btn:hover { background: #fff; color: #ff4d4d; }
+        .btn-download:hover { background: #45a049; transform: translateY(-2px); }
         .icon { font-size: 4rem; margin-bottom: 20px; }
+        #loading-text { color: #ff4d4d; font-weight: bold; margin-bottom: 20px; display: none; }
     </style>
 </head>
 <body>
@@ -45,8 +62,40 @@
         <div class="icon">✅</div>
         <h1>Оплата пройшла успішно!</h1>
         <p>Щиро дякуємо за вашу підтримку. Кожна придбана пісня — це внесок у проєкт «Голос проти раку».</p>
-        <p>Якщо у вас виникли будь-які питання, напишіть нам через чат на сайті або у WhatsApp.</p>
-        <a href="index.html" class="btn">Повернутися на головну</a>
+        
+        <p id="loading-text">⏳ Завантаження файлу почнеться автоматично...</p>
+        
+        <a href="#" id="download-btn" class="btn-download">⬇️ ЗАВАНТАЖИТИ ТРЕК</a>
+        
+        <br>
+        <a href="index.html" class="btn-home">Повернутися на головну</a>
     </div>
+
+    <script>
+        // Коли сторінка завантажилась
+        window.onload = function() {
+            // Шукаємо в посиланні ID пісні (те, що ми передали після ?file=)
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileId = urlParams.get('file');
+
+            if (fileId) {
+                // Робимо пряме посилання на скачування з Google Диска
+                const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                
+                // Налаштовуємо кнопку
+                const btn = document.getElementById('download-btn');
+                btn.href = downloadUrl;
+                btn.style.display = 'inline-block';
+                
+                // Показуємо текст про автоматичне завантаження
+                document.getElementById('loading-text').style.display = 'block';
+
+                // Запускаємо автоматичне скачування через 2 секунди
+                setTimeout(() => {
+                    window.location.href = downloadUrl;
+                }, 2000);
+            }
+        };
+    </script>
 </body>
 </html>
