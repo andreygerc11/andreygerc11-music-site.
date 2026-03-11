@@ -24,7 +24,8 @@ app.post('/api/pay', async (req, res) => {
         const response = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
             amount: 5000, // 50 грн в копійках
             ccy: 980,
-            redirectUrl: "https://golos-proty-raku.pp.ua/success.html",
+            // ТУТ ЗМІНА: передаємо ID пісні на сторінку успіху
+            redirectUrl: `https://golos-proty-raku.pp.ua/success.html?file=${songId}`,
             merchantPaymInfo: {
                 reference: songId,
                 destination: `Оплата за трек: ${songName}`
