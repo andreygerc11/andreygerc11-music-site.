@@ -24,44 +24,57 @@
             box-shadow: 0 10px 30px rgba(255, 77, 77, 0.1);
         }
         h1 { color: #4CAF50; margin-bottom: 20px; font-size: 1.8rem; }
-        p { font-size: 1.1rem; color: #ccc; margin-bottom: 30px; line-height: 1.6; }
-        .btn-home { 
-            display: inline-block;
-            background: transparent;
-            border: 1px solid #ff4d4d; 
+        p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; color: #ccc; }
+        .btn-download { 
+            display: none; 
+            background: #ff4d4d; 
             color: #fff; 
-            padding: 12px 30px; 
+            padding: 15px 30px; 
             text-decoration: none; 
-            border-radius: 50px; 
-            font-weight: 700; 
+            font-weight: bold; 
+            border-radius: 8px; 
+            font-size: 1.2rem;
+            margin-top: 20px;
             transition: 0.3s;
-            margin-top: 10px;
         }
-        .btn-home:hover { background: #ff4d4d; color: #fff; }
-        .btn-download {
-            display: none; /* Прихована, поки не отримає лінк */
-            background: #4CAF50; 
-            color: #fff; 
-            padding: 15px 35px; 
+        .btn-download:hover { background: #e60000; box-shadow: 0 0 15px rgba(255, 77, 77, 0.5); }
+        .btn-home { 
+            display: inline-block; 
+            margin-top: 20px; 
+            color: #ff4d4d; 
             text-decoration: none; 
-            border-radius: 50px; 
-            font-weight: 900; 
-            text-transform: uppercase;
-            transition: 0.3s; 
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            font-size: 0.9rem;
         }
-        .btn-download:hover { background: #45a049; transform: translateY(-2px); }
-        .icon { font-size: 4rem; margin-bottom: 20px; }
-        #loading-text { color: #ff4d4d; font-weight: bold; margin-bottom: 20px; display: none; }
+        .btn-home:hover { text-decoration: underline; }
+        #loading-text { color: #f39c12; font-weight: bold; display: none; margin-top: 20px; }
+        
+        /* Блок підтримки та гарантій */
+        .support-block {
+            margin-top: 40px; 
+            padding-top: 20px; 
+            border-top: 1px solid #333;
+            background: rgba(0, 136, 204, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .support-block p { color: #aaa; font-size: 0.95rem; margin-bottom: 15px; }
+        .support-btn {
+            display: inline-block;
+            color: #0088cc; 
+            text-decoration: none; 
+            font-weight: bold; 
+            border: 1px solid #0088cc; 
+            padding: 10px 20px; 
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .support-btn:hover { background: #0088cc; color: #fff; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="icon">✅</div>
-        <h1>Оплата пройшла успішно!</h1>
-        <p>Щиро дякуємо за вашу підтримку. Кожна придбана пісня — це внесок у проєкт «Голос проти раку».</p>
+        <h1>✅ Оплата успішна! Дякую за підтримку.</h1>
+        <p>Ваші кошти успішно зараховано. Кожна придбана пісня — це внесок у проєкт «Голос проти раку».</p>
         
         <p id="loading-text">⏳ Завантаження файлу почнеться автоматично...</p>
         
@@ -69,31 +82,39 @@
         
         <br>
         <a href="index.html" class="btn-home">Повернутися на головну</a>
+
+        <div class="support-block">
+            <h3 style="color: #0088cc; margin-bottom: 10px; font-size: 1.1rem;">🛡️ Гарантія отримання файлу</h3>
+            <p>Файл не завантажився або ви випадково закрили вікно?<br>Не хвилюйтеся, ваші гроші не пропали. Зверніться у нашу підтримку, і ми надішлемо вам трек особисто.</p>
+            <a href="https://t.me/andreygerc11" target="_blank" class="support-btn">
+                Написати в Telegram-підтримку
+            </a>
+        </div>
     </div>
 
     <script>
-        // Коли сторінка завантажилась
         window.onload = function() {
-            // Шукаємо в посиланні ID пісні (те, що ми передали після ?file=)
             const urlParams = new URLSearchParams(window.location.search);
             const fileId = urlParams.get('file');
 
             if (fileId) {
-                // Робимо пряме посилання на скачування з Google Диска
                 const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
                 
-                // Налаштовуємо кнопку
                 const btn = document.getElementById('download-btn');
                 btn.href = downloadUrl;
                 btn.style.display = 'inline-block';
                 
-                // Показуємо текст про автоматичне завантаження
                 document.getElementById('loading-text').style.display = 'block';
 
-                // Запускаємо автоматичне скачування через 2 секунди
                 setTimeout(() => {
                     window.location.href = downloadUrl;
+                    document.getElementById('loading-text').innerText = '✅ Файл завантажується!';
+                    document.getElementById('loading-text').style.color = '#4CAF50';
                 }, 2000);
+            } else {
+                document.getElementById('loading-text').innerText = '❌ Помилка: файл не знайдено. Зверніться в підтримку.';
+                document.getElementById('loading-text').style.color = '#ff4d4d';
+                document.getElementById('loading-text').style.display = 'block';
             }
         };
     </script>
