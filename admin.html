@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://unpkg.com/browser-id3-writer@3.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
     <style>
         :root { --accent: #ff4d4d; --bg: #0a0a0b; --card: #161618; }
         body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
@@ -51,7 +52,7 @@
     <button class="btn" id="startBtn" onclick="startProcess()">Прошити та Завантажити ВСІ</button>
 
     <div id="logArea">
-        > Система готова. Виділіть файли та натисніть кнопку.<br>
+        > Система готова. Вбудовано фізичну обрізку треків до 1 хв 20 с.<br>
     </div>
 </div>
 
@@ -60,6 +61,7 @@
     const FOLDER_FULL = '1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j';
     const FOLDER_PREV = '1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S';
     const ARTIST_NAME = 'Andriy Hertz';
+    const TRIM_DURATION_SECONDS = 80; // 1 хвилина 20 секунд
 
     const logArea = document.getElementById('logArea');
     const startBtn = document.getElementById('startBtn');
@@ -129,8 +131,64 @@
         });
     }
 
-    async function tagAudio(file, songName) {
-        const audioBuffer = await readFileAsArrayBuffer(file);
+    // Функція фізичної обрізки аудіофайлу
+    async function trimAudioToMp3(file, durationSec) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const audioBuffer = await audioCtx.decodeAudioData(e.target.result);
+
+                    const sampleRate = audioBuffer.sampleRate;
+                    const channels = audioBuffer.numberOfChannels;
+                    // Обрізаємо по вказаній тривалості
+                    const length = Math.min(audioBuffer.length, sampleRate * durationSec);
+
+                    const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128); // 128kbps для прев'ю
+                    let mp3Data = [];
+
+                    const left = audioBuffer.getChannelData(0);
+                    const right = channels > 1 ? audioBuffer.getChannelData(1) : left;
+
+                    const sampleBlockSize = 1152;
+                    let left16 = new Int16Array(sampleBlockSize);
+                    let right16 = new Int16Array(sampleBlockSize);
+
+                    for (let i = 0; i < length; i += sampleBlockSize) {
+                        let chunk = Math.min(sampleBlockSize, length - i);
+                        for (let j = 0; j < chunk; j++) {
+                            let l = left[i + j];
+                            left16[j] = l < 0 ? l * 0x8000 : l * 0x7FFF;
+                            if (channels > 1) {
+                                let r = right[i + j];
+                                right16[j] = r < 0 ? r * 0x8000 : r * 0x7FFF;
+                            }
+                        }
+                        
+                        let mp3buf;
+                        if (channels === 1) {
+                            mp3buf = mp3encoder.encodeBuffer(left16.subarray(0, chunk));
+                        } else {
+                            mp3buf = mp3encoder.encodeBuffer(left16.subarray(0, chunk), right16.subarray(0, chunk));
+                        }
+                        if (mp3buf.length > 0) mp3Data.push(mp3buf);
+                    }
+
+                    let mp3buf = mp3encoder.flush();
+                    if (mp3buf.length > 0) mp3Data.push(mp3buf);
+
+                    resolve(new Blob(mp3Data, { type: 'audio/mp3' }));
+                } catch (err) {
+                    reject(err);
+                }
+            };
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    async function tagAudio(audioBuffer, songName) {
         const writer = new ID3Writer(audioBuffer);
         writer.setFrame('TIT2', songName) 
               .setFrame('TPE1', [ARTIST_NAME]) 
@@ -157,14 +215,14 @@
         }
 
         try {
-            if (typeof ID3Writer === 'undefined') {
-                log("Помилка: Інструмент для прошивки не зміг завантажитись. Оновіть сторінку.", "error");
+            if (typeof ID3Writer === 'undefined' || typeof lamejs === 'undefined') {
+                log("Помилка: Бібліотеки не змогли завантажитись. Перевірте інтернет та оновіть сторінку.", "error");
                 return;
             }
 
             startBtn.disabled = true;
             startBtn.innerText = "Обробка...";
-            log(`Авторизація в Google для завантаження ${files.length} файлів...`, "wait");
+            log(`Авторизація в Google...`, "wait");
 
             const client = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
@@ -181,14 +239,28 @@
 
                     for (let i = 0; i < files.length; i++) {
                         const file = files[i];
-                        // Залишаємо назву файлу без змін, разом із розширенням
                         const name = file.name.trim(); 
                         
                         log(`--- Файл ${i + 1} з ${files.length}: "${name}" ---`, "header");
-                        log(`Прошиваю трек логотипом...`);
                         
-                        const blobAudio = await tagAudio(file, name);
-                        await uploadFilesToDrive(blobAudio, name, response.access_token);
+                        // 1. Обробка ПОВНОГО файлу
+                        log(`Прошиваю повний трек логотипом...`);
+                        const fullBuffer = await readFileAsArrayBuffer(file);
+                        const fullTaggedBlob = await tagAudio(fullBuffer, name);
+                        await uploadFileToDrive(fullTaggedBlob, name, FOLDER_FULL, response.access_token);
+
+                        // 2. Обрізка і обробка ПРЕВ'Ю
+                        log(`✂️ Обрізаю трек до ${TRIM_DURATION_SECONDS} секунд... (це займе трохи часу)`, "wait");
+                        const trimmedBlob = await trimAudioToMp3(file, TRIM_DURATION_SECONDS);
+                        
+                        log(`Прошиваю прев'ю логотипом...`);
+                        const trimmedBuffer = await trimmedBlob.arrayBuffer();
+                        const trimmedTaggedBlob = await tagAudio(trimmedBuffer, name);
+                        
+                        let prevName = name.replace('.mp3', ' (Прев\'ю).mp3');
+                        if (!name.toLowerCase().endsWith('.mp3')) prevName += ' (Прев\'ю).mp3';
+
+                        await uploadFileToDrive(trimmedTaggedBlob, prevName, FOLDER_PREV, response.access_token);
                     }
 
                     log("🎉 УСІ ТРЕКИ УСПІШНО ОБРОБЛЕНО ТА ЗАВАНТАЖЕНО!", "header");
@@ -206,39 +278,24 @@
         }
     }
 
-    async function uploadFilesToDrive(fileBlob, name, token) {
+    async function uploadFileToDrive(fileBlob, name, folderId, token) {
         try {
-            log(`Завантажую в закриту папку (Повна версія)...`);
-            let metadataFull = { name: name, parents: [FOLDER_FULL] };
-            let formFull = new FormData();
-            formFull.append('metadata', new Blob([JSON.stringify(metadataFull)], { type: 'application/json' }));
-            formFull.append('file', fileBlob, name);
+            let metadata = { name: name, parents: [folderId] };
+            let form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', fileBlob, name);
 
-            let resFull = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formFull
+            let res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: form
             });
-            let dataFull = await resFull.json();
-            if(dataFull.id) log("✅ Повний трек збережено!");
-
-            log(`Завантажую у відкриту папку (Прев'ю)...`);
-            // Вставляємо приписку "(Прев'ю)" перед .mp3
-            let prevName = name.replace('.mp3', ' (Прев\'ю).mp3');
-            if (!name.toLowerCase().endsWith('.mp3')) prevName += ' (Прев\'ю).mp3';
-            
-            let metadataPrev = { name: prevName, parents: [FOLDER_PREV] };
-            let formPrev = new FormData();
-            formPrev.append('metadata', new Blob([JSON.stringify(metadataPrev)], { type: 'application/json' }));
-            formPrev.append('file', fileBlob, prevName);
-
-            let resPrev = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formPrev
-            });
-            let dataPrev = await resPrev.json();
-            if(dataPrev.id) {
-                log("✅ Прев'ю успішно завантажено!");
+            let data = await res.json();
+            if(data.id) {
+                log(`✅ Файл "${name}" успішно завантажено!`);
+            } else {
+                throw new Error("Немає ID у відповіді");
             }
         } catch (e) {
-            log("❌ Сталася помилка при завантаженні на Гугл Диск.", "error");
+            log(`❌ Помилка при завантаженні "${name}" на Гугл Диск.`, "error");
         }
     }
 </script>
