@@ -1,152 +1,175 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DHLXH7C8QT"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DHLXH7C8QT');
+    </script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Голос проти раку | Андрій Герц</title>
     
     <link rel="icon" type="image/png" href="favicon.png?v=2">
     
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-
+    
     <style>
-        :root {
-            --accent: #ff4d4d;
-            --dark: #0a0a0b;
-            --glass: rgba(0, 0, 0, 0.85);
-            --text: #ffffff;
+        :root { 
+            --accent: #ff4d4d; 
+            --dark: #0a0a0b; 
+            --card: #161618;
+            --glass: rgba(0, 0, 0, 0.85); 
         }
-
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: var(--dark);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background: var(--dark); 
+            color: #fff; 
+            line-height: 1.6; 
+            overflow-x: hidden; 
         }
 
-        .hero {
-            position: relative;
-            height: 100vh;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            text-align: center;
-            background: #000;
+        /* Навігація */
+        .header-nav { 
+            position: fixed; top: 0; width: 100%; 
+            background: var(--glass); backdrop-filter: blur(10px);
+            z-index: 1000; padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .nav-container { 
+            max-width: 1200px; margin: 0 auto; padding: 0 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .logo { font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; color: #fff; text-decoration: none;}
+        .logo span { color: var(--accent); }
+        .nav-links { display: flex; gap: 20px; list-style: none; }
+        .nav-links a { text-decoration: none; color: #ccc; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; transition: 0.3s; }
+        .nav-links a:hover { color: #fff; }
+
+        /* Герой (Темний градієнт) */
+        .hero { 
+            height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; 
+            background: radial-gradient(circle at center, #2a0a0a 0%, var(--dark) 70%);
+            padding: 0 20px; position: relative;
+        }
+        .hero-content { max-width: 900px; z-index: 2; }
+        .hero h1 { 
+            font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 900; text-transform: uppercase; 
+            line-height: 1.1; margin-bottom: 20px; color: #fff;
+            text-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
+        }
+        .hero p { font-size: 1.15rem; color: #ccc; margin-bottom: 40px; max-width: 700px; margin-left: auto; margin-right: auto; }
+        
+        .btn-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
+        .btn { 
+            display: inline-block; padding: 15px 35px; background: var(--accent); color: #fff; 
+            text-decoration: none; font-weight: 900; border-radius: 50px; 
+            text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;
+            transition: 0.3s ease; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); border: 2px solid var(--accent);
+        }
+        .btn:hover { background: #fff; color: var(--accent); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(255, 77, 77, 0.5); }
+        .btn-outline { background: transparent; border: 2px solid #fff; box-shadow: none; }
+        .btn-outline:hover { background: #fff; color: var(--dark); }
+        .btn-whatsapp { background: #25D366; border-color: #25D366; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
+        .btn-whatsapp:hover { background: #fff; color: #25D366; }
+
+        /* Спільні стилі для секцій */
+        section { padding: 80px 20px; max-width: 1100px; margin: 0 auto; }
+        h2 { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; text-align: center; margin-bottom: 15px; color: #fff; }
+        .section-desc { text-align: center; color: #aaa; max-width: 700px; margin: 0 auto 50px auto; font-size: 1rem;}
+
+        /* Про проєкт */
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .about-text p { margin-bottom: 15px; color: #ccc; text-align: justify; }
+        .about-img { width: 100%; border-radius: 20px; border: 2px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
+        
+        .info-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin-top: 15px; border-left: 3px solid var(--accent); }
+        .info-box h4 { color: var(--accent); margin-bottom: 5px; font-size: 1.1rem; }
+        .info-box p { font-size: 0.9rem; margin-bottom: 0; color: #bbb; text-align: left; }
+        
+        .quote { font-style: italic; color: #fff; padding: 15px 20px; border-left: 3px solid var(--accent); margin: 25px 0; background: rgba(255, 77, 77, 0.05); border-radius: 0 10px 10px 0; }
+
+        /* Блок статистики під Проєктом */
+        .statistics-block {
+            margin-top: 50px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border-left: 4px solid var(--accent);
+        }
+        .statistics-block p {
+            font-size: 1rem;
+            color: #bbb;
+            text-align: justify;
+            margin-bottom: 0;
+            line-height: 1.8;
         }
 
-        #bg-video {
-            position: absolute;
-            top: 50%; left: 50%;
-            min-width: 100%; min-height: 100%;
-            transform: translate(-50%, -50%);
-            z-index: 0;
-            filter: brightness(0.4) contrast(1.1);
-            object-fit: cover;
+        /* Музика */
+        .music-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .music-card { 
+            background: var(--card); padding: 30px; border-radius: 20px; text-align: center; 
+            border: 1px solid rgba(255,255,255,0.03); transition: 0.3s;
+        }
+        .music-card:hover { border-color: rgba(255, 77, 77, 0.2); transform: translateY(-5px); }
+        .music-card h3 { font-size: 1.2rem; margin-bottom: 15px; color: #fff; }
+        audio { width: 100%; outline: none; border-radius: 30px; }
+
+        /* БЛОК СТАТЕЙ (ІНФОРМАЦІЙНИЙ ФРОНТ) */
+        .articles-section { margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 40px; }
+        .articles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-top: 30px; }
+        .article-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; overflow: hidden; transition: 0.4s ease; display: flex; flex-direction: column; }
+        .article-card:hover { transform: translateY(-10px); border-color: rgba(255, 77, 77, 0.4); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4); background: rgba(255, 255, 255, 0.05); }
+        .article-img-wrapper { overflow: hidden; position: relative; height: 200px; }
+        .article-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .article-card:hover .article-image { transform: scale(1.08); }
+        .article-tag { position: absolute; top: 15px; left: 15px; background: var(--accent); color: white; padding: 5px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; z-index: 2; box-shadow: 0 2px 10px rgba(255, 77, 77, 0.3); }
+        .article-content { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+        .article-title { font-size: 1.15rem; color: #fff; margin-bottom: 12px; font-weight: 700; line-height: 1.4; }
+        .article-excerpt { color: #aaa; font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px; flex-grow: 1; }
+        .article-btn { color: var(--accent); text-decoration: none; font-weight: bold; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; margin-top: auto; text-transform: uppercase; }
+        .article-btn:hover { color: white; gap: 12px; }
+
+        /* Підтримка (Кнопки поширення) */
+        .support-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; text-align: center;}
+        
+        .support-card { 
+            background: rgba(255,255,255,0.03); 
+            padding: 25px 15px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            text-decoration: none; 
+            color: #fff;
+            display: block; 
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .support-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
 
-        .hero-content {
-            z-index: 1;
-            padding: 20px;
-            max-width: 900px;
-        }
+        .support-card i { font-size: 2.5rem; margin-bottom: 15px; transition: 0.3s; }
+        .support-card:hover i { transform: scale(1.1); }
+        
+        .support-card h3 { margin-bottom: 8px; font-size: 1.1rem; color: #fff;}
+        .support-card p { color: #aaa; font-size: 0.85rem; margin: 0;}
 
-        .hero-title {
-            font-size: clamp(2.5rem, 8vw, 5rem);
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            background: linear-gradient(to right, #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            text-shadow: 0 0 30px rgba(255, 77, 77, 0.5);
-        }
-
-        .hero-subtitle {
-            font-size: clamp(1rem, 3vw, 1.4rem);
-            font-weight: 300;
-            margin-bottom: 40px;
-            color: #eee;
-        }
-
-        .btn-group { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-
-        .btn {
-            padding: 18px 35px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            transition: all 0.4s ease;
-            display: inline-block;
-        }
-
-        .btn-main { 
-            background: var(--accent); color: white; 
-            box-shadow: 0 10px 20px rgba(255, 77, 77, 0.4); border: 2px solid var(--accent);
-        }
-        .btn-main:hover { transform: translateY(-5px); background: white; color: var(--accent); }
-
-        .btn-outline { 
-            border: 2px solid white; color: white; backdrop-filter: blur(10px);
-        }
-        .btn-outline:hover { background: white; color: var(--dark); transform: translateY(-5px); }
-
-        .btn-whatsapp {
-            background: #25D366; color: white;
-            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3); border: 2px solid #25D366;
-        }
-        .btn-whatsapp:hover { background: white; color: #25D366; transform: translateY(-5px); }
-
-        section { padding: 80px 20px; max-width: 1100px; margin: auto; }
-
-        .glass-card {
-            background: var(--glass); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1); padding: 40px;
-            border-radius: 35px; margin-top: -100px; position: relative; z-index: 10;
-        }
-
-        h2 { font-size: 1.8rem; margin: 35px 0 20px; color: var(--accent); text-transform: uppercase; }
-        h2:first-child { margin-top: 0; }
-        p { margin-bottom: 15px; font-size: 1.1rem; color: #ddd; }
-
-        .quote {
-            border-left: 4px solid var(--accent); padding-left: 20px;
-            font-style: italic; margin: 30px 0; color: #fff;
-        }
-
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin: 40px 0; }
-
-        .info-item {
-            background: rgba(255,255,255,0.05); padding: 30px;
-            border-radius: 20px; border-bottom: 3px solid var(--accent);
-        }
-        .info-item h3 { margin-bottom: 10px; color: #fff; }
-
-        audio { width: 100%; margin-top: 15px; }
-
-        /* ====== ЮРИДИЧНИЙ ПІДВАЛ ====== */
-        footer { text-align: center; padding: 60px 20px; background: #0a0a0b; border-top: 1px solid rgba(255,255,255,0.05); }
-        .footer-content { max-width: 800px; margin: auto; display: flex; flex-direction: column; gap: 15px; }
-        .footer-copy { color: #fff; font-weight: bold; font-size: 1rem; }
-        .footer-details { color: #888; font-size: 0.85rem; line-height: 1.5; }
-        .footer-links { display: flex; justify-content: center; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
-        .footer-links a { color: var(--accent); text-decoration: none; font-size: 0.85rem; transition: 0.3s; }
-        .footer-links a:hover { text-decoration: underline; color: #fff; }
-
-        @media (max-width: 600px) {
-            .glass-card { padding: 25px; margin-top: -50px; }
-        }
-
-        /* ====== СТИЛІ ДЛЯ ВІДЖЕТА ПІДТРИМКИ (ЧАТ) ====== */
+        /* Віджет підтримки (Чат) */
         .support-widget {
             position: fixed; top: 50%; right: -320px; transform: translateY(-50%);
             width: 320px; background: var(--glass); backdrop-filter: blur(20px);
@@ -165,20 +188,14 @@
             box-shadow: -5px 0 15px rgba(255, 77, 77, 0.4);
             animation: pulse-support 2s infinite; display: flex; align-items: center; gap: 10px;
         }
-        @keyframes pulse-support {
-            0% { box-shadow: -2px 0 10px rgba(255, 77, 77, 0.4); }
-            50% { box-shadow: -2px 0 25px rgba(255, 77, 77, 0.8); }
-            100% { box-shadow: -2px 0 10px rgba(255, 77, 77, 0.4); }
-        }
+        @keyframes pulse-support { 0% { box-shadow: -2px 0 10px rgba(255, 77, 77, 0.4); } 50% { box-shadow: -2px 0 25px rgba(255, 77, 77, 0.8); } 100% { box-shadow: -2px 0 10px rgba(255, 77, 77, 0.4); } }
         .support-widget h3 { margin-bottom: 15px; color: #fff; font-size: 1.2rem; margin-top: 0;}
         .support-widget input, .support-widget textarea {
             width: 100%; padding: 12px; margin-bottom: 15px;
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
             color: white; border-radius: 8px; font-family: inherit; outline: none; transition: 0.3s;
         }
-        .support-widget input:focus, .support-widget textarea:focus {
-            border-color: var(--accent); background: rgba(255,255,255,0.1);
-        }
+        .support-widget input:focus, .support-widget textarea:focus { border-color: var(--accent); background: rgba(255,255,255,0.1); }
         .support-widget textarea { resize: none; height: 100px; }
         .support-widget button[type="submit"] {
             width: 100%; background: var(--accent); color: white; border: none;
@@ -187,85 +204,191 @@
         }
         .support-widget button[type="submit"]:hover { background: white; color: var(--accent); }
         #support-status { margin-top: 15px; font-size: 0.9rem; text-align: center; font-weight: bold;}
-        
-        /* Стиль для галочки згоди */
-        .gdpr-checkbox {
-            display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px;
-            font-size: 0.8rem; color: #ccc; text-align: left;
-        }
+        .gdpr-checkbox { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #ccc; text-align: left; }
         .gdpr-checkbox input { width: auto; margin-top: 3px; }
         .gdpr-checkbox a { color: var(--accent); text-decoration: underline; }
+
+        /* Футер */
+        footer { text-align: center; padding: 40px 20px; background: #0a0a0b; border-top: 1px solid rgba(255,255,255,0.05); }
+        .footer-logo { font-weight: 900; font-size: 1.1rem; text-transform: uppercase; margin-bottom: 10px; display: block; text-decoration: none; color: #fff;}
+        .footer-logo span { color: var(--accent); }
+        footer p { color: #666; font-size: 0.8rem; }
+        .footer-links { display: flex; justify-content: center; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
+        .footer-links a { color: var(--accent); text-decoration: none; font-size: 0.85rem; transition: 0.3s; }
+        .footer-links a:hover { text-decoration: underline; color: #fff; }
+
+        /* Адаптивність */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .about-grid { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+        }
     </style>
 </head>
 <body>
 
-<header class="hero">
-    <video autoplay muted loop playsinline id="bg-video">
-        <source src="grok_video_2026-01-25-18-39-38.mp4" type="video/mp4">
-    </video>
+<nav class="header-nav">
+    <div class="nav-container">
+        <a href="#" class="logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
+        <ul class="nav-links">
+            <li><a href="#about">Про проєкт</a></li>
+            <li><a href="#music">Музика</a></li>
+            <li><a href="#blog">Блог</a></li>
+            <li><a href="#support">Підтримати</a></li>
+        </ul>
+    </div>
+</nav>
 
-    <div class="hero-content" data-aos="zoom-out">
-        <h1 class="hero-title">Голос проти раку</h1>
-        <p class="hero-subtitle">Мій бій триває — і в шпиталі, і в строю. Я не складаю зброю і залишаюся на службі до нашої Перемоги.</p>
-        
+<header class="hero">
+    <div class="hero-content" data-aos="zoom-in">
+        <h1>Голос проти раку</h1>
+        <p>Мій бій триває — і в шпиталі, і в строю. Я не складаю зброю і залишаюся на службі до нашої Перемоги.</p>
         <div class="btn-group">
-            <a href="#support" class="btn btn-main">Підтримати проєкт</a>
+            <a href="#support" class="btn">Підтримати проєкт</a>
             <a href="music.html" class="btn btn-outline">Слухати музику</a>
-            <a href="https://chat.whatsapp.com/GbGbFxDZftZCQNyTDZOfu2" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> Чат WhatsApp</a>
+            <a href="https://chat.whatsapp.com/GbGbFxDZftZCQNyTDZOfu2" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
         </div>
     </div>
 </header>
 
-<section id="about">
-    <div class="glass-card" data-aos="fade-up">
-        <h2>Мій бій за життя</h2>
-        <p>Вітаю. Я — автор пісень і військовослужбовець, який зараз веде власну війну з раком крові. Мені пощастило більше, ніж багатьом: хворобу виявили випадково і на ранній стадії. Це дає мені реальний шанс не просто вистояти, а й допомогти іншим побороти цю хворобу.</p>
+<main>
+    <section id="about">
+        <h2 data-aos="fade-up">Мій бій за життя</h2>
         
-        <p><strong>Я не збираюся залишати армію.</strong> Попри діагноз, я продовжую службу і буду залишатися в строю до нашої Перемоги. Але я бачу іншу сторону цієї біди.</p>
+        <div class="about-grid">
+            <div class="about-text" data-aos="fade-right">
+                <p>Вітаю. Я — автор пісень і військовослужбовець, який зараз веде власну війну з раком крові. Мені пощастило більше, ніж багатьом: хворобу виявили випадково і на ранній стадії. Це дає мені реальний шанс не просто вистояти, а й допомогти іншим побороти цю хворобу.</p>
+                <p><strong>Я не збираюся залишати армію.</strong> Попри діагноз, я продовжую службу і буду залишатися в строю до нашої Перемоги. Але я бачу іншу сторону цієї біди.</p>
+                
+                <div class="quote">
+                    "Будь-яка ваша підтримка — це мій шанс не просто вистояти, а й допомогти іншим з цією хворобою."
+                </div>
 
-        <div class="grid">
-            <div class="info-item">
-                <i class="fas fa-heart-broken fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
-                <h3>Забуті герої</h3>
-                <p>Багато побратимів після списання за станом здоров'я залишаються сам на сам із хворобою, без жодної підтримки.</p>
+                <div class="info-box">
+                    <h4><i class="fas fa-heart-broken"></i> Забуті герої</h4>
+                    <p>Багато побратимів після списання за станом здоров'я залишаються сам на сам із хворобою, без жодної підтримки.</p>
+                </div>
+                
+                <div class="info-box">
+                    <h4><i class="fas fa-laptop"></i> Стартовий пакет</h4>
+                    <p>Я створюю цей сайт сам, але мені потрібна ваша допомога, щоб працювати надалі. Купуючи пісню, Ви підтримуєте людей, які важко хворі. Це інструмент для допомоги іншим.</p>
+                </div>
             </div>
-            <div class="info-item">
-                <i class="fas fa-laptop fa-2x" style="color: var(--accent); margin-bottom: 15px;"></i>
-                <h3>Стартовий пакет</h3>
-                <p>Я створюю цей сайт сам, але мені потрібена ваша допомога, щоб працювати надалі. Купуючи пісню Ви пітримуєте людей які важко хворі. Це інструмент для допомоги іншим.</p>
+            
+            <div class="about-img-wrap" data-aos="fade-left">
+                <img src="avatar_main.jpg" alt="Андрій Герц" class="about-img">
             </div>
         </div>
 
-        <div class="quote">
-            "Будь-яка ваша підтримка — це мій шанс не просто вистояти, а й допомогти іншим з цією хворобою."
+        <div class="statistics-block" data-aos="fade-up">
+            <p>Ця недуга належить до числа найважчих і найнебезпечніших у світі. Більше неї людських життів забирають нині тільки серцево-судинні захворювання. У нашій країні мінімум 1 мільйон онкохворих. За даними Національного інституту раку, щорічно в Україні занедужує майже 170 тисяч осіб. Щодня виникає 450 випадків захворювання. Ризик занедужати мають кожен четвертий чоловік і кожна п’ята жінка.</p>
         </div>
+    </section>
 
-        <p>Ця недуга належить до числа найважчих і найнебезпечніших у світі. Більше неї людських життів забирають нині тільки серцево-судинні захворювання. Сумна статистика щодо цього і в Україні. У нашій країні мінімум один мільйон онкохворих. Ця цифра відображує кількість осіб, які перебувають на медичному обліку. А скільки їх насправді! За даними Національного інституту раку, щорічно в Україні на рак занедужує майже 170 тисяч осіб. Щодня виникає 450 випадків захворювання й одночасно фіксується понад 240 летальних випадків. Ризик занедужати мають кожен четвертий чоловік і кожна п’ята жінка.</p>
-
-        <h2 id="music">Музика проєкту</h2>
-        <div class="grid">
-            <div class="info-item">
+    <section id="music">
+        <h2 data-aos="fade-up">Музика проєкту</h2>
+        
+        <div class="music-grid">
+            <div class="music-card" data-aos="fade-up" data-aos-delay="100">
                 <h3>Ланцюг добра (Ч. 1)</h3>
                 <audio controls>
                     <source src="Ланцюг добра (Remastered) (1).mp3" type="audio/mpeg">
                 </audio>
             </div>
-            <div class="info-item">
+            <div class="music-card" data-aos="fade-up" data-aos-delay="200">
                 <h3>Ланцюг добра (Ч. 2)</h3>
                 <audio controls>
                     <source src="Ланцюг добра (Remastered) (2).mp3" type="audio/mpeg">
                 </audio>
             </div>
         </div>
-
-        <h2 id="support">Як підтримати проєкт?</h2>
-        <div class="info-item" style="text-align: center; border-bottom: none;">
-            <p>Найкраща підтримка моєї боротьби — це ваша увага до моєї творчості.</p>
-            <a href="music.html" class="btn btn-main" style="margin: 15px 0;">Перейти до магазину музики</a>
-            <p style="font-size: 0.9rem; color: #aaa;">Усі офіційні реквізити для прямої фінансової підтримки вказані у нашій <a href="public_offer.html" style="color: var(--accent); text-decoration: underline;">Публічній оферті</a>.</p>
+        <div style="text-align: center; margin-top: 40px;" data-aos="fade-up">
+            <a href="music.html" class="btn">Перейти до магазину музики</a>
         </div>
-    </div>
-</section>
+    </section>
+
+    <section id="blog" class="articles-section">
+        <h2 data-aos="fade-up"><i class="fas fa-newspaper" style="color: var(--accent); margin-right: 10px;"></i> Інформаційний фронт</h2>
+        <p class="section-desc" data-aos="fade-up">Новини проєкту, специфіка раку крові та мій особистий досвід боротьби.</p>
+        
+        <div class="articles-grid">
+            <div class="article-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="article-img-wrapper">
+                    <span class="article-tag">Діагностика</span>
+                    <img src="images/article_cells.png" alt="Аналізи крові під мікроскопом" class="article-image">
+                </div>
+                <div class="article-content">
+                    <h3 class="article-title">Лейкемія: симптоми, які важко помітити</h3>
+                    <p class="article-excerpt">Розповідаю про підступність раку крові на ранніх стадіях. На що звернути увагу, коли варто здати аналізи та чому час є критичним фактором у лікуванні.</p>
+                    <a href="article1.html" class="article-btn">Читати далі <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <div class="article-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="article-img-wrapper">
+                    <span class="article-tag">Медицина</span>
+                    <img src="images/article_medicine.png" alt="Сучасні ліки у флаконі" class="article-image">
+                </div>
+                <div class="article-content">
+                    <h3 class="article-title">Майбутнє онкології: новітні методи</h3>
+                    <p class="article-excerpt">Короткий огляд сучасних трендів у лікуванні лейкемії. Що таке таргетна терапія, як працює імуноонкологія та які надії дають клінічні дослідження.</p>
+                    <a href="article2.html" class="article-btn">Читати далі <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <div class="article-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="article-img-wrapper">
+                    <span class="article-tag">Стійкість</span>
+                    <img src="images/article_support.png" alt="Дві руки, що тримаються разом" class="article-image">
+                </div>
+                <div class="article-content">
+                    <h3 class="article-title">Психологічна підтримка: сила в єдності</h3>
+                    <p class="article-excerpt">Рак вражає не лише тіло, а й душу. Мої думки про те, де брати сили, коли хочеться здатися, як правильно приймати допомогу близьких та чому надія — це теж ліки.</p>
+                    <a href="article3.html" class="article-btn">Читати далі <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="support">
+        <h2 data-aos="fade-up">Розповісти про проєкт</h2>
+        <p class="section-desc" data-aos="fade-up">Найкраща підтримка — це розголос. Натисніть на іконку месенджера, щоб поділитися посиланням на цей сайт зі своїми друзями та знайомими.</p>
+        
+        <div class="support-grid">
+            
+            <a href="javascript:void(0)" onclick="shareLink('telegram')" class="support-card" data-aos="fade-up" data-aos-delay="100">
+                <i class="fab fa-telegram" style="color: #2AABEE;"></i>
+                <h3>Telegram</h3>
+                <p>Поділитися</p>
+            </a>
+
+            <a href="javascript:void(0)" onclick="shareLink('whatsapp')" class="support-card" data-aos="fade-up" data-aos-delay="200">
+                <i class="fab fa-whatsapp" style="color: #25D366;"></i>
+                <h3>WhatsApp</h3>
+                <p>Поділитися</p>
+            </a>
+
+            <a href="javascript:void(0)" onclick="shareLink('viber')" class="support-card" data-aos="fade-up" data-aos-delay="300">
+                <i class="fab fa-viber" style="color: #7360f2;"></i>
+                <h3>Viber</h3>
+                <p>Поділитися</p>
+            </a>
+
+            <a href="javascript:void(0)" onclick="shareLink('signal')" class="support-card" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-comment-dots" style="color: #3a76f0;"></i>
+                <h3>Signal</h3>
+                <p>Скопіювати лінк</p>
+            </a>
+
+            <a href="javascript:void(0)" onclick="shareLink('teams')" class="support-card" data-aos="fade-up" data-aos-delay="500">
+                <i class="fab fa-microsoft" style="color: #6264A7;"></i>
+                <h3>Teams</h3>
+                <p>Скопіювати лінк</p>
+            </a>
+
+        </div>
+    </section>
+</main>
 
 <div class="support-widget" id="supportWidget">
     <div class="support-btn" onclick="toggleSupport()">
@@ -276,7 +399,7 @@
     <form id="supportForm">
         <input type="text" id="supName" name="Ім'я" placeholder="Ваше ім'я" required>
         <input type="text" id="supContact" name="Контактні дані" placeholder="Ваш Email, Telegram, Viber, WhatsApp" required>
-        <textarea id="supMessage" name="Повідомлення" placeholder="Якщо є питання — пишіть сюди..." required></textarea>
+        <textarea id="supMessage" name="Повідомлення" placeholder="Якщо виникли питання — пишіть сюди..." required></textarea>
         
         <label class="gdpr-checkbox">
             <input type="checkbox" required>
@@ -289,65 +412,74 @@
 </div>
 
 <footer>
-    <div class="footer-content">
-        <div class="footer-copy">© 2026 Проєкт «Голос проти раку». Музична Сповідь. Слава Україні! 🇺🇦</div>
-        <div class="footer-details">
-            Автор проєкту: Андрій Герц<br>
-            Офіційна інформація про статус продавця та умови придбання цифрового контенту міститься у Публічній оферті.<br>
-            Email: andreygerc11@gmail.com
-        </div>
-        <div class="footer-links">
-            <a href="public_offer.html">Публічна оферта</a>
-            <a href="privacy_policy.html">Політика конфіденційності</a>
-        </div>
+    <a href="#" class="footer-logo logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
+    <p>© 2026 Андрій Герц. Слава Україні! 🇺🇦</p>
+    <div class="footer-links">
+        <a href="public_offer.html">Публічна оферта</a>
+        <a href="privacy_policy.html">Політика конфіденційності</a>
     </div>
+    <p style="font-size: 0.75rem; margin-top: 15px; color: #555;">Email: andreygerc11@gmail.com</p>
 </footer>
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-    AOS.init({ duration: 1000, once: true });
-    window.addEventListener('load', function() {
-        var video = document.getElementById('bg-video');
-        video.play().catch(function(error) {
-            console.log("Автозапуск заблоковано браузером");
-        });
-    });
+  AOS.init({ duration: 1000, once: true });
 
-    // ЛОГІКА ВІДЖЕТА ПІДТРИМКИ
-    function toggleSupport() {
-        document.getElementById('supportWidget').classList.toggle('open');
-    }
+  // Логіка віджета підтримки
+  function toggleSupport() {
+      document.getElementById('supportWidget').classList.toggle('open');
+  }
 
-    document.getElementById('supportForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const statusDiv = document.getElementById('support-status');
-        const btn = this.querySelector('button');
-        const name = document.getElementById('supName').value;
-        const contact = document.getElementById('supContact').value;
-        const message = document.getElementById('supMessage').value;
+  document.getElementById('supportForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const statusDiv = document.getElementById('support-status');
+      const btn = this.querySelector('button');
+      const name = document.getElementById('supName').value;
+      const contact = document.getElementById('supContact').value;
+      const message = document.getElementById('supMessage').value;
 
-        btn.disabled = true; btn.innerText = 'Відправка...'; statusDiv.innerText = '';
+      btn.disabled = true; btn.innerText = 'Відправка...'; statusDiv.innerText = '';
 
-        try {
-            const response = await fetch('https://formspree.io/f/mnjgapgj', {
-                method: 'POST',
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name, contact: contact, message: message })
-            });
+      try {
+          const response = await fetch('https://formspree.io/f/mnjgapgj', {
+              method: 'POST',
+              headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: name, contact: contact, message: message })
+          });
 
-            if (response.ok) {
-                statusDiv.innerText = '✅ Повідомлення відправлено!';
-                statusDiv.style.color = '#4CAF50';
-                this.reset();
-                setTimeout(() => { toggleSupport(); statusDiv.innerText = ''; }, 4000);
-            } else { throw new Error('Помилка сервера'); }
-        } catch (error) {
-            statusDiv.innerText = '❌ Помилка. Спробуйте пізніше.';
-            statusDiv.style.color = 'var(--accent)';
-        } finally {
-            btn.disabled = false; btn.innerText = 'Відправити';
-        }
-    });
+          if (response.ok) {
+              statusDiv.innerText = '✅ Повідомлення відправлено!';
+              statusDiv.style.color = '#4CAF50';
+              this.reset();
+              setTimeout(() => { toggleSupport(); statusDiv.innerText = ''; }, 4000);
+          } else { throw new Error('Помилка сервера'); }
+      } catch (error) {
+          statusDiv.innerText = '❌ Помилка. Спробуйте пізніше.';
+          statusDiv.style.color = 'var(--accent)';
+      } finally {
+          btn.disabled = false; btn.innerText = 'Відправити';
+      }
+  });
+
+  // Логіка кнопок "Поділитися"
+  function shareLink(platform) {
+      const url = window.location.href; 
+      const text = encodeURIComponent("Підтримайте проєкт ветерана «Голос проти раку». Музична сповідь та боротьба за життя: ");
+      
+      if (platform === 'telegram') {
+          window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
+      } else if (platform === 'whatsapp') {
+          window.open(`https://api.whatsapp.com/send?text=${text}%20${url}`, '_blank');
+      } else if (platform === 'viber') {
+          window.open(`viber://forward?text=${text}%20${url}`, '_blank');
+      } else {
+          const copyText = decodeURIComponent(text) + " " + url;
+          navigator.clipboard.writeText(copyText).then(() => {
+              const appName = platform === 'signal' ? 'Signal' : 'Teams';
+              alert(`Готово! Посилання та текст скопійовано. Відкрийте ${appName} та вставте його у повідомлення друзям.`);
+          });
+      }
+  }
 </script>
 
 </body>

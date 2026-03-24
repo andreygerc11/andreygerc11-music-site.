@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DHLXH7C8QT"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DHLXH7C8QT');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лейкемія: симптоми, які важко помітити | Голос проти раку</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --accent: #ff4d4d; 
+            --dark: #0a0a0b; 
+            --card: #161618;
+            --glass: rgba(0, 0, 0, 0.85); 
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background: var(--dark); 
+            color: #fff; 
+            line-height: 1.7; 
+            overflow-x: hidden; 
+        }
+
+        /* Навігація */
+        .header-nav { 
+            position: fixed; top: 0; width: 100%; 
+            background: var(--glass); backdrop-filter: blur(10px);
+            z-index: 1000; padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .nav-container { 
+            max-width: 1200px; margin: 0 auto; padding: 0 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .logo { font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; color: #fff; text-decoration: none;}
+        .logo span { color: var(--accent); }
+        .btn-back {
+            color: #fff; text-decoration: none; font-size: 0.9rem; font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 50px; transition: 0.3s;
+        }
+        .btn-back:hover { background: #fff; color: var(--dark); }
+
+        /* Шапка статті */
+        .article-hero {
+            margin-top: 70px;
+            height: 50vh;
+            min-height: 400px;
+            background: linear-gradient(to bottom, rgba(10, 10, 11, 0.3), var(--dark)), url('images/article_cells.png') center/cover;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .article-hero-content {
+            max-width: 800px;
+        }
+        .article-tag {
+            background: var(--accent); color: white; padding: 6px 15px; border-radius: 50px;
+            font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+            display: inline-block; margin-bottom: 20px;
+        }
+        .article-title {
+            font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; line-height: 1.2; margin-bottom: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.8);
+        }
+
+        /* Тіло статті */
+        .article-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            font-size: 1.1rem;
+            color: #ddd;
+        }
+        .article-body p { margin-bottom: 25px; text-align: justify; }
+        .article-body h2 { color: #fff; font-size: 1.8rem; margin: 40px 0 20px; font-weight: 700; border-left: 4px solid var(--accent); padding-left: 15px; text-transform: none; text-align: left; }
+        
+        .article-body ul { margin-bottom: 30px; padding-left: 20px; list-style: none; }
+        .article-body ul li { margin-bottom: 15px; position: relative; padding-left: 30px; }
+        .article-body ul li::before {
+            content: "\f0a9"; /* FontAwesome arrow */
+            font-family: "Font Awesome 6 Free"; font-weight: 900;
+            position: absolute; left: 0; color: var(--accent);
+        }
+
+        .important-box {
+            background: rgba(255, 77, 77, 0.05); border: 1px solid rgba(255, 77, 77, 0.2);
+            padding: 30px; border-radius: 15px; margin: 40px 0;
+        }
+        .important-box h3 { color: var(--accent); margin-bottom: 15px; font-size: 1.3rem; }
+        .important-box p:last-child { margin-bottom: 0; }
+
+        /* Футер */
+        footer { text-align: center; padding: 40px 20px; background: #0a0a0b; border-top: 1px solid rgba(255,255,255,0.05); }
+        .footer-logo { font-weight: 900; font-size: 1.1rem; text-transform: uppercase; margin-bottom: 10px; display: block; text-decoration: none; color: #fff;}
+        .footer-logo span { color: var(--accent); }
+        footer p { color: #666; font-size: 0.8rem; }
+        
+        /* Кнопка "Поділитися" в кінці статті */
+        .share-section { text-align: center; margin-top: 50px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .share-btn {
+            background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 25px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: inline-flex; align-items: center; gap: 10px; text-transform: uppercase; font-size: 0.9rem;
+        }
+        .share-btn:hover { background: var(--accent); border-color: var(--accent); }
+
+    </style>
+</head>
+<body>
+
+<nav class="header-nav">
+    <div class="nav-container">
+        <a href="index.html" class="logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
+        <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
+    </div>
+</nav>
+
+<header class="article-hero">
+    <div class="article-hero-content" data-aos="fade-up">
+        <span class="article-tag">Діагностика</span>
+        <h1 class="article-title">Лейкемія: симптоми, які важко помітити</h1>
+    </div>
+</header>
+
+<main class="article-body">
+    <p data-aos="fade-up">Рак крові (лейкемія) — це захворювання, яке часто починається абсолютно непомітно. Його головна підступність полягає в тому, що на ранніх стадіях він маскується під звичайну втому, застуду або наслідки стресу. Через це люди часто втрачають дорогоцінний час, намагаючись "перехворіти на ногах".</p>
+
+    <p data-aos="fade-up">Коли я сам зіткнувся з цим діагнозом, я зрозумів, наскільки важливо дослухатися до свого тіла. Військова служба, постійні навантаження — все це притуплює пильність. Ти думаєш, що просто втомився, а насправді в організмі вже йде серйозна боротьба.</p>
+
+    <h2 data-aos="fade-up">На що слід звернути увагу?</h2>
+    <p data-aos="fade-up">Клітини крові виконують життєво важливі функції: еритроцити переносять кисень, лейкоцити борються з інфекціями, а тромбоцити відповідають за згортання. При лейкемії кістковий мозок починає виробляти аномальні клітини, які витісняють здорові. Це призводить до появи таких симптомів:</p>
+
+    <ul data-aos="fade-up">
+        <li><strong>Безпричинна слабкість та хронічна втома.</strong> Це не просто відчуття виснаження після важкого дня. Це втома, яка не минає навіть після тривалого відпочинку та сну (наслідок зниження рівня еритроцитів — анемії).</li>
+        <li><strong>Часті інфекційні захворювання.</strong> Оскільки здорові лейкоцити не виконують свою функцію, організм стає вразливим навіть до найслабших вірусів. Те, що раніше минало за три дні, тепер може лікуватися тижнями.</li>
+        <li><strong>Синці без причини та кровоточивість.</strong> Поява великих синців від найменшого дотику, кровоточивість ясен під час чищення зубів або часті носові кровотечі — це ознака нестачі тромбоцитів.</li>
+        <li><strong>Збільшення лімфатичних вузлів.</strong> Найчастіше вони безболісно збільшуються на шиї, під пахвами або в паху.</li>
+        <li><strong>Біль у кістках та суглобах.</strong> Цей симптом виникає через переповнення кісткового мозку пухлинними клітинами. Біль може бути ниючим або досить гострим.</li>
+        <li><strong>Нічна пітливість та безпричинна втрата ваги.</strong> Сильне потовиділення під час сну, яке змушує змінювати одяг, є дуже тривожним сигналом.</li>
+    </ul>
+
+    <div class="important-box" data-aos="fade-up">
+        <h3>Коли потрібно діяти?</h3>
+        <p>Якщо ви помічаєте у себе або у своїх близьких один чи кілька з цих симптомів, які не минають протягом кількох тижнів — не шукайте діагнози в інтернеті і не займайтеся самолікуванням.</p>
+        <p><strong>Найперший і найпростіший крок — здати розгорнутий загальний аналіз крові (ЗАК) з лейкоцитарною формулою.</strong> Це базове, недороге і швидке дослідження. Воно одразу покаже відхилення, які стануть сигналом для сімейного лікаря направити вас до гематолога.</p>
+    </div>
+
+    <h2 data-aos="fade-up">Час має значення</h2>
+    <p data-aos="fade-up">Онкологія — це не вирок, особливо за умови сучасної медицини. Але успіх лікування колосально залежить від стадії, на якій виявлено хворобу. Мені пощастило, що мою хворобу виявили вчасно. Не ігноруйте сигнали свого організму. Здавайте аналізи, проходьте регулярні огляди.</p>
+    <p data-aos="fade-up">Пам'ятайте, що турбота про власне здоров'я — це теж зброя. Залишайтесь у строю і бережіть себе.</p>
+
+    <div class="share-section" data-aos="fade-up">
+        <p style="margin-bottom: 15px; color: #aaa;">Ця інформація може врятувати чиєсь життя. Поділіться статтею:</p>
+        <button class="share-btn" onclick="shareArticle()">
+            <i class="fas fa-share-nodes"></i> Скопіювати посилання на статтю
+        </button>
+    </div>
+</main>
+
+<footer>
+    <a href="index.html" class="footer-logo logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
+    <p>© 2026 Андрій Герц. Слава Україні! 🇺🇦</p>
+</footer>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({ duration: 1000, once: true });
+
+    // Логіка копіювання посилання
+    function shareArticle() {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            const btn = document.querySelector('.share-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Посилання скопійовано!';
+            btn.style.background = '#4CAF50';
+            btn.style.borderColor = '#4CAF50';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = 'rgba(255,255,255,0.05)';
+                btn.style.borderColor = 'rgba(255,255,255,0.1)';
+            }, 3000);
+        });
+    }
+</script>
+
+</body>
+</html>
