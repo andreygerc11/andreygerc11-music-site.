@@ -7,11 +7,11 @@ app.use(cors());
 app.use(express.json());
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-ZZyOgiOwl67Pvypqw2Tej6ylWGFATEPAwqE6zpuVDMIzg9XPRBfyhPkoo9R1NB_C/exec";
-const MONO_TOKEN = "m5XYd9Yazsau6Rs2q6WAgQA"; 
 const BACKEND_URL = "https://andreygerc11-music-site.onrender.com"; 
 
-// Підтягуємо токен бота з налаштувань Render (так само, як це працює в bot.py)
+// Підтягуємо токени з налаштувань Render (Environment Variables)
 const TELEGRAM_BOT_TOKEN = process.env.BOT_TOKEN; 
+const MONO_TOKEN = process.env.MONO_TOKEN; // ТЕПЕР ТОКЕН У БЕЗПЕЦІ
 const TELEGRAM_CHAT_ID = "556627059"; 
 
 // Функція для відправки сповіщень тобі в Телеграм
@@ -31,6 +31,7 @@ async function sendTelegramMessage(text) {
     }
 }
 
+// Отримання списку пісень з Google Sheets
 app.get('/api/music', async (req, res) => {
     try {
         const response = await axios.get(GOOGLE_SCRIPT_URL, { maxRedirects: 5 });
@@ -40,14 +41,20 @@ app.get('/api/music', async (req, res) => {
     }
 });
 
+// Створення інвойсу в Монобанку
 app.post('/api/pay', async (req, res) => {
     try {
         const { songId, songName } = req.body;
+        
+        if (!MONO_TOKEN) {
+            return res.status(500).json({ error: "Помилка сервера: Токен Монобанку не налаштовано" });
+        }
+
         const response = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
             amount: 5000, // 50 грн в копійках
             ccy: 980,
             redirectUrl: `https://golos-proty-raku.pp.ua/success.html?file=${songId}`,
-            webHookUrl: `${BACKEND_URL}/api/webhook`, // Додано вебхук для Монобанку
+            webHookUrl: `${BACKEND_URL}/api/webhook`, 
             merchantPaymInfo: {
                 reference: songId,
                 destination: `Оплата за трек: ${songName}`
@@ -55,18 +62,19 @@ app.post('/api/pay', async (req, res) => {
         }, {
             headers: { 'X-Token': MONO_TOKEN }
         });
+        
         res.json({ url: response.data.pageUrl });
     } catch (error) {
-        console.error(error);
+        console.error("Помилка Монобанку:", error.response ? error.response.data : error.message);
         res.status(500).json({ error: "Не вдалося створити платіж" });
     }
 });
 
-// Новий маршрут для прийому вебхука від Монобанку
+// Маршрут для прийому вебхука від Монобанку
 app.post('/api/webhook', async (req, res) => {
     const paymentData = req.body;
     
-    // Перевіряємо, чи оплата дійсно пройшла
+    // Перевіряємо, чи оплата дійсно пройшла успішно
     if (paymentData.status === 'success') {
         console.log(`[УСПІХ] Гроші зайшли! Трек ID: ${paymentData.reference}`);
         
@@ -77,7 +85,7 @@ app.post('/api/webhook', async (req, res) => {
         console.log(`[СТАТУС] Зміна статусу платежу: ${paymentData.status}`);
     }
     
-    // Обов'язкова відповідь банку, щоб він не дублював запити
+    // Обов'язкова відповідь банку (HTTP 200)
     res.status(200).send('OK');
 });
 
