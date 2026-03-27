@@ -131,7 +131,6 @@
         });
     }
 
-    // Функція фізичної обрізки аудіофайлу
     async function trimAudioToMp3(file, durationSec) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -142,10 +141,9 @@
 
                     const sampleRate = audioBuffer.sampleRate;
                     const channels = audioBuffer.numberOfChannels;
-                    // Обрізаємо по вказаній тривалості
                     const length = Math.min(audioBuffer.length, sampleRate * durationSec);
 
-                    const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128); // 128kbps для прев'ю
+                    const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128); 
                     let mp3Data = [];
 
                     const left = audioBuffer.getChannelData(0);
@@ -226,7 +224,8 @@
 
             const client = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/drive.file',
+                // ВИПРАВЛЕНО: Змінено на повний доступ, щоб скрипт міг бачити ваші існуючі папки
+                scope: 'https://www.googleapis.com/auth/drive', 
                 callback: async (response) => {
                     if (response.error) {
                         log("Помилка доступу до Диску", "error");
@@ -250,15 +249,20 @@
                         await uploadFileToDrive(fullTaggedBlob, name, FOLDER_FULL, response.access_token);
 
                         // 2. Обрізка і обробка ПРЕВ'Ю
-                        log(`✂️ Обрізаю трек до ${TRIM_DURATION_SECONDS} секунд... (це займе трохи часу)`, "wait");
+                        log(`✂️ Обрізаю трек до ${TRIM_DURATION_SECONDS} секунд... (вкладка може на мить підвиснути)`, "wait");
+                        
+                        // ВИПРАВЛЕНО: Даємо браузеру час оновити текст у логах перед тим, як він почне важку обрізку
+                        await new Promise(resolve => setTimeout(resolve, 100));
+
                         const trimmedBlob = await trimAudioToMp3(file, TRIM_DURATION_SECONDS);
                         
                         log(`Прошиваю прев'ю логотипом...`);
                         const trimmedBuffer = await trimmedBlob.arrayBuffer();
                         const trimmedTaggedBlob = await tagAudio(trimmedBuffer, name);
                         
-                        let prevName = name.replace('.mp3', ' (Прев\'ю).mp3');
-                        if (!name.toLowerCase().endsWith('.mp3')) prevName += ' (Прев\'ю).mp3';
+                        // ВИПРАВЛЕНО: Надійна генерація імені для прев'ю
+                        let prevName = name.replace(/\.mp3$/i, ' (Прев\'ю).mp3');
+                        if (!prevName.includes('(Прев\'ю)')) prevName += ' (Прев\'ю).mp3';
 
                         await uploadFileToDrive(trimmedTaggedBlob, prevName, FOLDER_PREV, response.access_token);
                     }
