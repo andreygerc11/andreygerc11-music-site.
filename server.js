@@ -42,7 +42,7 @@ app.post('/api/pay', async (req, res) => {
         if (!MONO_TOKEN) return res.status(500).json({ error: "Токен Монобанку не налаштовано" });
 
         const response = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: 5000, // 50 грн
+            amount: 3736, // 37.36 грн (щоб чистими було рівно 35 грн)
             ccy: 980,
             redirectUrl: `https://golos-proty-raku.pp.ua/success.html?file=${songId}`,
             webHookUrl: `${BACKEND_URL}/api/webhook`, 
