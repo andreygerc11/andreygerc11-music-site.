@@ -6,7 +6,7 @@
     <title>Hertz Spectrum | Генератор Відео</title>
     
     <link rel="icon" type="image/png" href="favicon.png?v=2">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
@@ -95,6 +95,7 @@
             border: 2px solid var(--accent); border-radius: 50px; font-family: inherit;
             font-weight: 900; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; cursor: pointer;
+            text-align: center;
         }
         .btn-mono:hover {
             background: var(--accent); color: #fff; 
@@ -105,14 +106,15 @@
         .control-group { display: flex; flex-direction: column; gap: 10px; }
         label { font-size: 0.85rem; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
 
-        input[type="file"], select { 
+        input[type="text"], input[type="file"], select, textarea { 
             width: 100%; padding: 14px 15px; background: rgba(0, 0, 0, 0.4); 
             border: 1px solid var(--border); border-radius: 12px; color: white; 
-            outline: none; cursor: pointer; box-sizing: border-box; 
+            outline: none; box-sizing: border-box; 
             font-size: 0.9rem; font-family: inherit; transition: all 0.3s ease;
         }
-        select:hover, input[type="file"]:hover { border-color: rgba(255,255,255,0.3); }
-        select:focus, input[type="file"]:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255, 77, 77, 0.15); }
+        textarea { resize: vertical; min-height: 80px; }
+        input[type="text"]:hover, select:hover, input[type="file"]:hover, textarea:hover { border-color: rgba(255,255,255,0.3); }
+        input[type="text"]:focus, select:focus, input[type="file"]:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255, 77, 77, 0.15); }
         select option { background-color: var(--panel-bg); color: var(--text); }
 
         input[type="file"]::file-selector-button { 
@@ -223,20 +225,24 @@
         .open-info-btn:hover { background: var(--accent); color: #fff; box-shadow: 0 5px 20px rgba(255, 77, 77, 0.4); transform: scale(1.05); }
         
         .info-panel {
-            position: fixed; top: 0; right: -400px;
-            width: 350px; height: 100vh;
+            position: fixed; top: 0; right: -450px;
+            width: 400px; height: 100vh;
             background: var(--panel-bg);
             border-left: 1px solid var(--border);
             box-shadow: -5px 0 30px rgba(0,0,0,0.8);
             padding: 40px 30px; box-sizing: border-box;
             transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 200; display: flex; flex-direction: column;
+            overflow-y: auto;
         }
         .info-panel.open { right: 0; }
-        .info-panel h3 { color: var(--accent); margin-top: 0; margin-bottom: 20px; font-weight: 900; text-transform: uppercase; font-size: 1.4rem;}
-        .info-panel ol { color: #ccc; padding-left: 20px; font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px;}
-        .info-panel li { margin-bottom: 12px; }
-        .info-panel li strong { color: #fff; }
+        .info-panel h3 { color: var(--accent); margin-top: 0; margin-bottom: 10px; font-weight: 900; text-transform: uppercase; font-size: 1.4rem;}
+        
+        .instruction-step { margin-bottom: 15px; color: #ccc; font-size: 0.9rem; line-height: 1.5; }
+        .instruction-step strong { color: #fff; }
+        .instruction-highlight { background: rgba(255,77,77,0.1); padding: 10px; border-radius: 8px; border-left: 3px solid var(--accent); margin-top: 10px;}
+        .instruction-highlight b { color: var(--accent); }
+
         .close-info-btn {
             position: absolute; top: 20px; right: 20px;
             background: none; border: none; color: #888;
@@ -248,6 +254,7 @@
             margin-top: auto; padding: 20px; background: rgba(255,255,255,0.03);
             border-radius: 15px; border-left: 4px solid var(--accent);
             display: flex; gap: 15px; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-top: 20px;
         }
         .update-notice i { color: var(--accent); font-size: 2rem; }
         .update-notice p { margin: 0; font-size: 0.85rem; color: #bbb; line-height: 1.5; font-weight: 700;}
@@ -272,6 +279,12 @@
             cursor: pointer; text-decoration: none; background: none; border: none; width: 100%; transition: 0.3s;
         }
         .close-modal:hover { color: #fff; transform: translateY(-2px); }
+
+        /* Блок синхронізації караоке */
+        #syncStatus {
+            display: none; background: rgba(255, 77, 77, 0.05); border: 1px solid var(--accent); 
+            padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -280,20 +293,25 @@
     <div id="infoPanel" class="info-panel">
         <button id="closeInfoBtn" class="close-info-btn"><i class="fas fa-times"></i></button>
         <h3>Як працює<br>генератор?</h3>
-        <ol>
-            <li><strong>Формат:</strong> Виберіть розмір під вашу соцмережу (TikTok, YouTube).</li>
-            <li><strong>Стиль:</strong> Виберіть форму спектру.</li>
-            <li><strong>Кольори:</strong> Налаштуйте палітру або залиште красиву автозміну.</li>
-            <li><strong>Фон:</strong> Завантажте картинку або відео (воно автоматично розтягнеться).</li>
-            <li><strong>Логотип:</strong> Додайте центральне зображення (для кругових стилів).</li>
-            <li><strong>Аудіо:</strong> Завантажте пісню (.mp3, .wav).</li>
-            <li><strong>Ефекти:</strong> Виберіть частинки для більшої динаміки.</li>
-            <li>Натисніть <strong>"Почати Рендеринг"</strong> та збережіть відео!</li>
-        </ol>
+        <p style="color: #bbb; font-size: 0.85rem; margin-top: 0; margin-bottom: 20px;">Пройдіть ці прості кроки, щоб створити круте відео:</p>
+
+        <div class="instruction-step"><strong>1. Формат і Стиль:</strong> Оберіть розмір під вашу соцмережу (наприклад, вертикальний для TikTok) та форму звукових хвиль.</div>
+        <div class="instruction-step"><strong>2. Фон і Логотип:</strong> Завантажте картинку або відео на задній фон. Для кругових стилів додайте своє фото/логотип по центру.</div>
+        <div class="instruction-step"><strong>3. Аудіо:</strong> Завантажте пісню (.mp3 або .wav). Назва підтягнеться автоматично.</div>
+        
+        <div class="instruction-highlight">
+            <strong>🎤 4. Як додати текст (Караоке):</strong><br>
+            Вставте текст пісні у спеціальне поле. У вас є два варіанти:<br><br>
+            <span style="color: #4CAF50; font-weight: bold;">АВТОМАТИЧНО (LRC):</span> Якщо ваш текст вже має час (наприклад: <code>[00:15.50] Привіт...</code>), просто вставте його і натисніть «Синхронізувати». Все зробиться само!<br><br>
+            <b style="color: #ff4d4d;">ВРУЧНУ (СУФЛЕР):</b> Вставте звичайний текст і натисніть «Синхронізувати». Музика почне грати. <b>Уважно слухайте пісню і натискайте клавішу ПРОБІЛ рівно в той момент, коли починається рядок.</b> На екрані буде зручна підказка-суфлер.<br>
+            <i style="font-size: 0.8rem; color: #aaa;">(Підказка: Щоб текст зник з екрану під час довгого програшу, просто зробіть порожній рядок у тексті).</i>
+        </div>
+
+        <div class="instruction-step"><strong>5. Рендеринг:</strong> Натисніть "Почати Рендеринг", дочекайтеся завершення (не закривайте вкладку) і збережіть готовий кліп!</div>
 
         <div class="update-notice">
             <i class="fas fa-rocket"></i>
-            <p>Генератор буде поступово оновлюватися! Ми постійно додаємо нові стилі, ефекти та оптимізуємо якість.</p>
+            <p>Генератор постійно оновлюється! Ми додаємо нові стилі та покращуємо якість картинки.</p>
         </div>
     </div>
 
@@ -313,9 +331,11 @@
         <div class="control-group">
             <label>1. Формат відео</label>
             <select id="formatSelect">
-                <option value="tiktok" selected>TikTok / Shorts (9:16)</option>
-                <option value="youtube">YouTube (16:9)</option>
-                <option value="facebook">Instagram (1:1)</option>
+                <option value="vertical" selected>TikTok / Reels / Shorts (9:16)</option>
+                <option value="horizontal">YouTube / Vimeo / ТВ (16:9)</option>
+                <option value="square">Instagram Квадрат (1:1)</option>
+                <option value="portrait">Instagram Портрет (4:5)</option>
+                <option value="cinema">Кінематографічний (21:9)</option>
             </select>
         </div>
 
@@ -352,24 +372,30 @@
             <div id="sharpnessLabel">Слайдер розміру кривої/смуг</div>
         </div>
 
+        <div class="control-group" style="padding: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed var(--border);">
+            <label style="color: #fff;"><i class="fas fa-info-circle" style="color: var(--accent);"></i> 5. Інформація на відео</label>
+            <input type="text" id="songTitleInput" placeholder="Назва пісні (Автоматично)">
+            <input type="text" id="authorInput" placeholder="Автор відео (напр. @andreygerc11)" style="margin-top: 8px;">
+        </div>
+
         <div class="control-group">
-            <label>5. Фонове зображення / ВІДЕО</label>
+            <label>6. Фонове зображення / ВІДЕО</label>
             <input type="file" id="bgUpload" accept="image/*, video/mp4, video/webm, video/*">
         </div>
 
         <div class="control-group">
-            <label>6. Ваш логотип / Обкладинка</label>
+            <label>7. Ваш логотип / Обкладинка</label>
             <input type="file" id="logoUpload" accept="image/*">
         </div>
 
         <div class="control-group">
-            <label>7. Аудіо трек (.mp3, .wav)</label>
+            <label>8. Аудіо трек (.mp3, .wav)</label>
             <input type="file" id="audioUpload" accept="audio/mp3, audio/wav">
             <audio id="audioPlayer" controls></audio>
         </div>
 
         <div class="control-group">
-            <label>8. Ефекти на фоні (Частинки)</label>
+            <label>9. Ефекти на фоні (Частинки)</label>
             <select id="particleSelect">
                 <option value="none">Вимкнено</option>
                 <option value="bubbles">Бульбашки (Вгору)</option>
@@ -378,6 +404,15 @@
                 <option value="stars">Зірки (Мерехтіння)</option>
                 <option value="mixed">Магічний Мікс (Усе одразу)</option>
             </select>
+        </div>
+
+        <div class="control-group" style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <label>10. Текст пісні (Караоке / LRC)</label>
+            <textarea id="lyricsInput" placeholder="Вставте LRC текст для авто-синхронізації, або звичайний текст для ручного керування Пробілом."></textarea>
+            <button id="startSyncBtn" class="btn-mono" style="padding: 10px; font-size: 0.8rem;"><i class="fas fa-microphone"></i> Синхронізувати</button>
+            
+            <div id="syncStatus">
+                </div>
         </div>
 
         <div id="generateBtnContainer">
@@ -421,6 +456,9 @@
         const sharpnessSlider = document.getElementById('sharpnessSlider');
         const particleSelect = document.getElementById('particleSelect');
         
+        const songTitleInput = document.getElementById('songTitleInput');
+        const authorInput = document.getElementById('authorInput');
+
         let backgroundImage = null;
         let backgroundVideo = null;
         let logoImage = null;
@@ -439,9 +477,8 @@
         
         let isSubscribed = false; 
         
-        // ПЕРЕВІРКА URL-ПАРАМЕТРІВ (Оплата або Адмін-доступ)
+        // ПЕРЕВІРКА URL-ПАРАМЕТРІВ
         const urlParams = new URLSearchParams(window.location.search);
-        
         if (urlParams.get('status') === 'subscribed') {
             isSubscribed = true;
             alert("Дякуємо за підтримку! Рендеринг розблоковано.");
@@ -455,8 +492,21 @@
         
         let baseHue = 0;
         let particles = []; 
+        
+        // ЗМІННІ ДЛЯ ТЕКСТУ ПІСНІ (LRC)
+        let lyricsData = []; 
+        let rawLyrics = []; 
+        let isSyncingLyrics = false;
+        let currentSyncIndex = 0;
 
-        const formats = { tiktok: { w: 1080, h: 1920 }, youtube: { w: 1920, h: 1080 }, facebook: { w: 1080, h: 1080 } };
+        // НОВІ ФОРМАТИ
+        const formats = { 
+            vertical: { w: 1080, h: 1920 }, // 9:16
+            horizontal: { w: 1920, h: 1080 }, // 16:9
+            square: { w: 1080, h: 1080 }, // 1:1
+            portrait: { w: 1080, h: 1350 }, // 4:5
+            cinema: { w: 2560, h: 1080 } // 21:9
+        };
 
         function setCanvasSize() {
             const format = formats[formatSelect.value];
@@ -592,12 +642,137 @@
             if (this.files[0]) {
                 let fullName = this.files[0].name;
                 outputFileName = fullName.substring(0, fullName.lastIndexOf('.')) || fullName;
+                
+                songTitleInput.value = outputFileName;
+
                 audioPlayer.src = URL.createObjectURL(this.files[0]);
                 audioPlayer.currentTime = 0;
                 initVisualizer();
                 drawPreviewFrame();
             }
         });
+
+        // ==========================================
+        // ЛОГІКА СИНХРОНІЗАЦІЇ ТЕКСТУ (LRC + СУФЛЕР)
+        // ==========================================
+        const startSyncBtn = document.getElementById('startSyncBtn');
+        const syncStatus = document.getElementById('syncStatus');
+        const lyricsInput = document.getElementById('lyricsInput');
+
+        startSyncBtn.addEventListener('click', () => {
+            if (!audioPlayer.src) { alert('Спочатку завантажте аудіо трек!'); return; }
+            
+            const text = lyricsInput.value;
+            if (!text.trim()) { alert('Вставте текст пісні у поле вище!'); return; }
+
+            // ПЕРЕВІРКА: ЧИ ЦЕ ФОРМАТ LRC? (шукаємо [00:00.00])
+            const hasLRC = /\[\d{2}:\d{2}(\.\d{1,3})?\]/.test(text);
+
+            if (hasLRC) {
+                // АВТОМАТИЧНИЙ РЕЖИМ LRC
+                parseLRC(text);
+                syncStatus.style.display = 'block';
+                syncStatus.innerHTML = '<p style="color: #4CAF50; font-weight: bold; font-size: 0.95rem; margin: 0;"><i class="fas fa-check-circle"></i> LRC розпізнано!<br>Текст синхронізовано автоматично.</p>';
+                startSyncBtn.style.display = 'block';
+                startSyncBtn.innerHTML = '<i class="fas fa-redo"></i> Оновити текст';
+                isSyncingLyrics = false;
+                return;
+            }
+
+            // РУЧНИЙ РЕЖИМ (СУФЛЕР З ПРОБІЛОМ)
+            rawLyrics = text.split('\n').map(line => line.trim());
+            lyricsData = [];
+            currentSyncIndex = 0;
+            isSyncingLyrics = true;
+
+            syncStatus.style.display = 'block';
+            syncStatus.innerHTML = `
+                <p style="margin: 0 0 5px 0; font-size: 0.8rem; color: var(--accent); font-weight: bold; text-transform: uppercase;">Натискайте ПРОБІЛ на виділеному рядку!</p>
+                <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div id="prevLyricLine" style="color: #666; font-size: 0.85rem; min-height: 18px; margin-bottom: 8px;"></div>
+                    <div id="currentLyricLine" style="color: #fff; font-size: 1.15rem; font-weight: 900; min-height: 24px; margin-bottom: 8px; text-shadow: 0 0 10px var(--accent);"></div>
+                    <div id="nextLyricLine" style="color: #888; font-size: 0.95rem; min-height: 18px;"></div>
+                </div>
+                <p style="font-size: 0.7rem; color: #666; margin-top: 10px;">(Щоб скасувати, зачекайте кінця або змініть текст)</p>
+            `;
+
+            audioPlayer.blur();
+            audioPlayer.currentTime = 0;
+            audioPlayer.play();
+            startSyncBtn.style.display = 'none';
+
+            updateTeleprompter();
+        });
+
+        // Парсер LRC формату
+        function parseLRC(text) {
+            lyricsData = [];
+            const lines = text.split('\n');
+            const timeRegex = /\[\d{2}:\d{2}(\.\d{1,3})?\]/g; 
+            
+            lines.forEach(line => {
+                let timeMatches = line.match(timeRegex);
+                if (timeMatches) {
+                    let textStr = line.replace(timeRegex, '').trim();
+                    timeMatches.forEach(t => {
+                        const m = t.match(/\[(\d{2}):(\d{2})(\.(\d{1,3}))?\]/);
+                        if (m) {
+                            const minutes = parseInt(m[1], 10);
+                            const seconds = parseInt(m[2], 10);
+                            const milliseconds = m[4] ? parseFloat("0." + m[4]) : 0;
+                            const totalTime = minutes * 60 + seconds + milliseconds;
+                            lyricsData.push({ time: totalTime, text: textStr });
+                        }
+                    });
+                }
+            });
+            lyricsData.sort((a, b) => a.time - b.time); // Сортуємо по часу
+        }
+
+        // Оновлення екрану Суфлера
+        function updateTeleprompter() {
+            const prevEl = document.getElementById('prevLyricLine');
+            const currEl = document.getElementById('currentLyricLine');
+            const nextEl = document.getElementById('nextLyricLine');
+
+            if (!currEl) return; 
+
+            prevEl.innerText = (currentSyncIndex > 0) ? (rawLyrics[currentSyncIndex - 1] || "[ ПАУЗА ]") : "";
+            
+            if (currentSyncIndex < rawLyrics.length) {
+                currEl.innerText = rawLyrics[currentSyncIndex] || "[ ПАУЗА / ПРОГРАШ ]";
+            } else {
+                currEl.innerText = "СИНХРОНІЗАЦІЮ ЗАВЕРШЕНО!";
+                currEl.style.color = "#4CAF50";
+            }
+
+            nextEl.innerText = (currentSyncIndex + 1 < rawLyrics.length) ? (rawLyrics[currentSyncIndex + 1] || "[ ПАУЗА ]") : "";
+        }
+
+        // Обробка натискання ПРОБІЛУ
+        window.addEventListener('keydown', (e) => {
+            if (isSyncingLyrics && e.code === 'Space') {
+                e.preventDefault(); // Блокуємо прокрутку екрану
+                
+                lyricsData.push({
+                    time: audioPlayer.currentTime,
+                    text: rawLyrics[currentSyncIndex]
+                });
+                
+                currentSyncIndex++;
+                
+                if (currentSyncIndex >= rawLyrics.length) {
+                    isSyncingLyrics = false;
+                    setTimeout(() => {
+                        syncStatus.style.display = 'none';
+                        startSyncBtn.style.display = 'block';
+                        startSyncBtn.innerHTML = '<i class="fas fa-redo"></i> Пересинхронізувати текст';
+                    }, 1500);
+                }
+                updateTeleprompter();
+            }
+        });
+
 
         function initVisualizer() {
             if (!audioCtx) {
@@ -787,355 +962,105 @@
             else if (style === 'linear_bars') drawLinearBars(dataArray, minDimension, bufferLength);
             else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength);
             else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
-        }
 
-        function drawCircleSharp(dataArray, minDimension, bufferLength, avgBass) {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const baseRadius = minDimension * 0.16;
+            // --- МАЛЮВАННЯ НАЗВИ ПІСНІ ТА АВТОРА (З ПЕРЕНЕСЕННЯМ РЯДКІВ) ---
+            const titleText = songTitleInput.value.trim();
+            const authorText = authorInput.value.trim();
             
-            const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
-
-            if (logoImage) {
+            if (titleText || authorText) {
                 ctx.save();
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, pulsatingLogoRadius, 0, Math.PI * 2);
-                ctx.clip(); 
-                ctx.drawImage(logoImage, centerX - pulsatingLogoRadius, centerY - pulsatingLogoRadius, pulsatingLogoRadius * 2, pulsatingLogoRadius * 2);
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                
+                const padding = minDimension * 0.05; 
+                const maxWidthTitle = canvas.width - (padding * 2); 
+                let currentY = padding;
+                
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                ctx.shadowBlur = 15;
+                
+                if (titleText) {
+                    const titleSize = minDimension * 0.04;
+                    ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`;
+                    ctx.fillStyle = '#fff';
+                    
+                    let words = (`🎵 ${titleText}`).split(' ');
+                    let line = '';
+                    let lineHeight = titleSize * 1.3;
+
+                    for(let n = 0; n < words.length; n++) {
+                        let testLine = line + words[n] + ' ';
+                        let metrics = ctx.measureText(testLine);
+                        if (metrics.width > maxWidthTitle && n > 0) {
+                            ctx.fillText(line, padding, currentY);
+                            line = words[n] + ' ';
+                            currentY += lineHeight;
+                        } else {
+                            line = testLine;
+                        }
+                    }
+                    ctx.fillText(line, padding, currentY);
+                    currentY += lineHeight; 
+                }
+                
+                if (authorText) {
+                    const authorSize = minDimension * 0.025;
+                    ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`;
+                    ctx.fillStyle = '#bbb';
+                    
+                    let words = (`Відео: ${authorText}`).split(' ');
+                    let line = '';
+                    let lineHeight = authorSize * 1.3;
+
+                    for(let n = 0; n < words.length; n++) {
+                        let testLine = line + words[n] + ' ';
+                        let metrics = ctx.measureText(testLine);
+                        if (metrics.width > maxWidthTitle && n > 0) {
+                            ctx.fillText(line, padding, currentY);
+                            line = words[n] + ' ';
+                            currentY += lineHeight;
+                        } else {
+                            line = testLine;
+                        }
+                    }
+                    ctx.fillText(line, padding, currentY);
+                }
                 ctx.restore();
             }
 
-            const pointsCount = 60; 
-            const usefulDataLength = Math.floor(bufferLength * 0.65); 
-            let pointsRight = [];
-            let pointsLeft = [];
-
-            for (let i = 0; i <= pointsCount; i++) {
-                let ratio = i / pointsCount;
-                let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength);
-                let val = dataArray[dataIndex] || 0;
-
-                let cleanVal = Math.max(0, val - 35);
-                let normalized = cleanVal / 220;
-                let eqBoost = 1 + (ratio * 2.5); 
+            // --- МАЛЮВАННЯ ТЕКСТУ ПІСНІ (Караоке знизу З ПЕРЕНЕСЕННЯМ РЯДКІВ) ---
+            if (lyricsData.length > 0) {
+                let activeText = "";
+                let currentTime = audioPlayer.currentTime;
                 
-                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.15 * eqBoost;
-                let dist = pulsatingLogoRadius + barHeight; 
-
-                let angleR = (Math.PI / 2) - ratio * Math.PI; 
-                pointsRight.push({x: centerX + Math.cos(angleR) * dist, y: centerY + Math.sin(angleR) * dist});
-
-                let angleL = (Math.PI / 2) + ratio * Math.PI; 
-                pointsLeft.push({x: centerX + Math.cos(angleL) * dist, y: centerY + Math.sin(angleL) * dist});
-            }
-
-            ctx.beginPath();
-            ctx.lineJoin = 'round'; 
-            ctx.lineCap = 'round';
-
-            ctx.moveTo(pointsRight[0].x, pointsRight[0].y);
-            for(let j = 1; j < pointsRight.length; j++) ctx.lineTo(pointsRight[j].x, pointsRight[j].y);
-            for(let j = pointsLeft.length - 2; j >= 0; j--) ctx.lineTo(pointsLeft[j].x, pointsLeft[j].y);
-            ctx.closePath(); 
-
-            let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY);
-            gradient.addColorStop(0, primaryColor);
-            gradient.addColorStop(0.5, 'white');
-            gradient.addColorStop(1, secondaryColor);
-            
-            ctx.strokeStyle = gradient;
-            ctx.lineWidth = minDimension * 0.005; 
-            ctx.shadowBlur = 20 + (avgBass * 0.1); 
-            ctx.shadowColor = primaryColor;
-            ctx.stroke(); 
-            ctx.shadowBlur = 0; 
-        }
-
-        function drawCircleBars(dataArray, minDimension, bufferLength, avgBass) {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const baseRadius = minDimension * 0.16;
-            const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
-
-            if (logoImage) {
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, pulsatingLogoRadius, 0, Math.PI * 2);
-                ctx.clip(); 
-                ctx.drawImage(logoImage, centerX - pulsatingLogoRadius, centerY - pulsatingLogoRadius, pulsatingLogoRadius * 2, pulsatingLogoRadius * 2);
-                ctx.restore();
-            }
-
-            const pointsCount = 70;
-            const usefulDataLength = Math.floor(bufferLength * 0.65);
-            
-            let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY);
-            gradient.addColorStop(0, primaryColor);
-            gradient.addColorStop(0.5, 'white');
-            gradient.addColorStop(1, secondaryColor);
-            
-            ctx.strokeStyle = gradient;
-            ctx.lineWidth = minDimension * 0.006;
-            ctx.lineCap = 'round';
-
-            for (let i = 0; i < pointsCount; i++) {
-                let ratio = i / pointsCount;
-                let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength);
-                let val = dataArray[dataIndex] || 0;
-                
-                let cleanVal = Math.max(0, val - 30);
-                let normalized = cleanVal / 225;
-                let boost = 1 + (ratio * 2.0);
-                
-                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.2 * boost;
-                if (barHeight < 2) barHeight = 2; 
-
-                let angleR = (Math.PI / 2) - ratio * Math.PI;
-                ctx.beginPath();
-                ctx.moveTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5));
-                ctx.lineTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5 + barHeight));
-                ctx.stroke();
-
-                if (i !== 0 && i !== pointsCount - 1) {
-                    let angleL = (Math.PI / 2) + ratio * Math.PI;
-                    ctx.beginPath();
-                    ctx.moveTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5));
-                    ctx.lineTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5 + barHeight));
-                    ctx.stroke();
+                for (let i = 0; i < lyricsData.length; i++) {
+                    if (currentTime >= lyricsData[i].time) {
+                        activeText = lyricsData[i].text;
+                    }
                 }
-            }
-        }
 
-        function drawLinearBars(dataArray, minDimension, bufferLength) {
-            const usefulLength = Math.floor(bufferLength * 0.7);
-            const barWidth = canvas.width / usefulLength;
-            
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            ctx.fillStyle = gradient;
-
-            for (let i = 0; i < usefulLength; i++) {
-                const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6 * sharpnessSlider.value;
-                ctx.fillRect(i * barWidth, canvas.height - barHeightScaled, barWidth - 2, barHeightScaled);
-            }
-        }
-
-        function drawLinearCurve(dataArray, minDimension, bufferLength) {
-            const usefulLength = Math.floor(bufferLength * 0.7);
-            const sliceWidth = canvas.width / (usefulLength - 1);
-            
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height);
-
-            for (let i = 0; i < usefulLength; i++) {
-                const v = Math.pow(dataArray[i] / 255, 1.5);
-                const y = canvas.height - (v * canvas.height * 0.5 * sharpnessSlider.value);
-                const x = i * sliceWidth;
-                ctx.lineTo(x, y);
-            }
-
-            ctx.lineTo(canvas.width, canvas.height);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; 
-            ctx.fill();
-
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = gradient;
-            ctx.lineJoin = 'round';
-            ctx.stroke();
-        }
-
-        function drawLinearSymmetry(dataArray, minDimension, bufferLength) {
-            const usefulLength = Math.floor(bufferLength * 0.65);
-            const sliceWidth = canvas.width / (usefulLength * 2);
-            const centerY = canvas.height / 2;
-
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            
-            ctx.beginPath();
-            for (let i = usefulLength - 1; i >= 0; i--) {
-                const v = Math.pow(dataArray[i] / 255, 1.8);
-                const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value;
-                const x = (usefulLength - 1 - i) * sliceWidth;
-                if (i === usefulLength - 1) ctx.moveTo(x, centerY - amplitude);
-                else ctx.lineTo(x, centerY - amplitude);
-            }
-            for (let i = 0; i < usefulLength; i++) {
-                const v = Math.pow(dataArray[i] / 255, 1.8);
-                const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value;
-                const x = (usefulLength + i) * sliceWidth;
-                ctx.lineTo(x, centerY - amplitude);
-            }
-            ctx.lineJoin = 'round';
-            ctx.lineWidth = 5;
-            ctx.strokeStyle = gradient;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = primaryColor;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-            
-            ctx.beginPath();
-            for (let i = usefulLength - 1; i >= 0; i--) {
-                const v = Math.pow(dataArray[i] / 255, 1.8);
-                const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value;
-                const x = (usefulLength - 1 - i) * sliceWidth;
-                if (i === usefulLength - 1) ctx.moveTo(x, centerY + amplitude);
-                else ctx.lineTo(x, centerY + amplitude);
-            }
-            for (let i = 0; i < usefulLength; i++) {
-                const v = Math.pow(dataArray[i] / 255, 1.8);
-                const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value;
-                const x = (usefulLength + i) * sliceWidth;
-                ctx.lineTo(x, centerY + amplitude);
-            }
-            ctx.stroke();
-        }
-
-        // --- ЛОГІКА ПІДПИСКИ І РЕНДЕРУ ---
-        
-        function closeModal() {
-            document.getElementById('subscriptionModal').style.display = 'none';
-        }
-
-        async function processSubscription(btnElement, planType) {
-            const originalText = btnElement.innerText;
-            btnElement.innerText = 'Зачекайте...';
-            btnElement.disabled = true;
-
-            try {
-                const res = await fetch('https://andreygerc11-music-site.onrender.com/api/pay-subscription', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ plan: planType })
-                });
-                
-                const data = await res.json();
-                
-                if (data.url) {
-                    window.location.href = data.url; 
-                } else {
-                    alert('Не вдалося створити платіж. Перевірте з\'єднання.');
-                    btnElement.innerText = originalText;
-                    btnElement.disabled = false;
-                }
-            } catch (err) {
-                alert('Помилка сервера. Можливо, бекенд ще не налаштовано.');
-                btnElement.innerText = originalText;
-                btnElement.disabled = false;
-            }
-        }
-
-        document.getElementById('sidebarSubscribeBtn').addEventListener('click', function() {
-            processSubscription(this, 'trial_5_days');
-        });
-
-        document.getElementById('modalSubscribeBtn').addEventListener('click', function() {
-            processSubscription(this, 'trial_5_days');
-        });
-
-        const generateVideoBtn = document.getElementById('generateVideoBtn');
-        const generateProgress = document.getElementById('generateProgress');
-        const generateStatus = document.getElementById('generateStatus');
-
-        generateVideoBtn.addEventListener('click', async () => {
-            if (!audioCtx) { alert('Будь ласка, завантажте аудіо трек перед рендерингом!'); return; }
-            
-            // Якщо користувач не підписаний - показуємо вікно оплати!
-            if (!isSubscribed) {
-                document.getElementById('subscriptionModal').style.display = 'flex';
-                // Ховаємо кнопку інструкції, щоб не заважала
-                document.getElementById('infoPanel').classList.remove('open');
-                document.getElementById('openInfoBtn').style.display = 'none';
-                return;
-            }
-
-            if (isGenerating) return;
-            if (!audioPlayer.duration || audioPlayer.duration < 2) { alert('Спочатку завантажте аудіо трек!'); return; }
-
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
-
-            // Ховаємо інструкцію під час рендеру (щоб не попала на відео)
-            document.getElementById('infoPanel').classList.remove('open');
-            document.getElementById('openInfoBtn').style.display = 'none';
-
-            isGenerating = true;
-            chunks = [];
-
-            const mimeType = 'video/webm;codecs=vp9';
-            const fileExt = 'webm';
-
-            generateVideoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Рендеринг...';
-            generateVideoBtn.disabled = true;
-            generateProgress.style.display = 'block';
-            generateStatus.style.display = 'block';
-            generateProgress.value = 0;
-
-            const dest = audioCtx.createMediaStreamDestination();
-            source.connect(dest);
-            const audioStream = dest.stream;
-            const canvasStream = canvas.captureStream(30); 
-            const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
-
-            mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mimeType });
-            mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(chunks, { type: mimeType });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${outputFileName}.${fileExt}`;
-                a.click();
-                URL.revokeObjectURL(url);
-                
-                isGenerating = false;
-                generateVideoBtn.innerHTML = '<i class="fas fa-bolt"></i> Почати Рендеринг';
-                generateVideoBtn.disabled = false;
-                generateProgress.style.display = 'none';
-                generateStatus.style.display = 'none';
-                audioPlayer.currentTime = 0;
-                audioPlayer.pause();
-                
-                if (backgroundVideo) backgroundVideo.pause();
-                
-                source.disconnect(dest);
-                source.connect(analyser);
-
-                // Повертаємо кнопку інструкції після завершення рендеру
-                document.getElementById('openInfoBtn').style.display = 'flex';
-            };
-
-            audioPlayer.currentTime = 0;
-            
-            if (backgroundVideo) {
-                backgroundVideo.currentTime = 0;
-                backgroundVideo.play();
-            }
-            particles = [];
-
-            source.disconnect(audioCtx.destination); 
-            audioPlayer.play();
-            mediaRecorder.start();
-
-            const checkProgressInterval = setInterval(() => {
-                if (audioPlayer.currentTime >= audioPlayer.duration || audioPlayer.paused) {
-                    clearInterval(checkProgressInterval);
-                    if(mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-                } else {
-                    generateProgress.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-                    generateStatus.innerText = `Запис: ${audioPlayer.currentTime.toFixed(1)}с / ${audioPlayer.duration.toFixed(1)}с`;
-                }
-            }, 100);
-        });
-
-        // Якщо закрили модалку оплати - повертаємо кнопку інструкції
-        document.querySelector('.close-modal').addEventListener('click', () => {
-            document.getElementById('openInfoBtn').style.display = 'flex';
-        });
-    </script>
-</body>
-</html>
+                if (activeText !== "") {
+                    ctx.save();
+                    const fontSize = minDimension * 0.055; 
+                    ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    const padding = minDimension * 0.05;
+                    const maxWidthLyrics = canvas.width - (padding * 2);
+                    
+                    let words = activeText.split(' ');
+                    let line = '';
+                    let linesToDraw = [];
+                    
+                    for(let n = 0; n < words.length; n++) {
+                        let testLine = line + words[n] + ' ';
+                        let metrics = ctx.measureText(testLine);
+                        if (metrics.width > maxWidthLyrics && n > 0) {
+                            linesToDraw.push(line.trim());
+                            line = words[n] + ' ';
+                        } else {
+                            line = testLine;
+                        }
+                    }
+                    linesToDraw.push(line.
