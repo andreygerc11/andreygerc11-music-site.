@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hertz Spectrum | Генератор Відео</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #0a0a0b;
+            --panel-bg: #161618;
+            --accent: #ff4d4d; 
+            --accent-hover: #ff1a1a;
+            --text: #e0e0e0;
+            --border: rgba(255, 255, 255, 0.1);
+            --sidebar-width: 420px; /* Зробив трохи ширше для краси */
+        }
+
+        body { 
+            margin: 0; padding: 0; 
+            background-color: var(--bg-color); 
+            color: var(--text); 
+            font-family: 'Montserrat', sans-serif; 
+            display: flex; height: 100vh; overflow: hidden; 
+        }
+
+        /* Бічна панель налаштувань */
+        #sidebar { 
+            width: var(--sidebar-width); 
+            background-color: var(--panel-bg); 
+            border-right: 1px solid var(--border); 
+            padding: 30px 25px; 
+            box-sizing: border-box; 
+            overflow-y: auto; 
+            display: flex; flex-direction: column; gap: 22px; 
+            box-shadow: 5px 0 30px rgba(0,0,0,0.9); 
+            z-index: 100; 
+        }
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+        #sidebar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+
+        .back-link {
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        .back-link:hover { color: var(--accent); transform: translateX(-5px); }
+
+        h2 { 
+            margin: 0; font-size: 1.6rem; color: white; 
+            font-weight: 900; text-transform: uppercase; letter-spacing: 1px; 
+            border-bottom: 2px solid var(--accent); padding-bottom: 15px;
+        }
+        
+        /* Блок підписки */
+        .mono-premium-box {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 77, 77, 0.05) 100%);
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            border-radius: 20px;
+            padding: 20px 15px;
+            text-align: center;
+            transition: 0.4s ease;
+        }
+        .mono-premium-box:hover { border-color: var(--accent); box-shadow: 0 10px 30px rgba(255, 77, 77, 0.1); }
+        
+        .mono-premium-box h4 {
+            margin: 0 0 15px 0; color: #fff; font-size: 1.1rem; text-transform: uppercase; font-weight: 900;
+        }
+        .price-tag {
+            font-size: 1.8rem; font-weight: 900; color: var(--accent); margin-bottom: 5px;
+            text-shadow: 0 0 15px rgba(255, 77, 77, 0.3);
+        }
+        .mono-premium-box p {
+            margin: 0 0 15px 0; font-size: 0.85rem; color: #bbb; line-height: 1.5;
+        }
+        .fop-info {
+            font-size: 0.65rem; color: #666; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* Стильні анімовані кнопки підписки */
+        .btn-mono {
+            display: block; width: 100%; padding: 14px;
+            background: rgba(255, 77, 77, 0.1); color: var(--accent); text-decoration: none;
+            border: 2px solid var(--accent); border-radius: 50px; font-family: inherit;
+            font-weight: 900; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; cursor: pointer;
+        }
+        .btn-mono:hover {
+            background: var(--accent); color: #fff; 
+            box-shadow: 0 8px 25px rgba(255, 77, 77, 0.5); 
+            transform: translateY(-3px) scale(1.02);
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 10px; }
+        label { font-size: 0.85rem; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
+
+        /* Поля вводу та селекти */
+        input[type="file"], select { 
+            width: 100%; padding: 14px 15px; background: rgba(0, 0, 0, 0.4); 
+            border: 1px solid var(--border); border-radius: 12px; color: white; 
+            outline: none; cursor: pointer; box-sizing: border-box; 
+            font-size: 0.9rem; font-family: inherit; transition: all 0.3s ease;
+        }
+        select:hover, input[type="file"]:hover { border-color: rgba(255,255,255,0.3); }
+        select:focus, input[type="file"]:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255, 77, 77, 0.15); }
+        select option { background-color: var(--panel-bg); color: var(--text); }
+
+        /* Кнопка вибору файлу */
+        input[type="file"]::file-selector-button { 
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.2); 
+            color: white; padding: 8px 18px; border-radius: 50px; cursor: pointer; 
+            margin-right: 15px; font-weight: bold; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        input[type="file"]::file-selector-button:hover { 
+            background: var(--accent); border-color: var(--accent); color: #fff; 
+            transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 77, 77, 0.4);
+        }
+        
+        audio { width: 100%; margin-top: 10px; outline: none; border-radius: 50px; border: 1px solid var(--border); height: 45px;}
+        audio::-webkit-media-controls-panel { background-color: #000; border-radius: 50px; }
+        audio::-webkit-media-controls-play-button, audio::-webkit-media-controls-mute-button { filter: invert(1); }
+        audio::-webkit-media-controls-current-time-display, audio::-webkit-media-controls-time-remaining-display { color: white; }
+
+        /* КРУГЛА ПАЛІТРА КОЛЬОРІВ */
+        .color-picker-group { display: flex; gap: 15px; width: 100%; }
+        input[type="color"] { 
+            width: 100%; height: 50px; 
+            border: 2px solid var(--border); 
+            border-radius: 50px; 
+            cursor: pointer; background: none; padding: 4px; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50px; }
+        input[type="color"]::-moz-color-swatch { border: none; border-radius: 50px; }
+        input[type="color"]:hover { 
+            border-color: var(--accent); 
+            transform: translateY(-3px) scale(1.05); 
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1); 
+        }
+
+        /* Чекбокс */
+        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 5px; cursor: pointer; }
+        #autoColorLabel { font-size: 0.85rem; color: #aaa; font-weight: 400; text-transform: none; letter-spacing: 0; transition: 0.3s;}
+        .checkbox-wrapper:hover #autoColorLabel { color: #fff; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+        /* Повзунок (Слайдер) */
+        #sharpnessLabel { font-size: 0.8rem; color: #888; font-weight: 400; text-transform: none; letter-spacing: 0; margin-top: -5px;}
+        input[type="range"] { 
+            width: 100%; cursor: pointer; accent-color: var(--accent); height: 6px; 
+            background: rgba(255,255,255,0.1); border-radius: 10px; appearance: none; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb { 
+            appearance: none; width: 18px; height: 18px; border-radius: 50%; 
+            background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: 0.2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+        /* ГОЛОВНА КНОПКА РЕНДЕРУ */
+        #generateBtnContainer { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 25px; padding-bottom: 20px;}
+        
+        #generateVideoBtn { 
+            width: 100%; padding: 18px; 
+            background: linear-gradient(45deg, var(--accent), var(--accent-hover)); 
+            border: none; color: white; border-radius: 50px; 
+            cursor: pointer; font-weight: 900; font-size: 1.05rem; 
+            text-transform: uppercase; letter-spacing: 1.5px; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            font-family: inherit;
+            box-shadow: 0 5px 15px rgba(255, 77, 77, 0.3);
+            position: relative; overflow: hidden;
+        }
+        
+        /* Блік на кнопці */
+        #generateVideoBtn::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-25deg); transition: 0.6s ease;
+        }
+        
+        #generateVideoBtn:hover { 
+            transform: translateY(-4px) scale(1.02); 
+            box-shadow: 0 12px 30px rgba(255, 77, 77, 0.6); 
+        }
+        #generateVideoBtn:hover::after { left: 150%; } /* Анімація бліку */
+        
+        #generateVideoBtn:active { transform: translateY(0) scale(1); box-shadow: 0 5px 15px rgba(255, 77, 77, 0.4); }
+        
+        #generateVideoBtn:disabled { 
+            background: #2a2a2c; color: #666; cursor: not-allowed; 
+            box-shadow: none; transform: none; 
+        }
+        #generateVideoBtn:disabled::after { display: none; }
+
+        progress { width: 100%; margin-top: 15px; height: 10px; border-radius: 50px; overflow: hidden; }
+        progress::-webkit-progress-bar { background-color: rgba(255,255,255,0.1); }
+        progress::-webkit-progress-value { background-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        #preview-container { 
+            flex: 1; display: flex; justify-content: center; align-items: center; 
+            background: radial-gradient(circle, #1a1a1f 0%, #0a0a0b 100%); 
+            padding: 20px; position: relative;
+        }
+        canvas { 
+            background-color: black; box-shadow: 0 0 60px rgba(0,0,0,0.9); 
+            max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;
+        }
+
+        /* МОДАЛЬНЕ ВІКНО ПІДПИСКИ */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: var(--panel-bg); padding: 40px 30px; border-radius: 20px; text-align: center;
+            border: 2px solid var(--accent); max-width: 450px; width: 90%;
+            box-shadow: 0 15px 50px rgba(255, 77, 77, 0.25);
+        }
+        .modal-content h3 { color: #fff; margin-bottom: 10px; font-size: 1.6rem; font-weight: 900; text-transform: uppercase;}
+        .modal-content p { color: #ccc; margin-bottom: 20px; line-height: 1.6; font-size: 0.95rem;}
+        .modal-price { font-size: 2.2rem; color: var(--accent); font-weight: 900; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,77,77,0.4); }
+        .modal-subprice { font-size: 0.85rem; color: #888; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px;}
+        
+        .close-modal {
+            margin-top: 20px; display: block; color: #888; font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; text-decoration: none; background: none; border: none; width: 100%; transition: 0.3s;
+        }
+        .close-modal:hover { color: #fff; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> На головну</a>
+            <h2>Hertz Spectrum</h2>
+        </div>
+
+        <div class="mono-premium-box">
+            <h4><i class="fas fa-crown" style="color: var(--accent);"></i> Premium Доступ</h4>
+            <div class="price-tag">39 ₴</div>
+            <p><strong>Пробний період на 5 днів!</strong><br>Експортуйте відео у високій якості без водяних знаків. Далі — 199 ₴ / місяць.</p>
+            <div class="fop-info">ФОП Герц Андрій Костянтинович<br>ІПН: 3047713272</div>
+            <button id="sidebarSubscribeBtn" class="btn-mono">Оформити підписку</button>
+        </div>
+
+        <div class="control-group">
+            <label>1. Формат відео</label>
+            <select id="formatSelect">
+                <option value="tiktok" selected>TikTok / Shorts (9:16)</option>
+                <option value="youtube">YouTube (16:9)</option>
+                <option value="facebook">Instagram (1:1)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>2. Стиль візуалізатора</label>
+            <select id="playerStyle">
+                <optgroup label="Кругові стилі (Для логотипу)">
+                    <option value="circle_sharp" selected>Гострі кути (Рівномірна, приклеєна)</option>
+                    <option value="circle_bars">Смуги (Bars навколо лого)</option>
+                </optgroup>
+                <optgroup label="Лінійні стилі (Без логотипу по центру)">
+                    <option value="linear_bars">Лінійна: Смуги знизу</option>
+                    <option value="linear_curve">Лінійна: Плавна хвиля знизу</option>
+                    <option value="linear_symmetry">Лінійна: Симетрична хвиля по центру</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>3. Палітра кольорів</label>
+            <div class="color-picker-group">
+                <input type="color" id="primaryColorInput" value="#ff4d4d"> 
+                <input type="color" id="secondaryColorInput" value="#4d4dff"> 
+            </div>
+            <label class="checkbox-wrapper">
+                <input type="checkbox" id="autoColorCheckbox" checked>
+                <span id="autoColorLabel">Автоматична зміна кольору</span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label>4. Налаштування розмаху піків</label>
+            <input type="range" id="sharpnessSlider" min="0.0" max="3.0" step="0.1" value="0.0">
+            <div id="sharpnessLabel">Слайдер розміру кривої/смуг</div>
+        </div>
+
+        <div class="control-group">
+            <label>5. Фонове зображення / ВІДЕО</label>
+            <input type="file" id="bgUpload" accept="image/*, video/mp4, video/webm, video/*">
+        </div>
+
+        <div class="control-group">
+            <label>6. Ваш логотип / Обкладинка</label>
+            <input type="file" id="logoUpload" accept="image/*">
+        </div>
+
+        <div class="control-group">
+            <label>7. Аудіо трек (.mp3, .wav)</label>
+            <input type="file" id="audioUpload" accept="audio/mp3, audio/wav">
+            <audio id="audioPlayer" controls></audio>
+        </div>
+
+        <div class="control-group">
+            <label>8. Ефекти на фоні (Частинки)</label>
+            <select id="particleSelect">
+                <option value="none">Вимкнено</option>
+                <option value="bubbles">Бульбашки (Вгору)</option>
+                <option value="snow">Сніг (Вниз)</option>
+                <option value="hearts">Сердечка</option>
+                <option value="stars">Зірки (Мерехтіння)</option>
+                <option value="mixed">Магічний Мікс (Усе одразу)</option>
+            </select>
+        </div>
+
+        <div id="generateBtnContainer">
+            <button id="generateVideoBtn"><i class="fas fa-bolt"></i> Почати Рендеринг</button>
+            <progress id="generateProgress" value="0" max="100" style="display:none;"></progress>
+            <div id="generateStatus" style="display:none; text-align:center; font-size:0.85rem; color:#aaa; margin-top:8px; font-weight: bold;">Рендеринг...</div>
+        </div>
+    </div>
+
+    <div id="preview-container">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="modal-overlay" id="subscriptionModal">
+        <div class="modal-content">
+            <h3>Рендеринг Відео</h3>
+            <p>Експорт відео доступний лише за підпискою. Оформіть пробний період, щоб зберегти свій шедевр!</p>
+            <div class="modal-price">39 ₴</div>
+            <div class="modal-subprice">за 5 днів (далі 199 ₴ / міс)</div>
+            <button id="modalSubscribeBtn" class="btn-mono" style="font-size: 1rem; padding: 16px;">Оформити та Експортувати</button>
+            <button class="close-modal" onclick="closeModal()">Повернутися до редагування</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const formatSelect = document.getElementById('formatSelect');
+        const playerStyleSelect = document.getElementById('playerStyle');
+        const audioUpload = document.getElementById('audioUpload');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const sharpnessSlider = document.getElementById('sharpnessSlider');
+        const particleSelect = document.getElementById('particleSelect');
+        
+        let backgroundImage = null;
+        let backgroundVideo = null;
+        let logoImage = null;
+        let outputFileName = "hertz_spectrum_video"; 
+
+        const primaryColorInput = document.getElementById('primaryColorInput');
+        const secondaryColorInput = document.getElementById('secondaryColorInput');
+        const autoColorCheckbox = document.getElementById('autoColorCheckbox');
+        let primaryColor = primaryColorInput.value;
+        let secondaryColor = secondaryColorInput.value;
+
+        let audioCtx, analyser, source;
+        let mediaRecorder;
+        let chunks = [];
+        let isGenerating = false;
+        
+        // Імітація перевірки підписки (поки немає бази даних користувачів)
+        let isSubscribed = false; 
+        
+        let baseHue = 0;
+        let particles = []; 
+
+        const formats = { tiktok: { w: 1080, h: 1920 }, youtube: { w: 1920, h: 1080 }, facebook: { w: 1080, h: 1080 } };
+
+        function setCanvasSize() {
+            const format = formats[formatSelect.value];
+            canvas.width = format.w; canvas.height = format.h;
+            const ratio = format.w / format.h;
+            if (window.innerWidth / window.innerHeight > ratio) {
+                canvas.style.width = 'auto'; canvas.style.height = '100%';
+            } else {
+                canvas.style.width = '100%'; canvas.style.height = 'auto';
+            }
+            particles = []; 
+            if (!audioCtx) {
+                drawPreviewFrame();
+            }
+        }
+        
+        formatSelect.addEventListener('change', setCanvasSize);
+        window.addEventListener('resize', setCanvasSize);
+        setCanvasSize();
+
+        function updateColors() {
+            if (!autoColorCheckbox.checked) {
+                primaryColor = primaryColorInput.value;
+                secondaryColor = secondaryColorInput.value;
+            }
+        }
+        primaryColorInput.addEventListener('input', updateColors);
+        secondaryColorInput.addEventListener('input', updateColors);
+
+        autoColorCheckbox.addEventListener('change', () => {
+            if (!autoColorCheckbox.checked) {
+                primaryColorInput.disabled = false; secondaryColorInput.disabled = false;
+                updateColors();
+            } else {
+                primaryColorInput.disabled = true; secondaryColorInput.disabled = true;
+            }
+        });
+
+        function drawMediaCover(ctx, media, isVideo) {
+            const mw = isVideo ? media.videoWidth : media.width;
+            const mh = isVideo ? media.videoHeight : media.height;
+            const cw = canvas.width;
+            const ch = canvas.height;
+            const mRatio = mw / mh;
+            const cRatio = cw / ch;
+            let renderW, renderH, renderX, renderY;
+
+            if (mRatio < cRatio) {
+                renderW = cw;
+                renderH = cw / mRatio;
+                renderX = 0;
+                renderY = (ch - renderH) / 2;
+            } else {
+                renderW = ch * mRatio;
+                renderH = ch;
+                renderX = (cw - renderW) / 2;
+                renderY = 0;
+            }
+            ctx.drawImage(media, renderX - cw/2, renderY - ch/2, renderW, renderH);
+        }
+
+        document.getElementById('bgUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            backgroundImage = null;
+            if (backgroundVideo) {
+                backgroundVideo.pause();
+                backgroundVideo.src = "";
+                backgroundVideo = null;
+            }
+
+            if (file.type.startsWith('video/')) {
+                backgroundVideo = document.createElement('video');
+                backgroundVideo.src = URL.createObjectURL(file);
+                backgroundVideo.loop = true; 
+                backgroundVideo.muted = true; 
+                backgroundVideo.playsInline = true;
+                backgroundVideo.onloadeddata = () => {
+                    backgroundVideo.play();
+                    drawPreviewFrame();
+                };
+            } else if (file.type.startsWith('image/')) {
+                const img = new Image();
+                img.onload = () => { backgroundImage = img; drawPreviewFrame(); };
+                img.src = URL.createObjectURL(file);
+            }
+        });
+
+        document.getElementById('logoUpload').addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                const img = new Image();
+                img.onload = () => { logoImage = img; drawPreviewFrame(); };
+                img.src = URL.createObjectURL(e.target.files[0]);
+            }
+        });
+
+        function drawPreviewFrame() {
+            if (!audioCtx) {
+                ctx.fillStyle = '#0a0a0b'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                
+                if (backgroundVideo && backgroundVideo.readyState >= 2) {
+                    drawMediaCover(ctx, backgroundVideo, true);
+                } else if (backgroundImage) { 
+                    drawMediaCover(ctx, backgroundImage, false);
+                }
+                ctx.restore();
+                
+                if (backgroundVideo || backgroundImage) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)'; 
+                    ctx.fillRect(0,0,canvas.width,canvas.height); 
+                }
+                
+                if (logoImage && playerStyleSelect.value.startsWith('circle')) { 
+                    const minDimension = Math.min(canvas.width, canvas.height); 
+                    const logoRadius = minDimension * 0.16; 
+                    ctx.save(); ctx.beginPath(); ctx.arc(centerX, centerY, logoRadius, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(logoImage, centerX - logoRadius, centerY - logoRadius, logoRadius*2, logoRadius*2); ctx.restore();
+                    ctx.beginPath(); ctx.arc(centerX, centerY, logoRadius, 0, Math.PI * 2); ctx.strokeStyle = primaryColor; ctx.lineWidth = minDimension * 0.003; ctx.stroke();
+                }
+            }
+        }
+
+        playerStyleSelect.addEventListener('change', drawPreviewFrame);
+        particleSelect.addEventListener('change', () => particles = []); 
+
+        audioUpload.addEventListener('change', function() {
+            if (this.files[0]) {
+                let fullName = this.files[0].name;
+                outputFileName = fullName.substring(0, fullName.lastIndexOf('.')) || fullName;
+                audioPlayer.src = URL.createObjectURL(this.files[0]);
+                audioPlayer.currentTime = 0;
+                initVisualizer();
+                drawPreviewFrame();
+            }
+        });
+
+        function initVisualizer() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                source = audioCtx.createMediaElementSource(audioPlayer);
+                source.connect(analyser);
+                analyser.connect(audioCtx.destination);
+                
+                analyser.fftSize = 512; 
+                analyser.smoothingTimeConstant = 0.8; 
+                
+                draw();
+            }
+        }
+
+        function createParticle(typeOption) {
+            const types = ['bubble', 'snow', 'heart', 'star'];
+            let actualType = typeOption;
+            if (typeOption === 'mixed') {
+                actualType = types[Math.floor(Math.random() * types.length)];
+            } else if (typeOption === 'bubbles') actualType = 'bubble';
+            else if (typeOption === 'hearts') actualType = 'heart';
+            else if (typeOption === 'stars') actualType = 'star';
+            
+            const minDim = Math.min(canvas.width, canvas.height);
+            let p = {
+                x: Math.random() * canvas.width,
+                y: actualType === 'snow' ? -50 : canvas.height + 50,
+                size: Math.random() * (minDim * 0.015) + (minDim * 0.005),
+                speedX: (Math.random() - 0.5) * 2,
+                speedY: (Math.random() * 2 + 1),
+                type: actualType,
+                opacity: Math.random() * 0.5 + 0.2,
+                angle: Math.random() * Math.PI * 2,
+                spin: (Math.random() - 0.5) * 0.1
+            };
+
+            if (p.type === 'bubble' || p.type === 'heart') {
+                p.speedY = -p.speedY;
+                if (Math.random() > 0.7) {
+                    p.x = canvas.width / 2 + (Math.random() - 0.5) * (minDim * 0.3);
+                    p.y = canvas.height / 2 + (Math.random() - 0.5) * (minDim * 0.3);
+                }
+            }
+            if (p.type === 'star') {
+                p.y = Math.random() * canvas.height;
+                p.speedY = (Math.random() - 0.5) * 0.5;
+            }
+
+            return p;
+        }
+
+        function drawShape(ctx, p, pulseSize) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle);
+            
+            let finalSize = p.size + pulseSize; 
+
+            if (p.type === 'bubble') {
+                ctx.beginPath();
+                ctx.arc(0, 0, finalSize, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255,255,255,${p.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(-finalSize*0.3, -finalSize*0.3, finalSize*0.2, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(255,255,255,${p.opacity * 0.8})`;
+                ctx.fill();
+            } 
+            else if (p.type === 'snow') {
+                ctx.fillStyle = `rgba(255,255,255,${p.opacity})`;
+                ctx.beginPath();
+                ctx.arc(0, 0, finalSize * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'white';
+            }
+            else if (p.type === 'heart') {
+                ctx.fillStyle = `rgba(255, 60, 100, ${p.opacity})`;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'red';
+                let topCurveHeight = finalSize * 0.3;
+                ctx.beginPath();
+                ctx.moveTo(0, topCurveHeight);
+                ctx.bezierCurveTo(0, 0, -finalSize, 0, -finalSize, topCurveHeight);
+                ctx.bezierCurveTo(-finalSize, finalSize * 0.8, 0, finalSize, 0, finalSize * 1.2);
+                ctx.bezierCurveTo(0, finalSize, finalSize, finalSize * 0.8, finalSize, topCurveHeight);
+                ctx.bezierCurveTo(finalSize, 0, 0, 0, 0, topCurveHeight);
+                ctx.fill();
+            }
+            else if (p.type === 'star') {
+                ctx.fillStyle = `rgba(255, 255, 200, ${p.opacity})`;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'yellow';
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    ctx.lineTo(Math.cos((18 + i * 72) / 180 * Math.PI) * finalSize,
+                               -Math.sin((18 + i * 72) / 180 * Math.PI) * finalSize);
+                    ctx.lineTo(Math.cos((54 + i * 72) / 180 * Math.PI) * (finalSize * 0.4),
+                               -Math.sin((54 + i * 72) / 180 * Math.PI) * (finalSize * 0.4));
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function handleParticles(avgBass) {
+            const effect = particleSelect.value;
+            if (effect === 'none') return;
+
+            const maxParticles = 80;
+            if (particles.length < maxParticles && Math.random() < 0.3) {
+                particles.push(createParticle(effect));
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.angle += p.spin;
+
+                let pulse = (avgBass / 255) * 10; 
+
+                if(p.type === 'star') p.opacity += (Math.random() - 0.5) * 0.1;
+                p.opacity = Math.max(0.1, Math.min(0.8, p.opacity));
+
+                drawShape(ctx, p, pulse);
+
+                if (p.y < -100 || p.y > canvas.height + 100 || p.x < -100 || p.x > canvas.width + 100) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function draw() {
+            requestAnimationFrame(draw);
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+
+            let bassSum = 0;
+            for(let i = 0; i < 15; i++) bassSum += dataArray[i];
+            let avgBass = bassSum / 15;
+
+            ctx.fillStyle = '#0a0a0b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            let bgScale = 1 + (avgBass / 255) * 0.08; 
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.scale(bgScale, bgScale);
+            
+            if (backgroundVideo && backgroundVideo.readyState >= 2) {
+                drawMediaCover(ctx, backgroundVideo, true);
+                ctx.restore();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (backgroundImage) {
+                drawMediaCover(ctx, backgroundImage, false);
+                ctx.restore();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.restore();
+                ctx.fillStyle = 'rgba(10, 10, 11, 1.0)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            handleParticles(avgBass);
+
+            if (autoColorCheckbox.checked) {
+                baseHue = (baseHue + 1.5) % 360; 
+                primaryColor = `hsl(${Math.floor(baseHue)}, 100%, 50%)`;
+                secondaryColor = `hsl(${Math.floor((baseHue + 60) % 360)}, 100%, 50%)`;
+            }
+
+            const minDimension = Math.min(canvas.width, canvas.height);
+            const style = playerStyleSelect.value;
+
+            if (style === 'circle_sharp') drawCircleSharp(dataArray, minDimension, bufferLength, avgBass);
+            else if (style === 'circle_bars') drawCircleBars(dataArray, minDimension, bufferLength, avgBass);
+            else if (style === 'linear_bars') drawLinearBars(dataArray, minDimension, bufferLength);
+            else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength);
+            else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
+        }
+
+        function drawCircleSharp(dataArray, minDimension, bufferLength, avgBass) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const baseRadius = minDimension * 0.16;
+            
+            const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
+
+            if (logoImage) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, pulsatingLogoRadius, 0, Math.PI * 2);
+                ctx.clip(); 
+                ctx.drawImage(logoImage, centerX - pulsatingLogoRadius, centerY - pulsatingLogoRadius, pulsatingLogoRadius * 2, pulsatingLogoRadius * 2);
+                ctx.restore();
+            }
+
+            const pointsCount = 60; 
+            const usefulDataLength = Math.floor(bufferLength * 0.65); 
+            let pointsRight = [];
+            let pointsLeft = [];
+
+            for (let i = 0; i <= pointsCount; i++) {
+                let ratio = i / pointsCount;
+                let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength);
+                let val = dataArray[dataIndex] || 0;
+
+                let cleanVal = Math.max(0, val - 35);
+                let normalized = cleanVal / 220;
+                let eqBoost = 1 + (ratio * 2.5); 
+                
+                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.15 * eqBoost;
+                let dist = pulsatingLogoRadius + barHeight; 
+
+                let angleR = (Math.PI / 2) - ratio * Math.PI; 
+                pointsRight.push({x: centerX + Math.cos(angleR) * dist, y: centerY + Math.sin(angleR) * dist});
+
+                let angleL = (Math.PI / 2) + ratio * Math.PI; 
+                pointsLeft.push({x: centerX + Math.cos(angleL) * dist, y: centerY + Math.sin(angleL) * dist});
+            }
+
+            ctx.beginPath();
+            ctx.lineJoin = 'round'; 
+            ctx.lineCap = 'round';
+
+            ctx.moveTo(pointsRight[0].x, pointsRight[0].y);
+            for(let j = 1; j < pointsRight.length; j++) ctx.lineTo(pointsRight[j].x, pointsRight[j].y);
+            for(let j = pointsLeft.length - 2; j >= 0; j--) ctx.lineTo(pointsLeft[j].x, pointsLeft[j].y);
+            ctx.closePath(); 
+
+            let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY);
+            gradient.addColorStop(0, primaryColor);
+            gradient.addColorStop(0.5, 'white');
+            gradient.addColorStop(1, secondaryColor);
+            
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = minDimension * 0.005; 
+            ctx.shadowBlur = 20 + (avgBass * 0.1); 
+            ctx.shadowColor = primaryColor;
+            ctx.stroke(); 
+            ctx.shadowBlur = 0; 
+        }
+
+        function drawCircleBars(dataArray, minDimension, bufferLength, avgBass) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const baseRadius = minDimension * 0.16;
+            const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
+
+            if (logoImage) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, pulsatingLogoRadius, 0, Math.PI * 2);
+                ctx.clip(); 
+                ctx.drawImage(logoImage, centerX - pulsatingLogoRadius, centerY - pulsatingLogoRadius, pulsatingLogoRadius * 2, pulsatingLogoRadius * 2);
+                ctx.restore();
+            }
+
+            const pointsCount = 70;
+            const usefulDataLength = Math.floor(bufferLength * 0.65);
+            
+            let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY);
+            gradient.addColorStop(0, primaryColor);
+            gradient.addColorStop(0.5, 'white');
+            gradient.addColorStop(1, secondaryColor);
+            
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = minDimension * 0.006;
+            ctx.lineCap = 'round';
+
+            for (let i = 0; i < pointsCount; i++) {
+                let ratio = i / pointsCount;
+                let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength);
+                let val = dataArray[dataIndex] || 0;
+                
+                let cleanVal = Math.max(0, val - 30);
+                let normalized = cleanVal / 225;
+                let boost = 1 + (ratio * 2.0);
+                
+                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.2 * boost;
+                if (barHeight < 2) barHeight = 2; 
+
+                let angleR = (Math.PI / 2) - ratio * Math.PI;
+                ctx.beginPath();
+                ctx.moveTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5));
+                ctx.lineTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5 + barHeight));
+                ctx.stroke();
+
+                if (i !== 0 && i !== pointsCount - 1) {
+                    let angleL = (Math.PI / 2) + ratio * Math.PI;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5));
+                    ctx.lineTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5 + barHeight));
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function drawLinearBars(dataArray, minDimension, bufferLength) {
+            const usefulLength = Math.floor(bufferLength * 0.7);
+            const barWidth = canvas.width / usefulLength;
+            
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
+            ctx.fillStyle = gradient;
+
+            for (let i = 0; i < usefulLength; i++) {
+                const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6 * sharpnessSlider.value;
+                ctx.fillRect(i * barWidth, canvas.height - barHeightScaled, barWidth - 2, barHeightScaled);
+            }
+        }
+
+        function drawLinearCurve(dataArray, minDimension, bufferLength) {
+            const usefulLength = Math.floor(bufferLength * 0.7);
+            const sliceWidth = canvas.width / (usefulLength - 1);
+            
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+
+            for (let i = 0; i < usefulLength; i++) {
+                const v = Math.pow(dataArray[i] / 255, 1.5);
+                const y = canvas.height - (v * canvas.height * 0.5 * sharpnessSlider.value);
+                const x = i * sliceWidth;
+                ctx.lineTo(x, y);
+            }
+
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; 
+            ctx.fill();
+
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = gradient;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        }
+
+        function drawLinearSymmetry(dataArray, minDimension, bufferLength) {
+            const usefulLength = Math.floor(bufferLength * 0.65);
+            const sliceWidth = canvas.width / (usefulLength * 2);
+            const centerY = canvas.height / 2;
+
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
+            
+            ctx.beginPath();
+            for (let i = usefulLength - 1; i >= 0; i--) {
+                const v = Math.pow(dataArray[i] / 255, 1.8);
+                const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value;
+                const x = (usefulLength - 1 - i) * sliceWidth;
+                if (i === usefulLength - 1) ctx.moveTo(x, centerY - amplitude);
+                else ctx.lineTo(x, centerY - amplitude);
+            }
+            for (let i = 0; i < usefulLength; i++) {
+                const v = Math.pow(dataArray[i] / 255, 1.8);
+                const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value;
+                const x = (usefulLength + i) * sliceWidth;
+                ctx.lineTo(x, centerY - amplitude);
+            }
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = gradient;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = primaryColor;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            ctx.beginPath();
+            for (let i = usefulLength - 1; i >= 0; i--) {
+                const v = Math.pow(dataArray[i] / 255, 1.8);
+                const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value;
+                const x = (usefulLength - 1 - i) * sliceWidth;
+                if (i === usefulLength - 1) ctx.moveTo(x, centerY + amplitude);
+                else ctx.lineTo(x, centerY + amplitude);
+            }
+            for (let i = 0; i < usefulLength; i++) {
+                const v = Math.pow(dataArray[i] / 255, 1.8);
+                const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value;
+                const x = (usefulLength + i) * sliceWidth;
+                ctx.lineTo(x, centerY + amplitude);
+            }
+            ctx.stroke();
+        }
+
+        // --- ЛОГІКА ПІДПИСКИ І РЕНДЕРУ ---
+        
+        function closeModal() {
+            document.getElementById('subscriptionModal').style.display = 'none';
+        }
+
+        async function processSubscription(btnElement, planType) {
+            const originalText = btnElement.innerText;
+            btnElement.innerText = 'Зачекайте...';
+            btnElement.disabled = true;
+
+            try {
+                const res = await fetch('https://andreygerc11-music-site.onrender.com/api/pay-subscription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: planType })
+                });
+                
+                const data = await res.json();
+                
+                if (data.url) {
+                    window.location.href = data.url; 
+                } else {
+                    alert('Не вдалося створити платіж. Перевірте з\'єднання.');
+                    btnElement.innerText = originalText;
+                    btnElement.disabled = false;
+                }
+            } catch (err) {
+                alert('Помилка сервера. Можливо, бекенд ще не налаштовано.');
+                btnElement.innerText = originalText;
+                btnElement.disabled = false;
+            }
+        }
+
+        document.getElementById('sidebarSubscribeBtn').addEventListener('click', function() {
+            processSubscription(this, 'trial_5_days');
+        });
+
+        document.getElementById('modalSubscribeBtn').addEventListener('click', function() {
+            processSubscription(this, 'trial_5_days');
+        });
+
+        const generateVideoBtn = document.getElementById('generateVideoBtn');
+        const generateProgress = document.getElementById('generateProgress');
+        const generateStatus = document.getElementById('generateStatus');
+
+        generateVideoBtn.addEventListener('click', async () => {
+            if (!audioCtx) { alert('Будь ласка, завантажте аудіо трек перед рендерингом!'); return; }
+            
+            if (!isSubscribed) {
+                document.getElementById('subscriptionModal').style.display = 'flex';
+                return;
+            }
+
+            if (isGenerating) return;
+            if (!audioPlayer.duration || audioPlayer.duration < 2) { alert('Спочатку завантажте аудіо трек!'); return; }
+
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+            isGenerating = true;
+            chunks = [];
+
+            const mimeType = 'video/webm;codecs=vp9';
+            const fileExt = 'webm';
+
+            generateVideoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Рендеринг...';
+            generateVideoBtn.disabled = true;
+            generateProgress.style.display = 'block';
+            generateStatus.style.display = 'block';
+            generateProgress.value = 0;
+
+            const dest = audioCtx.createMediaStreamDestination();
+            source.connect(dest);
+            const audioStream = dest.stream;
+            const canvasStream = canvas.captureStream(30); 
+            const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
+
+            mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mimeType });
+            mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${outputFileName}.${fileExt}`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                isGenerating = false;
+                generateVideoBtn.innerHTML = '<i class="fas fa-bolt"></i> Почати Рендеринг';
+                generateVideoBtn.disabled = false;
+                generateProgress.style.display = 'none';
+                generateStatus.style.display = 'none';
+                audioPlayer.currentTime = 0;
+                audioPlayer.pause();
+                
+                if (backgroundVideo) backgroundVideo.pause();
+                
+                source.disconnect(dest);
+                source.connect(analyser);
+            };
+
+            audioPlayer.currentTime = 0;
+            
+            if (backgroundVideo) {
+                backgroundVideo.currentTime = 0;
+                backgroundVideo.play();
+            }
+            particles = [];
+
+            source.disconnect(audioCtx.destination); 
+            audioPlayer.play();
+            mediaRecorder.start();
+
+            const checkProgressInterval = setInterval(() => {
+                if (audioPlayer.currentTime >= audioPlayer.duration || audioPlayer.paused) {
+                    clearInterval(checkProgressInterval);
+                    if(mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+                } else {
+                    generateProgress.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                    generateStatus.innerText = `Запис: ${audioPlayer.currentTime.toFixed(1)}с / ${audioPlayer.duration.toFixed(1)}с`;
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
