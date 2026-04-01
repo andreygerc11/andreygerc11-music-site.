@@ -103,7 +103,7 @@
         
         .quote { font-style: italic; color: #fff; padding: 15px 20px; border-left: 3px solid var(--accent); margin: 25px 0; background: rgba(255, 77, 77, 0.05); border-radius: 0 10px 10px 0; }
 
-        /* Блок статистики під Проєктом */
+        /* Блок статистики */
         .statistics-block {
             margin-top: 50px;
             padding: 30px;
@@ -129,6 +129,20 @@
         .music-card:hover { border-color: rgba(255, 77, 77, 0.2); transform: translateY(-5px); }
         .music-card h3 { font-size: 1.2rem; margin-bottom: 15px; color: #fff; }
         audio { width: 100%; outline: none; border-radius: 30px; }
+
+        /* Генератор Відео */
+        .generator-promo-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
 
         /* БЛОК СТАТЕЙ (ІНФОРМАЦІЙНИЙ ФРОНТ) */
         .articles-section { margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 40px; }
@@ -226,6 +240,8 @@
             .hero h1 { font-size: 2.2rem; }
             .about-grid { grid-template-columns: 1fr; }
             .nav-links { display: none; }
+            .btn-group { flex-direction: column; width: 100%; }
+            .btn-group .btn { width: 100%; }
         }
     </style>
 </head>
@@ -237,6 +253,7 @@
         <ul class="nav-links">
             <li><a href="#about">Про проєкт</a></li>
             <li><a href="#music">Музика</a></li>
+            <li><a href="#generator">Hertz Spectrum</a></li>
             <li><a href="#blog">Блог</a></li>
             <li><a href="#support">Підтримати</a></li>
         </ul>
@@ -250,6 +267,7 @@
         <div class="btn-group">
             <a href="#support" class="btn">Підтримати проєкт</a>
             <a href="music.html" class="btn btn-outline">Слухати музику</a>
+            <a href="generator.html" class="btn btn-outline"><i class="fas fa-video"></i> Hertz Spectrum</a>
             <a href="https://chat.whatsapp.com/GbGbFxDZftZCQNyTDZOfu2" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
         </div>
     </div>
@@ -275,7 +293,7 @@
                 
                 <div class="info-box">
                     <h4><i class="fas fa-laptop"></i> Стартовий пакет</h4>
-                    <p>Я створюю цей сайт сам, але мені потрібна ваша допомога, щоб працювати надалі. Купуючи пісню, Ви підтримуєте людей, які важко хворі. Це інструмент для допомоги іншим.</p>
+                    <p>Я створюю цей сайт сам, але мені потрібна ваша допомога, щоб працювати надалі. Купуючи пісню або оформлюючи підписку на генератор відео, ви напряму підтримуєте людей, які важко хворі.</p>
                 </div>
             </div>
             
@@ -308,6 +326,29 @@
         </div>
         <div style="text-align: center; margin-top: 40px;" data-aos="fade-up">
             <a href="music.html" class="btn">Перейти до магазину музики</a>
+        </div>
+    </section>
+
+    <section id="generator">
+        <h2 data-aos="fade-up">Hertz Spectrum (Візуалізатор)</h2>
+        <p class="section-desc" data-aos="fade-up">Професійний візуалізатор для ваших музичних треків. Створюйте стильні відео для TikTok, YouTube та Instagram прямо в браузері.</p>
+        
+        <div class="about-grid" style="align-items: center;">
+            <div class="about-text" data-aos="fade-right">
+                <p>Я розробив цей інструмент, щоб кожен міг легко створювати круті музичні відео з пульсуючим логотипом, ефектами частинок та неоновими кривими.</p>
+                <div class="info-box">
+                    <h4><i class="fas fa-crown"></i> Підписка (Monobank)</h4>
+                    <p>Оформлюючи щомісячну підписку через Monobank, ви отримуєте повний преміум-доступ до всіх функцій генератора і водночас <strong>фінансово підтримуєте мій бій за життя</strong> та розвиток проєкту.</p>
+                </div>
+                <a href="generator.html" class="btn" style="margin-top: 20px;"><i class="fas fa-magic"></i> Відкрити Hertz Spectrum</a>
+            </div>
+            <div class="about-img-wrap" data-aos="fade-left">
+                <div class="generator-promo-box">
+                    <i class="fas fa-waveform" style="font-size: 5rem; color: var(--accent); margin-bottom: 20px; animation: pulse-support 2s infinite;"></i>
+                    <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.5rem;">Hertz Spectrum</h3>
+                    <p style="color: #aaa; font-size: 1rem; margin-bottom: 0;">10+ стилів, 50+ ефекто-варіацій частинок, підтримка фонових відео та експорт у високій якості.</p>
+                </div>
+            </div>
         </div>
     </section>
 
