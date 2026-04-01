@@ -447,10 +447,9 @@
             alert("Дякуємо за підтримку! Рендеринг розблоковано.");
         }
         
-        // СЕКРЕТНИЙ ДОСТУП ДЛЯ АВТОРА (?admin=boss)
-        if (urlParams.get('admin') === 'boss') {
+        // ПРИХОВАНИЙ ДОСТУП ДЛЯ РОЗРОБНИКА
+        if (urlParams.get('dev_token') === 'hz_auth_9942_xPq') {
             isSubscribed = true;
-            // Ховаємо блок підписки для автора, щоб не заважав
             document.getElementById('premiumBox').style.display = 'none';
         }
         
