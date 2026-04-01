@@ -6,7 +6,6 @@
     <title>Hertz Spectrum | Генератор Відео</title>
     
     <link rel="icon" type="image/png" href="favicon.png?v=2">
-    
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -29,7 +28,6 @@
             display: flex; height: 100vh; overflow: hidden; 
         }
 
-        /* Бічна панель налаштувань */
         #sidebar { 
             width: var(--sidebar-width); 
             background-color: var(--panel-bg); 
@@ -70,7 +68,6 @@
             border-bottom: 2px solid var(--accent); padding-bottom: 15px;
         }
         
-        /* Блок підписки */
         .mono-premium-box {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 77, 77, 0.05) 100%);
             border: 1px solid rgba(255, 77, 77, 0.3);
@@ -306,7 +303,7 @@
             <h2>Hertz Spectrum</h2>
         </div>
 
-        <div class="mono-premium-box">
+        <div class="mono-premium-box" id="premiumBox">
             <h4><i class="fas fa-crown" style="color: var(--accent);"></i> Premium Доступ</h4>
             <div class="price-tag">39 ₴</div>
             <p><strong>Пробний період на 5 днів!</strong><br>Експортуйте відео у високій якості без водяних знаків. Далі — 199 ₴ / місяць.</p>
@@ -441,6 +438,21 @@
         let isGenerating = false;
         
         let isSubscribed = false; 
+        
+        // ПЕРЕВІРКА URL-ПАРАМЕТРІВ (Оплата або Адмін-доступ)
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.get('status') === 'subscribed') {
+            isSubscribed = true;
+            alert("Дякуємо за підтримку! Рендеринг розблоковано.");
+        }
+        
+        // СЕКРЕТНИЙ ДОСТУП ДЛЯ АВТОРА (?admin=boss)
+        if (urlParams.get('admin') === 'boss') {
+            isSubscribed = true;
+            // Ховаємо блок підписки для автора, щоб не заважав
+            document.getElementById('premiumBox').style.display = 'none';
+        }
         
         let baseHue = 0;
         let particles = []; 
