@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hertz Spectrum | Генератор Відео</title>
     
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -16,7 +18,7 @@
             --accent-hover: #ff1a1a;
             --text: #e0e0e0;
             --border: rgba(255, 255, 255, 0.1);
-            --sidebar-width: 420px; /* Зробив трохи ширше для краси */
+            --sidebar-width: 420px; 
         }
 
         body { 
@@ -89,11 +91,7 @@
         .mono-premium-box p {
             margin: 0 0 15px 0; font-size: 0.85rem; color: #bbb; line-height: 1.5;
         }
-        .fop-info {
-            font-size: 0.65rem; color: #666; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;
-        }
 
-        /* Стильні анімовані кнопки підписки */
         .btn-mono {
             display: block; width: 100%; padding: 14px;
             background: rgba(255, 77, 77, 0.1); color: var(--accent); text-decoration: none;
@@ -110,7 +108,6 @@
         .control-group { display: flex; flex-direction: column; gap: 10px; }
         label { font-size: 0.85rem; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
 
-        /* Поля вводу та селекти */
         input[type="file"], select { 
             width: 100%; padding: 14px 15px; background: rgba(0, 0, 0, 0.4); 
             border: 1px solid var(--border); border-radius: 12px; color: white; 
@@ -121,7 +118,6 @@
         select:focus, input[type="file"]:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255, 77, 77, 0.15); }
         select option { background-color: var(--panel-bg); color: var(--text); }
 
-        /* Кнопка вибору файлу */
         input[type="file"]::file-selector-button { 
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.2); 
             color: white; padding: 8px 18px; border-radius: 50px; cursor: pointer; 
@@ -137,7 +133,6 @@
         audio::-webkit-media-controls-play-button, audio::-webkit-media-controls-mute-button { filter: invert(1); }
         audio::-webkit-media-controls-current-time-display, audio::-webkit-media-controls-time-remaining-display { color: white; }
 
-        /* КРУГЛА ПАЛІТРА КОЛЬОРІВ */
         .color-picker-group { display: flex; gap: 15px; width: 100%; }
         input[type="color"] { 
             width: 100%; height: 50px; 
@@ -155,13 +150,11 @@
             box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1); 
         }
 
-        /* Чекбокс */
         .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 5px; cursor: pointer; }
         #autoColorLabel { font-size: 0.85rem; color: #aaa; font-weight: 400; text-transform: none; letter-spacing: 0; transition: 0.3s;}
         .checkbox-wrapper:hover #autoColorLabel { color: #fff; }
         input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
 
-        /* Повзунок (Слайдер) */
         #sharpnessLabel { font-size: 0.8rem; color: #888; font-weight: 400; text-transform: none; letter-spacing: 0; margin-top: -5px;}
         input[type="range"] { 
             width: 100%; cursor: pointer; accent-color: var(--accent); height: 6px; 
@@ -173,7 +166,6 @@
         }
         input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
 
-        /* ГОЛОВНА КНОПКА РЕНДЕРУ */
         #generateBtnContainer { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 25px; padding-bottom: 20px;}
         
         #generateVideoBtn { 
@@ -188,7 +180,6 @@
             position: relative; overflow: hidden;
         }
         
-        /* Блік на кнопці */
         #generateVideoBtn::after {
             content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
             background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
@@ -199,7 +190,7 @@
             transform: translateY(-4px) scale(1.02); 
             box-shadow: 0 12px 30px rgba(255, 77, 77, 0.6); 
         }
-        #generateVideoBtn:hover::after { left: 150%; } /* Анімація бліку */
+        #generateVideoBtn:hover::after { left: 150%; } 
         
         #generateVideoBtn:active { transform: translateY(0) scale(1); box-shadow: 0 5px 15px rgba(255, 77, 77, 0.4); }
         
@@ -222,6 +213,47 @@
             background-color: black; box-shadow: 0 0 60px rgba(0,0,0,0.9); 
             max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;
         }
+
+        /* ІНФОРМАЦІЙНА ПАНЕЛЬ ТА КНОПКА */
+        .open-info-btn {
+            position: fixed; top: 25px; right: 25px;
+            background: rgba(255, 77, 77, 0.1); color: var(--accent);
+            border: 2px solid var(--accent); border-radius: 50px;
+            padding: 12px 25px; font-weight: 900; cursor: pointer;
+            transition: all 0.4s ease; z-index: 150; backdrop-filter: blur(5px);
+            display: flex; align-items: center; gap: 10px; font-family: inherit; font-size: 0.9rem; text-transform: uppercase;
+        }
+        .open-info-btn:hover { background: var(--accent); color: #fff; box-shadow: 0 5px 20px rgba(255, 77, 77, 0.4); transform: scale(1.05); }
+        
+        .info-panel {
+            position: fixed; top: 0; right: -400px;
+            width: 350px; height: 100vh;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border);
+            box-shadow: -5px 0 30px rgba(0,0,0,0.8);
+            padding: 40px 30px; box-sizing: border-box;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 200; display: flex; flex-direction: column;
+        }
+        .info-panel.open { right: 0; }
+        .info-panel h3 { color: var(--accent); margin-top: 0; margin-bottom: 20px; font-weight: 900; text-transform: uppercase; font-size: 1.4rem;}
+        .info-panel ol { color: #ccc; padding-left: 20px; font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px;}
+        .info-panel li { margin-bottom: 12px; }
+        .info-panel li strong { color: #fff; }
+        .close-info-btn {
+            position: absolute; top: 20px; right: 20px;
+            background: none; border: none; color: #888;
+            font-size: 1.5rem; cursor: pointer; transition: 0.3s;
+        }
+        .close-info-btn:hover { color: var(--accent); transform: rotate(90deg); }
+        
+        .update-notice {
+            margin-top: auto; padding: 20px; background: rgba(255,255,255,0.03);
+            border-radius: 15px; border-left: 4px solid var(--accent);
+            display: flex; gap: 15px; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .update-notice i { color: var(--accent); font-size: 2rem; }
+        .update-notice p { margin: 0; font-size: 0.85rem; color: #bbb; line-height: 1.5; font-weight: 700;}
 
         /* МОДАЛЬНЕ ВІКНО ПІДПИСКИ */
         .modal-overlay {
@@ -247,6 +279,27 @@
 </head>
 <body>
 
+    <button id="openInfoBtn" class="open-info-btn"><i class="fas fa-question-circle"></i> Інструкція</button>
+    <div id="infoPanel" class="info-panel">
+        <button id="closeInfoBtn" class="close-info-btn"><i class="fas fa-times"></i></button>
+        <h3>Як працює<br>генератор?</h3>
+        <ol>
+            <li><strong>Формат:</strong> Виберіть розмір під вашу соцмережу (TikTok, YouTube).</li>
+            <li><strong>Стиль:</strong> Виберіть форму спектру.</li>
+            <li><strong>Кольори:</strong> Налаштуйте палітру або залиште красиву автозміну.</li>
+            <li><strong>Фон:</strong> Завантажте картинку або відео (воно автоматично розтягнеться).</li>
+            <li><strong>Логотип:</strong> Додайте центральне зображення (для кругових стилів).</li>
+            <li><strong>Аудіо:</strong> Завантажте пісню (.mp3, .wav).</li>
+            <li><strong>Ефекти:</strong> Виберіть частинки для більшої динаміки.</li>
+            <li>Натисніть <strong>"Почати Рендеринг"</strong> та збережіть відео!</li>
+        </ol>
+
+        <div class="update-notice">
+            <i class="fas fa-rocket"></i>
+            <p>Генератор буде поступово оновлюватися! Ми постійно додаємо нові стилі, ефекти та оптимізуємо якість.</p>
+        </div>
+    </div>
+
     <div id="sidebar">
         <div class="sidebar-header">
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> На головну</a>
@@ -257,7 +310,6 @@
             <h4><i class="fas fa-crown" style="color: var(--accent);"></i> Premium Доступ</h4>
             <div class="price-tag">39 ₴</div>
             <p><strong>Пробний період на 5 днів!</strong><br>Експортуйте відео у високій якості без водяних знаків. Далі — 199 ₴ / місяць.</p>
-            <div class="fop-info">ФОП Герц Андрій Костянтинович<br>ІПН: 3047713272</div>
             <button id="sidebarSubscribeBtn" class="btn-mono">Оформити підписку</button>
         </div>
 
@@ -354,6 +406,15 @@
     </div>
 
     <script>
+        // ІНСТРУКЦІЯ ЛОГІКА
+        const infoPanel = document.getElementById('infoPanel');
+        const openInfoBtn = document.getElementById('openInfoBtn');
+        const closeInfoBtn = document.getElementById('closeInfoBtn');
+
+        openInfoBtn.addEventListener('click', () => infoPanel.classList.add('open'));
+        closeInfoBtn.addEventListener('click', () => infoPanel.classList.remove('open'));
+
+        // ОСНОВНИЙ КОД ГЕНЕРАТОРА
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const formatSelect = document.getElementById('formatSelect');
@@ -379,7 +440,6 @@
         let chunks = [];
         let isGenerating = false;
         
-        // Імітація перевірки підписки (поки немає бази даних користувачів)
         let isSubscribed = false; 
         
         let baseHue = 0;
@@ -973,8 +1033,12 @@
         generateVideoBtn.addEventListener('click', async () => {
             if (!audioCtx) { alert('Будь ласка, завантажте аудіо трек перед рендерингом!'); return; }
             
+            // Якщо користувач не підписаний - показуємо вікно оплати!
             if (!isSubscribed) {
                 document.getElementById('subscriptionModal').style.display = 'flex';
+                // Ховаємо кнопку інструкції, щоб не заважала
+                document.getElementById('infoPanel').classList.remove('open');
+                document.getElementById('openInfoBtn').style.display = 'none';
                 return;
             }
 
@@ -982,6 +1046,10 @@
             if (!audioPlayer.duration || audioPlayer.duration < 2) { alert('Спочатку завантажте аудіо трек!'); return; }
 
             if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+            // Ховаємо інструкцію під час рендеру (щоб не попала на відео)
+            document.getElementById('infoPanel').classList.remove('open');
+            document.getElementById('openInfoBtn').style.display = 'none';
 
             isGenerating = true;
             chunks = [];
@@ -1025,6 +1093,9 @@
                 
                 source.disconnect(dest);
                 source.connect(analyser);
+
+                // Повертаємо кнопку інструкції після завершення рендеру
+                document.getElementById('openInfoBtn').style.display = 'flex';
             };
 
             audioPlayer.currentTime = 0;
@@ -1048,6 +1119,11 @@
                     generateStatus.innerText = `Запис: ${audioPlayer.currentTime.toFixed(1)}с / ${audioPlayer.duration.toFixed(1)}с`;
                 }
             }, 100);
+        });
+
+        // Якщо закрили модалку оплати - повертаємо кнопку інструкції
+        document.querySelector('.close-modal').addEventListener('click', () => {
+            document.getElementById('openInfoBtn').style.display = 'flex';
         });
     </script>
 </body>
