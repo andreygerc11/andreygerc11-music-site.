@@ -482,19 +482,16 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         
-        // Адмін-доступ для тестування
         if (urlParams.get('dev_token') === 'hz_auth_9942_xPq') {
             isSubscribed = true;
             document.getElementById('premiumBox').style.display = 'none';
         }
 
-        // Перевірка з пам'яті браузера (якщо вже логінився і має преміум)
         if (currentUser && currentUser.status === 'premium') {
             isSubscribed = true;
             document.getElementById('premiumBox').style.display = 'none';
         }
 
-        // Перевірка успішної оплати (повернення з Монобанку)
         if (urlParams.get('status') === 'subscribed') {
             isSubscribed = true;
             if (currentUser) {
@@ -502,19 +499,16 @@
                 localStorage.setItem('hz_user', JSON.stringify(currentUser));
             }
             alert("Дякуємо за підтримку! Рендеринг розблоковано.");
-            window.history.replaceState({}, document.title, window.location.pathname); // Чистимо посилання
+            window.history.replaceState({}, document.title, window.location.pathname);
             document.getElementById('premiumBox').style.display = 'none';
         }
 
-        // Оновлюємо текст в меню, якщо юзер залогінений
         if (currentUser) {
             const authLink = document.getElementById('authSidebarLink');
             if (authLink) {
                 authLink.innerHTML = `Ви увійшли як <b style="color:#fff;">${currentUser.email}</b>. <a href="login.html" style="color:var(--accent);">Кабінет</a>`;
             }
         }
-
-        // ==========================================
         
         let baseHue = 0;
         let particles = []; 
@@ -1382,8 +1376,16 @@
             isGenerating = true;
             chunks = [];
 
-            const mimeType = 'video/webm;codecs=vp9';
-            const fileExt = 'webm';
+            // Перевірка сумісності формату
+            let mimeType = 'video/webm;codecs=vp9';
+            let fileExt = 'webm';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'video/webm'; 
+            }
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'video/mp4'; 
+                fileExt = 'mp4';
+            }
 
             generateVideoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Рендеринг...';
             generateVideoBtn.disabled = true;
@@ -1398,24 +1400,43 @@
             const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
 
             mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mimeType });
-            mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+            
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    chunks.push(e.data);
+                }
+            };
+
+            // Гарантована зупинка після завершення пісні
+            audioPlayer.onended = () => {
+                if (isGenerating && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+            };
 
             mediaRecorder.onstop = () => {
+                clearInterval(checkProgressInterval);
                 const blob = new Blob(chunks, { type: mimeType });
                 const url = URL.createObjectURL(blob);
+                
+                // Надійне завантаження файлу
                 const a = document.createElement('a');
+                a.style.display = 'none';
                 a.href = url;
                 a.download = `${outputFileName}.${fileExt}`;
+                document.body.appendChild(a);
                 a.click();
-                URL.revokeObjectURL(url);
+                
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
                 
                 isGenerating = false;
                 generateVideoBtn.innerHTML = '<i class="fas fa-bolt"></i> Почати Рендеринг';
                 generateVideoBtn.disabled = false;
                 generateProgress.style.display = 'none';
                 generateStatus.style.display = 'none';
-                audioPlayer.currentTime = 0;
-                audioPlayer.pause();
                 
                 if (backgroundVideo) backgroundVideo.pause();
                 
@@ -1435,13 +1456,12 @@
 
             source.disconnect(audioCtx.destination); 
             audioPlayer.play();
-            mediaRecorder.start();
+            
+            // Важливо: зберігаємо відео шматками по 1 секунді (щоб не забити пам'ять браузера)
+            mediaRecorder.start(1000);
 
             const checkProgressInterval = setInterval(() => {
-                if (audioPlayer.currentTime >= audioPlayer.duration || audioPlayer.paused) {
-                    clearInterval(checkProgressInterval);
-                    if(mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-                } else {
+                if (isGenerating) {
                     generateProgress.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
                     generateStatus.innerText = `Запис: ${audioPlayer.currentTime.toFixed(1)}с / ${audioPlayer.duration.toFixed(1)}с`;
                 }
