@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hertz Spectrum | Особистий Кабінет</title>
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background: #0a0a0b; color: white; font-family: 'Montserrat', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        .auth-container { 
+            background: #161618; padding: 40px; border-radius: 20px; 
+            border: 1px solid rgba(255,77,77,0.3); width: 90%; max-width: 400px; 
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            box-sizing: border-box;
+        }
+        
+        h2 { margin-top: 0; color: #ff4d4d; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;}
+        
+        input { 
+            width: 100%; padding: 15px; margin-bottom: 15px; 
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 10px; color: white; outline: none; 
+            box-sizing: border-box; font-family: inherit; font-size: 0.95rem;
+            transition: 0.3s;
+        }
+        input:focus { border-color: #ff4d4d; box-shadow: 0 0 10px rgba(255,77,77,0.2); }
+        
+        button { 
+            width: 100%; padding: 15px; background: #ff4d4d; border: none; 
+            color: white; font-weight: 900; border-radius: 50px; cursor: pointer; 
+            text-transform: uppercase; transition: 0.3s; font-family: inherit; letter-spacing: 1px;
+        }
+        button:hover { background: #ff1a1a; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,77,77,0.4);}
+        button:disabled { background: #555; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .toggle-link { color: #888; font-size: 0.85rem; margin-top: 20px; cursor: pointer; text-decoration: underline; transition: 0.3s;}
+        .toggle-link:hover { color: white; }
+        
+        #cabinet { display: none; }
+        
+        .status-badge { display: inline-block; padding: 10px 20px; border-radius: 50px; font-weight: bold; margin: 20px 0; font-size: 0.9rem;}
+        .status-free { background: #333; color: #aaa; }
+        .status-premium { background: rgba(255,77,77,0.2); color: #ff4d4d; border: 1px solid #ff4d4d; box-shadow: 0 0 15px rgba(255,77,77,0.2);}
+        
+        .back-link { display: block; margin-bottom: 20px; color: #888; text-decoration: none; font-size: 0.85rem; font-weight: bold; text-align: left;}
+        .back-link:hover { color: #ff4d4d; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container" id="authBox">
+        <a href="index.html" class="back-link">← На головну</a>
+        <h2 id="authTitle">Вхід у кабінет</h2>
+        <input type="email" id="email" placeholder="Ваш Email">
+        <input type="password" id="password" placeholder="Пароль">
+        <button id="submitBtn" onclick="processAuth()">Увійти</button>
+        <div class="toggle-link" onclick="toggleMode()" id="toggleModeText">Немає акаунту? Зареєструватися</div>
+        <p id="errorMsg" style="color: #ff4d4d; font-size: 0.85rem; display: none; margin-top: 15px; font-weight: bold;"></p>
+    </div>
+
+    <div class="auth-container" id="cabinet">
+        <a href="index.html" class="back-link">← На головну</a>
+        <h2>Особистий Кабінет</h2>
+        <p style="color: #bbb; font-size: 0.9rem;">Вітаємо, <br><strong id="userEmailDisplay" style="color: #fff; font-size: 1.1rem;"></strong></p>
+        
+        <div style="font-size: 0.85rem; color: #888; text-transform: uppercase; margin-top: 25px;">Статус акаунту:</div>
+        <div id="userStatusDisplay" class="status-badge"></div>
+        <br>
+        
+        <button onclick="window.location.href='generator.html'" style="margin-bottom: 15px;">Відкрити Генератор</button>
+        <button onclick="logout()" style="background: transparent; border: 2px solid #555; color: #aaa;">Вийти з акаунту</button>
+    </div>
+
+    <script>
+        let isLoginMode = true;
+        const API_URL = "https://andreygerc11-music-site.onrender.com/api";
+
+        // Перевіряємо, чи юзер вже увійшов при завантаженні сторінки
+        window.onload = () => {
+            const user = JSON.parse(localStorage.getItem('hz_user'));
+            if (user) showCabinet(user);
+        };
+
+        function toggleMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authTitle').innerText = isLoginMode ? "Вхід у кабінет" : "Реєстрація";
+            document.getElementById('submitBtn').innerText = isLoginMode ? "Увійти" : "Створити акаунт";
+            document.getElementById('toggleModeText').innerText = isLoginMode ? "Немає акаунту? Зареєструватися" : "Вже є акаунт? Увійти";
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+
+        async function processAuth() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const btn = document.getElementById('submitBtn');
+            const errorMsg = document.getElementById('errorMsg');
+
+            if(!email || !password) { 
+                errorMsg.innerText = "Заповніть всі поля!"; 
+                errorMsg.style.display = 'block'; 
+                return; 
+            }
+
+            btn.disabled = true; 
+            btn.innerText = "Зачекайте...";
+            const endpoint = isLoginMode ? "/login" : "/register";
+
+            try {
+                const res = await fetch(API_URL + endpoint, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+                
+                if (data.error) {
+                    errorMsg.innerText = data.error; 
+                    errorMsg.style.display = 'block';
+                } else {
+                    const userData = { email: email, status: data.status };
+                    localStorage.setItem('hz_user', JSON.stringify(userData));
+                    showCabinet(userData);
+                }
+            } catch (e) {
+                errorMsg.innerText = "Помилка зв'язку з сервером. Спробуйте пізніше."; 
+                errorMsg.style.display = 'block';
+            }
+            
+            btn.disabled = false; 
+            btn.innerText = isLoginMode ? "Увійти" : "Створити акаунт";
+        }
+
+        function showCabinet(user) {
+            document.getElementById('authBox').style.display = 'none';
+            document.getElementById('cabinet').style.display = 'block';
+            document.getElementById('userEmailDisplay').innerText = user.email;
+            
+            const statusEl = document.getElementById('userStatusDisplay');
+            if(user.status === 'premium') {
+                statusEl.innerText = "PREMIUM ДОСТУП";
+                statusEl.className = "status-badge status-premium";
+            } else {
+                statusEl.innerText = "БЕЗКОШТОВНИЙ ДОСТУП";
+                statusEl.className = "status-badge status-free";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('hz_user');
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
