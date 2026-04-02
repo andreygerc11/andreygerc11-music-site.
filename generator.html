@@ -1440,8 +1440,10 @@
                 
                 if (backgroundVideo) backgroundVideo.pause();
                 
+                // --- ВИПРАВЛЕНО ТУТ ---
                 source.disconnect(dest);
-                source.connect(analyser);
+                analyser.connect(audioCtx.destination);
+                // ----------------------
 
                 document.getElementById('openInfoBtn').style.display = 'flex';
             };
@@ -1454,7 +1456,10 @@
             }
             particles = [];
 
-            source.disconnect(audioCtx.destination); 
+            // --- ВИПРАВЛЕНО ТУТ ---
+            analyser.disconnect(); 
+            // ----------------------
+            
             audioPlayer.play();
             
             // Важливо: зберігаємо відео шматками по 1 секунді (щоб не забити пам'ять браузера)
