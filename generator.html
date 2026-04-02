@@ -320,7 +320,7 @@
             <div class="price-tag">39 ₴</div>
             <p><strong>Пробний період на 5 днів!</strong><br>Експортуйте відео у високій якості без водяних знаків. Далі — 199 ₴ / місяць.</p>
             <button id="sidebarSubscribeBtn" class="btn-mono">Оформити підписку</button>
-            <div style="margin-top:10px; font-size:0.8rem; color:#aaa;">Вже маєте акаунт? <a href="login.html" style="color:var(--accent);">Увійти</a></div>
+            <div style="margin-top:10px; font-size:0.8rem; color:#aaa;" id="authSidebarLink">Вже маєте акаунт? <a href="login.html" style="color:var(--accent);">Увійти</a></div>
         </div>
 
         <div class="control-group">
@@ -470,10 +470,11 @@
         let mediaRecorder;
         let chunks = [];
         let isGenerating = false;
-        
         let isSubscribed = false; 
         
-        // --- АВТОРИЗАЦІЯ І ПЕРЕВІРКА ПІДПИСКИ ---
+        // ==========================================
+        // АВТОРИЗАЦІЯ ТА ПЕРЕВІРКА ПІДПИСКИ
+        // ==========================================
         let currentUser = null;
         try {
             currentUser = JSON.parse(localStorage.getItem('hz_user'));
@@ -481,19 +482,19 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         
-        // ПРИХОВАНИЙ ДОСТУП ДЛЯ РОЗРОБНИКА
+        // Адмін-доступ для тестування
         if (urlParams.get('dev_token') === 'hz_auth_9942_xPq') {
             isSubscribed = true;
             document.getElementById('premiumBox').style.display = 'none';
         }
 
-        // Перевірка з пам'яті браузера
+        // Перевірка з пам'яті браузера (якщо вже логінився і має преміум)
         if (currentUser && currentUser.status === 'premium') {
             isSubscribed = true;
             document.getElementById('premiumBox').style.display = 'none';
         }
 
-        // Перевірка успішної оплати
+        // Перевірка успішної оплати (повернення з Монобанку)
         if (urlParams.get('status') === 'subscribed') {
             isSubscribed = true;
             if (currentUser) {
@@ -504,17 +505,24 @@
             window.history.replaceState({}, document.title, window.location.pathname); // Чистимо посилання
             document.getElementById('premiumBox').style.display = 'none';
         }
+
+        // Оновлюємо текст в меню, якщо юзер залогінений
+        if (currentUser) {
+            const authLink = document.getElementById('authSidebarLink');
+            if (authLink) {
+                authLink.innerHTML = `Ви увійшли як <b style="color:#fff;">${currentUser.email}</b>. <a href="login.html" style="color:var(--accent);">Кабінет</a>`;
+            }
+        }
+
+        // ==========================================
         
         let baseHue = 0;
         let particles = []; 
-        
-        // ЗМІННІ ДЛЯ ТЕКСТУ ПІСНІ (LRC)
         let lyricsData = []; 
         let rawLyrics = []; 
         let isSyncingLyrics = false;
         let currentSyncIndex = 0;
 
-        // ФОРМАТИ
         const formats = { 
             vertical: { w: 1080, h: 1920 }, // 9:16
             horizontal: { w: 1920, h: 1080 }, // 16:9
@@ -1300,13 +1308,20 @@
             ctx.stroke();
         }
 
-        // --- ЛОГІКА ПІДПИСКИ І РЕНДЕРУ ---
-        
+        // ==========================================
+        // ПРОЦЕС ОПЛАТИ ПІДПИСКИ
+        // ==========================================
         function closeModal() {
             document.getElementById('subscriptionModal').style.display = 'none';
         }
 
-        async function processSubscription(btnElement, planType) {
+        async function processSubscription(btnElement) {
+            if (!currentUser) {
+                alert("Будь ласка, спочатку увійдіть або зареєструйтесь, щоб прив'язати підписку до вашого акаунту.");
+                window.location.href = "login.html";
+                return;
+            }
+
             const originalText = btnElement.innerText;
             btnElement.innerText = 'Зачекайте...';
             btnElement.disabled = true;
@@ -1315,7 +1330,7 @@
                 const res = await fetch('https://andreygerc11-music-site.onrender.com/api/pay-subscription', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: currentUser ? currentUser.email : '' })
+                    body: JSON.stringify({ email: currentUser.email })
                 });
                 
                 const data = await res.json();
@@ -1335,11 +1350,11 @@
         }
 
         document.getElementById('sidebarSubscribeBtn').addEventListener('click', function() {
-            processSubscription(this, 'trial_5_days');
+            processSubscription(this);
         });
 
         document.getElementById('modalSubscribeBtn').addEventListener('click', function() {
-            processSubscription(this, 'trial_5_days');
+            processSubscription(this);
         });
 
         const generateVideoBtn = document.getElementById('generateVideoBtn');
