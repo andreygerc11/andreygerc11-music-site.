@@ -8,6 +8,8 @@
     <link rel="icon" type="image/png" href="favicon.png?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/fix-webm-duration@1.0.6/fix-webm-duration.js"></script>
 
     <style>
         :root {
@@ -466,7 +468,8 @@
         let primaryColor = primaryColorInput.value;
         let secondaryColor = secondaryColorInput.value;
 
-        let audioCtx, analyser, source;
+        // ВАЖЛИВО: Оновлена логіка аудіо
+        let audioCtx, analyser, source, masterGain;
         let mediaRecorder;
         let chunks = [];
         let isGenerating = false;
@@ -784,13 +787,19 @@
             }
         });
 
+        // ВАЖЛИВО: Оновлений ланцюг аудіо
         function initVisualizer() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioCtx.createAnalyser();
+                masterGain = audioCtx.createGain(); // Новий регулятор гучності
+                
                 source = audioCtx.createMediaElementSource(audioPlayer);
+                
+                // З'єднуємо: Джерело -> Аналізатор -> Регулятор гучності -> Динаміки
                 source.connect(analyser);
-                analyser.connect(audioCtx.destination);
+                analyser.connect(masterGain);
+                masterGain.connect(audioCtx.destination);
                 
                 analyser.fftSize = 512; 
                 analyser.smoothingTimeConstant = 0.8; 
@@ -1394,7 +1403,13 @@
             generateProgress.value = 0;
 
             const dest = audioCtx.createMediaStreamDestination();
+            
+            // ВАЖЛИВО: Вимикаємо звук для користувача (щоб не заважало під час рендеру)
+            masterGain.gain.value = 0; 
+            
+            // Направляємо звук ТАКОЖ на рекордер
             source.connect(dest);
+            
             const audioStream = dest.stream;
             const canvasStream = canvas.captureStream(30); 
             const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
@@ -1410,42 +1425,53 @@
             // Гарантована зупинка після завершення пісні
             audioPlayer.onended = () => {
                 if (isGenerating && mediaRecorder.state !== 'inactive') {
-                    mediaRecorder.stop();
+                    try { mediaRecorder.requestData(); } catch(e) {}
+                    
+                    setTimeout(() => {
+                        mediaRecorder.stop();
+                    }, 500); 
                 }
             };
 
+            // --- ОСЬ ТУТ МАГІЯ ЛІКУВАННЯ ТРИВАЛОСТІ ВІДЕО ---
             mediaRecorder.onstop = () => {
                 clearInterval(checkProgressInterval);
-                const blob = new Blob(chunks, { type: mimeType });
-                const url = URL.createObjectURL(blob);
+                const rawBlob = new Blob(chunks, { type: mimeType });
                 
-                // Надійне завантаження файлу
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `${outputFileName}.${fileExt}`;
-                document.body.appendChild(a);
-                a.click();
+                // Беремо точну тривалість пісні в мілісекундах
+                const durationMs = audioPlayer.duration * 1000;
                 
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
+                generateStatus.innerText = 'Виправляємо метадані відео...';
                 
-                isGenerating = false;
-                generateVideoBtn.innerHTML = '<i class="fas fa-bolt"></i> Почати Рендеринг';
-                generateVideoBtn.disabled = false;
-                generateProgress.style.display = 'none';
-                generateStatus.style.display = 'none';
-                
-                if (backgroundVideo) backgroundVideo.pause();
-                
-                // --- ВИПРАВЛЕНО ТУТ ---
-                source.disconnect(dest);
-                analyser.connect(audioCtx.destination);
-                // ----------------------
+                // Використовуємо бібліотеку ysFixWebmDuration
+                ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) {
+                    const url = URL.createObjectURL(fixedBlob);
+                    
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `${outputFileName}.${fileExt}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                    
+                    isGenerating = false;
+                    generateVideoBtn.innerHTML = '<i class="fas fa-bolt"></i> Почати Рендеринг';
+                    generateVideoBtn.disabled = false;
+                    generateProgress.style.display = 'none';
+                    generateStatus.style.display = 'none';
+                    
+                    if (backgroundVideo) backgroundVideo.pause();
+                    
+                    source.disconnect(dest);
+                    masterGain.gain.value = 1;
 
-                document.getElementById('openInfoBtn').style.display = 'flex';
+                    document.getElementById('openInfoBtn').style.display = 'flex';
+                });
             };
 
             audioPlayer.currentTime = 0;
@@ -1455,15 +1481,9 @@
                 backgroundVideo.play();
             }
             particles = [];
-
-            // --- ВИПРАВЛЕНО ТУТ ---
-            analyser.disconnect(); 
-            // ----------------------
             
             audioPlayer.play();
-            
-            // Важливо: зберігаємо відео шматками по 1 секунді (щоб не забити пам'ять браузера)
-            mediaRecorder.start(1000);
+            mediaRecorder.start();
 
             const checkProgressInterval = setInterval(() => {
                 if (isGenerating) {
