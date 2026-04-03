@@ -472,6 +472,30 @@
         openInfoBtn.addEventListener('click', () => infoPanel.classList.add('open'));
         closeInfoBtn.addEventListener('click', () => infoPanel.classList.remove('open'));
 
+        // ==========================================
+        // ФОНОВИЙ РЕНДЕР (WEB WORKER)
+        // Запобігає зависанню та багам при згортанні/перемиканні вкладок
+        // ==========================================
+        const timerWorkerCode = `
+            let interval = null;
+            self.onmessage = function(e) {
+                if (e.data === 'start') {
+                    if (!interval) interval = setInterval(() => self.postMessage('tick'), 1000 / 60); // 60 FPS
+                } else if (e.data === 'stop') {
+                    clearInterval(interval);
+                    interval = null;
+                }
+            };
+        `;
+        const timerBlob = new Blob([timerWorkerCode], { type: 'application/javascript' });
+        const timerWorker = new Worker(URL.createObjectURL(timerBlob));
+        
+        timerWorker.onmessage = function() {
+            if (audioCtx) {
+                draw();
+            }
+        };
+
         // ОСНОВНИЙ КОД ГЕНЕРАТОРА
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -495,6 +519,11 @@
         const autoColorCheckbox = document.getElementById('autoColorCheckbox');
         let primaryColor = primaryColorInput.value;
         let secondaryColor = secondaryColorInput.value;
+
+        // ВАЖЛИВО: Налаштування водяного знаку з гітхаб-фавікону
+        const watermarkImg = new Image();
+        watermarkImg.crossOrigin = "Anonymous"; // Щоб відео без проблем рендерилося (CORS)
+        watermarkImg.src = "favicon.png?v=2"; // Завантажується твій фавікон
 
         // ЗМІННІ АУДІО ТА ВІДЕО
         let audioCtx, analyser, source, masterGain;
@@ -831,7 +860,8 @@
                 analyser.fftSize = 512; 
                 analyser.smoothingTimeConstant = 0.8; 
                 
-                draw();
+                // Запускаємо фоновий таймер замість draw() або requestAnimationFrame
+                timerWorker.postMessage('start');
             }
         }
 
@@ -957,7 +987,8 @@
         }
 
         function draw() {
-            requestAnimationFrame(draw);
+            // УВАГА: requestAnimationFrame видалено! 
+            // Тепер ця функція викликається Web Worker-ом (фоновим таймером) 60 разів на секунду
             
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
@@ -1133,6 +1164,37 @@
                     
                     ctx.restore();
                 }
+            }
+
+            // --- МАЛЮВАННЯ ВОДЯНОГО ЗНАКУ (Тільки для Free версії) ---
+            if (!isSubscribed) {
+                ctx.save();
+                ctx.globalAlpha = 0.7; 
+                
+                const wmText = "Hertz Spectrum";
+                const wmFontSize = minDimension * 0.025; 
+                ctx.font = `800 ${wmFontSize}px 'Montserrat', sans-serif`;
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                
+                const padding = minDimension * 0.05;
+                const logoSize = wmFontSize * 1.5;
+                
+                const textX = canvas.width - padding;
+                const wmStartY = padding + logoSize / 2;
+                
+                ctx.fillStyle = '#fff';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                ctx.shadowBlur = 10;
+                ctx.fillText(wmText, textX, wmStartY);
+                
+                const textWidth = ctx.measureText(wmText).width;
+                const logoX = textX - textWidth - logoSize - 10;
+                
+                if (watermarkImg.complete) {
+                    ctx.drawImage(watermarkImg, logoX, wmStartY - logoSize/2, logoSize, logoSize);
+                }
+                ctx.restore();
             }
         }
 
