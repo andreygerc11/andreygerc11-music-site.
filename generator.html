@@ -201,7 +201,7 @@
         }
         #generateVideoBtn:disabled::after { display: none; }
 
-        /* Стилі для нової кнопки завантаження */
+        /* КНОПКА ЗАВАНТАЖЕННЯ (ЗЕЛЕНА) */
         #downloadVideoBtn {
             width: 100%; padding: 18px; 
             background: linear-gradient(45deg, #4CAF50, #45a049); 
@@ -212,11 +212,19 @@
             font-family: inherit;
             box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
             margin-top: 15px;
-            display: none; /* Прихована по замовчуванню */
+            display: none; 
+            animation: pulse 2s infinite;
         }
         #downloadVideoBtn:hover {
             transform: translateY(-4px) scale(1.02); 
             box-shadow: 0 12px 30px rgba(76, 175, 80, 0.6); 
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
         }
 
         progress { width: 100%; margin-top: 15px; height: 10px; border-radius: 50px; overflow: hidden; }
@@ -347,9 +355,9 @@
             <label>1. Формат відео</label>
             <select id="formatSelect">
                 <option value="vertical" selected>TikTok / Reels / Shorts (9:16)</option>
-                <option value="horizontal">YouTube / Vimeo / ТВ (16:9)</option>
-                <option value="square">Instagram Квадрат (1:1)</option>
-                <option value="portrait">Instagram Портрет (4:5)</option>
+                <option value="horizontal">YouTube / Facebook / ТВ (16:9)</option>
+                <option value="square">Instagram / Facebook Квадрат (1:1)</option>
+                <option value="portrait">Instagram / Facebook Портрет (4:5)</option>
                 <option value="cinema">Кінематографічний (21:9)</option>
             </select>
         </div>
@@ -434,6 +442,7 @@
             <button id="generateVideoBtn"><i class="fas fa-bolt"></i> Почати Рендеринг</button>
             <progress id="generateProgress" value="0" max="100" style="display:none;"></progress>
             <div id="generateStatus" style="display:none; text-align:center; font-size:0.85rem; color:#aaa; margin-top:8px; font-weight: bold;">Рендеринг...</div>
+            
             <button id="downloadVideoBtn"><i class="fas fa-download"></i> Завантажити готове відео</button>
         </div>
     </div>
@@ -487,13 +496,13 @@
         let primaryColor = primaryColorInput.value;
         let secondaryColor = secondaryColorInput.value;
 
-        // ВАЖЛИВО: Оновлена логіка аудіо та URL файлу
+        // ЗМІННІ АУДІО ТА ВІДЕО
         let audioCtx, analyser, source, masterGain;
         let mediaRecorder;
         let chunks = [];
         let isGenerating = false;
         let isSubscribed = false; 
-        let generatedVideoUrl = null; // Зберігає посилання на готове відео
+        let generatedVideoUrl = null; // Посилання на готове відео
         
         // ==========================================
         // АВТОРИЗАЦІЯ ТА ПЕРЕВІРКА ПІДПИСКИ
@@ -1006,18 +1015,21 @@
             
             if (titleText || authorText) {
                 ctx.save();
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'top';
+                ctx.textAlign = 'center'; // Відцентровано по горизонталі
+                ctx.textBaseline = 'middle'; // Відцентровано по вертикалі
                 
                 const padding = minDimension * 0.05; 
                 const maxWidthTitle = canvas.width - (padding * 2); 
-                let currentY = padding;
+                const centerXText = canvas.width / 2;
+                
+                // Опускаємо текст вниз на 25% від висоти екрану (чиста зона над логотипом)
+                let currentY = canvas.height * 0.25; 
                 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
                 ctx.shadowBlur = 15;
                 
                 if (titleText) {
-                    const titleSize = minDimension * 0.04;
+                    const titleSize = minDimension * 0.055; // Збільшений шрифт
                     ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`;
                     ctx.fillStyle = '#fff';
                     
@@ -1029,19 +1041,19 @@
                         let testLine = line + words[n] + ' ';
                         let metrics = ctx.measureText(testLine);
                         if (metrics.width > maxWidthTitle && n > 0) {
-                            ctx.fillText(line, padding, currentY);
+                            ctx.fillText(line, centerXText, currentY);
                             line = words[n] + ' ';
                             currentY += lineHeight;
                         } else {
                             line = testLine;
                         }
                     }
-                    ctx.fillText(line, padding, currentY);
+                    ctx.fillText(line, centerXText, currentY);
                     currentY += lineHeight; 
                 }
                 
                 if (authorText) {
-                    const authorSize = minDimension * 0.025;
+                    const authorSize = minDimension * 0.035; // Збільшений шрифт автора
                     ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`;
                     ctx.fillStyle = '#bbb';
                     
@@ -1053,19 +1065,19 @@
                         let testLine = line + words[n] + ' ';
                         let metrics = ctx.measureText(testLine);
                         if (metrics.width > maxWidthTitle && n > 0) {
-                            ctx.fillText(line, padding, currentY);
+                            ctx.fillText(line, centerXText, currentY);
                             line = words[n] + ' ';
                             currentY += lineHeight;
                         } else {
                             line = testLine;
                         }
                     }
-                    ctx.fillText(line, padding, currentY);
+                    ctx.fillText(line, centerXText, currentY);
                 }
                 ctx.restore();
             }
 
-            // МАЛЮВАННЯ ТЕКСТУ ПІСНІ
+            // МАЛЮВАННЯ ТЕКСТУ ПІСНІ (Караоке внизу)
             if (lyricsData.length > 0) {
                 let activeText = "";
                 let currentTime = audioPlayer.currentTime;
@@ -1400,7 +1412,7 @@
 
             document.getElementById('infoPanel').classList.remove('open');
             document.getElementById('openInfoBtn').style.display = 'none';
-            downloadVideoBtn.style.display = 'none'; // Ховаємо кнопку скачування при новому рендері
+            downloadVideoBtn.style.display = 'none'; 
 
             isGenerating = true;
             chunks = [];
@@ -1453,15 +1465,12 @@
                 generateStatus.innerText = 'Обробляємо файл...';
                 
                 ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) {
-                    // Очищаємо старий файл, якщо такий був, щоб не забивати пам'ять
                     if (generatedVideoUrl) {
                         URL.revokeObjectURL(generatedVideoUrl);
                     }
                     
-                    // Створюємо нове посилання
                     generatedVideoUrl = URL.createObjectURL(fixedBlob);
                     
-                    // Показуємо кнопку скачування і вішаємо на неї дію
                     downloadVideoBtn.style.display = 'block';
                     downloadVideoBtn.onclick = () => {
                         const a = document.createElement('a');
@@ -1472,11 +1481,7 @@
                         a.click();
                         setTimeout(() => { document.body.removeChild(a); }, 100);
                     };
-
-                    // Пробуємо скачати автоматично (якщо браузер не заблокує)
-                    try { downloadVideoBtn.click(); } catch(e) {}
                     
-                    // Повертаємо інтерфейс у нормальний стан
                     isGenerating = false;
                     generateVideoBtn.innerHTML = '<i class="fas fa-redo"></i> Переробити відео';
                     generateVideoBtn.disabled = false;
