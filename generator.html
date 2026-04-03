@@ -194,6 +194,18 @@
 
         #generateBtnContainer { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 25px; padding-bottom: 20px;}
         
+        /* КНОПКА ЗВУКУ ПРИ РЕНДЕРИНГУ */
+        #muteRenderBtn {
+            width: 100%; padding: 12px; 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            color: #ccc; border-radius: 12px; 
+            cursor: pointer; font-weight: 700; 
+            font-size: 0.85rem; margin-bottom: 15px; 
+            font-family: inherit; transition: 0.3s;
+        }
+        #muteRenderBtn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
         #generateVideoBtn { 
             width: 100%; padding: 18px; 
             background: linear-gradient(45deg, var(--accent), var(--accent-hover)); 
@@ -548,11 +560,13 @@
         </div>
 
         <div class="warning-box">
-            <strong><i class="fas fa-exclamation-triangle"></i> Дуже важливо!</strong>
-            Під час рендерингу <b>НЕ згортайте браузер</b> і не перемикайтеся на інші вкладки. Система може "заморозити" відеокарту для економії ресурсів, і відео вийде з лагами. Залиште цю вкладку відкритою до завершення!
+            <strong><i class="fas fa-exclamation-triangle"></i> Порада</strong>
+            Для найкращої якості та швидкості генерації рекомендуємо залишати цю вкладку відкритою, поки процес не досягне 100%.
         </div>
 
         <div id="generateBtnContainer">
+            <button id="muteRenderBtn"><i class="fas fa-volume-up"></i> Звук під час рендеру: УВІМКНЕНО</button>
+
             <button id="generateVideoBtn"><i class="fas fa-bolt"></i> Почати Рендеринг</button>
             
             <button id="stopRenderBtn"><i class="fas fa-times"></i> Скасувати рендеринг</button>
@@ -610,6 +624,33 @@
         mobileCloseBtn.addEventListener('click', closeMobileMenu);
         sidebarOverlay.addEventListener('click', closeMobileMenu);
 
+        // ==========================================
+        // ФОНОВИЙ РЕНДЕР (WEB WORKER) - ТЕПЕР ПРАЦЮЄ ІДЕАЛЬНО БЕЗ ПОДВІЙНОГО МАЛЮВАННЯ
+        // ==========================================
+        const timerWorkerCode = `
+            let interval = null;
+            self.onmessage = function(e) {
+                if (e.data === 'start') {
+                    if (!interval) interval = setInterval(() => self.postMessage('tick'), 1000 / 30); 
+                } else if (e.data === 'stop') {
+                    clearInterval(interval);
+                    interval = null;
+                }
+            };
+        `;
+        const timerBlob = new Blob([timerWorkerCode], { type: 'application/javascript' });
+        const timerWorker = new Worker(URL.createObjectURL(timerBlob));
+        
+        let isDrawingFrame = false; 
+        
+        timerWorker.onmessage = function() {
+            if (isGenerating && !isDrawingFrame) {
+                isDrawingFrame = true;
+                draw(); // Малює кадр у фоновому режимі (без requestAnimationFrame)
+                isDrawingFrame = false;
+            }
+        };
+
         // ОСНОВНИЙ КОД ГЕНЕРАТОРА
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -640,14 +681,35 @@
         watermarkImg.src = "favicon.png?v=2"; 
 
         // ЗМІННІ АУДІО ТА ВІДЕО
-        let audioCtx, analyser, source, masterGain;
+        let audioCtx, analyser, source, mediaDest, speakerGain;
         let mediaRecorder;
         let chunks = [];
         let isGenerating = false;
         let isCancelled = false; 
         let isSubscribed = false; 
         let generatedVideoUrl = null; 
+        let drawAnimationId; // ID для зупинки стандартної анімації
         
+        // ==========================================
+        // ЛОГІКА КНОПКИ ВІДКЛЮЧЕННЯ ЗВУКУ ПІД ЧАС РЕНДЕРУ
+        // ==========================================
+        let isMutedDuringRender = false;
+        const muteRenderBtn = document.getElementById('muteRenderBtn');
+        muteRenderBtn.addEventListener('click', () => {
+            isMutedDuringRender = !isMutedDuringRender;
+            if (isMutedDuringRender) {
+                muteRenderBtn.innerHTML = '<i class="fas fa-volume-mute"></i> Звук під час рендеру: ВИМКНЕНО';
+                muteRenderBtn.style.color = '#ff4d4d';
+                muteRenderBtn.style.borderColor = '#ff4d4d';
+                if (isGenerating && speakerGain) speakerGain.gain.value = 0;
+            } else {
+                muteRenderBtn.innerHTML = '<i class="fas fa-volume-up"></i> Звук під час рендеру: УВІМКНЕНО';
+                muteRenderBtn.style.color = '#ccc';
+                muteRenderBtn.style.borderColor = 'rgba(255,255,255,0.2)';
+                if (isGenerating && speakerGain) speakerGain.gain.value = 1;
+            }
+        });
+
         // ==========================================
         // АВТОРИЗАЦІЯ ТА ПЕРЕВІРКА ПІДПИСКИ
         // ==========================================
@@ -960,23 +1022,33 @@
             }
         });
 
-        // ВАЖЛИВО: Повернуто requestAnimationFrame для плавності без лагів
+        // ==========================================
+        // ІДЕАЛЬНА МАРШРУТИЗАЦІЯ ЗВУКУ (ДИНАМІКИ + РЕКОРДЕР)
+        // ==========================================
         function initVisualizer() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioCtx.createAnalyser();
-                masterGain = audioCtx.createGain(); 
+                
+                // Це потік, який піде ПРЯМО У ВІДЕОФАЙЛ (завжди 100% гучності)
+                mediaDest = audioCtx.createMediaStreamDestination(); 
+                
+                // Це регулятор гучності для ТВОЇХ КОЛОНОК (можна вимкнути кнопкою)
+                speakerGain = audioCtx.createGain(); 
                 
                 source = audioCtx.createMediaElementSource(audioPlayer);
                 
                 source.connect(analyser);
-                analyser.connect(masterGain);
-                masterGain.connect(audioCtx.destination);
+                
+                // Розділяємо звук на два незалежні кабелі:
+                analyser.connect(mediaDest); // Кабель 1: У відео файл
+                analyser.connect(speakerGain); // Кабель 2: У колонки
+                speakerGain.connect(audioCtx.destination);
                 
                 analyser.fftSize = 512; 
                 analyser.smoothingTimeConstant = 0.8; 
                 
-                draw(); // Старт плавного рендеру
+                draw(); // Запускаємо стандартну анімацію
             }
         }
 
@@ -1102,7 +1174,11 @@
         }
 
         function draw() {
-            requestAnimationFrame(draw); // Повернено для ідеально плавного рендеру
+            // ВАЖЛИВО: Викликаємо requestAnimationFrame тільки якщо ми НЕ рендеримо відео
+            // Щоб уникнути подвійного рендеру і жорстких лагів відеокарти
+            if (!isGenerating) {
+                drawAnimationId = requestAnimationFrame(draw);
+            }
 
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
@@ -1162,21 +1238,21 @@
             
             if (titleText || authorText) {
                 ctx.save();
-                ctx.textAlign = 'center'; // Відцентровано по горизонталі
-                ctx.textBaseline = 'middle'; // Відцентровано по вертикалі
+                ctx.textAlign = 'center'; // ВІДЦЕНТРОВАНО
+                ctx.textBaseline = 'middle'; 
                 
                 const padding = minDimension * 0.05; 
                 const maxWidthTitle = canvas.width - (padding * 2); 
                 const centerXText = canvas.width / 2;
                 
-                // ВАЖЛИВО: Опускаємо текст вниз, але він залишається НАД логотипом (на 20% від верху екрану)
-                let currentY = canvas.height * 0.20; 
+                // ВАЖЛИВО: Опускаємо текст вниз, але він залишається НАД логотипом (на 18% від верху екрану)
+                let currentY = canvas.height * 0.18; 
                 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
                 ctx.shadowBlur = 15;
                 
                 if (titleText) {
-                    const titleSize = minDimension * 0.065; // Збільшений шрифт
+                    const titleSize = minDimension * 0.065; // ВЕЛИКИЙ ШРИФТ
                     ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`;
                     ctx.fillStyle = '#fff';
                     
@@ -1200,7 +1276,7 @@
                 }
                 
                 if (authorText) {
-                    const authorSize = minDimension * 0.04; // Збільшений шрифт автора
+                    const authorSize = minDimension * 0.04; // ВЕЛИКИЙ ШРИФТ
                     ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`;
                     ctx.fillStyle = '#bbb';
                     
@@ -1285,7 +1361,7 @@
             // --- МАЛЮВАННЯ ВОДЯНОГО ЗНАКУ (Тільки для Free версії) ---
             if (!isSubscribed) {
                 ctx.save();
-                ctx.globalAlpha = 0.6; 
+                ctx.globalAlpha = 0.6; // Напівпрозорий
                 
                 const wmText = "Hertz Spectrum";
                 const wmFontSize = minDimension * 0.025; 
@@ -1307,7 +1383,7 @@
                 const textWidth = ctx.measureText(wmText).width;
                 const logoX = textX - textWidth - logoSize - 10;
                 
-                // Запобіжник від крашу, якщо фавікон ще не завантажився
+                // ВАЖЛИВО: Запобіжник від крашу, якщо фавікон не завантажився через CORS або локальний запуск
                 if (watermarkImg.complete && watermarkImg.naturalWidth > 0) {
                     ctx.drawImage(watermarkImg, logoX, wmStartY - logoSize/2, logoSize, logoSize);
                 }
@@ -1593,7 +1669,6 @@
                 let lastRenderStr = localStorage.getItem('hz_last_free_render');
                 if (lastRenderStr) {
                     let lastRenderTime = parseInt(lastRenderStr);
-                    // Якщо минуло менше 24 годин
                     if (Date.now() - lastRenderTime < 24 * 60 * 60 * 1000) {
                         document.getElementById('modalTitle').innerText = 'Ліміт вичерпано!';
                         document.getElementById('modalDesc').innerText = 'Ви вже використали свою 1 безкоштовну генерацію на сьогодні. Оформіть підписку для безлімітного доступу без водяних знаків!';
@@ -1652,18 +1727,18 @@
             generateStatus.style.display = 'block';
             generateProgress.value = 0;
 
-            const dest = audioCtx.createMediaStreamDestination();
-            masterGain.gain.value = 0; 
-            source.connect(dest);
-            
-            const audioStream = dest.stream;
+            // Відключаємо стандартну анімацію і запускаємо фоновий Worker
+            cancelAnimationFrame(drawAnimationId);
+            timerWorker.postMessage('start');
+
+            // ВАЖЛИВО: Оптимізація якості
+            const audioStream = mediaDest.stream;
             const canvasStream = canvas.captureStream(30); 
             const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
 
-            // ВАЖЛИВО: Оптимізація якості (8 Mbps для ідеальної чіткості)
             const options = { 
                 mimeType: mimeType, 
-                videoBitsPerSecond: 8000000 
+                videoBitsPerSecond: 5000000 
             };
             mediaRecorder = new MediaRecorder(combinedStream, options);
             
@@ -1683,6 +1758,10 @@
             mediaRecorder.onstop = () => {
                 clearInterval(checkProgressInterval);
                 
+                // Зупиняємо фоновий Worker і відновлюємо стандартну анімацію
+                timerWorker.postMessage('stop');
+                drawAnimationId = requestAnimationFrame(draw);
+                
                 // ЯКЩО БУЛО НАТИСНУТО КНОПКУ "СКАСУВАТИ"
                 if (isCancelled) {
                     isGenerating = false;
@@ -1694,9 +1773,8 @@
                     
                     if (backgroundVideo) backgroundVideo.pause();
                     audioPlayer.pause();
+                    audioPlayer.currentTime = 0; // Скидаємо трек на початок
                     
-                    source.disconnect(dest);
-                    masterGain.gain.value = 1;
                     document.getElementById('openInfoBtn').style.display = 'flex';
                     
                     if (window.innerWidth <= 768) {
@@ -1747,9 +1825,6 @@
                     generateStatus.style.display = 'none';
                     
                     if (backgroundVideo) backgroundVideo.pause();
-                    
-                    source.disconnect(dest);
-                    masterGain.gain.value = 1;
 
                     document.getElementById('openInfoBtn').style.display = 'flex';
                     
@@ -1772,6 +1847,11 @@
 
             audioPlayer.currentTime = 0;
             
+            // Застосовуємо налаштування звуку ПЕРЕД стартом
+            if (speakerGain) {
+                speakerGain.gain.value = isMutedDuringRender ? 0 : 1;
+            }
+
             if (backgroundVideo) {
                 backgroundVideo.currentTime = 0;
                 backgroundVideo.play();
