@@ -201,6 +201,24 @@
         }
         #generateVideoBtn:disabled::after { display: none; }
 
+        /* Стилі для нової кнопки завантаження */
+        #downloadVideoBtn {
+            width: 100%; padding: 18px; 
+            background: linear-gradient(45deg, #4CAF50, #45a049); 
+            border: none; color: white; border-radius: 50px; 
+            cursor: pointer; font-weight: 900; font-size: 1.05rem; 
+            text-transform: uppercase; letter-spacing: 1.5px; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            font-family: inherit;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            margin-top: 15px;
+            display: none; /* Прихована по замовчуванню */
+        }
+        #downloadVideoBtn:hover {
+            transform: translateY(-4px) scale(1.02); 
+            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.6); 
+        }
+
         progress { width: 100%; margin-top: 15px; height: 10px; border-radius: 50px; overflow: hidden; }
         progress::-webkit-progress-bar { background-color: rgba(255,255,255,0.1); }
         progress::-webkit-progress-value { background-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
@@ -416,6 +434,7 @@
             <button id="generateVideoBtn"><i class="fas fa-bolt"></i> Почати Рендеринг</button>
             <progress id="generateProgress" value="0" max="100" style="display:none;"></progress>
             <div id="generateStatus" style="display:none; text-align:center; font-size:0.85rem; color:#aaa; margin-top:8px; font-weight: bold;">Рендеринг...</div>
+            <button id="downloadVideoBtn"><i class="fas fa-download"></i> Завантажити готове відео</button>
         </div>
     </div>
 
@@ -468,12 +487,13 @@
         let primaryColor = primaryColorInput.value;
         let secondaryColor = secondaryColorInput.value;
 
-        // ВАЖЛИВО: Оновлена логіка аудіо
+        // ВАЖЛИВО: Оновлена логіка аудіо та URL файлу
         let audioCtx, analyser, source, masterGain;
         let mediaRecorder;
         let chunks = [];
         let isGenerating = false;
         let isSubscribed = false; 
+        let generatedVideoUrl = null; // Зберігає посилання на готове відео
         
         // ==========================================
         // АВТОРИЗАЦІЯ ТА ПЕРЕВІРКА ПІДПИСКИ
@@ -787,16 +807,14 @@
             }
         });
 
-        // ВАЖЛИВО: Оновлений ланцюг аудіо
         function initVisualizer() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioCtx.createAnalyser();
-                masterGain = audioCtx.createGain(); // Новий регулятор гучності
+                masterGain = audioCtx.createGain(); 
                 
                 source = audioCtx.createMediaElementSource(audioPlayer);
                 
-                // З'єднуємо: Джерело -> Аналізатор -> Регулятор гучності -> Динаміки
                 source.connect(analyser);
                 analyser.connect(masterGain);
                 masterGain.connect(audioCtx.destination);
@@ -1361,6 +1379,7 @@
         });
 
         const generateVideoBtn = document.getElementById('generateVideoBtn');
+        const downloadVideoBtn = document.getElementById('downloadVideoBtn');
         const generateProgress = document.getElementById('generateProgress');
         const generateStatus = document.getElementById('generateStatus');
 
@@ -1381,11 +1400,11 @@
 
             document.getElementById('infoPanel').classList.remove('open');
             document.getElementById('openInfoBtn').style.display = 'none';
+            downloadVideoBtn.style.display = 'none'; // Ховаємо кнопку скачування при новому рендері
 
             isGenerating = true;
             chunks = [];
 
-            // Перевірка сумісності формату
             let mimeType = 'video/webm;codecs=vp9';
             let fileExt = 'webm';
             if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -1404,10 +1423,7 @@
 
             const dest = audioCtx.createMediaStreamDestination();
             
-            // ВАЖЛИВО: Вимикаємо звук для користувача (щоб не заважало під час рендеру)
             masterGain.gain.value = 0; 
-            
-            // Направляємо звук ТАКОЖ на рекордер
             source.connect(dest);
             
             const audioStream = dest.stream;
@@ -1422,45 +1438,47 @@
                 }
             };
 
-            // Гарантована зупинка після завершення пісні
             audioPlayer.onended = () => {
                 if (isGenerating && mediaRecorder.state !== 'inactive') {
                     try { mediaRecorder.requestData(); } catch(e) {}
-                    
-                    setTimeout(() => {
-                        mediaRecorder.stop();
-                    }, 500); 
+                    setTimeout(() => { mediaRecorder.stop(); }, 500); 
                 }
             };
 
-            // --- ОСЬ ТУТ МАГІЯ ЛІКУВАННЯ ТРИВАЛОСТІ ВІДЕО ---
             mediaRecorder.onstop = () => {
                 clearInterval(checkProgressInterval);
                 const rawBlob = new Blob(chunks, { type: mimeType });
-                
-                // Беремо точну тривалість пісні в мілісекундах
                 const durationMs = audioPlayer.duration * 1000;
                 
-                generateStatus.innerText = 'Виправляємо метадані відео...';
+                generateStatus.innerText = 'Обробляємо файл...';
                 
-                // Використовуємо бібліотеку ysFixWebmDuration
                 ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) {
-                    const url = URL.createObjectURL(fixedBlob);
+                    // Очищаємо старий файл, якщо такий був, щоб не забивати пам'ять
+                    if (generatedVideoUrl) {
+                        URL.revokeObjectURL(generatedVideoUrl);
+                    }
                     
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = `${outputFileName}.${fileExt}`;
-                    document.body.appendChild(a);
-                    a.click();
+                    // Створюємо нове посилання
+                    generatedVideoUrl = URL.createObjectURL(fixedBlob);
                     
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }, 100);
+                    // Показуємо кнопку скачування і вішаємо на неї дію
+                    downloadVideoBtn.style.display = 'block';
+                    downloadVideoBtn.onclick = () => {
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = generatedVideoUrl;
+                        a.download = `${outputFileName}.${fileExt}`;
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(() => { document.body.removeChild(a); }, 100);
+                    };
+
+                    // Пробуємо скачати автоматично (якщо браузер не заблокує)
+                    try { downloadVideoBtn.click(); } catch(e) {}
                     
+                    // Повертаємо інтерфейс у нормальний стан
                     isGenerating = false;
-                    generateVideoBtn.innerHTML = '<i class="fas fa-bolt"></i> Почати Рендеринг';
+                    generateVideoBtn.innerHTML = '<i class="fas fa-redo"></i> Переробити відео';
                     generateVideoBtn.disabled = false;
                     generateProgress.style.display = 'none';
                     generateStatus.style.display = 'none';
