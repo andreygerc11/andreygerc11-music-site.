@@ -201,6 +201,26 @@
         }
         #generateVideoBtn:disabled::after { display: none; }
 
+        /* КНОПКА СКАСУВАННЯ РЕНДЕРИНГУ */
+        #stopRenderBtn {
+            width: 100%; padding: 14px; 
+            background: rgba(255, 77, 77, 0.1); 
+            border: 2px solid var(--accent); 
+            color: var(--accent); border-radius: 50px; 
+            cursor: pointer; font-weight: 900; font-size: 0.95rem; 
+            text-transform: uppercase; letter-spacing: 1.5px; 
+            transition: all 0.3s ease; 
+            font-family: inherit;
+            margin-top: 15px;
+            display: none; 
+        }
+        #stopRenderBtn:hover {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 8px 25px rgba(255, 77, 77, 0.4);
+            transform: translateY(-2px);
+        }
+
         /* КНОПКА ЗАВАНТАЖЕННЯ (ЗЕЛЕНА) */
         #downloadVideoBtn {
             width: 100%; padding: 18px; 
@@ -440,6 +460,9 @@
 
         <div id="generateBtnContainer">
             <button id="generateVideoBtn"><i class="fas fa-bolt"></i> Почати Рендеринг</button>
+            
+            <button id="stopRenderBtn"><i class="fas fa-times"></i> Скасувати рендеринг</button>
+
             <progress id="generateProgress" value="0" max="100" style="display:none;"></progress>
             <div id="generateStatus" style="display:none; text-align:center; font-size:0.85rem; color:#aaa; margin-top:8px; font-weight: bold;">Рендеринг...</div>
             
@@ -453,10 +476,10 @@
 
     <div class="modal-overlay" id="subscriptionModal">
         <div class="modal-content">
-            <h3>Рендеринг Відео</h3>
-            <p>Експорт відео доступний лише за підпискою. Оформіть пробний період, щоб зберегти свій шедевр!</p>
+            <h3 id="modalTitle">Рендеринг Відео</h3>
+            <p id="modalDesc">Експорт відео без обмежень доступний за підпискою. Оформіть доступ, щоб зберігати свої шедеври без водяних знаків!</p>
             <div class="modal-price">39 ₴</div>
-            <div class="modal-subprice">за 5 днів (далі 199 ₴ / міс)</div>
+            <div class="modal-subprice" id="modalSubprice">за 5 днів (далі 199 ₴ / міс)</div>
             <button id="modalSubscribeBtn" class="btn-mono" style="font-size: 1rem; padding: 16px;">Оформити та Експортувати</button>
             <div style="margin-top:15px; font-size:0.85rem; color:#ccc;">Маєте акаунт? <a href="login.html" style="color:var(--accent);">Увійдіть тут</a></div>
             <button class="close-modal" onclick="closeModal()">Повернутися до редагування</button>
@@ -530,8 +553,9 @@
         let mediaRecorder;
         let chunks = [];
         let isGenerating = false;
+        let isCancelled = false; // Прапорець скасування рендеру
         let isSubscribed = false; 
-        let generatedVideoUrl = null; // Посилання на готове відео
+        let generatedVideoUrl = null; 
         
         // ==========================================
         // АВТОРИЗАЦІЯ ТА ПЕРЕВІРКА ПІДПИСКИ
@@ -860,7 +884,7 @@
                 analyser.fftSize = 512; 
                 analyser.smoothingTimeConstant = 0.8; 
                 
-                // Запускаємо фоновий таймер замість draw() або requestAnimationFrame
+                // Запускаємо фоновий таймер (працює навіть при згортанні вкладки)
                 timerWorker.postMessage('start');
             }
         }
@@ -987,9 +1011,6 @@
         }
 
         function draw() {
-            // УВАГА: requestAnimationFrame видалено! 
-            // Тепер ця функція викликається Web Worker-ом (фоновим таймером) 60 разів на секунду
-            
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
             analyser.getByteFrequencyData(dataArray);
@@ -1053,14 +1074,14 @@
                 const maxWidthTitle = canvas.width - (padding * 2); 
                 const centerXText = canvas.width / 2;
                 
-                // Опускаємо текст вниз на 25% від висоти екрану (чиста зона над логотипом)
-                let currentY = canvas.height * 0.25; 
+                // Текст знаходиться на 75% висоти екрану (нижче центру, під логотипом)
+                let currentY = canvas.height * 0.75; 
                 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
                 ctx.shadowBlur = 15;
                 
                 if (titleText) {
-                    const titleSize = minDimension * 0.055; // Збільшений шрифт
+                    const titleSize = minDimension * 0.055; // Крупний шрифт
                     ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`;
                     ctx.fillStyle = '#fff';
                     
@@ -1084,7 +1105,7 @@
                 }
                 
                 if (authorText) {
-                    const authorSize = minDimension * 0.035; // Збільшений шрифт автора
+                    const authorSize = minDimension * 0.035; // Крупний шрифт автора
                     ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`;
                     ctx.fillStyle = '#bbb';
                     
@@ -1146,7 +1167,7 @@
                     linesToDraw.push(line.trim());
                     
                     const lineHeight = fontSize * 1.3;
-                    let startY = canvas.height * 0.85 - (linesToDraw.length - 1) * lineHeight;
+                    let startY = canvas.height * 0.92 - (linesToDraw.length - 1) * lineHeight;
                     
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
                     ctx.shadowBlur = 15;
@@ -1169,7 +1190,7 @@
             // --- МАЛЮВАННЯ ВОДЯНОГО ЗНАКУ (Тільки для Free версії) ---
             if (!isSubscribed) {
                 ctx.save();
-                ctx.globalAlpha = 0.7; 
+                ctx.globalAlpha = 0.6; // Напівпрозорий
                 
                 const wmText = "Hertz Spectrum";
                 const wmFontSize = minDimension * 0.025; 
@@ -1453,18 +1474,41 @@
         });
 
         const generateVideoBtn = document.getElementById('generateVideoBtn');
+        const stopRenderBtn = document.getElementById('stopRenderBtn');
         const downloadVideoBtn = document.getElementById('downloadVideoBtn');
         const generateProgress = document.getElementById('generateProgress');
         const generateStatus = document.getElementById('generateStatus');
 
+        // ЛОГІКА СКАСУВАННЯ
+        stopRenderBtn.addEventListener('click', () => {
+            if (isGenerating && mediaRecorder && mediaRecorder.state !== 'inactive') {
+                isCancelled = true;
+                generateStatus.innerText = 'Скасування...';
+                mediaRecorder.stop();
+            }
+        });
+
         generateVideoBtn.addEventListener('click', async () => {
             if (!audioCtx) { alert('Будь ласка, завантажте аудіо трек перед рендерингом!'); return; }
             
+            // ПЕРЕВІРКА ЛІМІТУ (1 БЕЗКОШТОВНЕ ВІДЕО В ДЕНЬ)
+            let canFreeRender = false;
             if (!isSubscribed) {
-                document.getElementById('subscriptionModal').style.display = 'flex';
-                document.getElementById('infoPanel').classList.remove('open');
-                document.getElementById('openInfoBtn').style.display = 'none';
-                return;
+                let lastRenderStr = localStorage.getItem('hz_last_free_render');
+                if (lastRenderStr) {
+                    let lastRenderTime = parseInt(lastRenderStr);
+                    // Якщо минуло менше 24 годин
+                    if (Date.now() - lastRenderTime < 24 * 60 * 60 * 1000) {
+                        document.getElementById('modalTitle').innerText = 'Ліміт вичерпано!';
+                        document.getElementById('modalDesc').innerText = 'Ви вже використали свою 1 безкоштовну генерацію на сьогодні. Оформіть підписку для безлімітного доступу без водяних знаків!';
+                        document.getElementById('subscriptionModal').style.display = 'flex';
+                        return;
+                    } else {
+                        canFreeRender = true;
+                    }
+                } else {
+                    canFreeRender = true;
+                }
             }
 
             if (isGenerating) return;
@@ -1477,6 +1521,7 @@
             downloadVideoBtn.style.display = 'none'; 
 
             isGenerating = true;
+            isCancelled = false; // Скидаємо прапорець
             chunks = [];
 
             let mimeType = 'video/webm;codecs=vp9';
@@ -1489,14 +1534,15 @@
                 fileExt = 'mp4';
             }
 
-            generateVideoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Рендеринг...';
-            generateVideoBtn.disabled = true;
+            // Міняємо інтерфейс кнопок
+            generateVideoBtn.style.display = 'none';
+            stopRenderBtn.style.display = 'block';
+            
             generateProgress.style.display = 'block';
             generateStatus.style.display = 'block';
             generateProgress.value = 0;
 
             const dest = audioCtx.createMediaStreamDestination();
-            
             masterGain.gain.value = 0; 
             source.connect(dest);
             
@@ -1521,6 +1567,26 @@
 
             mediaRecorder.onstop = () => {
                 clearInterval(checkProgressInterval);
+                
+                // ЯКЩО БУЛО НАТИСНУТО КНОПКУ "СКАСУВАТИ"
+                if (isCancelled) {
+                    isGenerating = false;
+                    generateVideoBtn.style.display = 'block';
+                    stopRenderBtn.style.display = 'none';
+                    
+                    generateProgress.style.display = 'none';
+                    generateStatus.style.display = 'none';
+                    
+                    if (backgroundVideo) backgroundVideo.pause();
+                    audioPlayer.pause();
+                    
+                    source.disconnect(dest);
+                    masterGain.gain.value = 1;
+                    document.getElementById('openInfoBtn').style.display = 'flex';
+                    return; // Виходимо, відео не зберігаємо
+                }
+
+                // НОРМАЛЬНЕ ЗАВЕРШЕННЯ
                 const rawBlob = new Blob(chunks, { type: mimeType });
                 const durationMs = audioPlayer.duration * 1000;
                 
@@ -1533,6 +1599,11 @@
                     
                     generatedVideoUrl = URL.createObjectURL(fixedBlob);
                     
+                    // Відновлюємо інтерфейс
+                    generateVideoBtn.style.display = 'block';
+                    generateVideoBtn.innerHTML = '<i class="fas fa-redo"></i> Переробити відео';
+                    stopRenderBtn.style.display = 'none';
+                    
                     downloadVideoBtn.style.display = 'block';
                     downloadVideoBtn.onclick = () => {
                         const a = document.createElement('a');
@@ -1544,9 +1615,12 @@
                         setTimeout(() => { document.body.removeChild(a); }, 100);
                     };
                     
+                    // Зберігаємо час безкоштовного рендеру в LocalStorage
+                    if (!isSubscribed) {
+                        localStorage.setItem('hz_last_free_render', Date.now().toString());
+                    }
+                    
                     isGenerating = false;
-                    generateVideoBtn.innerHTML = '<i class="fas fa-redo"></i> Переробити відео';
-                    generateVideoBtn.disabled = false;
                     generateProgress.style.display = 'none';
                     generateStatus.style.display = 'none';
                     
@@ -1571,7 +1645,7 @@
             mediaRecorder.start();
 
             const checkProgressInterval = setInterval(() => {
-                if (isGenerating) {
+                if (isGenerating && !isCancelled) {
                     generateProgress.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
                     generateStatus.innerText = `Запис: ${audioPlayer.currentTime.toFixed(1)}с / ${audioPlayer.duration.toFixed(1)}с`;
                 }
