@@ -137,38 +137,44 @@ app.post('/api/generate-image', async (req, res) => {
             textOverlayPrompt += ` on the image. `;
         }
 
-        // Формуємо фінальний промпт і додаємо пропорції
         let aiPrompt = `A stunning hyper-realistic album cover. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed, 8k resolution. ${textOverlayPrompt} Aspect ratio: ${aspectRatio}.`;
         
         console.log(`Відправляю завдання до Nano Banana 2: [${aiPrompt}]`);
 
-        // ВИКОРИСТОВУЄМО МОДЕЛЬ GEMINI FLASH IMAGE
+        // ВИКОРИСТОВУЄМО МОДЕЛЬ GEMINI FLASH IMAGE З ПРАВИЛЬНИМ ПАРАМЕТРОМ MODALITIES
         const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`, {
             contents: [
                 { parts: [ { text: aiPrompt } ] }
-            ]
+            ],
+            // ОСЬ ЦЕЙ КРИТИЧНИЙ РЯДОК, ЯКОГО НЕ ВИСТАЧАЛО:
+            generationConfig: {
+                responseModalities: ["IMAGE"]
+            }
         }, { headers: { 'Content-Type': 'application/json' } });
 
-        // Розбираємо відповідь від нової моделі
-        if (response.data && response.data.candidates && response.data.candidates[0].content.parts[0]) {
-            const part = response.data.candidates[0].content.parts[0];
-            // Підтримка різних форматів JSON 
-            const inlineData = part.inlineData || part.inline_data;
+        // Розбираємо відповідь
+        if (response.data && response.data.candidates && response.data.candidates[0].content.parts) {
+            // Шукаємо ту частину, де є картинка
+            const part = response.data.candidates[0].content.parts.find(p => p.inlineData || p.inline_data);
             
-            if (inlineData && inlineData.data) {
+            if (part) {
+                const inlineData = part.inlineData || part.inline_data;
                 const base64Image = inlineData.data;
                 const mimeType = inlineData.mimeType || "image/jpeg";
                 return res.json({ imageUrl: `data:${mimeType};base64,${base64Image}` });
             }
         }
         
-        throw new Error("Не вдалося знайти зображення у відповіді API");
+        // Якщо ШІ повернув щось інше, пишемо це в логи Render
+        console.error("Відповідь без зображення:", JSON.stringify(response.data));
+        throw new Error("ШІ не повернув зображення у відповіді");
 
     } catch (error) {
-        console.error("Помилка генерації зображення:", error.message);
+        console.error("--- ПОМИЛКА ГЕНЕРАЦІЇ ЗОБРАЖЕННЯ ---");
+        console.error("Повідомлення:", error.message);
+        
         if (error.response && error.response.data) {
             console.error("Деталі від Google API:", JSON.stringify(error.response.data));
-            // Обробка квот або тимчасової недоступності
             if (error.response.status === 404) {
                  return res.status(500).json({ error: "ШІ-модель тимчасово недоступна. Зверніться до адміністратора." });
             }
