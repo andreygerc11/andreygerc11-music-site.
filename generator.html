@@ -466,6 +466,8 @@
             <span style="color: #4CAF50; font-weight: bold;">АВТОМАТИЧНО (LRC):</span> Якщо ваш текст вже має час, просто вставте його і натисніть «Синхронізувати».<br><br>
             <b style="color: #ff4d4d;">ВРУЧНУ (СУФЛЕР):</b> Вставте звичайний текст і натисніть «Синхронізувати». <b>Слухайте пісню і натискайте ПРОБІЛ на початку кожного рядка.</b>
         </div>
+        
+        <div class="instruction-step"><strong>💡 Підказка:</strong> Наведіть мишку або палець на назву пісні чи текст караоке прямо на відео, затисніть і <b>перетягніть у будь-яке місце!</b></div>
 
         <div class="instruction-step"><strong>5. Рендеринг:</strong> Натисніть "Почати Рендеринг", дочекайтеся завершення і збережіть готовий кліп!</div>
         
@@ -540,9 +542,13 @@
         </div>
 
         <div class="control-group" style="padding: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed var(--border);">
-            <label style="color: #fff;"><i class="fas fa-info-circle" style="color: var(--accent);"></i> 5. Інформація на відео</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                <label style="color: #fff; margin:0;"><i class="fas fa-info-circle" style="color: var(--accent);"></i> 5. Інформація на відео</label>
+                <button id="resetTextPosBtn" style="background:none; border:none; color:#888; cursor:pointer; font-size:0.7rem; font-weight:bold;"><i class="fas fa-undo"></i> Скинути позицію</button>
+            </div>
             <input type="text" id="songTitleInput" placeholder="Назва пісні (Автоматично)">
             <input type="text" id="authorInput" placeholder="Автор відео (напр. @andreygerc11)" style="margin-top: 8px;">
+            <p style="font-size: 0.7rem; color: #888; margin: 8px 0 0 0;"><i class="fas fa-mouse-pointer"></i> Текст можна перетягувати прямо на відео!</p>
         </div>
 
         <div class="control-group">
@@ -735,6 +741,99 @@
         let generatedVideoUrl = null; 
         let drawAnimationId; 
         
+        // ==========================================
+        // ЛОГІКА ПЕРЕТЯГУВАННЯ (DRAG & DROP)
+        // ==========================================
+        let textOffsetX = 0, textOffsetY = 0;
+        let lyricsOffsetX = 0, lyricsOffsetY = 0;
+        let isDraggingText = false, isDraggingLyrics = false;
+        let dragStartX = 0, dragStartY = 0;
+        let textBB = { x: 0, y: 0, w: 0, h: 0 };
+        let lyricsBB = { x: 0, y: 0, w: 0, h: 0 };
+        let isHoveringText = false, isHoveringLyrics = false;
+
+        document.getElementById('resetTextPosBtn').addEventListener('click', () => {
+            textOffsetX = 0; textOffsetY = 0; lyricsOffsetX = 0; lyricsOffsetY = 0;
+            if (!audioCtx) drawPreviewFrame();
+        });
+
+        function getMousePos(evt) {
+            const rect = canvas.getBoundingClientRect();
+            const sX = canvas.width / rect.width;
+            const sY = canvas.height / rect.height;
+            let cx = evt.clientX;
+            let cy = evt.clientY;
+            if (evt.touches && evt.touches.length > 0) {
+                cx = evt.touches[0].clientX;
+                cy = evt.touches[0].clientY;
+            }
+            return { x: (cx - rect.left) * sX, y: (cy - rect.top) * sY };
+        }
+
+        function handleDown(evt) {
+            if (isGenerating) return;
+            const p = getMousePos(evt);
+            
+            // Визначаємо, чи клікнув/торкнувся юзер тексту
+            let hitText = (p.x >= textBB.x && p.x <= textBB.x + textBB.w && p.y >= textBB.y && p.y <= textBB.y + textBB.h);
+            let hitLyrics = (p.x >= lyricsBB.x && p.x <= lyricsBB.x + lyricsBB.w && p.y >= lyricsBB.y && p.y <= lyricsBB.y + lyricsBB.h);
+
+            if (hitText) {
+                isDraggingText = true;
+                dragStartX = p.x;
+                dragStartY = p.y;
+            } else if (hitLyrics) {
+                isDraggingLyrics = true;
+                dragStartX = p.x;
+                dragStartY = p.y;
+            }
+        }
+
+        function handleMove(evt) {
+            if (isGenerating) return;
+            const p = getMousePos(evt);
+            
+            if (isDraggingText) {
+                if (evt.cancelable) evt.preventDefault(); // Запобігає скролу на телефоні
+                textOffsetX += (p.x - dragStartX);
+                textOffsetY += (p.y - dragStartY);
+                dragStartX = p.x;
+                dragStartY = p.y;
+                canvas.style.cursor = 'grabbing';
+                if (!audioCtx) drawPreviewFrame();
+            } else if (isDraggingLyrics) {
+                if (evt.cancelable) evt.preventDefault(); // Запобігає скролу на телефоні
+                lyricsOffsetX += (p.x - dragStartX);
+                lyricsOffsetY += (p.y - dragStartY);
+                dragStartX = p.x;
+                dragStartY = p.y;
+                canvas.style.cursor = 'grabbing';
+                if (!audioCtx) drawPreviewFrame();
+            } else {
+                isHoveringText = (p.x >= textBB.x && p.x <= textBB.x + textBB.w && p.y >= textBB.y && p.y <= textBB.y + textBB.h);
+                isHoveringLyrics = (p.x >= lyricsBB.x && p.x <= lyricsBB.x + lyricsBB.w && p.y >= lyricsBB.y && p.y <= lyricsBB.y + lyricsBB.h);
+                canvas.style.cursor = (isHoveringText || isHoveringLyrics) ? 'grab' : 'default';
+                if (!audioCtx) drawPreviewFrame();
+            }
+        }
+
+        function handleUp() {
+            isDraggingText = false;
+            isDraggingLyrics = false;
+            canvas.style.cursor = 'default';
+            if (!audioCtx) drawPreviewFrame();
+        }
+
+        // Правильно прив'язуємо слухачі для миші та сенсора
+        canvas.addEventListener('mousedown', handleDown);
+        canvas.addEventListener('touchstart', handleDown, { passive: false });
+        canvas.addEventListener('mousemove', handleMove);
+        canvas.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('mouseup', handleUp);
+        window.addEventListener('touchend', handleUp);
+
+        // ==========================================
+
         let isMutedDuringRender = false;
         const muteRenderBtn = document.getElementById('muteRenderBtn');
         muteRenderBtn.addEventListener('click', () => {
@@ -907,7 +1006,6 @@
 
                 ctx.save();
                 
-                // Застосування розмиття
                 if (bgBlurSlider.value > 0) {
                     ctx.filter = `blur(${bgBlurSlider.value}px)`;
                 }
@@ -932,11 +1030,16 @@
                     ctx.save(); ctx.beginPath(); ctx.arc(centerX, centerY, logoRadius, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(logoImage, centerX - logoRadius, centerY - logoRadius, logoRadius*2, logoRadius*2); ctx.restore();
                     ctx.beginPath(); ctx.arc(centerX, centerY, logoRadius, 0, Math.PI * 2); ctx.strokeStyle = primaryColor; ctx.lineWidth = minDimension * 0.003; ctx.stroke();
                 }
+
+                drawTextOverlay(Math.min(canvas.width, canvas.height));
             }
         }
 
         playerStyleSelect.addEventListener('change', drawPreviewFrame);
         bgBlurSlider.addEventListener('input', drawPreviewFrame);
+        songTitleInput.addEventListener('input', drawPreviewFrame);
+        authorInput.addEventListener('input', drawPreviewFrame);
+        document.getElementById('lyricsInput').addEventListener('input', drawPreviewFrame);
         particleSelect.addEventListener('change', () => particles = []); 
 
         audioUpload.addEventListener('change', function() {
@@ -953,9 +1056,6 @@
             }
         });
 
-        // ==========================================
-        // ЛОГІКА ГЕНЕРАЦІЇ ШІ-ОБКЛАДИНКИ З КАСТОМНИМ ПРОМПТОМ
-        // ==========================================
         document.getElementById('generateAiBgBtn').addEventListener('click', async () => {
             const title = document.getElementById('songTitleInput').value.trim();
             const lyrics = document.getElementById('lyricsInput').value.trim();
@@ -1008,9 +1108,6 @@
             status.style.display = 'none';
         });
 
-        // ==========================================
-        // НОВА ЛОГІКА: АВТО-РОЗПІЗНАВАННЯ WHISPER (GROQ)
-        // ==========================================
         document.getElementById('aiSyncBtn').addEventListener('click', async () => {
             const audioFile = document.getElementById('audioUpload').files[0];
             if (!audioFile) {
@@ -1037,6 +1134,7 @@
                 if (data.lrc) {
                     document.getElementById('lyricsInput').value = data.lrc;
                     alert("ШІ успішно розпізнав текст! Перевірте його у полі нижче та натисніть 'Синхронізувати'.");
+                    drawPreviewFrame();
                 } else {
                     alert("Помилка: " + (data.error || "Не вдалося розпізнати текст."));
                 }
@@ -1048,9 +1146,6 @@
             statusInfo.style.display = 'none';
         });
 
-        // ==========================================
-        // ЛОГІКА СИНХРОНІЗАЦІЇ ТЕКСТУ (LRC + СУФЛЕР)
-        // ==========================================
         const startSyncBtn = document.getElementById('startSyncBtn');
         const syncStatus = document.getElementById('syncStatus');
         const lyricsInput = document.getElementById('lyricsInput');
@@ -1073,6 +1168,7 @@
                 startSyncBtn.style.display = 'block';
                 startSyncBtn.innerHTML = '<i class="fas fa-redo"></i> Оновити текст';
                 isSyncingLyrics = false;
+                drawPreviewFrame();
                 return;
             }
 
@@ -1089,6 +1185,7 @@
             audioPlayer.play();
             
             updateTeleprompter();
+            drawPreviewFrame();
         });
 
         restartSyncBtn.addEventListener('click', () => {
@@ -1107,6 +1204,7 @@
             syncStatus.style.display = 'none';
             startSyncBtn.style.display = 'block';
             startSyncBtn.innerHTML = '<i class="fas fa-microphone"></i> Синхронізувати';
+            drawPreviewFrame();
         });
 
         function parseLRC(text) {
@@ -1318,6 +1416,206 @@
             }
         }
 
+        // ==========================================
+        // ФУНКЦІЯ МАЛЮВАННЯ ТЕКСТУ (З ПЕРЕНЕСЕННЯМ)
+        // ==========================================
+        function drawTextOverlay(minDimension) {
+            const titleText = songTitleInput.value.trim();
+            const authorText = authorInput.value.trim();
+            
+            if (titleText || authorText) {
+                ctx.save();
+                ctx.textAlign = 'center'; 
+                ctx.textBaseline = 'middle'; 
+                
+                const padding = minDimension * 0.05; 
+                const maxWidthTitle = canvas.width - (padding * 2); 
+                const centerXText = (canvas.width / 2) + textOffsetX;
+                
+                let startY = (canvas.height * 0.18) + textOffsetY; 
+                let currentY = startY;
+                
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                ctx.shadowBlur = 15;
+                
+                let totalHeight = 0;
+                let maxLineWidth = 0;
+                
+                if (titleText) {
+                    const titleSize = minDimension * 0.065; 
+                    ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`;
+                    ctx.fillStyle = '#fff';
+                    
+                    let words = (`🎵 ${titleText}`).split(' ');
+                    let line = '';
+                    let lineHeight = titleSize * 1.3;
+
+                    for(let n = 0; n < words.length; n++) {
+                        let testLine = line + words[n] + ' ';
+                        let metrics = ctx.measureText(testLine);
+                        if (metrics.width > maxWidthTitle && n > 0) {
+                            ctx.fillText(line.trim(), centerXText, currentY);
+                            maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width);
+                            line = words[n] + ' ';
+                            currentY += lineHeight;
+                            totalHeight += lineHeight;
+                        } else {
+                            line = testLine;
+                        }
+                    }
+                    ctx.fillText(line.trim(), centerXText, currentY);
+                    maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width);
+                    currentY += lineHeight; 
+                    totalHeight += lineHeight;
+                }
+                
+                if (authorText) {
+                    const authorSize = minDimension * 0.04; 
+                    ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`;
+                    ctx.fillStyle = '#bbb';
+                    
+                    let words = (`Відео: ${authorText}`).split(' ');
+                    let line = '';
+                    let lineHeight = authorSize * 1.3;
+
+                    for(let n = 0; n < words.length; n++) {
+                        let testLine = line + words[n] + ' ';
+                        let metrics = ctx.measureText(testLine);
+                        if (metrics.width > maxWidthTitle && n > 0) {
+                            ctx.fillText(line.trim(), centerXText, currentY);
+                            maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width);
+                            line = words[n] + ' ';
+                            currentY += lineHeight;
+                            totalHeight += lineHeight;
+                        } else {
+                            line = testLine;
+                        }
+                    }
+                    ctx.fillText(line.trim(), centerXText, currentY);
+                    maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width);
+                    totalHeight += lineHeight;
+                }
+                ctx.restore();
+
+                textBB = {
+                    x: centerXText - (maxLineWidth / 2) - 30,
+                    y: startY - (minDimension * 0.065 / 2) - 20,
+                    w: maxLineWidth + 60,
+                    h: totalHeight + 40
+                };
+
+                if (!isGenerating && isHoveringText) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([10, 10]);
+                    ctx.strokeRect(textBB.x, textBB.y, textBB.w, textBB.h);
+                    
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.font = '900 18px "Montserrat"';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('✋ Перетягнути', textBB.x + textBB.w / 2, textBB.y - 15);
+                    ctx.restore();
+                }
+            } else {
+                textBB = { x: 0, y: 0, w: 0, h: 0 };
+            }
+
+            let activeText = "";
+            let currentTime = audioPlayer ? audioPlayer.currentTime : 0;
+            
+            if (lyricsData.length > 0) {
+                for (let i = 0; i < lyricsData.length; i++) {
+                    if (currentTime >= lyricsData[i].time) {
+                        activeText = lyricsData[i].text;
+                    }
+                }
+            }
+
+            let isPlaceholder = false;
+            if (!isGenerating && activeText === "" && (document.getElementById('lyricsInput').value.trim() !== "" || lyricsData.length > 0)) {
+                activeText = "[ Текст пісні з'явиться тут ]";
+                isPlaceholder = true;
+            }
+
+            if (activeText !== "") {
+                ctx.save();
+                if (isPlaceholder) ctx.globalAlpha = 0.5;
+
+                const fontSize = minDimension * 0.055; 
+                ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const padding = minDimension * 0.05;
+                const maxWidthLyrics = canvas.width - (padding * 2);
+                const centerXText = (canvas.width / 2) + lyricsOffsetX;
+                
+                let words = activeText.split(' ');
+                let line = '';
+                let linesToDraw = [];
+                
+                for(let n = 0; n < words.length; n++) {
+                    let testLine = line + words[n] + ' ';
+                    let metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidthLyrics && n > 0) {
+                        linesToDraw.push(line.trim());
+                        line = words[n] + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                linesToDraw.push(line.trim());
+                
+                const lineHeight = fontSize * 1.3;
+                let startY = (canvas.height * 0.85) - (linesToDraw.length - 1) * lineHeight + lyricsOffsetY;
+                
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                ctx.shadowBlur = 15;
+                ctx.lineWidth = fontSize * 0.15;
+                
+                let maxLyricsWidth = 0;
+
+                for (let i = 0; i < linesToDraw.length; i++) {
+                    const currentLineY = startY + (i * lineHeight);
+                    
+                    ctx.strokeStyle = '#000';
+                    ctx.strokeText(linesToDraw[i], centerXText, currentLineY);
+                    
+                    ctx.fillStyle = '#fff';
+                    ctx.shadowColor = primaryColor; 
+                    ctx.shadowBlur = 25;
+                    ctx.fillText(linesToDraw[i], centerXText, currentLineY);
+
+                    maxLyricsWidth = Math.max(maxLyricsWidth, ctx.measureText(linesToDraw[i]).width);
+                }
+                ctx.restore();
+
+                lyricsBB = {
+                    x: centerXText - (maxLyricsWidth / 2) - 30,
+                    y: startY - (fontSize / 2) - 20,
+                    w: maxLyricsWidth + 60,
+                    h: (linesToDraw.length * lineHeight) + 40
+                };
+
+                if (!isGenerating && isHoveringLyrics) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([10, 10]);
+                    ctx.strokeRect(lyricsBB.x, lyricsBB.y, lyricsBB.w, lyricsBB.h);
+                    
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.font = '900 18px "Montserrat"';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('✋ Перетягнути текст', lyricsBB.x + lyricsBB.w / 2, lyricsBB.y - 15);
+                    ctx.restore();
+                }
+            } else {
+                lyricsBB = { x: 0, y: 0, w: 0, h: 0 };
+            }
+        }
+
         function draw() {
             if (!isGenerating) {
                 drawAnimationId = requestAnimationFrame(draw);
@@ -1341,7 +1639,6 @@
 
             ctx.save();
             
-            // Розмиття (Blur)
             if (bgBlurSlider.value > 0) {
                 ctx.filter = `blur(${bgBlurSlider.value}px)`;
             }
@@ -1379,128 +1676,7 @@
             else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength);
             else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
 
-            const titleText = songTitleInput.value.trim();
-            const authorText = authorInput.value.trim();
-            
-            if (titleText || authorText) {
-                ctx.save();
-                ctx.textAlign = 'center'; 
-                ctx.textBaseline = 'middle'; 
-                
-                const padding = minDimension * 0.05; 
-                const maxWidthTitle = canvas.width - (padding * 2); 
-                const centerXText = canvas.width / 2;
-                
-                let currentY = canvas.height * 0.18; 
-                
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-                ctx.shadowBlur = 15;
-                
-                if (titleText) {
-                    const titleSize = minDimension * 0.065; 
-                    ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`;
-                    ctx.fillStyle = '#fff';
-                    
-                    let words = (`🎵 ${titleText}`).split(' ');
-                    let line = '';
-                    let lineHeight = titleSize * 1.3;
-
-                    for(let n = 0; n < words.length; n++) {
-                        let testLine = line + words[n] + ' ';
-                        let metrics = ctx.measureText(testLine);
-                        if (metrics.width > maxWidthTitle && n > 0) {
-                            ctx.fillText(line.trim(), centerXText, currentY);
-                            line = words[n] + ' ';
-                            currentY += lineHeight;
-                        } else {
-                            line = testLine;
-                        }
-                    }
-                    ctx.fillText(line.trim(), centerXText, currentY);
-                    currentY += lineHeight; 
-                }
-                
-                if (authorText) {
-                    const authorSize = minDimension * 0.04; 
-                    ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`;
-                    ctx.fillStyle = '#bbb';
-                    
-                    let words = (`Відео: ${authorText}`).split(' ');
-                    let line = '';
-                    let lineHeight = authorSize * 1.3;
-
-                    for(let n = 0; n < words.length; n++) {
-                        let testLine = line + words[n] + ' ';
-                        let metrics = ctx.measureText(testLine);
-                        if (metrics.width > maxWidthTitle && n > 0) {
-                            ctx.fillText(line.trim(), centerXText, currentY);
-                            line = words[n] + ' ';
-                            currentY += lineHeight;
-                        } else {
-                            line = testLine;
-                        }
-                    }
-                    ctx.fillText(line.trim(), centerXText, currentY);
-                }
-                ctx.restore();
-            }
-
-            if (lyricsData.length > 0) {
-                let activeText = "";
-                let currentTime = audioPlayer.currentTime;
-                
-                for (let i = 0; i < lyricsData.length; i++) {
-                    if (currentTime >= lyricsData[i].time) {
-                        activeText = lyricsData[i].text;
-                    }
-                }
-
-                if (activeText !== "") {
-                    ctx.save();
-                    const fontSize = minDimension * 0.055; 
-                    ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    
-                    const padding = minDimension * 0.05;
-                    const maxWidthLyrics = canvas.width - (padding * 2);
-                    
-                    let words = activeText.split(' ');
-                    let line = '';
-                    let linesToDraw = [];
-                    
-                    for(let n = 0; n < words.length; n++) {
-                        let testLine = line + words[n] + ' ';
-                        let metrics = ctx.measureText(testLine);
-                        if (metrics.width > maxWidthLyrics && n > 0) {
-                            linesToDraw.push(line.trim());
-                            line = words[n] + ' ';
-                        } else {
-                            line = testLine;
-                        }
-                    }
-                    linesToDraw.push(line.trim());
-                    
-                    const lineHeight = fontSize * 1.3;
-                    let startY = canvas.height * 0.85 - (linesToDraw.length - 1) * lineHeight;
-                    
-                    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-                    ctx.shadowBlur = 15;
-                    ctx.lineWidth = fontSize * 0.15;
-                    
-                    for (let i = 0; i < linesToDraw.length; i++) {
-                        ctx.strokeStyle = '#000';
-                        ctx.strokeText(linesToDraw[i], canvas.width / 2, startY + (i * lineHeight));
-                        
-                        ctx.fillStyle = '#fff';
-                        ctx.shadowColor = primaryColor; 
-                        ctx.shadowBlur = 25;
-                        ctx.fillText(linesToDraw[i], canvas.width / 2, startY + (i * lineHeight));
-                    }
-                    
-                    ctx.restore();
-                }
-            }
+            drawTextOverlay(minDimension);
 
             if (!isSubscribed) {
                 ctx.save();
@@ -1995,8 +2171,6 @@
             particles = [];
             
             audioPlayer.play();
-            
-            // ВАЖЛИВО: Зберігаємо по 1 секунді (Щоб не забивати пам'ять)
             mediaRecorder.start(1000);
 
             const checkProgressInterval = setInterval(() => {
