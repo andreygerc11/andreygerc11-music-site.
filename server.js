@@ -51,7 +51,7 @@ app.post('/api/pay', async (req, res) => {
             merchantPaymInfo: { reference: songId, destination: `Оплата за трек: ${songName}` }
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: response.data.pageUrl });
-    } catch (error) { console.error("Помилка Моно:", error.response?.data || error.message); res.status(500).json({ error: "Не вдалося створити платіж" }); }
+    } catch (error) { res.status(500).json({ error: "Не вдалося створити платіж" }); }
 });
 
 app.post('/api/pay-subscription', async (req, res) => {
@@ -66,12 +66,11 @@ app.post('/api/pay-subscription', async (req, res) => {
             merchantPaymInfo: { reference: subId + '|' + email, destination: `Пробний період Hertz Spectrum` }
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: response.data.pageUrl });
-    } catch (error) { console.error("Помилка Моно Підписка:", error.response?.data || error.message); res.status(500).json({ error: "Не вдалося створити підписку" }); }
+    } catch (error) { res.status(500).json({ error: "Не вдалося створити підписку" }); }
 });
 
 app.post('/api/webhook', async (req, res) => {
     const paymentData = req.body;
-    
     if (paymentData.status === 'success') {
         const refParts = paymentData.reference.split('|');
         const ref = refParts[0];
@@ -80,17 +79,17 @@ app.post('/api/webhook', async (req, res) => {
         if (ref.startsWith('sub_')) {
             const nextDate = new Date(); nextDate.setDate(nextDate.getDate() + 5); 
             await axios.post(SUBS_SCRIPT_URL, { action: "new_sub", subId: ref, walletId: paymentData.walletId, nextPaymentDate: nextDate.toISOString().split('T')[0], email: email });
-            await sendTelegramMessage(`🔥 <b>НОВА ПІДПИСКА!</b>\n📧 Юзер: ${email}\nНаступне списання: ${nextDate.toISOString().split('T')[0]}`);
+            await sendTelegramMessage(`🔥 <b>НОВА ПІДПИСКА!</b>\n📧 Юзер: ${email}`);
         } 
-        else if (ref.startsWith('ren_')) { await sendTelegramMessage(`💸 <b>АВТОМАТИЧНЕ СПИСАННЯ УСПІШНЕ!</b>\nЮзер подовжив підписку.`); }
-        else { await sendTelegramMessage(`✅ <b>Оплата за пісню!</b>\nID файлу: <code>${ref}</code>`); }
+        else if (ref.startsWith('ren_')) { await sendTelegramMessage(`💸 <b>АВТОМАТИЧНЕ СПИСАННЯ УСПІШНЕ!</b>`); }
+        else { await sendTelegramMessage(`✅ <b>Оплата за пісню!</b>\nID: <code>${ref}</code>`); }
     }
     res.status(200).send('OK');
 });
 
 
 // ==========================================
-// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (GEMINI 3.1 FLASH IMAGE - "NANO BANANA 2")
+// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (СТАБІЛЬНА МОДЕЛЬ IMAGEN 3.0)
 // ==========================================
 app.post('/api/generate-image', async (req, res) => {
     try {
@@ -98,13 +97,15 @@ app.post('/api/generate-image', async (req, res) => {
 
         const { title, lyrics, format, customPrompt, author } = req.body;
         
+        // Imagen 3.0 підтримує лише стандартні пропорції. Цей код запобігає помилці 400.
         let aspectRatio = "1:1"; 
-        if (format === 'vertical' || format === 'portrait') aspectRatio = "9:16"; 
-        if (format === 'horizontal' || format === 'cinema') aspectRatio = "16:9";
+        if (format === 'vertical') aspectRatio = "9:16"; 
+        else if (format === 'horizontal' || format === 'cinema') aspectRatio = "16:9"; 
+        else if (format === 'portrait') aspectRatio = "3:4"; 
 
         let safeVisualDescription = "abstract cinematic background, elegant, 8k";
 
-        // КРОК 1: АНАЛІЗ ТЕКСТУ ЧЕРЕЗ GEMINI 1.5
+        // КРОК 1: АНАЛІЗ ТЕКСТУ ЧЕРЕЗ GEMINI 1.5 FLASH
         if (customPrompt && customPrompt.length > 2) {
             safeVisualDescription = customPrompt;
         } else if (lyrics && lyrics.length > 5) {
@@ -119,67 +120,50 @@ app.post('/api/generate-image', async (req, res) => {
                     safeVisualDescription = textResponse.data.candidates[0].content.parts[0].text.trim();
                 }
             } catch (analyzeErr) {
-                console.error("Помилка аналізу тексту:", analyzeErr.message);
-                safeVisualDescription = "abstract cinematic background, moody atmosphere, 8k";
+                console.error("Помилка аналізу тексту Gemini 1.5:", analyzeErr.response?.data || analyzeErr.message);
             }
         }
 
-        // КРОК 2: МАЛЮВАННЯ КАРТИНКИ (NANO BANANA 2)
+        // КРОК 2: МАЛЮВАННЯ КАРТИНКИ ЧЕРЕЗ IMAGEN 3.0
         let textOverlayPrompt = "";
         let finalTitle = title ? title.replace(/["']/g, '') : "";
         let finalAuthor = author ? author.replace(/["']/g, '') : "";
 
         if (finalTitle) {
-            textOverlayPrompt = `Typography: Beautifully and elegantly write the text "${finalTitle}"`;
+            textOverlayPrompt = `The image must have the typography text "${finalTitle}" written beautifully on it.`;
             if (finalAuthor) {
-                textOverlayPrompt += ` and author "${finalAuthor}"`;
+                textOverlayPrompt += ` Also include the text "${finalAuthor}".`;
             }
-            textOverlayPrompt += ` on the image. `;
         }
 
-        let aiPrompt = `A stunning hyper-realistic album cover. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed, 8k resolution. ${textOverlayPrompt} Aspect ratio: ${aspectRatio}.`;
+        let aiPrompt = `A stunning hyper-realistic album cover. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed. ${textOverlayPrompt}`;
         
-        console.log(`Відправляю завдання до Nano Banana 2: [${aiPrompt}]`);
+        console.log(`Відправляю промпт до Imagen: [${aiPrompt}] Aspect Ratio: ${aspectRatio}`);
 
-        // ВИКОРИСТОВУЄМО МОДЕЛЬ GEMINI FLASH IMAGE З ПРАВИЛЬНИМ ПАРАМЕТРОМ MODALITIES
-        const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`, {
-            contents: [
-                { parts: [ { text: aiPrompt } ] }
-            ],
-            // ОСЬ ЦЕЙ КРИТИЧНИЙ РЯДОК, ЯКОГО НЕ ВИСТАЧАЛО:
-            generationConfig: {
-                responseModalities: ["IMAGE"]
-            }
+        // Офіційний і задокументований формат запиту до Imagen
+        const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_API_KEY}`, {
+            instances: [ { prompt: aiPrompt } ],
+            parameters: { sampleCount: 1, aspectRatio: aspectRatio }
         }, { headers: { 'Content-Type': 'application/json' } });
 
-        // Розбираємо відповідь
-        if (response.data && response.data.candidates && response.data.candidates[0].content.parts) {
-            // Шукаємо ту частину, де є картинка
-            const part = response.data.candidates[0].content.parts.find(p => p.inlineData || p.inline_data);
-            
-            if (part) {
-                const inlineData = part.inlineData || part.inline_data;
-                const base64Image = inlineData.data;
-                const mimeType = inlineData.mimeType || "image/jpeg";
-                return res.json({ imageUrl: `data:${mimeType};base64,${base64Image}` });
-            }
+        if (response.data && response.data.predictions && response.data.predictions[0]) {
+            const base64Image = response.data.predictions[0].bytesBase64Encoded;
+            return res.json({ imageUrl: `data:image/jpeg;base64,${base64Image}` });
+        } else {
+            throw new Error("Неочікувана структура відповіді від Imagen.");
         }
-        
-        // Якщо ШІ повернув щось інше, пишемо це в логи Render
-        console.error("Відповідь без зображення:", JSON.stringify(response.data));
-        throw new Error("ШІ не повернув зображення у відповіді");
 
     } catch (error) {
         console.error("--- ПОМИЛКА ГЕНЕРАЦІЇ ЗОБРАЖЕННЯ ---");
-        console.error("Повідомлення:", error.message);
-        
         if (error.response && error.response.data) {
-            console.error("Деталі від Google API:", JSON.stringify(error.response.data));
-            if (error.response.status === 404) {
-                 return res.status(500).json({ error: "ШІ-модель тимчасово недоступна. Зверніться до адміністратора." });
+            console.error("ДЕТАЛІ ВІД GOOGLE API:", JSON.stringify(error.response.data, null, 2));
+            if (error.response.status === 400) {
+                 return res.status(500).json({ error: "ШІ відхилив запит через правила безпеки, або непідтримуваний формат." });
             }
+        } else {
+            console.error("Повідомлення:", error.message);
         }
-        res.status(500).json({ error: "ШІ не зміг згенерувати обкладинку. Спробуйте інший опис." });
+        res.status(500).json({ error: "Внутрішня помилка. ШІ не зміг згенерувати обкладинку." });
     }
 });
 
@@ -220,7 +204,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     } catch (error) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         console.error("Помилка Whisper Groq:", error.response?.data || error.message);
-        res.status(500).json({ error: "ШІ не зміг розпізнати пісню. Можливо, файл завеликий (ліміт ~25MB)." });
+        res.status(500).json({ error: "ШІ не зміг розпізнати пісню." });
     }
 });
 
@@ -241,7 +225,6 @@ cron.schedule('0 10 * * *', async () => {
                     const nextDate = new Date(); nextDate.setDate(nextDate.getDate() + 30);
                     await axios.post(SUBS_SCRIPT_URL, { action: "update_sub", subId: sub.SubID, nextPaymentDate: nextDate.toISOString().split('T')[0] });
                 } catch (chargeError) {
-                    await sendTelegramMessage(`❌ <b>Помилка списання 199 грн!</b>\nНе вдалося зняти гроші за підписку <code>${sub.SubID}</code>.`);
                     await axios.post(SUBS_SCRIPT_URL, { action: "update_sub", subId: sub.SubID, status: "failed" });
                 }
             }
