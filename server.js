@@ -2,10 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const cron = require('node-cron');
+const multer = require('multer');
+const fs = require('fs');
+const FormData = require('form-data');
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Налаштування для тимчасового збереження аудіофайлів
+const upload = multer({ dest: '/tmp/' });
 
 const MUSIC_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjzr5afDgy4pAWlwKVsatYaAK4JZC6c7itGdJaeScLCp-2iZP4PZ-8j_Kid7t0jIw/exec";
 const SUBS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiNvM7G8qf2JsBFVrII76c8WafveUvK1GXynFeAOV9wNXBX9fvWXz5iyu-9WrQ_DT2/exec";
@@ -15,8 +21,9 @@ const TELEGRAM_BOT_TOKEN = process.env.BOT_TOKEN;
 const MONO_TOKEN = process.env.MONO_TOKEN; 
 const TELEGRAM_CHAT_ID = "556627059"; 
 
-// КЛЮЧ ДЛЯ ШТУЧНОГО ІНТЕЛЕКТУ GOOGLE GEMINI
+// КЛЮЧІ ДЛЯ ШІ
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
+const GROQ_API_KEY = process.env.GROQ_API_KEY; 
 
 async function sendTelegramMessage(text) {
     if (!TELEGRAM_BOT_TOKEN) return;
@@ -79,9 +86,7 @@ app.post('/api/webhook', async (req, res) => {
     res.status(200).send('OK');
 });
 
-// ==========================================
-// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (З підтримкою кастомного промпту)
-// ==========================================
+// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (GEMINI)
 app.post('/api/generate-image', async (req, res) => {
     try {
         if (!GEMINI_API_KEY) return res.status(500).json({ error: "Ключ Gemini не налаштовано на сервері" });
@@ -94,10 +99,8 @@ app.post('/api/generate-image', async (req, res) => {
 
         let aiPrompt = "";
         if (customPrompt && customPrompt.length > 2) {
-            // Якщо користувач ввів свою ідею
             aiPrompt = `Hyper-realistic cinematic background image. IMPORTANT: NO text, NO words, NO letters. Subject: ${customPrompt}. Cinematic lighting, highly detailed, 8k resolution masterpiece.`;
         } else {
-            // Якщо поле пусте - малюємо за текстом пісні
             aiPrompt = `Hyper-realistic cinematic background image. IMPORTANT: NO text, NO words, NO letters. Atmospheric and emotional setting perfectly matching the Ukrainian song "${title}". Poem snippet: "${lyrics ? lyrics.substring(0, 300) : title}". Cinematic lighting, highly detailed, 8k resolution masterpiece.`;
         }
 
@@ -110,10 +113,58 @@ app.post('/api/generate-image', async (req, res) => {
         const imageUrl = `data:image/jpeg;base64,${base64Image}`;
 
         res.json({ imageUrl: imageUrl });
-
     } catch (error) {
         console.error("Помилка генерації Google Imagen:", error.response?.data || error.message);
         res.status(500).json({ error: "Не вдалося згенерувати зображення. Можливо, текст порушує правила безпеки." });
+    }
+});
+
+// АВТО-СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER ЧЕРЕЗ GROQ)
+app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
+    try {
+        if (!GROQ_API_KEY) return res.status(500).json({ error: "Ключ Groq API не налаштовано на сервері!" });
+        if (!req.file) return res.status(400).json({ error: "Аудіофайл не отримано сервером." });
+
+        // Формуємо дані для відправки на Groq
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
+        formData.append('model', 'whisper-large-v3'); // Найкраща модель розпізнавання
+        formData.append('response_format', 'verbose_json'); // Щоб отримати таймкоди
+
+        // Відправляємо запит до Groq
+        const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
+            headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                ...formData.getHeaders()
+            },
+            maxBodyLength: Infinity
+        });
+
+        // Обов'язково видаляємо аудіофайл з нашого сервера після відправки, щоб пам'ять не забивалася
+        fs.unlinkSync(req.file.path);
+
+        const segments = response.data.segments;
+        let lrcText = "";
+        
+        // Збираємо LRC текст з таймкодами
+        if (segments && segments.length > 0) {
+            segments.forEach(seg => {
+                let date = new Date(seg.start * 1000);
+                let m = String(date.getUTCMinutes()).padStart(2, '0');
+                let s = String(date.getUTCSeconds()).padStart(2, '0');
+                let ms = String(Math.floor(date.getUTCMilliseconds() / 10)).padStart(2, '0');
+                
+                lrcText += `[${m}:${s}.${ms}] ${seg.text.trim()}\n`;
+            });
+        }
+
+        res.json({ lrc: lrcText });
+
+    } catch (error) {
+        // Якщо сталася помилка, все одно видаляємо файл
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        console.error("Помилка Whisper Groq:", error.response?.data || error.message);
+        res.status(500).json({ error: "ШІ не зміг розпізнати пісню. Можливо файл завеликий (ліміт ~25MB)." });
     }
 });
 
