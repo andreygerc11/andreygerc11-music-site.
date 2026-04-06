@@ -158,7 +158,7 @@
         .checkbox-wrapper:hover #autoColorLabel { color: #fff; }
         input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
 
-        #sharpnessLabel { font-size: 0.8rem; color: #888; font-weight: 400; text-transform: none; letter-spacing: 0; margin-top: -5px;}
+        .slider-label { font-size: 0.8rem; color: #888; font-weight: 400; text-transform: none; letter-spacing: 0; margin-top: -5px;}
         input[type="range"] { 
             width: 100%; cursor: pointer; accent-color: var(--accent); height: 6px; 
             background: rgba(255,255,255,0.1); border-radius: 10px; appearance: none; outline: none;
@@ -194,7 +194,6 @@
 
         #generateBtnContainer { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 25px; padding-bottom: 20px;}
         
-        /* КНОПКА ЗВУКУ ПРИ РЕНДЕРИНГУ */
         #muteRenderBtn {
             width: 100%; padding: 12px; 
             background: rgba(255,255,255,0.05); 
@@ -238,7 +237,6 @@
         }
         #generateVideoBtn:disabled::after { display: none; }
 
-        /* КНОПКА СКАСУВАННЯ РЕНДЕРИНГУ */
         #stopRenderBtn {
             width: 100%; padding: 14px; 
             background: rgba(255, 77, 77, 0.1); 
@@ -258,7 +256,6 @@
             transform: translateY(-2px);
         }
 
-        /* КНОПКА ЗАВАНТАЖЕННЯ (ЗЕЛЕНА) */
         #downloadVideoBtn {
             width: 100%; padding: 18px; 
             background: linear-gradient(45deg, #4CAF50, #45a049); 
@@ -298,7 +295,6 @@
             max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;
         }
 
-        /* ІНФОРМАЦІЙНА ПАНЕЛЬ ТА КНОПКА */
         .open-info-btn {
             position: fixed; top: 25px; right: 25px;
             background: rgba(255, 77, 77, 0.1); color: var(--accent);
@@ -335,7 +331,6 @@
         }
         .close-info-btn:hover { color: var(--accent); transform: rotate(90deg); }
 
-        /* МОДАЛЬНЕ ВІКНО ПІДПИСКИ ТА ЛІМІТІВ */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center;
@@ -356,13 +351,23 @@
         }
         .close-modal:hover { color: #fff; transform: translateY(-2px); }
 
-        /* Блок синхронізації караоке */
         #syncStatus {
             display: none; background: rgba(255, 77, 77, 0.05); border: 1px solid var(--accent); 
             padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;
         }
+        
+        .sync-btn-group {
+            display: flex; gap: 10px; margin-top: 10px;
+        }
+        .sync-btn-group button {
+            flex: 1; padding: 8px; background: transparent; border-radius: 8px; cursor: pointer; 
+            font-family: inherit; font-size: 0.75rem; text-transform: uppercase; font-weight: bold; transition: 0.3s;
+        }
+        .btn-restart { border: 1px solid #888; color: #aaa; }
+        .btn-restart:hover { border-color: #fff; color: #fff; }
+        .btn-cancel { border: 1px solid var(--accent); color: var(--accent); }
+        .btn-cancel:hover { background: var(--accent); color: #fff; }
 
-        /* МОБІЛЬНА ВЕРСІЯ ТА АДАПТИВНЕ МЕНЮ */
         .mobile-menu-btn {
             display: none;
             position: fixed;
@@ -386,6 +391,14 @@
         .mobile-menu-btn:hover { background: var(--accent); color: #fff; }
         
         .sidebar-overlay { display: none; }
+
+        .update-notice {
+            margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.03);
+            border-radius: 15px; border-left: 4px solid var(--accent);
+            display: flex; gap: 15px; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .update-notice i { color: var(--accent); font-size: 2rem; }
+        .update-notice p { margin: 0; font-size: 0.85rem; color: #bbb; line-height: 1.5; font-weight: 700;}
 
         @media (max-width: 768px) {
             .mobile-menu-btn { display: flex; align-items: center; gap: 8px; }
@@ -442,17 +455,22 @@
         <p style="color: #bbb; font-size: 0.85rem; margin-top: 0; margin-bottom: 20px;">Пройдіть ці прості кроки, щоб створити круте відео:</p>
 
         <div class="instruction-step"><strong>1. Формат і Стиль:</strong> Оберіть розмір під вашу соцмережу.</div>
-        <div class="instruction-step"><strong>2. Фон і Логотип:</strong> Завантажте картинку або відео на задній фон. Для кругових стилів додайте своє фото/логотип по центру.</div>
+        <div class="instruction-step"><strong>2. Фон і Логотип:</strong> Згенеруйте ШІ-фон, налаштуйте розмиття (Blur) або завантажте свою картинку/відео.</div>
         <div class="instruction-step"><strong>3. Аудіо:</strong> Завантажте пісню (.mp3 або .wav). Назва підтягнеться автоматично.</div>
         
         <div class="instruction-highlight">
             <strong>🎤 4. Як додати текст (Караоке):</strong><br>
             Вставте текст пісні у спеціальне поле. У вас є два варіанти:<br><br>
-            <span style="color: #4CAF50; font-weight: bold;">АВТОМАТИЧНО (LRC):</span> Якщо ваш текст вже має час (наприклад: <code>[00:15.50] Привіт...</code>), просто вставте його і натисніть «Синхронізувати». Все зробиться само!<br><br>
-            <b style="color: #ff4d4d;">ВРУЧНУ (СУФЛЕР):</b> Вставте звичайний текст і натисніть «Синхронізувати». Музика почне грати. <b>Уважно слухайте пісню і натискайте клавішу ПРОБІЛ рівно в той момент, коли починається рядок.</b> На екрані буде зручна підказка-суфлер.<br>
+            <span style="color: #4CAF50; font-weight: bold;">АВТОМАТИЧНО (LRC):</span> Якщо ваш текст вже має час (наприклад: <code>[00:15.50] Привіт...</code>), просто вставте його і натисніть «Синхронізувати».<br><br>
+            <b style="color: #ff4d4d;">ВРУЧНУ (СУФЛЕР):</b> Вставте звичайний текст і натисніть «Синхронізувати». <b>Уважно слухайте пісню і натискайте ПРОБІЛ рівно в той момент, коли починається рядок.</b>
         </div>
 
         <div class="instruction-step"><strong>5. Рендеринг:</strong> Натисніть "Почати Рендеринг", дочекайтеся завершення і збережіть готовий кліп!</div>
+        
+        <div class="update-notice">
+            <i class="fas fa-rocket"></i>
+            <p>Генератор постійно оновлюється! Ми регулярно додаємо нові стилі, ефекти та оптимізуємо якість відео.</p>
+        </div>
     </div>
 
     <div id="sidebar">
@@ -499,7 +517,7 @@
         </div>
 
         <div class="control-group">
-            <label>3. Палітра кольорів</label>
+            <label>3. Колір та світіння</label>
             <div class="color-picker-group">
                 <input type="color" id="primaryColorInput" value="#ff4d4d"> 
                 <input type="color" id="secondaryColorInput" value="#4d4dff"> 
@@ -508,12 +526,15 @@
                 <input type="checkbox" id="autoColorCheckbox" checked>
                 <span id="autoColorLabel">Автоматична зміна кольору</span>
             </label>
+            
+            <input type="range" id="glowSlider" min="0.1" max="2.5" step="0.1" value="1.0" style="margin-top: 10px;">
+            <div class="slider-label">Інтенсивність світіння (Неон)</div>
         </div>
 
         <div class="control-group">
             <label>4. Налаштування розмаху піків</label>
             <input type="range" id="sharpnessSlider" min="0.0" max="3.0" step="0.1" value="0.0">
-            <div id="sharpnessLabel">Слайдер розміру кривої/смуг</div>
+            <div class="slider-label">Слайдер розміру кривої/смуг</div>
         </div>
 
         <div class="control-group" style="padding: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed var(--border);">
@@ -525,6 +546,17 @@
         <div class="control-group">
             <label>6. Фонове зображення / ВІДЕО</label>
             <input type="file" id="bgUpload" accept="image/*, video/mp4, video/webm, video/*">
+            
+            <input type="range" id="bgBlurSlider" min="0" max="20" step="1" value="0" style="margin-top: 10px;">
+            <div class="slider-label">Розмиття фону (Blur)</div>
+
+            <input type="text" id="customAiPrompt" placeholder="Свій опис для ШІ (напр: Нічне місто під дощем)..." style="margin-top: 10px; font-size: 0.8rem; padding: 10px;">
+            <button id="generateAiBgBtn" class="btn-mono" style="margin-top:8px; font-size: 0.75rem; padding: 12px;">
+                <i class="fas fa-magic"></i> Створити ШІ-обкладинку
+            </button>
+            <div id="aiLoadingStatus" style="display:none; font-size: 0.8rem; color: var(--accent); margin-top: 5px; text-align: center; font-weight: bold;">
+                Нейромережа малює шедевр... <br>(це займе 10-15 секунд) <i class="fas fa-spinner fa-spin"></i>
+            </div>
         </div>
 
         <div class="control-group">
@@ -556,7 +588,18 @@
             <button id="startSyncBtn" class="btn-mono" style="padding: 10px; font-size: 0.8rem;"><i class="fas fa-microphone"></i> Синхронізувати</button>
             
             <div id="syncStatus">
+                <p style="margin: 0 0 5px 0; font-size: 0.8rem; color: var(--accent); font-weight: bold; text-transform: uppercase;">Натискайте ПРОБІЛ на виділеному рядку!</p>
+                <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div id="prevLyricLine" style="color: #666; font-size: 0.85rem; min-height: 18px; margin-bottom: 8px;"></div>
+                    <div id="currentLyricLine" style="color: #fff; font-size: 1.15rem; font-weight: 900; min-height: 24px; margin-bottom: 8px; text-shadow: 0 0 10px var(--accent);"></div>
+                    <div id="nextLyricLine" style="color: #888; font-size: 0.95rem; min-height: 18px;"></div>
                 </div>
+                
+                <div class="sync-btn-group">
+                    <button id="restartSyncBtn" class="btn-restart"><i class="fas fa-undo"></i> Спочатку</button>
+                    <button id="cancelSyncBtn" class="btn-cancel"><i class="fas fa-times"></i> Скасувати</button>
+                </div>
+            </div>
         </div>
 
         <div class="warning-box">
@@ -595,7 +638,6 @@
     </div>
 
     <script>
-        // ІНСТРУКЦІЯ ЛОГІКА
         const infoPanel = document.getElementById('infoPanel');
         const openInfoBtn = document.getElementById('openInfoBtn');
         const closeInfoBtn = document.getElementById('closeInfoBtn');
@@ -603,9 +645,6 @@
         openInfoBtn.addEventListener('click', () => infoPanel.classList.add('open'));
         closeInfoBtn.addEventListener('click', () => infoPanel.classList.remove('open'));
 
-        // ==========================================
-        // ЛОГІКА МОБІЛЬНОГО МЕНЮ
-        // ==========================================
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileCloseBtn = document.getElementById('mobileCloseBtn');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -624,9 +663,6 @@
         mobileCloseBtn.addEventListener('click', closeMobileMenu);
         sidebarOverlay.addEventListener('click', closeMobileMenu);
 
-        // ==========================================
-        // ФОНОВИЙ РЕНДЕР (WEB WORKER) - ТЕПЕР ПРАЦЮЄ ІДЕАЛЬНО БЕЗ ПОДВІЙНОГО МАЛЮВАННЯ
-        // ==========================================
         const timerWorkerCode = `
             let interval = null;
             self.onmessage = function(e) {
@@ -646,12 +682,11 @@
         timerWorker.onmessage = function() {
             if (isGenerating && !isDrawingFrame) {
                 isDrawingFrame = true;
-                draw(); // Малює кадр у фоновому режимі (без requestAnimationFrame)
+                draw(); 
                 isDrawingFrame = false;
             }
         };
 
-        // ОСНОВНИЙ КОД ГЕНЕРАТОРА
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const formatSelect = document.getElementById('formatSelect');
@@ -660,6 +695,8 @@
         const audioPlayer = document.getElementById('audioPlayer');
         const sharpnessSlider = document.getElementById('sharpnessSlider');
         const particleSelect = document.getElementById('particleSelect');
+        const bgBlurSlider = document.getElementById('bgBlurSlider');
+        const glowSlider = document.getElementById('glowSlider');
         
         const songTitleInput = document.getElementById('songTitleInput');
         const authorInput = document.getElementById('authorInput');
@@ -675,12 +712,10 @@
         let primaryColor = primaryColorInput.value;
         let secondaryColor = secondaryColorInput.value;
 
-        // ВАЖЛИВО: Налаштування водяного знаку з гітхаб-фавікону
         const watermarkImg = new Image();
         watermarkImg.crossOrigin = "Anonymous"; 
         watermarkImg.src = "favicon.png?v=2"; 
 
-        // ЗМІННІ АУДІО ТА ВІДЕО
         let audioCtx, analyser, source, mediaDest, speakerGain;
         let mediaRecorder;
         let chunks = [];
@@ -688,11 +723,8 @@
         let isCancelled = false; 
         let isSubscribed = false; 
         let generatedVideoUrl = null; 
-        let drawAnimationId; // ID для зупинки стандартної анімації
+        let drawAnimationId; 
         
-        // ==========================================
-        // ЛОГІКА КНОПКИ ВІДКЛЮЧЕННЯ ЗВУКУ ПІД ЧАС РЕНДЕРУ
-        // ==========================================
         let isMutedDuringRender = false;
         const muteRenderBtn = document.getElementById('muteRenderBtn');
         muteRenderBtn.addEventListener('click', () => {
@@ -710,9 +742,6 @@
             }
         });
 
-        // ==========================================
-        // АВТОРИЗАЦІЯ ТА ПЕРЕВІРКА ПІДПИСКИ
-        // ==========================================
         let currentUser = null;
         try {
             currentUser = JSON.parse(localStorage.getItem('hz_user'));
@@ -867,6 +896,12 @@
                 const centerY = canvas.height / 2;
 
                 ctx.save();
+                
+                // Застосування розмиття
+                if (bgBlurSlider.value > 0) {
+                    ctx.filter = `blur(${bgBlurSlider.value}px)`;
+                }
+                
                 ctx.translate(centerX, centerY);
                 
                 if (backgroundVideo && backgroundVideo.readyState >= 2) {
@@ -891,6 +926,7 @@
         }
 
         playerStyleSelect.addEventListener('change', drawPreviewFrame);
+        bgBlurSlider.addEventListener('input', drawPreviewFrame);
         particleSelect.addEventListener('change', () => particles = []); 
 
         audioUpload.addEventListener('change', function() {
@@ -908,11 +944,66 @@
         });
 
         // ==========================================
-        // ЛОГІКА СИНХРОНІЗАЦІЇ ТЕКСТУ (LRC + СУФЛЕР)
+        // ЛОГІКА ГЕНЕРАЦІЇ ШІ-ОБКЛАДИНКИ З КАСТОМНИМ ПРОМПТОМ
         // ==========================================
+        document.getElementById('generateAiBgBtn').addEventListener('click', async () => {
+            const title = document.getElementById('songTitleInput').value.trim();
+            const lyrics = document.getElementById('lyricsInput').value.trim();
+            const format = document.getElementById('formatSelect').value;
+            const customPrompt = document.getElementById('customAiPrompt').value.trim();
+            
+            if (!lyrics && !customPrompt) {
+                alert("Вставте текст пісні або напишіть свій опис у полі 'Свій опис для ШІ', щоб нейромережі було з чим працювати!");
+                return;
+            }
+
+            const btn = document.getElementById('generateAiBgBtn');
+            const status = document.getElementById('aiLoadingStatus');
+            
+            btn.disabled = true;
+            status.style.display = 'block';
+            
+            try {
+                const response = await fetch('https://andreygerc11-music-site.onrender.com/api/generate-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: title || "Музика", lyrics: lyrics, format: format, customPrompt: customPrompt })
+                });
+                
+                const data = await response.json();
+                
+                if (data.imageUrl) {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous"; 
+                    img.onload = () => { 
+                        backgroundImage = img; 
+                        
+                        if (backgroundVideo) {
+                            backgroundVideo.pause();
+                            backgroundVideo.src = "";
+                            backgroundVideo = null;
+                        }
+                        
+                        drawPreviewFrame(); 
+                    };
+                    img.src = data.imageUrl;
+                } else {
+                    alert("Помилка генерації: " + (data.error || "Невідома помилка"));
+                }
+            } catch (err) {
+                alert("Помилка зв'язку з сервером. Переконайтесь, що бекенд оновлено.");
+            }
+            
+            btn.disabled = false;
+            status.style.display = 'none';
+        });
+
         const startSyncBtn = document.getElementById('startSyncBtn');
         const syncStatus = document.getElementById('syncStatus');
         const lyricsInput = document.getElementById('lyricsInput');
+        
+        const restartSyncBtn = document.getElementById('restartSyncBtn');
+        const cancelSyncBtn = document.getElementById('cancelSyncBtn');
 
         startSyncBtn.addEventListener('click', () => {
             if (!audioPlayer.src) { alert('Спочатку завантажте аудіо трек!'); return; }
@@ -938,22 +1029,31 @@
             isSyncingLyrics = true;
 
             syncStatus.style.display = 'block';
-            syncStatus.innerHTML = `
-                <p style="margin: 0 0 5px 0; font-size: 0.8rem; color: var(--accent); font-weight: bold; text-transform: uppercase;">Натискайте ПРОБІЛ на виділеному рядку!</p>
-                <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1);">
-                    <div id="prevLyricLine" style="color: #666; font-size: 0.85rem; min-height: 18px; margin-bottom: 8px;"></div>
-                    <div id="currentLyricLine" style="color: #fff; font-size: 1.15rem; font-weight: 900; min-height: 24px; margin-bottom: 8px; text-shadow: 0 0 10px var(--accent);"></div>
-                    <div id="nextLyricLine" style="color: #888; font-size: 0.95rem; min-height: 18px;"></div>
-                </div>
-                <p style="font-size: 0.7rem; color: #666; margin-top: 10px;">(Щоб скасувати, зачекайте кінця або змініть текст)</p>
-            `;
+            startSyncBtn.style.display = 'none';
 
             audioPlayer.blur();
             audioPlayer.currentTime = 0;
             audioPlayer.play();
-            startSyncBtn.style.display = 'none';
-
+            
             updateTeleprompter();
+        });
+
+        restartSyncBtn.addEventListener('click', () => {
+            lyricsData = [];
+            currentSyncIndex = 0;
+            audioPlayer.currentTime = 0;
+            audioPlayer.play();
+            isSyncingLyrics = true;
+            updateTeleprompter();
+        });
+
+        cancelSyncBtn.addEventListener('click', () => {
+            isSyncingLyrics = false;
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            syncStatus.style.display = 'none';
+            startSyncBtn.style.display = 'block';
+            startSyncBtn.innerHTML = '<i class="fas fa-microphone"></i> Синхронізувати';
         });
 
         function parseLRC(text) {
@@ -1022,33 +1122,25 @@
             }
         });
 
-        // ==========================================
-        // ІДЕАЛЬНА МАРШРУТИЗАЦІЯ ЗВУКУ (ДИНАМІКИ + РЕКОРДЕР)
-        // ==========================================
         function initVisualizer() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioCtx.createAnalyser();
                 
-                // Це потік, який піде ПРЯМО У ВІДЕОФАЙЛ (завжди 100% гучності)
                 mediaDest = audioCtx.createMediaStreamDestination(); 
-                
-                // Це регулятор гучності для ТВОЇХ КОЛОНОК (можна вимкнути кнопкою)
                 speakerGain = audioCtx.createGain(); 
                 
                 source = audioCtx.createMediaElementSource(audioPlayer);
                 
                 source.connect(analyser);
-                
-                // Розділяємо звук на два незалежні кабелі:
-                analyser.connect(mediaDest); // Кабель 1: У відео файл
-                analyser.connect(speakerGain); // Кабель 2: У колонки
+                analyser.connect(mediaDest);
+                analyser.connect(speakerGain);
                 speakerGain.connect(audioCtx.destination);
                 
                 analyser.fftSize = 512; 
                 analyser.smoothingTimeConstant = 0.8; 
                 
-                draw(); // Запускаємо стандартну анімацію
+                draw(); 
             }
         }
 
@@ -1174,8 +1266,6 @@
         }
 
         function draw() {
-            // ВАЖЛИВО: Викликаємо requestAnimationFrame тільки якщо ми НЕ рендеримо відео
-            // Щоб уникнути подвійного рендеру і жорстких лагів відеокарти
             if (!isGenerating) {
                 drawAnimationId = requestAnimationFrame(draw);
             }
@@ -1197,6 +1287,12 @@
             let bgScale = 1 + (avgBass / 255) * 0.08; 
 
             ctx.save();
+            
+            // Розмиття (Blur)
+            if (bgBlurSlider.value > 0) {
+                ctx.filter = `blur(${bgBlurSlider.value}px)`;
+            }
+            
             ctx.translate(centerX, centerY);
             ctx.scale(bgScale, bgScale);
             
@@ -1230,29 +1326,25 @@
             else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength);
             else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
 
-            // ==========================================
-            // МАЛЮВАННЯ НАЗВИ ПІСНІ ТА АВТОРА (НАД ЛОГОТИПОМ)
-            // ==========================================
             const titleText = songTitleInput.value.trim();
             const authorText = authorInput.value.trim();
             
             if (titleText || authorText) {
                 ctx.save();
-                ctx.textAlign = 'center'; // ВІДЦЕНТРОВАНО
+                ctx.textAlign = 'center'; 
                 ctx.textBaseline = 'middle'; 
                 
                 const padding = minDimension * 0.05; 
                 const maxWidthTitle = canvas.width - (padding * 2); 
                 const centerXText = canvas.width / 2;
                 
-                // ВАЖЛИВО: Опускаємо текст вниз, але він залишається НАД логотипом (на 18% від верху екрану)
                 let currentY = canvas.height * 0.18; 
                 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
                 ctx.shadowBlur = 15;
                 
                 if (titleText) {
-                    const titleSize = minDimension * 0.065; // ВЕЛИКИЙ ШРИФТ
+                    const titleSize = minDimension * 0.065; 
                     ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`;
                     ctx.fillStyle = '#fff';
                     
@@ -1276,7 +1368,7 @@
                 }
                 
                 if (authorText) {
-                    const authorSize = minDimension * 0.04; // ВЕЛИКИЙ ШРИФТ
+                    const authorSize = minDimension * 0.04; 
                     ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`;
                     ctx.fillStyle = '#bbb';
                     
@@ -1300,7 +1392,6 @@
                 ctx.restore();
             }
 
-            // МАЛЮВАННЯ ТЕКСТУ ПІСНІ (Караоке внизу)
             if (lyricsData.length > 0) {
                 let activeText = "";
                 let currentTime = audioPlayer.currentTime;
@@ -1358,10 +1449,9 @@
                 }
             }
 
-            // --- МАЛЮВАННЯ ВОДЯНОГО ЗНАКУ (Тільки для Free версії) ---
             if (!isSubscribed) {
                 ctx.save();
-                ctx.globalAlpha = 0.6; // Напівпрозорий
+                ctx.globalAlpha = 0.6; 
                 
                 const wmText = "Hertz Spectrum";
                 const wmFontSize = minDimension * 0.025; 
@@ -1383,7 +1473,6 @@
                 const textWidth = ctx.measureText(wmText).width;
                 const logoX = textX - textWidth - logoSize - 10;
                 
-                // ВАЖЛИВО: Запобіжник від крашу, якщо фавікон не завантажився через CORS або локальний запуск
                 if (watermarkImg.complete && watermarkImg.naturalWidth > 0) {
                     ctx.drawImage(watermarkImg, logoX, wmStartY - logoSize/2, logoSize, logoSize);
                 }
@@ -1446,7 +1535,7 @@
             
             ctx.strokeStyle = gradient;
             ctx.lineWidth = minDimension * 0.008; 
-            ctx.shadowBlur = 20 + (avgBass * 0.1); 
+            ctx.shadowBlur = (20 + (avgBass * 0.1)) * glowSlider.value; 
             ctx.shadowColor = primaryColor;
             ctx.stroke(); 
             ctx.shadowBlur = 0; 
@@ -1478,6 +1567,8 @@
             ctx.strokeStyle = gradient;
             ctx.lineWidth = minDimension * 0.009; 
             ctx.lineCap = 'round';
+            ctx.shadowBlur = 5 * glowSlider.value;
+            ctx.shadowColor = primaryColor;
 
             for (let i = 0; i < pointsCount; i++) {
                 let ratio = i / pointsCount;
@@ -1505,6 +1596,7 @@
                     ctx.stroke();
                 }
             }
+            ctx.shadowBlur = 0;
         }
 
         function drawLinearBars(dataArray, minDimension, bufferLength) {
@@ -1514,11 +1606,14 @@
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
             gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
             ctx.fillStyle = gradient;
+            ctx.shadowBlur = 10 * glowSlider.value;
+            ctx.shadowColor = primaryColor;
 
             for (let i = 0; i < usefulLength; i++) {
                 const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6 * sharpnessSlider.value;
                 ctx.fillRect(i * barWidth, canvas.height - barHeightScaled, barWidth - 2, barHeightScaled);
             }
+            ctx.shadowBlur = 0;
         }
 
         function drawLinearCurve(dataArray, minDimension, bufferLength) {
@@ -1546,7 +1641,10 @@
             ctx.lineWidth = 8; 
             ctx.strokeStyle = gradient;
             ctx.lineJoin = 'round';
+            ctx.shadowBlur = 15 * glowSlider.value;
+            ctx.shadowColor = primaryColor;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         }
 
         function drawLinearSymmetry(dataArray, minDimension, bufferLength) {
@@ -1574,7 +1672,7 @@
             ctx.lineJoin = 'round';
             ctx.lineWidth = 10; 
             ctx.strokeStyle = gradient;
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 15 * glowSlider.value;
             ctx.shadowColor = primaryColor;
             ctx.stroke();
             ctx.shadowBlur = 0;
@@ -1596,9 +1694,6 @@
             ctx.stroke();
         }
 
-        // ==========================================
-        // ПРОЦЕС ОПЛАТИ ПІДПИСКИ
-        // ==========================================
         function closeModal() {
             document.getElementById('subscriptionModal').style.display = 'none';
         }
@@ -1651,7 +1746,6 @@
         const generateProgress = document.getElementById('generateProgress');
         const generateStatus = document.getElementById('generateStatus');
 
-        // ЛОГІКА СКАСУВАННЯ
         stopRenderBtn.addEventListener('click', () => {
             if (isGenerating && mediaRecorder && mediaRecorder.state !== 'inactive') {
                 isCancelled = true;
@@ -1663,7 +1757,6 @@
         generateVideoBtn.addEventListener('click', async () => {
             if (!audioCtx) { alert('Будь ласка, завантажте аудіо трек перед рендерингом!'); return; }
             
-            // ПЕРЕВІРКА ЛІМІТУ (1 БЕЗКОШТОВНЕ ВІДЕО В ДЕНЬ)
             let canFreeRender = false;
             if (!isSubscribed) {
                 let lastRenderStr = localStorage.getItem('hz_last_free_render');
@@ -1687,7 +1780,6 @@
 
             if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-            // Закриваємо мобільне меню при старті рендеру
             if (window.innerWidth <= 768) {
                 closeMobileMenu();
             }
@@ -1697,7 +1789,7 @@
             downloadVideoBtn.style.display = 'none'; 
 
             isGenerating = true;
-            isCancelled = false; // Скидаємо прапорець
+            isCancelled = false; 
             chunks = [];
 
             let mimeType = '';
@@ -1719,7 +1811,6 @@
                 useWebmFix = true;
             }
 
-            // Міняємо інтерфейс кнопок
             generateVideoBtn.style.display = 'none';
             stopRenderBtn.style.display = 'block';
             
@@ -1727,11 +1818,9 @@
             generateStatus.style.display = 'block';
             generateProgress.value = 0;
 
-            // Відключаємо стандартну анімацію і запускаємо фоновий Worker
             cancelAnimationFrame(drawAnimationId);
             timerWorker.postMessage('start');
 
-            // ВАЖЛИВО: Оптимізація якості
             const audioStream = mediaDest.stream;
             const canvasStream = canvas.captureStream(30); 
             const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
@@ -1758,11 +1847,9 @@
             mediaRecorder.onstop = () => {
                 clearInterval(checkProgressInterval);
                 
-                // Зупиняємо фоновий Worker і відновлюємо стандартну анімацію
                 timerWorker.postMessage('stop');
                 drawAnimationId = requestAnimationFrame(draw);
                 
-                // ЯКЩО БУЛО НАТИСНУТО КНОПКУ "СКАСУВАТИ"
                 if (isCancelled) {
                     isGenerating = false;
                     generateVideoBtn.style.display = 'block';
@@ -1773,7 +1860,7 @@
                     
                     if (backgroundVideo) backgroundVideo.pause();
                     audioPlayer.pause();
-                    audioPlayer.currentTime = 0; // Скидаємо трек на початок
+                    audioPlayer.currentTime = 0; 
                     
                     document.getElementById('openInfoBtn').style.display = 'flex';
                     
@@ -1783,7 +1870,6 @@
                     return; 
                 }
 
-                // НОРМАЛЬНЕ ЗАВЕРШЕННЯ
                 const rawBlob = new Blob(chunks, { type: mimeType });
                 const durationMs = audioPlayer.duration * 1000;
                 
@@ -1793,7 +1879,6 @@
                     generateStatus.innerText = 'Обробляємо файл...';
                 }
                 
-                // Функція для фіналізації та завантаження
                 const finalizeAndDownload = (finalBlob) => {
                     if (generatedVideoUrl) {
                         URL.revokeObjectURL(generatedVideoUrl);
@@ -1835,7 +1920,6 @@
                     }
                 };
 
-                // ВАЖЛИВО: Використовуємо лікування тривалості тільки для WebM
                 if (useWebmFix) {
                     ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) {
                         finalizeAndDownload(fixedBlob);
@@ -1847,7 +1931,6 @@
 
             audioPlayer.currentTime = 0;
             
-            // Застосовуємо налаштування звуку ПЕРЕД стартом
             if (speakerGain) {
                 speakerGain.gain.value = isMutedDuringRender ? 0 : 1;
             }
@@ -1859,7 +1942,9 @@
             particles = [];
             
             audioPlayer.play();
-            mediaRecorder.start();
+            
+            // ВАЖЛИВО: Зберігаємо по 1 секунді (Відновлено і перевірено)
+            mediaRecorder.start(1000);
 
             const checkProgressInterval = setInterval(() => {
                 if (isGenerating && !isCancelled) {
