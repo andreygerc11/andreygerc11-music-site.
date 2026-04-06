@@ -51,7 +51,7 @@ app.post('/api/pay', async (req, res) => {
             merchantPaymInfo: { reference: songId, destination: `Оплата за трек: ${songName}` }
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: response.data.pageUrl });
-    } catch (error) { res.status(500).json({ error: "Не вдалося створити платіж" }); }
+    } catch (error) { console.error("Помилка Моно:", error.response?.data || error.message); res.status(500).json({ error: "Не вдалося створити платіж" }); }
 });
 
 app.post('/api/pay-subscription', async (req, res) => {
@@ -66,11 +66,12 @@ app.post('/api/pay-subscription', async (req, res) => {
             merchantPaymInfo: { reference: subId + '|' + email, destination: `Пробний період Hertz Spectrum` }
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: response.data.pageUrl });
-    } catch (error) { res.status(500).json({ error: "Не вдалося створити підписку" }); }
+    } catch (error) { console.error("Помилка Моно Підписка:", error.response?.data || error.message); res.status(500).json({ error: "Не вдалося створити підписку" }); }
 });
 
 app.post('/api/webhook', async (req, res) => {
     const paymentData = req.body;
+    
     if (paymentData.status === 'success') {
         const refParts = paymentData.reference.split('|');
         const ref = refParts[0];
@@ -89,7 +90,7 @@ app.post('/api/webhook', async (req, res) => {
 
 
 // ==========================================
-// ДВОКРОКОВА ГЕНЕРАЦІЯ (Gemini 1.5 -> Imagen)
+// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (GEMINI 3.1 FLASH IMAGE - "NANO BANANA 2")
 // ==========================================
 app.post('/api/generate-image', async (req, res) => {
     try {
@@ -103,12 +104,12 @@ app.post('/api/generate-image', async (req, res) => {
 
         let safeVisualDescription = "abstract cinematic background, elegant, 8k";
 
-        // КРОК 1: АНАЛІЗ ТЕКСТУ ЧЕРЕЗ GEMINI
+        // КРОК 1: АНАЛІЗ ТЕКСТУ ЧЕРЕЗ GEMINI 1.5
         if (customPrompt && customPrompt.length > 2) {
             safeVisualDescription = customPrompt;
         } else if (lyrics && lyrics.length > 5) {
             try {
-                const textAnalyzePrompt = `Ти - професійний арт-директор музичних кліпів. Прочитай цей текст пісні і створи ОДНИМ РЕЧЕННЯМ англійською мовою безпечний візуальний опис для фону обкладинки. Уникай будь-яких слів про смерть, кров, війну, біль, насилля (щоб не спрацювали фільтри безпеки). Напиши лише візуальну атмосферу (наприклад: cinematic autumn landscape, dramatic beautiful lighting). Текст: "${lyrics.substring(0, 800)}"`;
+                const textAnalyzePrompt = `Ти - професійний арт-директор. Прочитай текст пісні і створи ОДНИМ РЕЧЕННЯМ англійською мовою безпечний візуальний опис для фону обкладинки. Уникай слів про смерть, кров, війну, насилля. Напиши лише візуальну атмосферу. Текст: "${lyrics.substring(0, 800)}"`;
                 
                 const textResponse = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     contents: [{ parts: [{ text: textAnalyzePrompt }] }]
@@ -116,7 +117,6 @@ app.post('/api/generate-image', async (req, res) => {
                 
                 if (textResponse.data && textResponse.data.candidates) {
                     safeVisualDescription = textResponse.data.candidates[0].content.parts[0].text.trim();
-                    console.log("Gemini зрозумів пісню і створив опис:", safeVisualDescription);
                 }
             } catch (analyzeErr) {
                 console.error("Помилка аналізу тексту:", analyzeErr.message);
@@ -124,34 +124,55 @@ app.post('/api/generate-image', async (req, res) => {
             }
         }
 
-        // КРОК 2: МАЛЮВАННЯ ТА ДОДАВАННЯ ТЕКСТУ НА КАРТИНКУ
+        // КРОК 2: МАЛЮВАННЯ КАРТИНКИ (NANO BANANA 2)
         let textOverlayPrompt = "";
-        let finalTitle = title || "";
-        let finalAuthor = author || "";
+        let finalTitle = title ? title.replace(/["']/g, '') : "";
+        let finalAuthor = author ? author.replace(/["']/g, '') : "";
 
         if (finalTitle) {
             textOverlayPrompt = `Typography: Beautifully and elegantly write the text "${finalTitle}"`;
             if (finalAuthor) {
                 textOverlayPrompt += ` and author "${finalAuthor}"`;
             }
-            textOverlayPrompt += ` on the image.`;
+            textOverlayPrompt += ` on the image. `;
         }
 
-        let aiPrompt = `A stunning hyper-realistic album cover. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed, 8k resolution. ${textOverlayPrompt}`;
+        // Формуємо фінальний промпт і додаємо пропорції
+        let aiPrompt = `A stunning hyper-realistic album cover. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed, 8k resolution. ${textOverlayPrompt} Aspect ratio: ${aspectRatio}.`;
         
-        console.log(`Відправляю завдання художнику Imagen: [${aiPrompt}]`);
+        console.log(`Відправляю завдання до Nano Banana 2: [${aiPrompt}]`);
 
-        const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_API_KEY}`, {
-            instances: [ { prompt: aiPrompt } ],
-            parameters: { sampleCount: 1, aspectRatio: aspectRatio }
+        // ВИКОРИСТОВУЄМО МОДЕЛЬ GEMINI FLASH IMAGE
+        const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`, {
+            contents: [
+                { parts: [ { text: aiPrompt } ] }
+            ]
         }, { headers: { 'Content-Type': 'application/json' } });
 
-        const base64Image = response.data.predictions[0].bytesBase64Encoded;
-        res.json({ imageUrl: `data:image/jpeg;base64,${base64Image}` });
+        // Розбираємо відповідь від нової моделі
+        if (response.data && response.data.candidates && response.data.candidates[0].content.parts[0]) {
+            const part = response.data.candidates[0].content.parts[0];
+            // Підтримка різних форматів JSON 
+            const inlineData = part.inlineData || part.inline_data;
+            
+            if (inlineData && inlineData.data) {
+                const base64Image = inlineData.data;
+                const mimeType = inlineData.mimeType || "image/jpeg";
+                return res.json({ imageUrl: `data:${mimeType};base64,${base64Image}` });
+            }
+        }
+        
+        throw new Error("Не вдалося знайти зображення у відповіді API");
 
     } catch (error) {
-        console.error("Помилка генерації:", error.message);
-        if (error.response && error.response.data) console.error("Деталі:", JSON.stringify(error.response.data));
+        console.error("Помилка генерації зображення:", error.message);
+        if (error.response && error.response.data) {
+            console.error("Деталі від Google API:", JSON.stringify(error.response.data));
+            // Обробка квот або тимчасової недоступності
+            if (error.response.status === 404) {
+                 return res.status(500).json({ error: "ШІ-модель тимчасово недоступна. Зверніться до адміністратора." });
+            }
+        }
         res.status(500).json({ error: "ШІ не зміг згенерувати обкладинку. Спробуйте інший опис." });
     }
 });
