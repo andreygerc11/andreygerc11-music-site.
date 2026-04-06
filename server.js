@@ -10,20 +10,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Налаштування для тимчасового збереження аудіофайлів
 const upload = multer({ dest: '/tmp/' });
 
-// УРЛИ ГУГЛ-СКРИПТІВ
 const MUSIC_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjzr5afDgy4pAWlwKVsatYaAK4JZC6c7itGdJaeScLCp-2iZP4PZ-8j_Kid7t0jIw/exec";
 const SUBS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiNvM7G8qf2JsBFVrII76c8WafveUvK1GXynFeAOV9wNXBX9fvWXz5iyu-9WrQ_DT2/exec";
 
-// НАЛАШТУВАННЯ
 const BACKEND_URL = "https://andreygerc11-music-site.onrender.com"; 
 const TELEGRAM_BOT_TOKEN = process.env.BOT_TOKEN; 
 const MONO_TOKEN = process.env.MONO_TOKEN; 
 const TELEGRAM_CHAT_ID = "556627059"; 
 
-// КЛЮЧІ ДЛЯ ШІ
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 const GROQ_API_KEY = process.env.GROQ_API_KEY; 
 
@@ -55,7 +51,7 @@ app.post('/api/pay', async (req, res) => {
             merchantPaymInfo: { reference: songId, destination: `Оплата за трек: ${songName}` }
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: response.data.pageUrl });
-    } catch (error) { console.error("Помилка Моно:", error.response?.data || error.message); res.status(500).json({ error: "Не вдалося створити платіж" }); }
+    } catch (error) { res.status(500).json({ error: "Не вдалося створити платіж" }); }
 });
 
 app.post('/api/pay-subscription', async (req, res) => {
@@ -70,13 +66,11 @@ app.post('/api/pay-subscription', async (req, res) => {
             merchantPaymInfo: { reference: subId + '|' + email, destination: `Пробний період Hertz Spectrum` }
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: response.data.pageUrl });
-    } catch (error) { console.error("Помилка Моно Підписка:", error.response?.data || error.message); res.status(500).json({ error: "Не вдалося створити підписку" }); }
+    } catch (error) { res.status(500).json({ error: "Не вдалося створити підписку" }); }
 });
 
 app.post('/api/webhook', async (req, res) => {
     const paymentData = req.body;
-    console.log("Отримано Вебхук:", paymentData.reference, paymentData.status);
-    
     if (paymentData.status === 'success') {
         const refParts = paymentData.reference.split('|');
         const ref = refParts[0];
@@ -95,65 +89,75 @@ app.post('/api/webhook', async (req, res) => {
 
 
 // ==========================================
-// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (ОНОВЛЕНО ДО IMAGEN 4)
+// ДВОКРОКОВА ГЕНЕРАЦІЯ (Gemini 1.5 -> Imagen)
 // ==========================================
 app.post('/api/generate-image', async (req, res) => {
     try {
-        if (!GEMINI_API_KEY) {
-            console.error("Критична помилка: GEMINI_API_KEY не знайдено!");
-            return res.status(500).json({ error: "Ключ Gemini не налаштовано на сервері" });
-        }
+        if (!GEMINI_API_KEY) return res.status(500).json({ error: "Ключ Gemini не налаштовано на сервері" });
 
-        const { title, lyrics, format, customPrompt } = req.body;
+        const { title, lyrics, format, customPrompt, author } = req.body;
         
         let aspectRatio = "1:1"; 
         if (format === 'vertical' || format === 'portrait') aspectRatio = "9:16"; 
         if (format === 'horizontal' || format === 'cinema') aspectRatio = "16:9";
 
-        let finalSubject = "";
+        let safeVisualDescription = "abstract cinematic background, elegant, 8k";
+
+        // КРОК 1: АНАЛІЗ ТЕКСТУ ЧЕРЕЗ GEMINI
         if (customPrompt && customPrompt.length > 2) {
-            finalSubject = `Subject: ${customPrompt}.`;
-        } else {
-            let safeText = lyrics ? lyrics.substring(0, 50).replace(/[\n\r]/g, ' ') : "";
-            finalSubject = `Theme: ${title}. Vibe based on: ${safeText}.`;
+            safeVisualDescription = customPrompt;
+        } else if (lyrics && lyrics.length > 5) {
+            try {
+                const textAnalyzePrompt = `Ти - професійний арт-директор музичних кліпів. Прочитай цей текст пісні і створи ОДНИМ РЕЧЕННЯМ англійською мовою безпечний візуальний опис для фону обкладинки. Уникай будь-яких слів про смерть, кров, війну, біль, насилля (щоб не спрацювали фільтри безпеки). Напиши лише візуальну атмосферу (наприклад: cinematic autumn landscape, dramatic beautiful lighting). Текст: "${lyrics.substring(0, 800)}"`;
+                
+                const textResponse = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    contents: [{ parts: [{ text: textAnalyzePrompt }] }]
+                });
+                
+                if (textResponse.data && textResponse.data.candidates) {
+                    safeVisualDescription = textResponse.data.candidates[0].content.parts[0].text.trim();
+                    console.log("Gemini зрозумів пісню і створив опис:", safeVisualDescription);
+                }
+            } catch (analyzeErr) {
+                console.error("Помилка аналізу тексту:", analyzeErr.message);
+                safeVisualDescription = "abstract cinematic background, moody atmosphere, 8k";
+            }
         }
 
-        let aiPrompt = `A stunning hyper-realistic background image. Cinematic lighting, highly detailed, 8k. NO text, NO words, NO letters. Subject matter: ${finalSubject}`;
-        
-        console.log(`Відправляю промпт до Gemini Imagen 4: [${aiPrompt}]`);
+        // КРОК 2: МАЛЮВАННЯ ТА ДОДАВАННЯ ТЕКСТУ НА КАРТИНКУ
+        let textOverlayPrompt = "";
+        let finalTitle = title || "";
+        let finalAuthor = author || "";
 
-        // СТУКАЄМО В НОВІ ДВЕРІ: imagen-4.0-generate-001
-        const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${GEMINI_API_KEY}`, {
+        if (finalTitle) {
+            textOverlayPrompt = `Typography: Beautifully and elegantly write the text "${finalTitle}"`;
+            if (finalAuthor) {
+                textOverlayPrompt += ` and author "${finalAuthor}"`;
+            }
+            textOverlayPrompt += ` on the image.`;
+        }
+
+        let aiPrompt = `A stunning hyper-realistic album cover. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed, 8k resolution. ${textOverlayPrompt}`;
+        
+        console.log(`Відправляю завдання художнику Imagen: [${aiPrompt}]`);
+
+        const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_API_KEY}`, {
             instances: [ { prompt: aiPrompt } ],
             parameters: { sampleCount: 1, aspectRatio: aspectRatio }
         }, { headers: { 'Content-Type': 'application/json' } });
 
-        if (response.data && response.data.predictions && response.data.predictions[0] && response.data.predictions[0].bytesBase64Encoded) {
-            const base64Image = response.data.predictions[0].bytesBase64Encoded;
-            res.json({ imageUrl: `data:image/jpeg;base64,${base64Image}` });
-        } else {
-            console.error("Неочікувана структура відповіді:", JSON.stringify(response.data));
-            throw new Error("Неочікувана структура відповіді від ШІ");
-        }
+        const base64Image = response.data.predictions[0].bytesBase64Encoded;
+        res.json({ imageUrl: `data:image/jpeg;base64,${base64Image}` });
 
     } catch (error) {
-        console.error("--- ПОМИЛКА ГЕНЕРАЦІЇ ШІ ---");
-        console.error("Повідомлення:", error.message);
-        
-        if (error.response && error.response.data) {
-            console.error("ДЕТАЛІ ВІД GOOGLE:", JSON.stringify(error.response.data));
-            if (error.response.status === 400) {
-                return res.status(500).json({ error: "ШІ заблокував запит. Спробуйте написати щось просте у поле 'Свій опис для ШІ'." });
-            }
-        }
-        res.status(500).json({ error: "Внутрішня помилка сервера при генерації." });
+        console.error("Помилка генерації:", error.message);
+        if (error.response && error.response.data) console.error("Деталі:", JSON.stringify(error.response.data));
+        res.status(500).json({ error: "ШІ не зміг згенерувати обкладинку. Спробуйте інший опис." });
     }
 });
 
 
-// ==========================================
 // АВТО-СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER ЧЕРЕЗ GROQ)
-// ==========================================
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     try {
         if (!GROQ_API_KEY) return res.status(500).json({ error: "Ключ Groq API не налаштовано на сервері!" });
@@ -163,6 +167,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
         formData.append('model', 'whisper-large-v3'); 
         formData.append('response_format', 'verbose_json'); 
+        formData.append('language', 'uk'); 
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
@@ -192,7 +197,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
-// КРОН-ДЖОБ
 cron.schedule('0 10 * * *', async () => {
     if (!MONO_TOKEN) return;
     try {

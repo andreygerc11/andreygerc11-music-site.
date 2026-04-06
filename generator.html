@@ -45,67 +45,38 @@
         #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
         #sidebar::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-        .sidebar-header {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 5px;
-        }
+        .sidebar-header { display: flex; flex-direction: column; gap: 15px; margin-bottom: 5px; }
 
         .back-link {
-            color: #aaa;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
+            color: #aaa; text-decoration: none; font-size: 0.85rem; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease;
         }
         .back-link:hover { color: var(--accent); transform: translateX(-5px); }
 
         .sidebar-header h2 { 
-            margin: 0; font-size: 1.6rem; color: white; 
-            font-weight: 900; text-transform: uppercase; letter-spacing: 1px; 
-            border-bottom: 2px solid var(--accent); padding-bottom: 15px;
+            margin: 0; font-size: 1.6rem; color: white; font-weight: 900; 
+            text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--accent); padding-bottom: 15px;
         }
         .sidebar-header-flex { display: flex; justify-content: space-between; align-items: center; }
         .mobile-close-btn { display: none; }
         
         .mono-premium-box {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 77, 77, 0.05) 100%);
-            border: 1px solid rgba(255, 77, 77, 0.3);
-            border-radius: 20px;
-            padding: 20px 15px;
-            text-align: center;
-            transition: 0.4s ease;
+            border: 1px solid rgba(255, 77, 77, 0.3); border-radius: 20px; padding: 20px 15px;
+            text-align: center; transition: 0.4s ease;
         }
         .mono-premium-box:hover { border-color: var(--accent); box-shadow: 0 10px 30px rgba(255, 77, 77, 0.1); }
-        
-        .mono-premium-box h4 {
-            margin: 0 0 15px 0; color: #fff; font-size: 1.1rem; text-transform: uppercase; font-weight: 900;
-        }
-        .price-tag {
-            font-size: 1.8rem; font-weight: 900; color: var(--accent); margin-bottom: 5px;
-            text-shadow: 0 0 15px rgba(255, 77, 77, 0.3);
-        }
-        .mono-premium-box p {
-            margin: 0 0 15px 0; font-size: 0.85rem; color: #bbb; line-height: 1.5;
-        }
+        .mono-premium-box h4 { margin: 0 0 15px 0; color: #fff; font-size: 1.1rem; text-transform: uppercase; font-weight: 900; }
+        .price-tag { font-size: 1.8rem; font-weight: 900; color: var(--accent); margin-bottom: 5px; text-shadow: 0 0 15px rgba(255, 77, 77, 0.3); }
+        .mono-premium-box p { margin: 0 0 15px 0; font-size: 0.85rem; color: #bbb; line-height: 1.5; }
 
         .btn-mono {
-            display: block; width: 100%; padding: 14px;
-            background: rgba(255, 77, 77, 0.1); color: var(--accent); text-decoration: none;
-            border: 2px solid var(--accent); border-radius: 50px; font-family: inherit;
-            font-weight: 900; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; cursor: pointer;
-            text-align: center;
+            display: block; width: 100%; padding: 14px; background: rgba(255, 77, 77, 0.1); 
+            color: var(--accent); text-decoration: none; border: 2px solid var(--accent); border-radius: 50px; 
+            font-family: inherit; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; 
+            letter-spacing: 1px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; cursor: pointer; text-align: center;
         }
-        .btn-mono:hover {
-            background: var(--accent); color: #fff; 
-            box-shadow: 0 8px 25px rgba(255, 77, 77, 0.5); 
-            transform: translateY(-3px) scale(1.02);
-        }
+        .btn-mono:hover { background: var(--accent); color: #fff; box-shadow: 0 8px 25px rgba(255, 77, 77, 0.5); transform: translateY(-3px) scale(1.02); }
 
         .control-group { display: flex; flex-direction: column; gap: 10px; }
         label { font-size: 0.85rem; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
@@ -113,8 +84,7 @@
         input[type="text"], input[type="file"], select, textarea { 
             width: 100%; padding: 14px 15px; background: rgba(0, 0, 0, 0.4); 
             border: 1px solid var(--border); border-radius: 12px; color: white; 
-            outline: none; box-sizing: border-box; 
-            font-size: 0.9rem; font-family: inherit; transition: all 0.3s ease;
+            outline: none; box-sizing: border-box; font-size: 0.9rem; font-family: inherit; transition: all 0.3s ease;
         }
         textarea { resize: vertical; min-height: 80px; }
         input[type="text"]:hover, select:hover, input[type="file"]:hover, textarea:hover { border-color: rgba(255,255,255,0.3); }
@@ -126,10 +96,7 @@
             color: white; padding: 8px 18px; border-radius: 50px; cursor: pointer; 
             margin-right: 15px; font-weight: bold; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        input[type="file"]::file-selector-button:hover { 
-            background: var(--accent); border-color: var(--accent); color: #fff; 
-            transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 77, 77, 0.4);
-        }
+        input[type="file"]::file-selector-button:hover { background: var(--accent); border-color: var(--accent); color: #fff; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 77, 77, 0.4); }
         
         audio { width: 100%; margin-top: 10px; outline: none; border-radius: 50px; border: 1px solid var(--border); height: 45px;}
         audio::-webkit-media-controls-panel { background-color: #000; border-radius: 50px; }
@@ -138,20 +105,13 @@
 
         .color-picker-group { display: flex; gap: 15px; width: 100%; }
         input[type="color"] { 
-            width: 100%; height: 50px; 
-            border: 2px solid var(--border); 
-            border-radius: 50px; 
-            cursor: pointer; background: none; padding: 4px; 
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%; height: 50px; border: 2px solid var(--border); border-radius: 50px; 
+            cursor: pointer; background: none; padding: 4px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50px; }
         input[type="color"]::-moz-color-swatch { border: none; border-radius: 50px; }
-        input[type="color"]:hover { 
-            border-color: var(--accent); 
-            transform: translateY(-3px) scale(1.05); 
-            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1); 
-        }
+        input[type="color"]:hover { border-color: var(--accent); transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1); }
 
         .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 5px; cursor: pointer; }
         #autoColorLabel { font-size: 0.85rem; color: #aaa; font-weight: 400; text-transform: none; letter-spacing: 0; transition: 0.3s;}
@@ -170,116 +130,53 @@
         input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
 
         .warning-box {
-            background: rgba(255, 77, 77, 0.05);
-            border: 1px dashed rgba(255, 77, 77, 0.4);
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 0.8rem;
-            color: #bbb;
-            line-height: 1.5;
-            text-align: left;
+            background: rgba(255, 77, 77, 0.05); border: 1px dashed rgba(255, 77, 77, 0.4); border-radius: 12px;
+            padding: 15px; margin-top: 20px; font-size: 0.8rem; color: #bbb; line-height: 1.5; text-align: left;
         }
-        .warning-box strong {
-            color: var(--accent);
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            font-weight: 900;
-        }
+        .warning-box strong { color: var(--accent); font-size: 0.9rem; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; text-transform: uppercase; font-weight: 900; }
         .warning-box b { color: #fff; }
 
         #generateBtnContainer { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 25px; padding-bottom: 20px;}
         
         #muteRenderBtn {
-            width: 100%; padding: 12px; 
-            background: rgba(255,255,255,0.05); 
-            border: 1px solid rgba(255,255,255,0.2); 
-            color: #ccc; border-radius: 12px; 
-            cursor: pointer; font-weight: 700; 
-            font-size: 0.85rem; margin-bottom: 15px; 
-            font-family: inherit; transition: 0.3s;
+            width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); 
+            color: #ccc; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.85rem; margin-bottom: 15px; font-family: inherit; transition: 0.3s;
         }
         #muteRenderBtn:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
         #generateVideoBtn { 
-            width: 100%; padding: 18px; 
-            background: linear-gradient(45deg, var(--accent), var(--accent-hover)); 
-            border: none; color: white; border-radius: 50px; 
-            cursor: pointer; font-weight: 900; font-size: 1.05rem; 
-            text-transform: uppercase; letter-spacing: 1.5px; 
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            font-family: inherit;
-            box-shadow: 0 5px 15px rgba(255, 77, 77, 0.3);
-            position: relative; overflow: hidden;
+            width: 100%; padding: 18px; background: linear-gradient(45deg, var(--accent), var(--accent-hover)); 
+            border: none; color: white; border-radius: 50px; cursor: pointer; font-weight: 900; font-size: 1.05rem; 
+            text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            font-family: inherit; box-shadow: 0 5px 15px rgba(255, 77, 77, 0.3); position: relative; overflow: hidden;
         }
-        
         #generateVideoBtn::after {
             content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
             background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
             transform: skewX(-25deg); transition: 0.6s ease;
         }
-        
-        #generateVideoBtn:hover { 
-            transform: translateY(-4px) scale(1.02); 
-            box-shadow: 0 12px 30px rgba(255, 77, 77, 0.6); 
-        }
+        #generateVideoBtn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 12px 30px rgba(255, 77, 77, 0.6); }
         #generateVideoBtn:hover::after { left: 150%; } 
-        
         #generateVideoBtn:active { transform: translateY(0) scale(1); box-shadow: 0 5px 15px rgba(255, 77, 77, 0.4); }
-        
-        #generateVideoBtn:disabled { 
-            background: #2a2a2c; color: #666; cursor: not-allowed; 
-            box-shadow: none; transform: none; 
-        }
+        #generateVideoBtn:disabled { background: #2a2a2c; color: #666; cursor: not-allowed; box-shadow: none; transform: none; }
         #generateVideoBtn:disabled::after { display: none; }
 
         #stopRenderBtn {
-            width: 100%; padding: 14px; 
-            background: rgba(255, 77, 77, 0.1); 
-            border: 2px solid var(--accent); 
-            color: var(--accent); border-radius: 50px; 
-            cursor: pointer; font-weight: 900; font-size: 0.95rem; 
-            text-transform: uppercase; letter-spacing: 1.5px; 
-            transition: all 0.3s ease; 
-            font-family: inherit;
-            margin-top: 15px;
-            display: none; 
+            width: 100%; padding: 14px; background: rgba(255, 77, 77, 0.1); border: 2px solid var(--accent); 
+            color: var(--accent); border-radius: 50px; cursor: pointer; font-weight: 900; font-size: 0.95rem; 
+            text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.3s ease; font-family: inherit; margin-top: 15px; display: none; 
         }
-        #stopRenderBtn:hover {
-            background: var(--accent);
-            color: #fff;
-            box-shadow: 0 8px 25px rgba(255, 77, 77, 0.4);
-            transform: translateY(-2px);
-        }
+        #stopRenderBtn:hover { background: var(--accent); color: #fff; box-shadow: 0 8px 25px rgba(255, 77, 77, 0.4); transform: translateY(-2px); }
 
         #downloadVideoBtn {
-            width: 100%; padding: 18px; 
-            background: linear-gradient(45deg, #4CAF50, #45a049); 
-            border: none; color: white; border-radius: 50px; 
-            cursor: pointer; font-weight: 900; font-size: 1.05rem; 
-            text-transform: uppercase; letter-spacing: 1.5px; 
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            font-family: inherit;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-            margin-top: 15px;
-            display: none; 
-            animation: pulse 2s infinite;
+            width: 100%; padding: 18px; background: linear-gradient(45deg, #4CAF50, #45a049); 
+            border: none; color: white; border-radius: 50px; cursor: pointer; font-weight: 900; font-size: 1.05rem; 
+            text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            font-family: inherit; box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3); margin-top: 15px; display: none; animation: pulse 2s infinite;
         }
-        #downloadVideoBtn:hover {
-            transform: translateY(-4px) scale(1.02); 
-            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.6); 
-            animation: none;
-        }
+        #downloadVideoBtn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 12px 30px rgba(76, 175, 80, 0.6); animation: none; }
         
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
-        }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); } }
 
         progress { width: 100%; margin-top: 15px; height: 10px; border-radius: 50px; overflow: hidden; }
         progress::-webkit-progress-bar { background-color: rgba(255,255,255,0.1); }
@@ -287,34 +184,21 @@
 
         #preview-container { 
             flex: 1; display: flex; justify-content: center; align-items: center; 
-            background: radial-gradient(circle, #1a1a1f 0%, #0a0a0b 100%); 
-            padding: 20px; position: relative;
+            background: radial-gradient(circle, #1a1a1f 0%, #0a0a0b 100%); padding: 20px; position: relative;
         }
-        canvas { 
-            background-color: black; box-shadow: 0 0 60px rgba(0,0,0,0.9); 
-            max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;
-        }
+        canvas { background-color: black; box-shadow: 0 0 60px rgba(0,0,0,0.9); max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
 
         .open-info-btn {
-            position: fixed; top: 25px; right: 25px;
-            background: rgba(255, 77, 77, 0.1); color: var(--accent);
-            border: 2px solid var(--accent); border-radius: 50px;
-            padding: 12px 25px; font-weight: 900; cursor: pointer;
-            transition: all 0.4s ease; z-index: 150; backdrop-filter: blur(5px);
-            display: flex; align-items: center; gap: 10px; font-family: inherit; font-size: 0.9rem; text-transform: uppercase;
+            position: fixed; top: 25px; right: 25px; background: rgba(255, 77, 77, 0.1); color: var(--accent);
+            border: 2px solid var(--accent); border-radius: 50px; padding: 12px 25px; font-weight: 900; cursor: pointer;
+            transition: all 0.4s ease; z-index: 150; backdrop-filter: blur(5px); display: flex; align-items: center; gap: 10px; font-family: inherit; font-size: 0.9rem; text-transform: uppercase;
         }
         .open-info-btn:hover { background: var(--accent); color: #fff; box-shadow: 0 5px 20px rgba(255, 77, 77, 0.4); transform: scale(1.05); }
         
         .info-panel {
-            position: fixed; top: 0; right: -450px;
-            width: 400px; height: 100vh;
-            background: var(--panel-bg);
-            border-left: 1px solid var(--border);
-            box-shadow: -5px 0 30px rgba(0,0,0,0.8);
-            padding: 40px 30px; box-sizing: border-box;
-            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 200; display: flex; flex-direction: column;
-            overflow-y: auto;
+            position: fixed; top: 0; right: -450px; width: 400px; height: 100vh; background: var(--panel-bg); border-left: 1px solid var(--border);
+            box-shadow: -5px 0 30px rgba(0,0,0,0.8); padding: 40px 30px; box-sizing: border-box; transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 200; display: flex; flex-direction: column; overflow-y: auto;
         }
         .info-panel.open { right: 0; }
         .info-panel h3 { color: var(--accent); margin-top: 0; margin-bottom: 10px; font-weight: 900; text-transform: uppercase; font-size: 1.4rem;}
@@ -324,78 +208,39 @@
         .instruction-highlight { background: rgba(255,77,77,0.1); padding: 10px; border-radius: 8px; border-left: 3px solid var(--accent); margin-top: 10px;}
         .instruction-highlight b { color: var(--accent); }
 
-        .close-info-btn {
-            position: absolute; top: 20px; right: 20px;
-            background: none; border: none; color: #888;
-            font-size: 1.5rem; cursor: pointer; transition: 0.3s;
-        }
+        .close-info-btn { position: absolute; top: 20px; right: 20px; background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
         .close-info-btn:hover { color: var(--accent); transform: rotate(90deg); }
 
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: var(--panel-bg); padding: 40px 30px; border-radius: 20px; text-align: center;
-            border: 2px solid var(--accent); max-width: 450px; width: 90%;
-            box-shadow: 0 15px 50px rgba(255, 77, 77, 0.25);
-        }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--panel-bg); padding: 40px 30px; border-radius: 20px; text-align: center; border: 2px solid var(--accent); max-width: 450px; width: 90%; box-shadow: 0 15px 50px rgba(255, 77, 77, 0.25); }
         .modal-content h3 { color: #fff; margin-bottom: 10px; font-size: 1.6rem; font-weight: 900; text-transform: uppercase;}
         .modal-content p { color: #ccc; margin-bottom: 20px; line-height: 1.6; font-size: 0.95rem;}
         .modal-price { font-size: 2.2rem; color: var(--accent); font-weight: 900; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,77,77,0.4); }
         .modal-subprice { font-size: 0.85rem; color: #888; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px;}
         
-        .close-modal {
-            margin-top: 20px; display: block; color: #888; font-size: 0.9rem; font-weight: 700;
-            cursor: pointer; text-decoration: none; background: none; border: none; width: 100%; transition: 0.3s;
-        }
+        .close-modal { margin-top: 20px; display: block; color: #888; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-decoration: none; background: none; border: none; width: 100%; transition: 0.3s; }
         .close-modal:hover { color: #fff; transform: translateY(-2px); }
 
-        #syncStatus {
-            display: none; background: rgba(255, 77, 77, 0.05); border: 1px solid var(--accent); 
-            padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;
-        }
-        
-        .sync-btn-group {
-            display: flex; gap: 10px; margin-top: 10px;
-        }
-        .sync-btn-group button {
-            flex: 1; padding: 8px; background: transparent; border-radius: 8px; cursor: pointer; 
-            font-family: inherit; font-size: 0.75rem; text-transform: uppercase; font-weight: bold; transition: 0.3s;
-        }
+        #syncStatus { display: none; background: rgba(255, 77, 77, 0.05); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px; }
+        .sync-btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .sync-btn-group button { flex: 1; padding: 8px; background: transparent; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.75rem; text-transform: uppercase; font-weight: bold; transition: 0.3s; }
         .btn-restart { border: 1px solid #888; color: #aaa; }
         .btn-restart:hover { border-color: #fff; color: #fff; }
         .btn-cancel { border: 1px solid var(--accent); color: var(--accent); }
         .btn-cancel:hover { background: var(--accent); color: #fff; }
 
         .mobile-menu-btn {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 77, 77, 0.1);
-            color: var(--accent);
-            border: 2px solid var(--accent);
-            border-radius: 50px;
-            padding: 12px 20px;
-            font-weight: 900;
-            cursor: pointer;
-            z-index: 90;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            text-transform: uppercase;
-            font-family: inherit;
-            font-size: 0.85rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            display: none; position: fixed; top: 20px; left: 20px; background: rgba(255, 77, 77, 0.1); color: var(--accent);
+            border: 2px solid var(--accent); border-radius: 50px; padding: 12px 20px; font-weight: 900; cursor: pointer;
+            z-index: 90; transition: all 0.3s ease; backdrop-filter: blur(5px); text-transform: uppercase; font-family: inherit; font-size: 0.85rem; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
         .mobile-menu-btn:hover { background: var(--accent); color: #fff; }
         
         .sidebar-overlay { display: none; }
 
         .update-notice {
-            margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.03);
-            border-radius: 15px; border-left: 4px solid var(--accent);
-            display: flex; gap: 15px; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 15px;
+            border-left: 4px solid var(--accent); display: flex; gap: 15px; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         .update-notice i { color: var(--accent); font-size: 2rem; }
         .update-notice p { margin: 0; font-size: 0.85rem; color: #bbb; line-height: 1.5; font-weight: 700;}
@@ -403,42 +248,12 @@
         @media (max-width: 768px) {
             .mobile-menu-btn { display: flex; align-items: center; gap: 8px; }
             .sidebar-header h2 { border-bottom: none; padding-bottom: 0; font-size: 1.3rem;}
-            
-            .sidebar-header-flex { 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: center; 
-                border-bottom: 2px solid var(--accent); 
-                padding-bottom: 15px;
-            }
-            
-            .mobile-close-btn { 
-                display: block; background: none; border: none; 
-                color: #888; font-size: 1.5rem; cursor: pointer; 
-                transition: 0.3s;
-            }
+            .sidebar-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); padding-bottom: 15px; }
+            .mobile-close-btn { display: block; background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
             .mobile-close-btn:hover { color: var(--accent); }
-            
-            #sidebar {
-                position: fixed;
-                top: 0; left: -100%;
-                height: 100vh;
-                width: 85%;
-                max-width: 350px;
-                transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 100;
-            }
+            #sidebar { position: fixed; top: 0; left: -100%; height: 100vh; width: 85%; max-width: 350px; transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; }
             #sidebar.open { left: 0; }
-            
-            .sidebar-overlay.active {
-                display: block;
-                position: fixed;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(5px);
-                z-index: 95;
-            }
-
+            .sidebar-overlay.active { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 95; }
             .open-info-btn { top: 20px; right: 20px; padding: 10px 15px; font-size: 0.8rem; }
         }
     </style>
@@ -562,9 +377,7 @@
             <button id="generateAiBgBtn" class="btn-mono" style="margin-top:8px; font-size: 0.75rem; padding: 12px;">
                 <i class="fas fa-magic"></i> Створити ШІ-обкладинку
             </button>
-            <div id="aiLoadingStatus" style="display:none; font-size: 0.8rem; color: var(--accent); margin-top: 5px; text-align: center; font-weight: bold;">
-                Нейромережа малює шедевр... <br>(це займе 10-15 секунд) <i class="fas fa-spinner fa-spin"></i>
-            </div>
+            <div id="aiLoadingStatus" style="display:none; font-size: 0.8rem; color: var(--accent); margin-top: 5px; text-align: center; font-weight: bold;"></div>
         </div>
 
         <div class="control-group">
@@ -625,14 +438,10 @@
 
         <div id="generateBtnContainer">
             <button id="muteRenderBtn"><i class="fas fa-volume-up"></i> Звук під час рендеру: УВІМКНЕНО</button>
-
             <button id="generateVideoBtn"><i class="fas fa-bolt"></i> Почати Рендеринг</button>
-            
             <button id="stopRenderBtn"><i class="fas fa-times"></i> Скасувати рендеринг</button>
-
             <progress id="generateProgress" value="0" max="100" style="display:none;"></progress>
             <div id="generateStatus" style="display:none; text-align:center; font-size:0.85rem; color:#aaa; margin-top:8px; font-weight: bold;">Рендеринг...</div>
-            
             <button id="downloadVideoBtn"><i class="fas fa-download"></i> Завантажити готове відео</button>
         </div>
     </div>
@@ -774,7 +583,6 @@
             if (isGenerating) return;
             const p = getMousePos(evt);
             
-            // Визначаємо, чи клікнув/торкнувся юзер тексту
             let hitText = (p.x >= textBB.x && p.x <= textBB.x + textBB.w && p.y >= textBB.y && p.y <= textBB.y + textBB.h);
             let hitLyrics = (p.x >= lyricsBB.x && p.x <= lyricsBB.x + lyricsBB.w && p.y >= lyricsBB.y && p.y <= lyricsBB.y + lyricsBB.h);
 
@@ -794,7 +602,7 @@
             const p = getMousePos(evt);
             
             if (isDraggingText) {
-                if (evt.cancelable) evt.preventDefault(); // Запобігає скролу на телефоні
+                if (evt.cancelable) evt.preventDefault(); 
                 textOffsetX += (p.x - dragStartX);
                 textOffsetY += (p.y - dragStartY);
                 dragStartX = p.x;
@@ -802,7 +610,7 @@
                 canvas.style.cursor = 'grabbing';
                 if (!audioCtx) drawPreviewFrame();
             } else if (isDraggingLyrics) {
-                if (evt.cancelable) evt.preventDefault(); // Запобігає скролу на телефоні
+                if (evt.cancelable) evt.preventDefault(); 
                 lyricsOffsetX += (p.x - dragStartX);
                 lyricsOffsetY += (p.y - dragStartY);
                 dragStartX = p.x;
@@ -824,15 +632,12 @@
             if (!audioCtx) drawPreviewFrame();
         }
 
-        // Правильно прив'язуємо слухачі для миші та сенсора
         canvas.addEventListener('mousedown', handleDown);
         canvas.addEventListener('touchstart', handleDown, { passive: false });
         canvas.addEventListener('mousemove', handleMove);
         canvas.addEventListener('touchmove', handleMove, { passive: false });
         window.addEventListener('mouseup', handleUp);
         window.addEventListener('touchend', handleUp);
-
-        // ==========================================
 
         let isMutedDuringRender = false;
         const muteRenderBtn = document.getElementById('muteRenderBtn');
@@ -1056,14 +861,18 @@
             }
         });
 
+        // ==========================================
+        // ЛОГІКА ГЕНЕРАЦІЇ ШІ-ОБКЛАДИНКИ (ДВОКРОКОВА)
+        // ==========================================
         document.getElementById('generateAiBgBtn').addEventListener('click', async () => {
             const title = document.getElementById('songTitleInput').value.trim();
+            const author = document.getElementById('authorInput').value.trim();
             const lyrics = document.getElementById('lyricsInput').value.trim();
             const format = document.getElementById('formatSelect').value;
             const customPrompt = document.getElementById('customAiPrompt').value.trim();
             
             if (!lyrics && !customPrompt && !title) {
-                alert("Напишіть опис у полі 'Свій опис для ШІ' або заповніть назву/текст пісні!");
+                alert("Заповніть назву, текст пісні або свій опис!");
                 return;
             }
 
@@ -1072,28 +881,32 @@
             
             btn.disabled = true;
             status.style.display = 'block';
+            status.innerHTML = 'ШІ читає текст і придумує ідею... <i class="fas fa-spinner fa-spin"></i>';
             
             try {
                 const response = await fetch('https://andreygerc11-music-site.onrender.com/api/generate-image', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: title || "Музика", lyrics: lyrics, format: format, customPrompt: customPrompt })
+                    body: JSON.stringify({ title: title, author: author, lyrics: lyrics, format: format, customPrompt: customPrompt })
                 });
                 
                 const data = await response.json();
                 
+                if (data.warning) {
+                    alert(data.warning);
+                }
+
                 if (data.imageUrl) {
+                    status.innerHTML = 'Малюємо обкладинку... <i class="fas fa-spinner fa-spin"></i>';
                     const img = new Image();
                     img.crossOrigin = "Anonymous"; 
                     img.onload = () => { 
                         backgroundImage = img; 
-                        
                         if (backgroundVideo) {
                             backgroundVideo.pause();
                             backgroundVideo.src = "";
                             backgroundVideo = null;
                         }
-                        
                         drawPreviewFrame(); 
                     };
                     img.src = data.imageUrl;
@@ -1108,6 +921,9 @@
             status.style.display = 'none';
         });
 
+        // ==========================================
+        // АВТО-СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER)
+        // ==========================================
         document.getElementById('aiSyncBtn').addEventListener('click', async () => {
             const audioFile = document.getElementById('audioUpload').files[0];
             if (!audioFile) {
@@ -1416,9 +1232,6 @@
             }
         }
 
-        // ==========================================
-        // ФУНКЦІЯ МАЛЮВАННЯ ТЕКСТУ (З ПЕРЕНЕСЕННЯМ)
-        // ==========================================
         function drawTextOverlay(minDimension) {
             const titleText = songTitleInput.value.trim();
             const authorText = authorInput.value.trim();
