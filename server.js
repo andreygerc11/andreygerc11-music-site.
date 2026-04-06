@@ -86,7 +86,7 @@ app.post('/api/webhook', async (req, res) => {
     res.status(200).send('OK');
 });
 
-// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (GEMINI)
+// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (GEMINI) - З ЗАХИСТОМ ВІД БЛОКУВАННЯ
 app.post('/api/generate-image', async (req, res) => {
     try {
         if (!GEMINI_API_KEY) return res.status(500).json({ error: "Ключ Gemini не налаштовано на сервері" });
@@ -99,9 +99,11 @@ app.post('/api/generate-image', async (req, res) => {
 
         let aiPrompt = "";
         if (customPrompt && customPrompt.length > 2) {
-            aiPrompt = `Hyper-realistic cinematic background image. IMPORTANT: NO text, NO words, NO letters. Subject: ${customPrompt}. Cinematic lighting, highly detailed, 8k resolution masterpiece.`;
+            aiPrompt = `Hyper-realistic background image. NO text, NO words. Subject: ${customPrompt}. Cinematic lighting, 8k.`;
         } else {
-            aiPrompt = `Hyper-realistic cinematic background image. IMPORTANT: NO text, NO words, NO letters. Atmospheric and emotional setting perfectly matching the Ukrainian song "${title}". Poem snippet: "${lyrics ? lyrics.substring(0, 300) : title}". Cinematic lighting, highly detailed, 8k resolution masterpiece.`;
+            // ЗАХИСТ: Беремо тільки перші 60 символів тексту, щоб не тригерити фільтри безпеки
+            let safeText = lyrics ? lyrics.substring(0, 60).replace(/[\n\r]/g, ' ') : "";
+            aiPrompt = `Hyper-realistic background image. NO text, NO words. Theme: ${title}. Vibe: ${safeText}. Cinematic lighting, highly detailed, 8k.`;
         }
 
         const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-images:predict?key=${GEMINI_API_KEY}`, {
@@ -110,12 +112,10 @@ app.post('/api/generate-image', async (req, res) => {
         }, { headers: { 'Content-Type': 'application/json' } });
 
         const base64Image = response.data.predictions[0].bytesBase64Encoded;
-        const imageUrl = `data:image/jpeg;base64,${base64Image}`;
-
-        res.json({ imageUrl: imageUrl });
+        res.json({ imageUrl: `data:image/jpeg;base64,${base64Image}` });
     } catch (error) {
         console.error("Помилка генерації Google Imagen:", error.response?.data || error.message);
-        res.status(500).json({ error: "Не вдалося згенерувати зображення. Можливо, текст порушує правила безпеки." });
+        res.status(500).json({ error: "ШІ заблокував запит. Спробуйте написати короткий опис у поле 'Свій опис для ШІ'." });
     }
 });
 
@@ -125,13 +125,11 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         if (!GROQ_API_KEY) return res.status(500).json({ error: "Ключ Groq API не налаштовано на сервері!" });
         if (!req.file) return res.status(400).json({ error: "Аудіофайл не отримано сервером." });
 
-        // Формуємо дані для відправки на Groq
         const formData = new FormData();
         formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
-        formData.append('model', 'whisper-large-v3'); // Найкраща модель розпізнавання
-        formData.append('response_format', 'verbose_json'); // Щоб отримати таймкоди
+        formData.append('model', 'whisper-large-v3'); 
+        formData.append('response_format', 'verbose_json'); 
 
-        // Відправляємо запит до Groq
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: {
                 'Authorization': `Bearer ${GROQ_API_KEY}`,
@@ -140,13 +138,12 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
             maxBodyLength: Infinity
         });
 
-        // Обов'язково видаляємо аудіофайл з нашого сервера після відправки, щоб пам'ять не забивалася
+        // Видаляємо файл після обробки
         fs.unlinkSync(req.file.path);
 
         const segments = response.data.segments;
         let lrcText = "";
         
-        // Збираємо LRC текст з таймкодами
         if (segments && segments.length > 0) {
             segments.forEach(seg => {
                 let date = new Date(seg.start * 1000);
@@ -161,7 +158,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         res.json({ lrc: lrcText });
 
     } catch (error) {
-        // Якщо сталася помилка, все одно видаляємо файл
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         console.error("Помилка Whisper Groq:", error.response?.data || error.message);
         res.status(500).json({ error: "ШІ не зміг розпізнати пісню. Можливо файл завеликий (ліміт ~25MB)." });
