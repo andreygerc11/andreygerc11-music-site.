@@ -89,7 +89,7 @@ app.post('/api/webhook', async (req, res) => {
 
 
 // ==========================================
-// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (ЧИСТИЙ УНІВЕРСАЛЬНИЙ ПРОМПТ)
+// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (СТВОРЕННЯ ОБКЛАДИНКИ ЗА ПІСНЕЮ ТА ФОРМАТОМ)
 // ==========================================
 app.post('/api/generate-image', async (req, res) => {
     try {
@@ -97,37 +97,45 @@ app.post('/api/generate-image', async (req, res) => {
 
         const { lyrics, format, customPrompt } = req.body;
         
+        // 1. ВИЗНАЧАЄМО СУВОРИЙ ФОРМАТ (ПРОПОРЦІЇ) ЗГІДНО З ВИБОРОМ ЮЗЕРА
         let aspectRatio = "1:1"; 
         if (format === 'vertical' || format === 'portrait') aspectRatio = "9:16"; 
         if (format === 'horizontal' || format === 'cinema') aspectRatio = "16:9";
 
-        // Нейтральний дефолт (якщо немає тексту або аналіз впав)
-        let safeVisualDescription = "beautiful abstract cinematic background, elegant lighting, 8k resolution";
+        let safeVisualDescription = "abstract cinematic background, elegant lighting, 8k resolution";
 
+        // 2. АНАЛІЗУЄМО ПІСНЮ ЧЕРЕЗ GROQ LLAMA 3
         if (customPrompt && customPrompt.length > 2) {
             safeVisualDescription = customPrompt;
         } else if (lyrics && lyrics.length > 5) {
             try {
-                // Абсолютно чистий універсальний промпт для аналізатора
-                const textAnalyzePrompt = `Read the following song lyrics and extract the core visual atmosphere, setting, and objects. Create ONLY ONE SENTENCE in English describing a highly detailed, cinematic background image for an album cover that PERFECTLY MATCHES the song's vibe. Do NOT include instructions to write text. Lyrics: "${lyrics.substring(0, 800)}"`;
+                if (!GROQ_API_KEY) throw new Error("Немає ключа Groq");
                 
-                const textResponse = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                    contents: [{ parts: [{ text: textAnalyzePrompt }] }]
+                // Пряма команда: "Ти арт-директор. Прочитай пісню і придумай обкладинку для неї"
+                const textAnalyzePrompt = `You are a visionary art director. Read the following song lyrics: "${lyrics.substring(0, 600)}". Create ONLY ONE SENTENCE in English describing a highly detailed, cinematic background image to be used as the album cover for this song. Describe the specific visual scene, mood, and objects based on the lyrics. Do NOT generate text or words on the image.`;
+                
+                const textResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                    model: 'llama3-8b-8192',
+                    messages: [{ role: 'user', content: textAnalyzePrompt }]
+                }, {
+                    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` }
                 });
                 
-                if (textResponse.data && textResponse.data.candidates) {
-                    safeVisualDescription = textResponse.data.candidates[0].content.parts[0].text.trim();
-                    console.log("ШІ проаналізував текст і видав:", safeVisualDescription);
+                if (textResponse.data && textResponse.data.choices) {
+                    safeVisualDescription = textResponse.data.choices[0].message.content.trim();
+                    console.log("Llama 3 придумала обкладинку для пісні:", safeVisualDescription);
                 }
             } catch (e) {
-                console.error("Аналіз тексту не вдався, залишаємо нейтральний дефолт:", e.message);
+                console.error("Аналіз пісні не вдався:", e.message);
+                safeVisualDescription = "Cinematic background inspired by this text: " + lyrics.substring(0, 100).replace(/\n/g, ' ');
             }
         }
 
-        // КРОК 2: Генерація картинки
-        let aiPrompt = `A stunning hyper-realistic album cover background WITHOUT ANY TEXT. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed, 8k resolution. Aspect ratio: ${aspectRatio}.`;
+        // 3. СТВОРЮЄМО КАРТИНКУ ІЗ СУВОРОЮ ВИМОГОЮ РОЗМІРУ ТА СУТІ
+        // Додана жорстка вказівка на формат (aspect ratio) прямо в промпт
+        let aiPrompt = `Create a beautiful album cover based on a song. Visual scene: ${safeVisualDescription}. STRICT REQUIREMENT: Generate the image EXACTLY in ${aspectRatio} aspect ratio. Do not include any text, letters, or titles on the image. Cinematic lighting, highly detailed, 8k resolution.`;
         
-        console.log(`Відправляю промпт до графічної моделі: [${aiPrompt}]`);
+        console.log(`Відправляю завдання до художника: Формат [${aspectRatio}], Промпт [${aiPrompt}]`);
 
         const imageModel = "gemini-3.1-flash-image-preview"; 
 
@@ -154,34 +162,26 @@ app.post('/api/generate-image', async (req, res) => {
 
     } catch (error) {
         console.error("--- ПОМИЛКА ГЕНЕРАЦІЇ ЗОБРАЖЕННЯ ---");
-        
         let clientErrorMessage = "ШІ не зміг згенерувати обкладинку. Перевірте логи.";
         
         if (error.response) {
             const errorData = JSON.stringify(error.response.data);
-            console.error("Status:", error.response.status);
-            console.error("Data:", errorData);
-            
             if (error.response.status === 429) {
-                clientErrorMessage = "Ваш API ключ ще не оновився до платного. Зачекайте 15 хвилин.";
+                clientErrorMessage = "Зачекайте кілька секунд. Модель перевантажена.";
             } else if (error.response.status === 400 && errorData.includes("SAFETY")) {
                 clientErrorMessage = "ШІ заблокував генерацію через фільтр безпеки. Напишіть нейтральний опис.";
-            } else if (error.response.status === 404) {
-                clientErrorMessage = "Модель не знайдена. Перевірте назву моделі в коді.";
             } else {
                 clientErrorMessage = `Помилка Google API (${error.response.status}).`;
             }
-        } else {
-            console.error("Full error:", error.message);
-            clientErrorMessage = "Серверна помилка: " + error.message;
         }
-        
         res.status(500).json({ error: clientErrorMessage });
     }
 });
 
 
+// ==========================================
 // АВТО-СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER)
+// ==========================================
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     try {
         if (!GROQ_API_KEY) return res.status(500).json({ error: "Ключ Groq API не налаштовано!" });
@@ -196,7 +196,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('language', 'uk'); 
 
         if (lyricsText && lyricsText.trim().length > 0) {
-            formData.append('prompt', lyricsText.substring(0, 1000));
+            formData.append('prompt', lyricsText.substring(0, 200));
         }
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
@@ -220,6 +220,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
 
     } catch (error) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        console.error("Whisper Error:", error.response?.data || error.message);
         res.status(500).json({ error: "Помилка розпізнавання Whisper." });
     }
 });
