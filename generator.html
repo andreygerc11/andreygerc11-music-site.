@@ -238,13 +238,6 @@
         
         .sidebar-overlay { display: none; }
 
-        .update-notice {
-            margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 15px;
-            border-left: 4px solid var(--accent); display: flex; gap: 15px; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .update-notice i { color: var(--accent); font-size: 2rem; }
-        .update-notice p { margin: 0; font-size: 0.85rem; color: #bbb; line-height: 1.5; font-weight: 700;}
-
         @media (max-width: 768px) {
             .mobile-menu-btn { display: flex; align-items: center; gap: 8px; }
             .sidebar-header h2 { border-bottom: none; padding-bottom: 0; font-size: 1.3rem;}
@@ -268,7 +261,11 @@
     <div id="infoPanel" class="info-panel">
         <button id="closeInfoBtn" class="close-info-btn"><i class="fas fa-times"></i></button>
         <h3>Як працює<br>генератор?</h3>
-        <p style="color: #bbb; font-size: 0.85rem; margin-top: 0; margin-bottom: 20px;">Пройдіть ці прості кроки, щоб створити круте відео:</p>
+        
+        <div class="warning-box" style="margin-bottom: 20px; background: rgba(255,0,0,0.1); border: 1px dashed red; padding: 15px; border-radius: 8px;">
+            <strong>⚠️ УВАГА: РЕНДЕРИНГ ВІДЕО</strong><br>
+            Процес створення (рендерингу) відео вимагає від вашого пристрою оперативної пам'яті (RAM). На старих смартфонах браузер може зависнути або закрити вкладку під час генерації. <b>Обов'язково закрийте інші вкладки перед початком рендерингу!</b>
+        </div>
 
         <div class="instruction-step"><strong>1. Формат і Стиль:</strong> Оберіть розмір під вашу соцмережу.</div>
         <div class="instruction-step"><strong>2. Фон і Логотип:</strong> Згенеруйте ШІ-фон, налаштуйте розмиття (Blur) або завантажте свою картинку/відео.</div>
@@ -283,13 +280,6 @@
         </div>
         
         <div class="instruction-step"><strong>💡 Підказка:</strong> Наведіть мишку або палець на назву пісні чи текст караоке прямо на відео, затисніть і <b>перетягніть у будь-яке місце!</b></div>
-
-        <div class="instruction-step"><strong>5. Рендеринг:</strong> Натисніть "Почати Рендеринг", дочекайтеся завершення і збережіть готовий кліп!</div>
-        
-        <div class="update-notice">
-            <i class="fas fa-rocket"></i>
-            <p>Генератор постійно оновлюється! Ми регулярно додаємо нові стилі, ефекти та оптимізуємо якість відео.</p>
-        </div>
     </div>
 
     <div id="sidebar">
@@ -429,11 +419,6 @@
                     <button id="cancelSyncBtn" class="btn-cancel"><i class="fas fa-times"></i> Скасувати</button>
                 </div>
             </div>
-        </div>
-
-        <div class="warning-box">
-            <strong><i class="fas fa-exclamation-triangle"></i> Порада</strong>
-            Для найкращої якості та швидкості генерації рекомендуємо залишати цю вкладку відкритою, поки процес не досягне 100%.
         </div>
 
         <div id="generateBtnContainer">
@@ -699,11 +684,11 @@
         let currentSyncIndex = 0;
 
         const formats = { 
-            vertical: { w: 1080, h: 1920 }, // 9:16
-            horizontal: { w: 1920, h: 1080 }, // 16:9
-            square: { w: 1080, h: 1080 }, // 1:1
-            portrait: { w: 1080, h: 1350 }, // 4:5
-            cinema: { w: 2560, h: 1080 } // 21:9
+            vertical: { w: 1080, h: 1920 },
+            horizontal: { w: 1920, h: 1080 },
+            square: { w: 1080, h: 1080 },
+            portrait: { w: 1080, h: 1350 },
+            cinema: { w: 2560, h: 1080 }
         };
 
         function setCanvasSize() {
@@ -862,20 +847,13 @@
         });
 
         // ==========================================
-        // ЛОГІКА ГЕНЕРАЦІЇ ШІ-ОБКЛАДИНКИ (ДВОКРОКОВА)
+        // ЛОГІКА ГЕНЕРАЦІЇ ШІ-ОБКЛАДИНКИ
         // ==========================================
         document.getElementById('generateAiBgBtn').addEventListener('click', async () => {
-            const title = document.getElementById('songTitleInput').value.trim();
-            const author = document.getElementById('authorInput').value.trim();
             const lyrics = document.getElementById('lyricsInput').value.trim();
             const format = document.getElementById('formatSelect').value;
             const customPrompt = document.getElementById('customAiPrompt').value.trim();
             
-            if (!lyrics && !customPrompt && !title) {
-                alert("Заповніть назву, текст пісні або свій опис!");
-                return;
-            }
-
             const btn = document.getElementById('generateAiBgBtn');
             const status = document.getElementById('aiLoadingStatus');
             
@@ -887,14 +865,10 @@
                 const response = await fetch('https://andreygerc11-music-site.onrender.com/api/generate-image', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: title, author: author, lyrics: lyrics, format: format, customPrompt: customPrompt })
+                    body: JSON.stringify({ lyrics: lyrics, format: format, customPrompt: customPrompt })
                 });
                 
                 const data = await response.json();
-                
-                if (data.warning) {
-                    alert(data.warning);
-                }
 
                 if (data.imageUrl) {
                     status.innerHTML = 'Малюємо обкладинку... <i class="fas fa-spinner fa-spin"></i>';
@@ -931,6 +905,8 @@
                 return;
             }
 
+            const currentLyrics = document.getElementById('lyricsInput').value.trim();
+
             const btn = document.getElementById('aiSyncBtn');
             const statusInfo = document.getElementById('aiSyncStatusInfo');
             
@@ -939,6 +915,10 @@
 
             const formData = new FormData();
             formData.append('audio', audioFile);
+            
+            if (currentLyrics) {
+                formData.append('lyricsText', currentLyrics);
+            }
 
             try {
                 const response = await fetch('https://andreygerc11-music-site.onrender.com/api/sync-lyrics', {
@@ -955,7 +935,7 @@
                     alert("Помилка: " + (data.error || "Не вдалося розпізнати текст."));
                 }
             } catch (e) {
-                alert("Помилка з'єднання з сервером. Переконайтесь, що на сервері оновлено код та встановлено бібліотеку multer.");
+                alert("Помилка з'єднання з сервером.");
             }
 
             btn.disabled = false;
@@ -1796,6 +1776,9 @@
             }
         });
 
+        // =========================================================
+        // РЕНДЕРИНГ ВІДЕО ЧЕРЕЗ MEDIARECORDER (РЕАЛЬНИЙ ЧАС)
+        // =========================================================
         generateVideoBtn.addEventListener('click', async () => {
             if (!audioCtx) { alert('Будь ласка, завантажте аудіо трек перед рендерингом!'); return; }
             
@@ -1864,6 +1847,7 @@
             timerWorker.postMessage('start');
 
             const audioStream = mediaDest.stream;
+            // Обмежуємо FPS для слабких пристроїв
             const canvasStream = canvas.captureStream(30); 
             const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
 
@@ -1984,7 +1968,7 @@
             particles = [];
             
             audioPlayer.play();
-            mediaRecorder.start(1000);
+            mediaRecorder.start(1000); // Оптимізація для пам'яті (скидання чанків)
 
             const checkProgressInterval = setInterval(() => {
                 if (isGenerating && !isCancelled) {
@@ -1996,7 +1980,7 @@
                         mobileMenuBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${percent.toFixed(0)}%`;
                     }
                 }
-            }, 100);
+            }, 500); // Оновлення інтерфейсу рідше, щоб не гальмувати телефон
         });
 
         document.querySelector('.close-modal').addEventListener('click', () => {

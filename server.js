@@ -89,25 +89,25 @@ app.post('/api/webhook', async (req, res) => {
 
 
 // ==========================================
-// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (ВИПРАВЛЕНІ НАЗВИ МОДЕЛЕЙ)
+// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ
 // ==========================================
 app.post('/api/generate-image', async (req, res) => {
     try {
         if (!GEMINI_API_KEY) return res.status(500).json({ error: "Ключ Gemini не налаштовано на сервері" });
 
-        const { title, lyrics, format, customPrompt } = req.body;
+        const { lyrics, format, customPrompt } = req.body;
         
         let aspectRatio = "1:1"; 
         if (format === 'vertical' || format === 'portrait') aspectRatio = "9:16"; 
         if (format === 'horizontal' || format === 'cinema') aspectRatio = "16:9";
 
-        // КРОК 1: Аналіз тексту (Правильна модель gemini-1.5-flash)
         let safeVisualDescription = "abstract cinematic background, elegant, epic lighting, 8k resolution";
+
         if (customPrompt && customPrompt.length > 2) {
             safeVisualDescription = customPrompt;
         } else if (lyrics && lyrics.length > 5) {
             try {
-                const textAnalyzePrompt = `Створи ОДНИМ РЕЧЕННЯМ англійською мовою безпечний візуальний опис фону. Уникай слів про смерть, кров, війну. Текст: "${lyrics.substring(0, 800)}"`;
+                const textAnalyzePrompt = `You are a professional art director. Read the following song lyrics and extract the core visual atmosphere, setting, and objects. Create ONLY ONE SENTENCE in English describing a highly detailed, cinematic background image for an album cover that PERFECTLY MATCHES the song's vibe. Do NOT include instructions to write text. Keep it safe. Lyrics: "${lyrics.substring(0, 800)}"`;
                 const textResponse = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     contents: [{ parts: [{ text: textAnalyzePrompt }] }]
                 });
@@ -119,11 +119,8 @@ app.post('/api/generate-image', async (req, res) => {
             }
         }
 
-        // КРОК 2: Генерація картинки (Правильна модель gemini-3.1-flash-image-preview)
         let aiPrompt = `A stunning hyper-realistic album cover background WITHOUT ANY TEXT, NO LETTERS. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed, 8k resolution. Aspect ratio: ${aspectRatio}.`;
         
-        console.log(`Відправляю промпт до графічної моделі: [${aiPrompt}]`);
-
         const imageModel = "gemini-3.1-flash-image-preview"; 
 
         const generateResponse = await axios.post(
@@ -154,39 +151,41 @@ app.post('/api/generate-image', async (req, res) => {
         
         if (error.response) {
             const errorData = JSON.stringify(error.response.data);
-            console.error("Status:", error.response.status);
-            console.error("Data:", errorData);
-            
             if (error.response.status === 429) {
-                clientErrorMessage = "Ваш API ключ ще не оновився до платного. Зачекайте 15 хвилин і спробуйте знову.";
+                clientErrorMessage = "ШІ-модель тимчасово перевантажена. Спробуйте ще раз.";
             } else if (error.response.status === 400 && errorData.includes("SAFETY")) {
                 clientErrorMessage = "ШІ заблокував генерацію через фільтр безпеки. Напишіть нейтральний опис.";
-            } else if (error.response.status === 404) {
-                clientErrorMessage = "Модель не знайдена. Перевірте назву моделі в коді.";
             } else {
                 clientErrorMessage = `Помилка Google API (${error.response.status}).`;
             }
-        } else {
-            console.error("Full error:", error.message);
-            clientErrorMessage = "Серверна помилка: " + error.message;
         }
-        
         res.status(500).json({ error: clientErrorMessage });
     }
 });
 
 
-// АВТО-СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER)
+// ==========================================
+// АВТО-СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER) ІЗ ПІДКАЗКОЮ
+// ==========================================
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     try {
         if (!GROQ_API_KEY) return res.status(500).json({ error: "Ключ Groq API не налаштовано!" });
         if (!req.file) return res.status(400).json({ error: "Аудіофайл не отримано." });
+
+        // Отримуємо текст пісні, якщо користувач його вставив
+        const lyricsText = req.body.lyricsText;
 
         const formData = new FormData();
         formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
         formData.append('model', 'whisper-large-v3'); 
         formData.append('response_format', 'verbose_json'); 
         formData.append('language', 'uk'); 
+
+        // Якщо є текст пісні, даємо його ШІ як шпаргалку (до 1000 символів, щоб не перевантажити)
+        if (lyricsText && lyricsText.trim().length > 0) {
+            formData.append('prompt', lyricsText.substring(0, 1000));
+            console.log("Whisper отримав шпаргалку з текстом пісні.");
+        }
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
