@@ -89,7 +89,7 @@ app.post('/api/webhook', async (req, res) => {
 
 
 // ==========================================
-// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (СУЧАСНИЙ СПОСІБ 2026)
+// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (ВИПРАВЛЕНІ НАЗВИ МОДЕЛЕЙ)
 // ==========================================
 app.post('/api/generate-image', async (req, res) => {
     try {
@@ -101,14 +101,14 @@ app.post('/api/generate-image', async (req, res) => {
         if (format === 'vertical' || format === 'portrait') aspectRatio = "9:16"; 
         if (format === 'horizontal' || format === 'cinema') aspectRatio = "16:9";
 
-        // КРОК 1: Аналіз тексту (Використовуємо -latest щоб уникнути помилки 404)
-        let safeVisualDescription = "abstract cinematic background, elegant, 8k";
+        // КРОК 1: Аналіз тексту (Правильна модель gemini-1.5-flash)
+        let safeVisualDescription = "abstract cinematic background, elegant, epic lighting, 8k resolution";
         if (customPrompt && customPrompt.length > 2) {
             safeVisualDescription = customPrompt;
         } else if (lyrics && lyrics.length > 5) {
             try {
                 const textAnalyzePrompt = `Створи ОДНИМ РЕЧЕННЯМ англійською мовою безпечний візуальний опис фону. Уникай слів про смерть, кров, війну. Текст: "${lyrics.substring(0, 800)}"`;
-                const textResponse = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+                const textResponse = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     contents: [{ parts: [{ text: textAnalyzePrompt }] }]
                 });
                 if (textResponse.data && textResponse.data.candidates) {
@@ -119,12 +119,12 @@ app.post('/api/generate-image', async (req, res) => {
             }
         }
 
-        // КРОК 2: Генерація без тексту (щоб уникнути помилок з кирилицею)
+        // КРОК 2: Генерація картинки (Правильна модель gemini-3.1-flash-image-preview)
         let aiPrompt = `A stunning hyper-realistic album cover background WITHOUT ANY TEXT, NO LETTERS. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed, 8k resolution. Aspect ratio: ${aspectRatio}.`;
         
         console.log(`Відправляю промпт до графічної моделі: [${aiPrompt}]`);
 
-        const imageModel = "gemini-3.1-flash-image"; 
+        const imageModel = "gemini-3.1-flash-image-preview"; 
 
         const generateResponse = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/${imageModel}:generateContent?key=${GEMINI_API_KEY}`,
@@ -145,7 +145,7 @@ app.post('/api/generate-image', async (req, res) => {
             }
         }
         
-        throw new Error("Не вдалося знайти зображення у відповіді API");
+        throw new Error("Відповідь успішна, але зображення не знайдено");
 
     } catch (error) {
         console.error("--- ПОМИЛКА ГЕНЕРАЦІЇ ЗОБРАЖЕННЯ ---");
@@ -161,6 +161,8 @@ app.post('/api/generate-image', async (req, res) => {
                 clientErrorMessage = "Ваш API ключ ще не оновився до платного. Зачекайте 15 хвилин і спробуйте знову.";
             } else if (error.response.status === 400 && errorData.includes("SAFETY")) {
                 clientErrorMessage = "ШІ заблокував генерацію через фільтр безпеки. Напишіть нейтральний опис.";
+            } else if (error.response.status === 404) {
+                clientErrorMessage = "Модель не знайдена. Перевірте назву моделі в коді.";
             } else {
                 clientErrorMessage = `Помилка Google API (${error.response.status}).`;
             }
