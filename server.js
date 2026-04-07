@@ -89,7 +89,7 @@ app.post('/api/webhook', async (req, res) => {
 
 
 // ==========================================
-// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (СУЧАСНИЙ СПОСІБ 2026)
+// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (ІМАГЕН 3.0 ЧЕРЕЗ GEMINI API)
 // ==========================================
 app.post('/api/generate-image', async (req, res) => {
     try {
@@ -101,85 +101,103 @@ app.post('/api/generate-image', async (req, res) => {
         if (format === 'vertical' || format === 'portrait') aspectRatio = "9:16"; 
         if (format === 'horizontal' || format === 'cinema') aspectRatio = "16:9";
 
-        // КРОК 1: Аналіз тексту
+        // КРОК 1: АНАЛІЗ ТЕКСТУ ЧЕРЕЗ GEMINI
         let safeVisualDescription = "abstract cinematic background, elegant, 8k";
+
         if (customPrompt && customPrompt.length > 2) {
             safeVisualDescription = customPrompt;
         } else if (lyrics && lyrics.length > 5) {
             try {
-                const textAnalyzePrompt = `Створи ОДНИМ РЕЧЕННЯМ англійською мовою безпечний візуальний опис фону. Уникай слів про смерть, кров, війну. Текст: "${lyrics.substring(0, 800)}"`;
+                // Промпт для Gemini, щоб він створив безпечний опис для Imagen
+                const textAnalyzePrompt = `Ти - професійний арт-директор музичних кліпів. Прочитай цей текст пісні і створи ОДНИМ РЕЧЕННЯМ англійською мовою безпечний візуальний опис для фону обкладинки. Уникай будь-яких слів про смерть, кров, війну, біль, насилля (щоб не спрацювали фільтри безпеки Google Imagen). Напиши лише візуальну атмосферу (наприклад: cinematic autumn landscape, dramatic beautiful lighting). Текст: "${lyrics.substring(0, 800)}"`;
+                
                 const textResponse = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     contents: [{ parts: [{ text: textAnalyzePrompt }] }]
                 });
+                
                 if (textResponse.data && textResponse.data.candidates) {
                     safeVisualDescription = textResponse.data.candidates[0].content.parts[0].text.trim();
+                    console.log("Gemini зрозумів пісню і створив опис:", safeVisualDescription);
                 }
-            } catch (e) {
-                console.error("Аналіз тексту не вдався:", e.message);
+            } catch (analyzeErr) {
+                console.error("Помилка аналізу тексту Gemini:", analyzeErr.message);
+                // Якщо аналіз не вдався, використовуємо стандартний опис
             }
         }
 
-        // КРОК 2: Генерація через сучасну модель
+        // КРОК 2: МАЛЮВАННЯ ТА ДОДАВАННЯ ТЕКСТУ НА КАРТИНКУ
         let textOverlayPrompt = "";
-        let finalTitle = title ? title.replace(/["']/g, '') : "";
-        let finalAuthor = author ? author.replace(/["']/g, '') : "";
+        let finalTitle = title ? title.replace(/["']/g, '') : ""; // Прибираємо лапки з назви
+        let finalAuthor = author ? author.replace(/["']/g, '') : ""; // Прибираємо лапки з автора
 
         if (finalTitle) {
-            textOverlayPrompt = `Typography: Beautifully write the text "${finalTitle}"`;
-            if (finalAuthor) { textOverlayPrompt += ` and author "${finalAuthor}"`; }
+            textOverlayPrompt = `Typography: Beautifully and elegantly write the text "${finalTitle}"`;
+            if (finalAuthor) {
+                textOverlayPrompt += ` and author "${finalAuthor}"`;
+            }
             textOverlayPrompt += ` on the image. `;
         }
 
+        // Промпт для Imagen 3.0
         let aiPrompt = `A stunning hyper-realistic album cover. Visuals: ${safeVisualDescription}. Cinematic lighting, highly detailed, 8k resolution. Aspect ratio: ${aspectRatio}. ${textOverlayPrompt}`;
         
-        console.log(`Відправляю промпт до Gemini Image: [${aiPrompt}]`);
+        console.log(`Відправляю промпт до Google Imagen: [${aiPrompt}]`);
 
-        const imageModel = "gemini-3.1-flash-image-preview"; // Сучасна модель
+        // ВИКЛИК ГОЛОВНОЇ ШІ-МОДЕЛІ МАЛЮВАННЯ (IMAGEN 3.0)
+        // Модель gemini-3.1-flash-image-preview працює через ендпоінт generateContent з параметром responseModalities
+        const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`, {
+            contents: [
+                { parts: [ { text: aiPrompt } ] }
+            ],
+            generationConfig: {
+                responseModalities: ["IMAGE"] // ВАЖЛИВО!
+            }
+        }, { headers: { 'Content-Type': 'application/json' } });
 
-        const generateResponse = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/${imageModel}:generateContent?key=${GEMINI_API_KEY}`,
-            {
-                contents: [{
-                    parts: [{ text: aiPrompt }]
-                }],
-                generationConfig: {
-                    responseModalities: ["IMAGE"] // ВАЖЛИВО!
-                }
-            },
-            { headers: { 'Content-Type': 'application/json' } }
-        );
-
-        // Обробка відповіді (Нова структура)
-        if (generateResponse.data && generateResponse.data.candidates && generateResponse.data.candidates[0].content.parts) {
-            const part = generateResponse.data.candidates[0].content.parts.find(p => p.inlineData || p.inline_data);
-            if (part) {
-                const inlineData = part.inlineData || part.inline_data;
+        // Обробка відповіді (структура Imagen 3 інша, ніж у Imagen 2)
+        if (response.data && response.data.candidates && response.data.candidates[0].content.parts[0]) {
+            const inlineData = response.data.candidates[0].content.parts[0].inlineData || response.data.candidates[0].content.parts[0].inline_data;
+            if (inlineData && inlineData.data) {
                 const base64Image = inlineData.data;
                 const mimeType = inlineData.mimeType || "image/jpeg";
                 return res.json({ imageUrl: `data:${mimeType};base64,${base64Image}` });
             }
         }
         
-        throw new Error("Не вдалося знайти зображення у відповіді API");
+        throw new Error("Не вдалося знайти дані зображення у відповіді API");
 
     } catch (error) {
-        // Детальне логування, як порадив Грок
+        // === ОСЬ ТУТ ПОКРАЩЕНО ОБРОБКУ ПОМИЛОК КВОТИ ===
         console.error("--- ПОМИЛКА ГЕНЕРАЦІЇ ЗОБРАЖЕННЯ ---");
-        console.error("Full error:", error.message);
+        
         if (error.response) {
             console.error("Status:", error.response.status);
             console.error("Data:", JSON.stringify(error.response.data, null, 2));
+
+            // Специфічне повідомлення для помилки квоти 429
+            if (error.response.status === 429) {
+                return res.status(429).json({ error: "ШІ-модель перевантажена. Спробуйте через 1-2 хвилини, або перейдіть на платний тариф Google." });
+            }
+            
+            // Специфічне повідомлення для помилки фільтрів безпеки 400
+            if (error.response.status === 400 && error.response.data && JSON.stringify(error.response.data).includes('SAFETY')) {
+                return res.status(400).json({ error: "ШІ відхилив запит через опис. Спробуйте інший текст пісні або опис." });
+            }
+        } else {
+            console.error("Повідомлення:", error.message);
         }
-        res.status(500).json({ error: "ШІ не зміг згенерувати обкладинку. Подивіться логи сервера." });
+        
+        // Загальне повідомлення для всіх інших помилок
+        res.status(500).json({ error: "ШІ не зміг згенерувати обкладинку. Спробуйте інший опис." });
     }
 });
 
 
-// АВТО-СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER)
+// АВТО-СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER ЧЕРЕЗ GROQ)
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     try {
-        if (!GROQ_API_KEY) return res.status(500).json({ error: "Ключ Groq API не налаштовано!" });
-        if (!req.file) return res.status(400).json({ error: "Аудіофайл не отримано." });
+        if (!GROQ_API_KEY) return res.status(500).json({ error: "Ключ Groq API не налаштовано на сервері!" });
+        if (!req.file) return res.status(400).json({ error: "Аудіофайл не отримано сервером." });
 
         const formData = new FormData();
         formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
@@ -192,15 +210,18 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
             maxBodyLength: Infinity
         });
 
+        // Видаляємо тимчасовий файл
         fs.unlinkSync(req.file.path);
 
+        const segments = response.data.segments;
         let lrcText = "";
-        if (response.data.segments) {
-            response.data.segments.forEach(seg => {
-                let d = new Date(seg.start * 1000);
-                let m = String(d.getUTCMinutes()).padStart(2, '0');
-                let s = String(d.getUTCSeconds()).padStart(2, '0');
-                let ms = String(Math.floor(d.getUTCMilliseconds() / 10)).padStart(2, '0');
+        
+        if (segments && segments.length > 0) {
+            segments.forEach(seg => {
+                let date = new Date(seg.start * 1000);
+                let m = String(date.getUTCMinutes()).padStart(2, '0');
+                let s = String(date.getUTCSeconds()).padStart(2, '0');
+                let ms = String(Math.floor(date.getUTCMilliseconds() / 10)).padStart(2, '0');
                 lrcText += `[${m}:${s}.${ms}] ${seg.text.trim()}\n`;
             });
         }
@@ -208,11 +229,38 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
 
     } catch (error) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        res.status(500).json({ error: "Помилка розпізнавання Whisper." });
+        console.error("Помилка Whisper Groq:", error.response?.data || error.message);
+        res.status(500).json({ error: "ШІ не зміг розпізнати пісню. Можливо, файл завеликий (ліміт ~25MB)." });
     }
 });
 
-cron.schedule('0 10 * * *', async () => { /* Функція крон-джобів залишається */ });
+// КРОН-ДЖОБ ДЛЯ АВТО-СПИСАННЯ ПІДПИСОК (кожен день о 10:00)
+cron.schedule('0 10 * * *', async () => {
+    if (!MONO_TOKEN) return;
+    try {
+        const response = await axios.get(`${SUBS_SCRIPT_URL}?action=getSubs`);
+        const subs = response.data;
+        const today = new Date().toISOString().split('T')[0];
+
+        for (let sub of subs) {
+            if (sub.Status === 'active' && sub.NextPaymentDate && sub.NextPaymentDate <= today) {
+                try {
+                    // Списання через Монобанк
+                    await axios.post('https://api.monobank.ua/api/merchant/wallet/payment', {
+                        walletId: sub.WalletId, amount: 19900, ccy: 980, reference: 'ren_' + sub.SubID + '_' + Date.now(), destination: "Місячна підписка Hertz Spectrum"
+                    }, { headers: { 'X-Token': MONO_TOKEN } });
+
+                    // Оновлення дати в таблиці Google
+                    const nextDate = new Date(); nextDate.setDate(nextDate.getDate() + 30);
+                    await axios.post(SUBS_SCRIPT_URL, { action: "update_sub", subId: sub.SubID, nextPaymentDate: nextDate.toISOString().split('T')[0] });
+                } catch (chargeError) {
+                    await sendTelegramMessage(`❌ <b>Помилка списання 199 грн!</b>\nНе вдалося зняти гроші за підписку <code>${sub.SubID}</code>.`);
+                    await axios.post(SUBS_SCRIPT_URL, { action: "update_sub", subId: sub.SubID, status: "failed" });
+                }
+            }
+        }
+    } catch (err) { console.error("Помилка роботи Cron:", err.message); }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Сервер працює на порту ${PORT}`));
