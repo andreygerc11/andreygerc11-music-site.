@@ -14,16 +14,17 @@
     <style>
         :root {
             --bg-base: #09090b;      
-            --bg-panel: #121214;     
-            --bg-card: #1c1c1f;      
+            --bg-panel: #141417;     
+            --bg-card: #1c1c21;      
             --bg-input: #000000;     
             --border-color: rgba(255, 255, 255, 0.08);
             --accent: #ff3c00;       
             --text-main: #f0f0f0;
             --text-muted: #888888;
+            
             --top-height: 65px;
             --bottom-height: 80px;
-            --sidebar-width: 330px;
+            --sidebar-width: 340px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,14 +43,14 @@
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
         /* ============================== */
-        /* 1. ВЕРХНЯ ПАНЕЛЬ (TOP)         */
+        /* 1. ВЕРХНЯ ПАНЕЛЬ (TOP BAR)     */
         /* ============================== */
         .top-bar {
             height: var(--top-height); background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
             display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 50;
         }
 
-        .top-left { display: flex; align-items: center; gap: 15px; }
+        .top-left { display: flex; align-items: center; gap: 20px; }
         .logo { font-size: 1.2rem; font-weight: 900; text-transform: uppercase; color: #fff; text-decoration: none; letter-spacing: 1px; }
         .logo span { color: var(--accent); }
         .back-link { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: 0.3s;}
@@ -58,12 +59,12 @@
         .top-right { display: flex; align-items: center; gap: 12px; }
         
         /* КРУГЛІ КНОПКИ */
-        .btn-round { padding: 10px 22px; border-radius: 50px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: 1px solid var(--border-color); font-family: inherit; outline: none; display: flex; align-items: center; gap: 8px; }
-        .btn-round:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
+        .btn-round { padding: 10px 22px; border-radius: 50px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: 1px solid var(--border-color); font-family: inherit; display: flex; align-items: center; gap: 8px; outline: none;}
+        .btn-round:hover { background: rgba(255,255,255,0.05); border-color: #fff; color: #fff; }
         
         .btn-premium { background: rgba(255, 60, 0, 0.1); color: var(--accent); border-color: var(--accent); }
-        .btn-premium:hover { background: var(--accent); color: #fff; }
-
+        .btn-premium:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+        
         .btn-instruction { background: transparent; color: #aaa; text-decoration: none; }
 
         .btn-export {
@@ -84,7 +85,6 @@
         /* ============================== */
         .workspace { display: flex; flex: 1; height: calc(100vh - var(--top-height) - var(--bottom-height)); overflow: hidden; }
 
-        /* Бокові панелі */
         .sidebar { width: var(--sidebar-width); background: var(--bg-panel); display: flex; flex-direction: column; overflow-y: auto; z-index: 40; }
         .sidebar-left { border-right: 1px solid var(--border-color); }
         .sidebar-right { border-left: 1px solid var(--border-color); }
@@ -93,16 +93,15 @@
         .panel-header i { color: var(--accent); }
         
         .panel-content { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
-        .settings-block { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; }
+        .settings-block { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
         .block-title { font-size: 0.75rem; font-weight: 800; color: #ddd; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
 
-        /* Інпути */
         .control-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
         .control-group:last-child { margin-bottom: 0; }
         label { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
         
         input[type="text"], select, textarea {
-            width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; color: #fff;
+            width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: #fff;
             font-family: inherit; font-size: 0.85rem; outline: none; transition: 0.3s;
         }
         input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(255,60,0,0.1); }
@@ -113,24 +112,21 @@
         input[type="file"]::file-selector-button { background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 8px 15px; border-radius: 50px; cursor: pointer; margin-right: 15px; font-weight: 700; transition: 0.3s; }
         input[type="file"]::file-selector-button:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
 
-        /* Кнопки в панелях (КАПСУЛИ) */
+        /* КРУГЛІ КНОПКИ В ПАНЕЛЯХ */
         .btn-capsule {
             width: 100%; padding: 12px; background: transparent; border: 1px solid var(--border-color); color: #fff; border-radius: 50px;
             cursor: pointer; font-family: inherit; font-weight: 800; font-size: 0.8rem; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; outline: none;
         }
         .btn-capsule:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
-        
         .btn-ai { border-color: var(--accent); color: var(--accent); }
         .btn-ai:hover { background: var(--accent); color: #fff; }
         .btn-whisper { border-color: #4CAF50; color: #4CAF50; }
         .btn-whisper:hover { background: #4CAF50; color: #fff; }
 
-        /* Слайдери */
         .slider-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         input[type="range"] { width: 100%; height: 6px; background: var(--bg-input); border-radius: 50px; appearance: none; outline: none; cursor: pointer; }
         input[type="range"]::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; }
 
-        /* Кольори (Круглі) */
         .color-row { display: flex; justify-content: space-around; gap: 15px; margin-bottom: 10px; }
         input[type="color"] { -webkit-appearance: none; border: 2px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; cursor: pointer; background: transparent; padding: 2px; transition: 0.3s; }
         input[type="color"]:hover { border-color: var(--accent); transform: scale(1.1); }
@@ -138,28 +134,25 @@
         input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
 
         /* ============================== */
-        /* 3. ЦЕНТРАЛЬНА СЦЕНА (ВІДЕО)    */
+        /* 3. ЦЕНТРАЛЬНА СЦЕНА (ФІКС РОЗМІРУ) */
         /* ============================== */
         .center-stage {
             flex: 1; display: flex; align-items: center; justify-content: center;
-            background: radial-gradient(circle at center, #1a1a1f 0%, #09090b 100%);
-            position: relative; padding: 20px; /* Трохи відступу */
+            background: radial-gradient(circle at center, #18181b 0%, #09090b 100%);
+            padding: 30px; position: relative;
         }
         
         #canvasWrapper {
-            position: relative; box-shadow: 0 20px 80px rgba(0,0,0,0.9); border: 2px solid rgba(255,255,255,0.03);
-            background: #000; border-radius: 12px; overflow: hidden; line-height: 0;
-            /* Важливо для виправлення розміру */
+            width: 100%; height: 100%; 
             display: flex; align-items: center; justify-content: center;
-            max-width: 100%; max-height: 100%;
         }
         
-        canvas {
-            display: block;
-            /* Розмір адаптується до батька */
-            max-width: 100%; max-height: 100%;
+        canvas { 
+            max-width: 100%; max-height: 100%; 
             width: auto; height: auto;
-            object-fit: contain; cursor: crosshair;
+            object-fit: contain; 
+            box-shadow: 0 20px 80px rgba(0,0,0,0.9); border-radius: 8px; 
+            background: #000; cursor: crosshair;
         }
 
         /* ============================== */
@@ -167,26 +160,23 @@
         /* ============================== */
         .bottom-bar {
             height: var(--bottom-height); background: var(--bg-panel); border-top: 1px solid var(--border-color);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 30px; z-index: 50; position: relative;
+            display: flex; align-items: center; justify-content: center; padding: 0 20px; z-index: 50; position: relative;
         }
+        .player-container { width: 100%; max-width: 700px; }
+        audio { width: 100%; height: 46px; border-radius: 50px; outline: none;}
 
-        .player-container { width: 100%; max-width: 800px; margin: 0 auto; display: flex; align-items: center; }
-        audio { flex: 1; height: 46px; outline: none; border-radius: 50px; }
-        
-        .bottom-right { display: flex; align-items: center; gap: 15px; position: absolute; right: 30px; }
-        .btn-icon { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); width: 46px; height: 46px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; }
+        .bottom-right { display: flex; align-items: center; gap: 15px; position: absolute; right: 20px; }
+        .btn-icon { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); width: 46px; height: 46px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; font-size: 1.2rem;}
         .btn-icon:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
-        /* Прогрес рендеру */
         .render-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-panel); z-index: 60; align-items: center; justify-content: center; flex-direction: column; }
-        .render-info { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 700px; margin-bottom: 10px; }
-        .render-info span { font-size: 0.85rem; font-weight: 800; color: #fff; text-transform: uppercase; }
+        .render-info { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 700px; margin-bottom: 10px;}
+        .render-info span { font-size: 0.85rem; font-weight: 800; color: #fff; text-transform: uppercase;}
         progress { width: 100%; max-width: 700px; height: 10px; border-radius: 50px; overflow: hidden; appearance: none; border: none; }
         progress::-webkit-progress-bar { background-color: var(--bg-input); }
         progress::-webkit-progress-value { background-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
 
-        /* Караоке статус (телесуфлер) */
-        #syncStatus { display: none; background: rgba(255, 60, 0, 0.05); border: 1px solid rgba(255,60,0,0.2); padding: 15px; border-radius: 12px; text-align: center; margin-top: 15px; }
+        #syncStatus { display: none; background: rgba(255, 60, 0, 0.05); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; text-align: center; margin-top: 15px; }
         .sync-btn-group { display: flex; gap: 10px; margin-top: 12px; }
         #syncStatus p { margin: 0 0 10px 0; font-size: 0.75rem; color: var(--accent); font-weight: 800; text-transform: uppercase; }
         .teleprompter { background: #000; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); }
@@ -196,21 +186,18 @@
         #aiSyncStatusInfo, #aiLoadingStatus { display: none; font-size: 0.75rem; color: var(--accent); text-align: center; font-weight: bold; margin-top: 10px; }
         #aiSyncStatusInfo { color: #4CAF50; }
 
-        /* Модалка */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--bg-panel); padding: 30px; border-radius: 16px; text-align: center; border: 1px solid var(--border-color); max-width: 420px; width: 90%; position: relative;}
-        .modal-content h3 { color: #fff; margin-bottom: 10px; font-size: 1.3rem; font-weight: 900; text-transform: uppercase; }
-        .modal-content p { color: #aaa; margin-bottom: 20px; font-size: 0.85rem; line-height: 1.6; }
-        .modal-price { font-size: 2.2rem; color: var(--accent); font-weight: 900; margin-bottom: 5px; }
+        .modal-content { background: var(--bg-panel); padding: 40px 30px; border-radius: 20px; text-align: center; border: 2px solid var(--accent); max-width: 450px; width: 90%; box-shadow: 0 15px 50px rgba(255, 77, 77, 0.25); position: relative;}
+        .modal-content h3 { color: #fff; margin-bottom: 10px; font-size: 1.4rem; font-weight: 900; text-transform: uppercase;}
+        .modal-content p { color: #ccc; margin-bottom: 20px; line-height: 1.6; font-size: 0.95rem;}
+        .modal-price { font-size: 2.2rem; color: var(--accent); font-weight: 900; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,77,77,0.4); }
         .close-modal-btn { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #555; cursor: pointer; font-size: 1.2rem; transition: 0.3s;}
         .close-modal-btn:hover { color: #fff;}
 
-        /* Адаптивність */
         @media (max-width: 1100px) {
             .workspace { flex-direction: column; overflow-y: auto; height: auto; }
             .sidebar { width: 100%; height: auto; border: none; border-bottom: 1px solid var(--border-color); }
-            .center-stage { min-height: 70vh; padding: 10px; }
-            #canvasWrapper { width: auto; height: auto; max-width: 100%; max-height: 100%;}
+            .center-stage { min-height: 60vh; padding: 10px; }
             body { overflow: auto; }
             .bottom-bar { position: sticky; bottom: 0; flex-direction: column; height: auto; padding: 15px; gap: 10px;}
             .player-container { width: 100%; max-width: 100%;}
@@ -227,11 +214,10 @@
         </div>
         
         <div class="top-right">
-            <button id="sidebarSubscribeBtn" class="btn-round btn-premium" style="display: none;"><i class="fas fa-crown"></i> PRO Доступ</button>
+            <button id="sidebarSubscribeBtn" class="btn-round btn-premium" style="display:none;"><i class="fas fa-crown"></i> PRO Доступ</button>
             <a href="instruction.html" target="_blank" class="btn-round btn-instruction"><i class="fas fa-question-circle"></i> Інструкція</a>
-            
             <button id="stopRenderBtn" class="btn-round btn-stop"><i class="fas fa-times"></i> Скасувати</button>
-            <button id="downloadVideoBtn" class="btn-round btn-download"><i class="fas fa-download"></i> Завантажити MP4</button>
+            <button id="downloadVideoBtn" class="btn-round btn-download"><i class="fas fa-download"></i> Завантажити</button>
             <button id="exportVideoBtn" class="btn-round btn-export" disabled><i class="fas fa-bolt"></i> Експорт Відео</button>
         </div>
     </header>
@@ -241,25 +227,16 @@
         <aside class="sidebar sidebar-left">
             <div class="panel-header"><i class="fas fa-sliders-h"></i> Аудіо та Текст</div>
             <div class="panel-content">
-                
                 <div class="settings-block">
                     <div class="block-title"><i class="fas fa-info-circle"></i> Інформація</div>
-                    <div class="control-group">
-                        <label>Назва пісні</label>
-                        <input type="text" id="songTitleInput" placeholder="Назва пісні">
-                    </div>
-                    <div class="control-group">
-                        <label>Автор</label>
-                        <input type="text" id="authorInput" placeholder="@andreygerc11">
-                    </div>
+                    <div class="control-group"><label>Назва пісні</label><input type="text" id="songTitleInput"></div>
+                    <div class="control-group"><label>Автор</label><input type="text" id="authorInput" placeholder="@andreygerc11"></div>
                     <button id="resetTextPosBtn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.7rem; font-weight:bold; margin-top:5px; text-align: right; width: 100%; text-transform: uppercase;"><i class="fas fa-undo"></i> Скинути позицію тексту</button>
                 </div>
 
                 <div class="settings-block">
                     <div class="block-title"><i class="fas fa-compact-disc"></i> Аудіофайл</div>
-                    <div class="control-group">
-                        <input type="file" id="audioUpload" accept="audio/mp3, audio/wav, audio/m4a">
-                    </div>
+                    <div class="control-group"><input type="file" id="audioUpload" accept="audio/*"></div>
                 </div>
 
                 <div class="settings-block">
@@ -268,14 +245,8 @@
                         <i class="fas fa-brain"></i> ШІ-Таймінг (Whisper)
                     </button>
                     <div id="aiSyncStatusInfo">Слухаю... <i class="fas fa-spinner fa-spin"></i></div>
-                    
-                    <div class="control-group">
-                        <textarea id="lyricsInput" placeholder="Вставте текст пісні..."></textarea>
-                    </div>
-                    
-                    <button id="startSyncBtn" class="btn-capsule" style="margin-top: 10px;">
-                        <i class="fas fa-play"></i> Застосувати текст
-                    </button>
+                    <div class="control-group"><textarea id="lyricsInput" placeholder="Вставте текст пісні..."></textarea></div>
+                    <button id="startSyncBtn" class="btn-capsule" style="margin-top: 10px;"><i class="fas fa-play"></i> Застосувати текст</button>
 
                     <div id="syncStatus">
                         <p>Тисніть ПРОБІЛ на початку кожного рядка!</p>
@@ -290,7 +261,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </aside>
 
@@ -298,13 +268,12 @@
             <div id="canvasWrapper">
                 <canvas id="canvas"></canvas>
             </div>
-            <p style="position:absolute; bottom: 15px; font-size: 0.75rem; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: 1px; pointer-events: none;"><i class="fas fa-mouse-pointer"></i> Текст можна перетягувати мишкою</p>
+            <p style="position:absolute; bottom: 15px; font-size: 0.7rem; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: 1px; pointer-events: none;"><i class="fas fa-mouse-pointer"></i> Текст можна перетягувати мишкою</p>
         </section>
 
         <aside class="sidebar sidebar-right">
             <div class="panel-header"><i class="fas fa-eye"></i> Візуалізація</div>
             <div class="panel-content">
-
                 <div class="settings-block">
                     <div class="block-title"><i class="fas fa-expand"></i> Формат та Стиль</div>
                     <div class="control-group">
@@ -335,27 +304,21 @@
 
                 <div class="settings-block">
                     <div class="block-title"><i class="fas fa-image"></i> Фон та Лого</div>
-                    
                     <div class="control-group">
                         <label style="color: var(--accent);">ШІ-Генерація Фону (за текстом)</label>
                         <input type="text" id="customAiPrompt" placeholder="Свій опис для ШІ (опціонально)...">
-                        <button id="generateAiBgBtn" class="btn-capsule btn-ai" style="margin-top:8px;">
-                            <i class="fas fa-magic"></i> Згенерувати фон
-                        </button>
+                        <button id="generateAiBgBtn" class="btn-capsule btn-ai" style="margin-top:8px;"><i class="fas fa-magic"></i> Згенерувати фон</button>
                         <div id="aiLoadingStatus">Малюю шедевр... <i class="fas fa-spinner fa-spin"></i></div>
                     </div>
-
                     <div style="border-top: 1px solid var(--border-color); margin: 20px 0;"></div>
-
                     <div class="control-group">
                         <label>Завантажити Свій Фон (IMG/MP4)</label>
-                        <input type="file" id="bgUpload" accept="image/*, video/mp4, video/webm">
+                        <input type="file" id="bgUpload" accept="image/*, video/*">
                     </div>
                     <div class="control-group">
                         <div class="slider-flex"><label>Розмиття фону (Blur)</label></div>
                         <input type="range" id="bgBlurSlider" min="0" max="20" step="1" value="0">
                     </div>
-                    
                     <div class="control-group" style="margin-top: 15px;">
                         <label>Ваш Логотип (Круглий)</label>
                         <input type="file" id="logoUpload" accept="image/*">
@@ -402,14 +365,11 @@
                         </select>
                     </div>
                 </div>
-
             </div>
         </aside>
-
     </main>
 
     <footer class="bottom-bar">
-        
         <div class="render-overlay" id="renderOverlay">
             <div class="render-info">
                 <span>Рендеринг відео... Не закривайте вкладку!</span>
@@ -417,16 +377,9 @@
             </div>
             <progress id="generateProgress" value="0" max="100"></progress>
         </div>
-
-        <div class="player-container">
-            <audio id="audioPlayer" controls></audio>
-        </div>
-
-        <div class="bottom-right">
-            <button id="muteRenderBtn" class="btn-icon" title="Звук під час рендеру увімкнено"><i class="fas fa-volume-up"></i></button>
-        </div>
+        <div class="player-container"><audio id="audioPlayer" controls></audio></div>
+        <div class="bottom-right"><button id="muteRenderBtn" class="btn-icon" title="Звук під час рендеру увімкнено"><i class="fas fa-volume-up"></i></button></div>
     </footer>
-
 
     <div class="modal-overlay" id="subscriptionModal">
         <div class="modal-content">
@@ -441,7 +394,6 @@
     </div>
 
     <script>
-        // === ТАЙМЕР Worker ===
         const timerWorkerCode = `
             let interval = null;
             self.onmessage = function(e) {
@@ -500,7 +452,6 @@
             textOffsetX = 0; textOffsetY = 0; lyricsOffsetX = 0; lyricsOffsetY = 0; if (!audioCtx) drawPreviewFrame();
         });
 
-        // ПЕРЕТЯГУВАННЯ
         function getMousePos(evt) {
             const rect = canvas.getBoundingClientRect();
             const sX = canvas.width / rect.width; const sY = canvas.height / rect.height;
@@ -531,64 +482,39 @@
             } else {
                 isHoveringText = (p.x >= textBB.x && p.x <= textBB.x + textBB.w && p.y >= textBB.y && p.y <= textBB.y + textBB.h);
                 isHoveringLyrics = (p.x >= lyricsBB.x && p.x <= lyricsBB.x + lyricsBB.w && p.y >= lyricsBB.y && p.y <= lyricsBB.y + lyricsBB.h);
-                canvas.style.cursor = (isHoveringText || isHoveringLyrics) ? 'grab' : 'crosshair';
+                canvas.style.cursor = (isHoveringText || isHoveringLyrics) ? 'grab' : 'default';
                 if (!audioCtx) drawPreviewFrame();
             }
         }
 
-        function handleUp() { isDraggingText = false; isDraggingLyrics = false; canvas.style.cursor = 'crosshair'; if (!audioCtx) drawPreviewFrame(); }
+        function handleUp() { isDraggingText = false; isDraggingLyrics = false; canvas.style.cursor = 'default'; if (!audioCtx) drawPreviewFrame(); }
 
         canvas.addEventListener('mousedown', handleDown); canvas.addEventListener('touchstart', handleDown, { passive: false });
         canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('touchmove', handleMove, { passive: false });
         window.addEventListener('mouseup', handleUp); window.addEventListener('touchend', handleUp);
 
-        // ЗВУК ПРИ РЕНДЕРІ
         let isMutedDuringRender = false;
         const muteRenderBtn = document.getElementById('muteRenderBtn');
         muteRenderBtn.addEventListener('click', () => {
             isMutedDuringRender = !isMutedDuringRender;
             if (isMutedDuringRender) {
                 muteRenderBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-                muteRenderBtn.style.color = '#ff3c00';
+                muteRenderBtn.style.color = '#ff4d4d'; muteRenderBtn.style.borderColor = '#ff4d4d';
                 if (isGenerating && speakerGain) speakerGain.gain.value = 0;
             } else {
                 muteRenderBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                muteRenderBtn.style.color = '#fff';
+                muteRenderBtn.style.color = 'var(--text-muted)'; muteRenderBtn.style.borderColor = 'var(--border-color)';
                 if (isGenerating && speakerGain) speakerGain.gain.value = 1;
             }
         });
 
-        // ПІДПИСКА (Симуляція)
         let currentUser = null;
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('dev_token') === 'hz_auth_9942_xPq') { isSubscribed = true; }
         if (currentUser && currentUser.status === 'premium') { isSubscribed = true; }
-        
         if (!isSubscribed) { document.getElementById('sidebarSubscribeBtn').style.display = 'flex'; }
         
-        async function processSubscription(btnElement) {
-            if (!currentUser) { alert("Будь ласка, спочатку увійдіть або зареєструйтесь."); window.location.href = "login.html"; return; }
-            const originalText = btnElement.innerText; btnElement.innerText = 'Зачекайте...'; btnElement.disabled = true;
-            try {
-                // Симуляція запиту
-                await new Promise(r => setTimeout(r, 1500));
-                // Успіх
-                isSubscribed = true;
-                currentUser.status = 'premium';
-                localStorage.setItem('hz_user', JSON.stringify(currentUser));
-                document.getElementById('sidebarSubscribeBtn').style.display = 'none';
-                document.getElementById('subscriptionModal').style.display = 'none';
-                alert("Дякуємо за підтримку! PRO доступ розблоковано.");
-                drawPreviewFrame(); // Оновити (прибрати вотермарк)
-            } catch (err) { alert('Помилка сервера.'); }
-            btnElement.innerText = originalText; btnElement.disabled = false;
-        }
-        
-        document.getElementById('sidebarSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
-        document.getElementById('modalSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
-
-        // === ПЕРЕМІННІ ===
         let baseHue = 0; let particles = []; let lyricsData = []; let rawLyrics = []; let isSyncingLyrics = false; let currentSyncIndex = 0;
         const formats = { vertical: { w: 1080, h: 1920 }, horizontal: { w: 1920, h: 1080 }, square: { w: 1080, h: 1080 }, portrait: { w: 1080, h: 1350 }, cinema: { w: 2560, h: 1080 } };
 
@@ -604,7 +530,6 @@
             } else { primaryColorInput.disabled = true; secondaryColorInput.disabled = true; }
         });
 
-        // Media Cover
         function drawMediaCover(ctx, media, isVideo) {
             const mw = isVideo ? media.videoWidth : media.width; const mh = isVideo ? media.videoHeight : media.height;
             const cw = canvas.width; const ch = canvas.height; const mRatio = mw / mh; const cRatio = cw / ch; let renderW, renderH, renderX, renderY;
@@ -613,7 +538,6 @@
             ctx.drawImage(media, renderX - cw/2, renderY - ch/2, renderW, renderH);
         }
 
-        // ЗАВАНТАЖЕННЯ ФОНУ ТА ЛОГО
         document.getElementById('bgUpload').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return; backgroundImage = null;
             if (backgroundVideo) { backgroundVideo.pause(); backgroundVideo.src = ""; backgroundVideo = null; }
@@ -628,15 +552,6 @@
             if (e.target.files[0]) { const img = new Image(); img.onload = () => { logoImage = img; drawPreviewFrame(); }; img.src = URL.createObjectURL(e.target.files[0]); }
         });
 
-        // ЗАВАНТАЖЕННЯ АУДІО
-        audioUpload.addEventListener('change', function() {
-            if (this.files[0]) {
-                let fullName = this.files[0].name; outputFileName = fullName.substring(0, fullName.lastIndexOf('.')) || fullName; songTitleInput.value = outputFileName;
-                audioPlayer.src = URL.createObjectURL(this.files[0]); audioPlayer.currentTime = 0; initVisualizer(); document.getElementById('exportVideoBtn').disabled = false; drawPreviewFrame();
-            }
-        });
-
-        // PREVIEW
         function drawPreviewFrame() {
             if (!audioCtx) {
                 ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height); const centerX = canvas.width / 2; const centerY = canvas.height / 2; ctx.save();
@@ -645,58 +560,84 @@
                 if (backgroundVideo && backgroundVideo.readyState >= 2) { drawMediaCover(ctx, backgroundVideo, true); } else if (backgroundImage) { drawMediaCover(ctx, backgroundImage, false); }
                 ctx.restore();
                 if (backgroundVideo || backgroundImage) { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height); }
-                
-                // Лого (якщо стиль круговий)
                 if (logoImage && playerStyleSelect.value.startsWith('circle')) { 
                     const minDimension = Math.min(canvas.width, canvas.height); const logoRadius = minDimension * 0.16; 
                     ctx.save(); ctx.beginPath(); ctx.arc(centerX, centerY, logoRadius, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(logoImage, centerX - logoRadius, centerY - logoRadius, logoRadius*2, logoRadius*2); ctx.restore();
                     ctx.beginPath(); ctx.arc(centerX, centerY, logoRadius, 0, Math.PI * 2); ctx.strokeStyle = primaryColor; ctx.lineWidth = minDimension * 0.003; ctx.stroke();
                 }
                 drawTextOverlay(Math.min(canvas.width, canvas.height));
-                drawWatermark(Math.min(canvas.width, canvas.height));
             }
         }
 
-        // ПОДІЇ НАЛАШТУВАНЬ
         playerStyleSelect.addEventListener('change', drawPreviewFrame); bgBlurSlider.addEventListener('input', drawPreviewFrame); songTitleInput.addEventListener('input', drawPreviewFrame); authorInput.addEventListener('input', drawPreviewFrame); document.getElementById('lyricsInput').addEventListener('input', drawPreviewFrame); particleSelect.addEventListener('change', () => particles = []); 
 
-        // WHISPER / ШІ ФОН (Симуляція для роботи без сервера)
+        audioUpload.addEventListener('change', function() {
+            if (this.files[0]) {
+                let fullName = this.files[0].name; outputFileName = fullName.substring(0, fullName.lastIndexOf('.')) || fullName; songTitleInput.value = outputFileName;
+                audioPlayer.src = URL.createObjectURL(this.files[0]); audioPlayer.currentTime = 0; initVisualizer(); document.getElementById('exportVideoBtn').disabled = false; drawPreviewFrame();
+            }
+        });
+
+        // ==========================================
+        // ШІ ОБКЛАДИНКА (З відловом помилок)
+        // ==========================================
         document.getElementById('generateAiBgBtn').addEventListener('click', async () => {
+            const lyrics = document.getElementById('lyricsInput').value.trim(); const format = document.getElementById('formatSelect').value; const customPrompt = document.getElementById('customAiPrompt').value.trim();
             const btn = document.getElementById('generateAiBgBtn'); const status = document.getElementById('aiLoadingStatus');
-            btn.disabled = true; status.style.display = 'block';
-            await new Promise(r => setTimeout(r, 2000));
-            // Симуляція: просто ставимо кольоровий фон
-            const c = document.createElement('canvas'); c.width=100; c.height=100; const cx = c.getContext('2d');
-            cx.fillStyle = secondaryColor; cx.fillRect(0,0,100,100); backgroundImage = new Image(); backgroundImage.src = c.toDataURL(); backgroundImage.onload = drawPreviewFrame;
+            btn.disabled = true; status.style.display = 'block'; status.innerHTML = 'Генерую... <i class="fas fa-spinner fa-spin"></i>';
+            try {
+                const response = await fetch('https://andreygerc11-music-site.onrender.com/api/generate-image', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lyrics: lyrics, format: format, customPrompt: customPrompt })
+                });
+                const data = await response.json();
+                if (response.ok && data.imageUrl) {
+                    const img = new Image(); img.crossOrigin = "Anonymous"; 
+                    img.onload = () => { backgroundImage = img; if (backgroundVideo) { backgroundVideo.pause(); backgroundVideo.src = ""; backgroundVideo = null; } drawPreviewFrame(); };
+                    img.src = data.imageUrl;
+                } else { alert("Помилка ШІ: " + (data.error || "Сервер не зміг згенерувати зображення.")); }
+            } catch (err) { alert("Помилка зв'язку з сервером. Можливо, Render ще запускається або перевантажений. Спробуйте ще раз."); }
             btn.disabled = false; status.style.display = 'none';
         });
 
+        // ==========================================
+        // WHISPER (З відловом помилок)
+        // ==========================================
         document.getElementById('aiSyncBtn').addEventListener('click', async () => {
-            if (!audioUpload.files[0]) { alert("Завантажте аудіо!"); return; }
-            const btn = document.getElementById('aiSyncBtn'); const statusInfo = document.getElementById('aiSyncStatusInfo');
+            const audioFile = document.getElementById('audioUpload').files[0]; if (!audioFile) { alert("Спочатку завантажте аудіо трек!"); return; }
+            const currentLyrics = document.getElementById('lyricsInput').value.trim(); const btn = document.getElementById('aiSyncBtn'); const statusInfo = document.getElementById('aiSyncStatusInfo');
             btn.disabled = true; statusInfo.style.display = 'block';
-            await new Promise(r => setTimeout(r, 2000));
-            // Симуляція таймінгів
-            document.getElementById('lyricsInput').value = "[00:02.00]Перший рядок симуляції\n[00:05.00]Другий рядок караоке";
-            btn.disabled = false; statusInfo.style.display = 'none'; drawPreviewFrame();
+            const formData = new FormData(); formData.append('audio', audioFile); if (currentLyrics) formData.append('lyricsText', currentLyrics);
+            try {
+                const response = await fetch('https://andreygerc11-music-site.onrender.com/api/sync-lyrics', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (response.ok && data.lrc) { document.getElementById('lyricsInput').value = data.lrc; alert("ШІ успішно розпізнав текст!"); drawPreviewFrame(); } 
+                else { alert("Помилка Whisper: " + (data.error || "Не вдалося розпізнати текст.")); }
+            } catch (e) { alert("Помилка з'єднання з сервером. Файл занадто великий (ліміт 25 МБ) або Render перервав з'єднання."); }
+            btn.disabled = false; statusInfo.style.display = 'none';
         });
 
-        // КАРАОКЕ СИНХРОНІЗАЦІЯ
+        // КАРАОКЕ
         const startSyncBtn = document.getElementById('startSyncBtn'); const syncStatus = document.getElementById('syncStatus'); const lyricsInput = document.getElementById('lyricsInput');
         const restartSyncBtn = document.getElementById('restartSyncBtn'); const cancelSyncBtn = document.getElementById('cancelSyncBtn');
 
         startSyncBtn.addEventListener('click', () => {
-            if (!audioPlayer.src) { alert('Завантажте аудіо!'); return; }
-            const text = lyricsInput.value; if (!text.trim()) { alert('Вставте текст!'); return; }
+            if (!audioPlayer.src) { alert('Спочатку завантажте аудіо трек!'); return; }
+            const text = lyricsInput.value; if (!text.trim()) { alert('Вставте текст пісні у поле вище!'); return; }
             const hasLRC = /\[\d{2}:\d{2}(\.\d{1,3})?\]/.test(text);
-            if (hasLRC) { parseLRC(text); alert("LRC розпізнано!"); drawPreviewFrame(); return; }
+
+            if (hasLRC) {
+                parseLRC(text); syncStatus.style.display = 'block';
+                syncStatus.innerHTML = '<p style="color: #4CAF50;"><i class="fas fa-check-circle"></i> LRC розпізнано! Текст синхронізовано.</p>';
+                startSyncBtn.innerHTML = '<i class="fas fa-redo"></i> Оновити текст'; isSyncingLyrics = false; drawPreviewFrame(); return;
+            }
+
             rawLyrics = text.split('\n').map(line => line.trim()); lyricsData = []; currentSyncIndex = 0; isSyncingLyrics = true;
             syncStatus.style.display = 'block'; startSyncBtn.style.display = 'none';
             audioPlayer.blur(); audioPlayer.currentTime = 0; audioPlayer.play(); updateTeleprompter(); drawPreviewFrame();
         });
 
         restartSyncBtn.addEventListener('click', () => { lyricsData = []; currentSyncIndex = 0; audioPlayer.currentTime = 0; audioPlayer.play(); isSyncingLyrics = true; updateTeleprompter(); });
-        cancelSyncBtn.addEventListener('click', () => { isSyncingLyrics = false; audioPlayer.pause(); audioPlayer.currentTime = 0; syncStatus.style.display = 'none'; startSyncBtn.style.display = 'flex'; drawPreviewFrame(); });
+        cancelSyncBtn.addEventListener('click', () => { isSyncingLyrics = false; audioPlayer.pause(); audioPlayer.currentTime = 0; syncStatus.style.display = 'none'; startSyncBtn.style.display = 'flex'; startSyncBtn.innerHTML = '<i class="fas fa-play"></i> Застосувати текст'; drawPreviewFrame(); });
 
         function parseLRC(text) {
             lyricsData = []; const lines = text.split('\n'); const timeRegex = /\[\d{2}:\d{2}(\.\d{1,3})?\]/g; 
@@ -714,17 +655,22 @@
         }
 
         function updateTeleprompter() {
-            const currEl = document.getElementById('currentLyricLine');
-            if (currentSyncIndex < rawLyrics.length) { currEl.innerText = rawLyrics[currentSyncIndex] || "[ ПАУЗА ]"; } else { currEl.innerText = "ЗАВЕРШЕНО!"; isSyncingLyrics = false; }
+            const prevEl = document.getElementById('prevLyricLine'); const currEl = document.getElementById('currentLyricLine'); const nextEl = document.getElementById('nextLyricLine');
+            if (!currEl) return; 
+            prevEl.innerText = (currentSyncIndex > 0) ? (rawLyrics[currentSyncIndex - 1] || "[ ПАУЗА ]") : "";
+            if (currentSyncIndex < rawLyrics.length) { currEl.innerText = rawLyrics[currentSyncIndex] || "[ ПАУЗА ]"; } else { currEl.innerText = "ЗАВЕРШЕНО!"; currEl.style.color = "#4CAF50"; }
+            nextEl.innerText = (currentSyncIndex + 1 < rawLyrics.length) ? (rawLyrics[currentSyncIndex + 1] || "[ ПАУЗА ]") : "";
         }
 
         window.addEventListener('keydown', (e) => {
             if (isSyncingLyrics && e.code === 'Space') {
-                e.preventDefault(); lyricsData.push({ time: audioPlayer.currentTime, text: rawLyrics[currentSyncIndex] }); currentSyncIndex++; updateTeleprompter();
+                e.preventDefault(); lyricsData.push({ time: audioPlayer.currentTime, text: rawLyrics[currentSyncIndex] }); currentSyncIndex++;
+                if (currentSyncIndex >= rawLyrics.length) { isSyncingLyrics = false; setTimeout(() => { syncStatus.style.display = 'none'; startSyncBtn.style.display = 'flex'; startSyncBtn.innerHTML = '<i class="fas fa-redo"></i> Оновити'; }, 1500); }
+                updateTeleprompter();
             }
         });
 
-        // INIT VISUALIZER
+        // ВІЗУАЛІЗАТОР ТА 20 ЕФЕКТІВ
         function initVisualizer() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)(); analyser = audioCtx.createAnalyser(); mediaDest = audioCtx.createMediaStreamDestination(); speakerGain = audioCtx.createGain(); 
@@ -733,46 +679,88 @@
             }
         }
 
-        // === ЧАСТИНКИ ТАShape ===
         function createParticle(typeOption) {
             const typesList = ['bubble', 'snow', 'rain', 'heart', 'star', 'firefly', 'dust', 'note', 'lightning', 'spark', 'confetti', 'triangle', 'diamond', 'cross', 'meteor', 'fire', 'smoke', 'matrix', 'leaf'];
             let t = typeOption === 'mixed' ? typesList[Math.floor(Math.random() * typesList.length)] : typeOption;
+            
             const minDim = Math.min(canvas.width, canvas.height);
-            let p = { x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * (minDim * 0.015) + (minDim * 0.005), speedX: (Math.random() - 0.5) * 2, speedY: (Math.random() - 0.5) * 2, type: t, opacity: Math.random() * 0.5 + 0.2, angle: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 0.1, color: 'white', char: '' };
+            let p = {
+                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                size: Math.random() * (minDim * 0.015) + (minDim * 0.005),
+                speedX: (Math.random() - 0.5) * 2, speedY: (Math.random() - 0.5) * 2,
+                type: t, opacity: Math.random() * 0.5 + 0.2, angle: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 0.1,
+                color: 'white', char: ''
+            };
+
             switch(t) {
-                case 'bubble': p.speedY = -(Math.random()*2+1); p.y=canvas.height+50; break;
-                case 'snow': p.speedY = Math.random()*2+1; p.y=-50; break;
-                case 'heart': p.speedY=-(Math.random()*2+1); p.y=canvas.height+50; p.color=primaryColor; break;
-                case 'star': p.color='yellow'; break;
-                case 'rain': p.speedY=Math.random()*5+5; p.y=-50; p.size*=0.5; p.color='rgba(200,220,255,0.6)'; break;
-                case 'firefly': p.color='#ccff00'; p.size*=0.3; break;
-                case 'dust': p.size*=0.2; p.opacity=0.3; break;
-                case 'note': p.speedY=-(Math.random()*2+1); p.y=canvas.height+50; p.char=Math.random()>0.5?'🎵':'🎶'; break;
-                case 'lightning': p.speedY=Math.random()*10+10; p.y=-50; p.size*=0.2; p.color='#e0f0ff'; break;
-                case 'spark': p.speedY=-(Math.random()*5+2); p.y=canvas.height+50; p.color='#ffaa00'; p.size*=0.4; break;
-                case 'confetti': p.speedY=Math.random()*3+1; p.y=-50; const c=['#f00','#0f0','#00f','#ff0','#0ff','#f0f']; p.color=c[Math.floor(Math.random()*c.length)]; break;
-                case 'triangle': p.speedY=-(Math.random()*2+1); p.y=canvas.height+50; p.color=secondaryColor; break;
-                case 'diamond': p.speedY=-(Math.random()*2+1); p.y=canvas.height+50; p.color='#0ffff'; break;
-                case 'cross': p.speedY=-(Math.random()*2+1); p.y=canvas.height+50; p.color='#ff00ff'; break;
-                case 'meteor': p.speedY=Math.random()*8+5; p.speedX=p.speedY; p.y=-50; p.x=Math.random()*canvas.width*2-canvas.width; break;
-                case 'fire': p.speedY=-(Math.random()*3+2); p.y=canvas.height+20; p.color='#ff4000'; p.size*=1.5; break;
-                case 'smoke': p.speedY=-(Math.random()*1+0.5); p.y=canvas.height+50; p.color='rgba(150,150,150,0.15)'; p.size*=3; break;
-                case 'matrix': p.speedY=Math.random()*3+2; p.y=-50; p.color='#00ff00'; p.char=String.fromCharCode(0x30A0+Math.random()*96); break;
-                case 'leaf': p.speedY=Math.random()*2+1; p.y=-50; const l=['🍂','🍁','🍃']; p.char=l[Math.floor(Math.random()*l.length)]; break;
+                case 'bubble': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; break;
+                case 'snow': p.speedY = Math.random() * 2 + 1; p.y = -50; break;
+                case 'heart': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = '#ff3c00'; break;
+                case 'star': p.speedY = (Math.random() - 0.5) * 0.5; p.color = 'yellow'; break;
+                case 'rain': p.speedY = Math.random() * 5 + 5; p.speedX = (Math.random()-0.5); p.y = -50; p.size *= 0.5; p.color = 'rgba(200,220,255,0.6)'; break;
+                case 'firefly': p.speedY = (Math.random() - 0.5); p.speedX = (Math.random() - 0.5); p.color = '#ccff00'; p.size *= 0.3; break;
+                case 'dust': p.speedY = (Math.random() - 0.5)*0.5; p.speedX = (Math.random() - 0.5)*0.5; p.size *= 0.2; p.opacity = 0.3; break;
+                case 'note': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.char = Math.random() > 0.5 ? '🎵' : '🎶'; break;
+                case 'lightning': p.speedY = Math.random() * 10 + 10; p.speedX = (Math.random()-0.5)*2; p.y = -50; p.size *= 0.2; p.color = '#e0f0ff'; break;
+                case 'spark': p.speedY = -(Math.random() * 5 + 2); p.speedX = (Math.random() - 0.5) * 4; p.y = canvas.height + 50; p.color = '#ffaa00'; p.size *= 0.4; break;
+                case 'confetti': { p.speedY = Math.random() * 3 + 1; p.y = -50; const colors = ['#ff0000','#00ff00','#0000ff','#ffff00','#00ffff','#ff00ff']; p.color = colors[Math.floor(Math.random()*colors.length)]; break; }
+                case 'triangle': { p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; const tcols = ['#ff4d4d','#4d4dff','#4dff4d']; p.color = tcols[Math.floor(Math.random()*tcols.length)]; break; }
+                case 'diamond': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = '#00ffff'; break;
+                case 'cross': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = '#ff00ff'; break;
+                case 'meteor': p.speedY = Math.random() * 8 + 5; p.speedX = p.speedY; p.y = -50; p.x = Math.random() * canvas.width * 2 - canvas.width; p.size *= 0.5; break;
+                case 'fire': p.speedY = -(Math.random() * 3 + 2); p.y = canvas.height + 20; p.x = canvas.width/2 + (Math.random()-0.5)*canvas.width*0.8; p.color = Math.random() > 0.5 ? '#ff4000' : '#ff8800'; p.size *= 1.5; break;
+                case 'smoke': p.speedY = -(Math.random() * 1 + 0.5); p.y = canvas.height + 50; p.color = 'rgba(150,150,150,0.15)'; p.size *= 3; break;
+                case 'matrix': p.speedY = Math.random() * 3 + 2; p.speedX = 0; p.y = -50; p.color = '#00ff00'; p.char = String.fromCharCode(0x30A0 + Math.random() * 96); p.spin = 0; p.angle = 0; break;
+                case 'leaf': { p.speedY = Math.random() * 2 + 1; p.speedX = (Math.random() - 0.5) * 2; p.y = -50; const leaves = ['🍂', '🍁', '🍃']; p.char = leaves[Math.floor(Math.random()*leaves.length)]; break; }
             }
             return p;
         }
 
         function drawShape(ctx, p, pulseSize) {
-            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle); let finalSize = Math.max(0.1, p.size + pulseSize * 0.5); ctx.globalAlpha = p.opacity; ctx.fillStyle = p.color || 'white'; ctx.strokeStyle = p.color || 'white';
-            if (p.type === 'bubble') { ctx.beginPath(); ctx.arc(0, 0, finalSize, 0, Math.PI*2); ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke(); ctx.beginPath(); ctx.arc(-finalSize*0.3,-finalSize*0.3,finalSize*0.2,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill(); } 
-            else if (['snow','dust','smoke','fire','triangle','diamond','cross'].includes(p.type)) { ctx.beginPath(); if(p.type==='triangle'){ctx.moveTo(0,-finalSize);ctx.lineTo(finalSize,finalSize);ctx.lineTo(-finalSize,finalSize);ctx.closePath();}else if(p.type==='diamond'){ctx.moveTo(0,-finalSize);ctx.lineTo(finalSize*0.7,0);ctx.lineTo(0,finalSize);ctx.lineTo(-finalSize*0.7,0);ctx.closePath();}else if(p.type==='cross'){ctx.fillRect(-finalSize,-finalSize*0.2,finalSize*2,finalSize*0.4);ctx.fillRect(-finalSize*0.2,-finalSize,finalSize*0.4,finalSize*2);}else{ctx.arc(0,0,finalSize,0,Math.PI*2);} ctx.fill(); if(p.type==='snow'){ctx.shadowBlur=10;ctx.shadowColor='white';} }
-            else if (p.type === 'heart') { ctx.shadowBlur=10;ctx.shadowColor='red'; let top=finalSize*0.3; ctx.beginPath(); ctx.moveTo(0,top); ctx.bezierCurveTo(0,0,-finalSize,0,-finalSize,top); ctx.bezierCurveTo(-finalSize,finalSize*0.8,0,finalSize,0,finalSize*1.2); ctx.bezierCurveTo(0,finalSize,finalSize,finalSize*0.8,finalSize,top); ctx.bezierCurveTo(finalSize,0,0,0,0,top); ctx.fill(); }
-            else if (['star','firefly','spark'].includes(p.type)) { ctx.beginPath(); for(let i=0;i<5;i++){ctx.lineTo(Math.cos((18+i*72)/180*Math.PI)*finalSize,-Math.sin((18+i*72)/180*Math.PI)*finalSize);ctx.lineTo(Math.cos((54+i*72)/180*Math.PI)*(finalSize*0.4),-Math.sin((54+i*72)/180*Math.PI)*(finalSize*0.4));} ctx.closePath(); ctx.fill(); ctx.shadowBlur=10;ctx.shadowColor=p.color; }
-            else if (['rain','lightning'].includes(p.type)) { ctx.fillRect(0,0,finalSize*0.3,finalSize*10); }
-            else if (['note','matrix','leaf'].includes(p.type)) { ctx.font=`${finalSize*2}px sans-serif`; ctx.textAlign='center'; ctx.fillText(p.char,0,0); }
-            else if (p.type === 'confetti') { ctx.fillRect(-finalSize/2, -finalSize/2, finalSize, finalSize); }
-            else if (p.type === 'meteor') { ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(finalSize*10,finalSize*10); ctx.lineWidth=finalSize; ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.stroke(); ctx.beginPath(); ctx.arc(finalSize*10,finalSize*10,finalSize,0,Math.PI*2); ctx.fill(); }
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle); 
+            let finalSize = Math.max(0.1, p.size + pulseSize * 0.5); 
+            ctx.globalAlpha = p.opacity;
+
+            if (p.type === 'bubble') { 
+                ctx.beginPath(); ctx.arc(0, 0, finalSize, 0, Math.PI * 2); ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke(); 
+                ctx.beginPath(); ctx.arc(-finalSize*0.3, -finalSize*0.3, finalSize*0.2, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill(); 
+            } 
+            else if (p.type === 'snow' || p.type === 'dust' || p.type === 'smoke' || p.type === 'fire') { 
+                ctx.fillStyle = p.color || 'white'; ctx.beginPath(); ctx.arc(0, 0, finalSize, 0, Math.PI * 2); ctx.fill(); 
+                if (p.type === 'snow') { ctx.shadowBlur = 10; ctx.shadowColor = 'white'; }
+                if (p.type === 'fire') { ctx.shadowBlur = 15; ctx.shadowColor = 'red'; }
+            }
+            else if (p.type === 'heart') { 
+                ctx.fillStyle = p.color; ctx.shadowBlur = 10; ctx.shadowColor = 'red'; let top = finalSize * 0.3; 
+                ctx.beginPath(); ctx.moveTo(0, top); ctx.bezierCurveTo(0, 0, -finalSize, 0, -finalSize, top); ctx.bezierCurveTo(-finalSize, finalSize * 0.8, 0, finalSize, 0, finalSize * 1.2); ctx.bezierCurveTo(0, finalSize, finalSize, finalSize * 0.8, finalSize, top); ctx.bezierCurveTo(finalSize, 0, 0, 0, 0, top); ctx.fill(); 
+            }
+            else if (p.type === 'star' || p.type === 'firefly' || p.type === 'spark') { 
+                ctx.fillStyle = p.color; ctx.shadowBlur = 10; ctx.shadowColor = p.color; ctx.beginPath(); 
+                for (let i = 0; i < 5; i++) { ctx.lineTo(Math.cos((18 + i * 72) / 180 * Math.PI) * finalSize, -Math.sin((18 + i * 72) / 180 * Math.PI) * finalSize); ctx.lineTo(Math.cos((54 + i * 72) / 180 * Math.PI) * (finalSize * 0.4), -Math.sin((54 + i * 72) / 180 * Math.PI) * (finalSize * 0.4)); } 
+                ctx.closePath(); ctx.fill(); 
+            }
+            else if (p.type === 'rain' || p.type === 'lightning') {
+                ctx.fillStyle = p.color; ctx.fillRect(0, 0, finalSize*0.5, finalSize * 10);
+            }
+            else if (p.type === 'confetti' || p.type === 'diamond') {
+                ctx.fillStyle = p.color; ctx.fillRect(-finalSize/2, -finalSize/2, finalSize, finalSize);
+            }
+            else if (p.type === 'triangle') {
+                ctx.fillStyle = p.color; ctx.beginPath(); ctx.moveTo(0, -finalSize); ctx.lineTo(finalSize, finalSize); ctx.lineTo(-finalSize, finalSize); ctx.closePath(); ctx.fill();
+            }
+            else if (p.type === 'cross') {
+                ctx.fillStyle = p.color; ctx.fillRect(-finalSize, -finalSize*0.2, finalSize*2, finalSize*0.4); ctx.fillRect(-finalSize*0.2, -finalSize, finalSize*0.4, finalSize*2);
+            }
+            else if (p.type === 'meteor') {
+                ctx.fillStyle = p.color || 'white'; ctx.shadowBlur = 10; ctx.shadowColor = 'white';
+                ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(finalSize*10, finalSize*10); ctx.lineWidth = finalSize; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke();
+                ctx.beginPath(); ctx.arc(finalSize*10, finalSize*10, finalSize, 0, Math.PI*2); ctx.fill();
+            }
+            else if (['note', 'matrix', 'leaf'].includes(p.type)) {
+                ctx.fillStyle = p.color || 'white'; ctx.font = `${finalSize * 2}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                if(p.type==='matrix') { ctx.shadowBlur = 10; ctx.shadowColor = '#00ff00'; }
+                ctx.fillText(p.char, 0, 0);
+            }
             ctx.restore();
         }
 
@@ -780,53 +768,77 @@
             const effect = particleSelect.value; if (effect === 'none') return;
             const maxParticles = (effect === 'rain' || effect === 'snow' || effect === 'matrix') ? 150 : 80; 
             if (particles.length < maxParticles && Math.random() < 0.4) { particles.push(createParticle(effect)); }
+            
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.x += p.speedX; p.y += p.speedY; p.angle += p.spin; 
                 let pulse = (avgBass / 255) * 10; 
+                if(['star','firefly','spark'].includes(p.type)) p.opacity += (Math.random() - 0.5) * 0.15; 
                 if(p.type === 'fire' || p.type === 'smoke') { p.size *= 0.98; p.opacity -= 0.01; } 
+                if(p.type === 'matrix') { if(Math.random() < 0.05) p.char = String.fromCharCode(0x30A0 + Math.random() * 96); }
+
                 p.opacity = Math.max(0.01, Math.min(0.9, p.opacity));
                 drawShape(ctx, p, pulse); 
                 if (p.opacity <= 0.02 || p.y < -100 || p.y > canvas.height + 100 || p.x < -100 || p.x > canvas.width + 100) { particles.splice(i, 1); }
             }
         }
 
-        // === OVERLAYS ===
-        function drawTextOverlay(minDim) {
-            const title = songTitleInput.value.trim(); const author = authorInput.value.trim();
-            if (title || author) {
-                ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const centerX = canvas.width / 2 + textOffsetX; let startY = canvas.height * 0.18 + textOffsetY; let currentY = startY; ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15; let totalH = 0; let maxW = 0;
-                if (title) { const size = minDim * 0.065; ctx.font = `900 ${size}px 'Montserrat', sans-serif`; ctx.fillStyle = '#fff'; let words = (`🎵 ${title}`).split(' '); let line = ''; let lineHeight = size * 1.3;
-                    for(let n=0; n<words.length; n++){ let testLine = line+words[n]+' '; let metrics = ctx.measureText(testLine); if(metrics.width>(canvas.width-minDim*0.1) && n>0){ ctx.fillText(line.trim(), centerX, currentY); maxW = Math.max(maxW, ctx.measureText(line.trim()).width); line=words[n]+' '; currentY+=lineHeight; totalH+=lineHeight; }else{line=testLine;}} ctx.fillText(line.trim(), centerX, currentY); maxW = Math.max(maxW, ctx.measureText(line.trim()).width); currentY+=lineHeight; totalH+=lineHeight;
+        function drawTextOverlay(minDimension) {
+            const titleText = songTitleInput.value.trim(); const authorText = authorInput.value.trim();
+            if (titleText || authorText) {
+                ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+                const padding = minDimension * 0.05; const maxWidthTitle = canvas.width - (padding * 2); const centerXText = (canvas.width / 2) + textOffsetX;
+                let startY = (canvas.height * 0.18) + textOffsetY; let currentY = startY; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 15; let totalHeight = 0; let maxLineWidth = 0;
+                if (titleText) {
+                    const titleSize = minDimension * 0.065; ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`; ctx.fillStyle = '#fff';
+                    let words = (`🎵 ${titleText}`).split(' '); let line = ''; let lineHeight = titleSize * 1.3;
+                    for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthTitle && n > 0) { ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); line = words[n] + ' '; currentY += lineHeight; totalHeight += lineHeight; } else { line = testLine; } }
+                    ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); currentY += lineHeight; totalHeight += lineHeight;
                 }
-                if (author) { const size = minDim * 0.04; ctx.font = `600 ${size}px 'Montserrat', sans-serif`; ctx.fillStyle = '#bbb'; let words = (`Відео: ${author}`).split(' '); let line = ''; let lineHeight = size * 1.3;
-                    for(let n=0; n<words.length; n++){ let testLine = line+words[n]+' '; let metrics = ctx.measureText(testLine); if(metrics.width>(canvas.width-minDim*0.1) && n>0){ ctx.fillText(line.trim(), centerX, currentY); maxW = Math.max(maxW, ctx.measureText(line.trim()).width); line=words[n]+' '; currentY+=lineHeight; totalH+=lineHeight; }else{line=testLine;}} ctx.fillText(line.trim(), centerX, currentY); maxW = Math.max(maxW, ctx.measureText(line.trim()).width); totalH+=lineHeight;
+                if (authorText) {
+                    const authorSize = minDimension * 0.04; ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`; ctx.fillStyle = '#bbb';
+                    let words = (`Відео: ${authorText}`).split(' '); let line = ''; let lineHeight = authorSize * 1.3;
+                    for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthTitle && n > 0) { ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); line = words[n] + ' '; currentY += lineHeight; totalHeight += lineHeight; } else { line = testLine; } }
+                    ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); totalHeight += lineHeight;
                 }
-                ctx.restore(); textBB = { x: centerX - maxW/2 - 30, y: startY - (minDim*0.065/2) - 20, w: maxW + 60, h: totalH + 40 };
-                if (!isGenerating && isHoveringText) { ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=3; ctx.setLineDash([10,10]); ctx.strokeRect(textBB.x, textBB.y, textBB.w, textBB.h); ctx.restore(); }
+                ctx.restore();
+                textBB = { x: centerXText - (maxLineWidth / 2) - 30, y: startY - (minDimension * 0.065 / 2) - 20, w: maxLineWidth + 60, h: totalHeight + 40 };
+                if (!isGenerating && isHoveringText) {
+                    ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(textBB.x, textBB.y, textBB.w, textBB.h);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('✋ Перетягнути', textBB.x + textBB.w / 2, textBB.y - 15); ctx.restore();
+                }
             } else { textBB = { x: 0, y: 0, w: 0, h: 0 }; }
 
-            // Lyrics
-            let activeText = ""; let currentTime = audioPlayer.currentTime;
+            let activeText = ""; let currentTime = audioPlayer ? audioPlayer.currentTime : 0;
             if (lyricsData.length > 0) { for (let i = 0; i < lyricsData.length; i++) { if (currentTime >= lyricsData[i].time) { activeText = lyricsData[i].text; } } }
+            let isPlaceholder = false;
+            if (!isGenerating && activeText === "" && (document.getElementById('lyricsInput').value.trim() !== "" || lyricsData.length > 0)) { activeText = "[ Текст пісні з'явиться тут ]"; isPlaceholder = true; }
+
             if (activeText !== "") {
-                ctx.save(); const fontSize = minDim * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const centerX = canvas.width / 2 + lyricsOffsetX; const lineHeight = fontSize * 1.3; ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15; ctx.lineWidth = fontSize * 0.15;
-                let words = activeText.split(' '); let line = ''; let lines = [];
-                for(let n=0; n<words.length; n++){ let testLine = line+words[n]+' '; let metrics = ctx.measureText(testLine); if(metrics.width>(canvas.width-minDim*0.1) && n>0){ lines.push(line.trim()); line=words[n]+' '; }else{line=testLine;}} lines.push(line.trim());
-                let startY = canvas.height * 0.85 - (lines.length - 1) * lineHeight + lyricsOffsetY; let maxW = 0;
-                for (let i = 0; i < lines.length; i++) { const currentLineY = startY + (i * lineHeight); ctx.strokeStyle = '#000'; ctx.strokeText(lines[i], centerX, currentLineY); ctx.fillStyle = '#fff'; ctx.shadowColor = primaryColor; ctx.shadowBlur = 25; ctx.fillText(lines[i], centerX, currentLineY); maxW = Math.max(maxW, ctx.measureText(lines[i]).width); }
-                ctx.restore(); lyricsBB = { x: centerX - maxW/2 - 30, y: startY - fontSize/2 - 20, w: maxW + 60, h: lines.length*lineHeight + 40 };
-                if (!isGenerating && isHoveringLyrics) { ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=3; ctx.setLineDash([10,10]); ctx.strokeRect(lyricsBB.x, lyricsBB.y, lyricsBB.w, lyricsBB.h); ctx.restore(); }
+                ctx.save(); if (isPlaceholder) ctx.globalAlpha = 0.5;
+                const fontSize = minDimension * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                const padding = minDimension * 0.05; const maxWidthLyrics = canvas.width - (padding * 2); const centerXText = (canvas.width / 2) + lyricsOffsetX;
+                let words = activeText.split(' '); let line = ''; let linesToDraw = [];
+                for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthLyrics && n > 0) { linesToDraw.push(line.trim()); line = words[n] + ' '; } else { line = testLine; } }
+                linesToDraw.push(line.trim());
+                const lineHeight = fontSize * 1.3; let startY = (canvas.height * 0.85) - (linesToDraw.length - 1) * lineHeight + lyricsOffsetY;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 15; ctx.lineWidth = fontSize * 0.15; let maxLyricsWidth = 0;
+
+                for (let i = 0; i < linesToDraw.length; i++) {
+                    const currentLineY = startY + (i * lineHeight);
+                    ctx.strokeStyle = '#000'; ctx.strokeText(linesToDraw[i], centerXText, currentLineY);
+                    ctx.fillStyle = '#fff'; ctx.shadowColor = primaryColor; ctx.shadowBlur = 25; ctx.fillText(linesToDraw[i], centerXText, currentLineY);
+                    maxLyricsWidth = Math.max(maxLyricsWidth, ctx.measureText(linesToDraw[i]).width);
+                }
+                ctx.restore();
+                lyricsBB = { x: centerXText - (maxLyricsWidth / 2) - 30, y: startY - (fontSize / 2) - 20, w: maxLyricsWidth + 60, h: (linesToDraw.length * lineHeight) + 40 };
+
+                if (!isGenerating && isHoveringLyrics) {
+                    ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(lyricsBB.x, lyricsBB.y, lyricsBB.w, lyricsBB.h);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('✋ Перетягнути текст', lyricsBB.x + lyricsBB.w / 2, lyricsBB.y - 15); ctx.restore();
+                }
             } else { lyricsBB = { x: 0, y: 0, w: 0, h: 0 }; }
         }
 
-        function drawWatermark(minDim) {
-            if (!isSubscribed) {
-                ctx.save(); ctx.globalAlpha = 0.6; const text = "Hertz Spectrum"; ctx.font = `800 ${minDim * 0.025}px 'Montserrat', sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 10;
-                ctx.fillText(text, canvas.width - minDim*0.05, minDim*0.05); ctx.restore();
-            }
-        }
-
-        // === MAIN DRAW ===
         function draw() {
             if (!isGenerating) { drawAnimationId = requestAnimationFrame(draw); }
             const bufferLength = analyser.frequencyBinCount; const dataArray = new Uint8Array(bufferLength); analyser.getByteFrequencyData(dataArray);
@@ -834,77 +846,110 @@
 
             ctx.fillStyle = '#0a0a0b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             const centerX = canvas.width / 2; const centerY = canvas.height / 2; let bgScale = 1 + (avgBass / 255) * 0.08; 
+
             ctx.save();
             if (bgBlurSlider.value > 0) { ctx.filter = `blur(${bgBlurSlider.value}px)`; }
             ctx.translate(centerX, centerY); ctx.scale(bgScale, bgScale);
-            if (backgroundVideo && backgroundVideo.readyState >= 2) { drawMediaCover(ctx, backgroundVideo, true); ctx.restore(); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0,0,canvas.width,canvas.height); } 
-            else if (backgroundImage) { drawMediaCover(ctx, backgroundImage, false); ctx.restore(); ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0,0,canvas.width,canvas.height); } 
-            else { ctx.restore(); ctx.fillStyle = 'rgba(10,10,11,1)'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+            if (backgroundVideo && backgroundVideo.readyState >= 2) { drawMediaCover(ctx, backgroundVideo, true); ctx.restore(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (backgroundImage) { drawMediaCover(ctx, backgroundImage, false); ctx.restore(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else { ctx.restore(); ctx.fillStyle = 'rgba(10, 10, 11, 1.0)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
             handleParticles(avgBass);
             if (autoColorCheckbox.checked) { baseHue = (baseHue + 1.5) % 360; primaryColor = `hsl(${Math.floor(baseHue)}, 100%, 50%)`; secondaryColor = `hsl(${Math.floor((baseHue + 60) % 360)}, 100%, 50%)`; }
 
-            const minDim = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
-            const radiusBoost = avgBass * 0.15 * sharpnessSlider.value; const baseRadius = minDim * 0.16; const logoRadius = baseRadius + radiusBoost;
+            const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
+            if (style === 'circle_sharp') drawCircleSharp(dataArray, minDimension, bufferLength, avgBass); else if (style === 'circle_bars') drawCircleBars(dataArray, minDimension, bufferLength, avgBass); else if (style === 'linear_bars') drawLinearBars(dataArray, minDimension, bufferLength); else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength); else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
+            drawTextOverlay(minDimension);
 
-            if (style === 'circle_sharp' || style === 'circle_bars') {
-                if (logoImage) { ctx.save(); ctx.beginPath(); ctx.arc(centerX, centerY, logoRadius, 0, Math.PI*2); ctx.clip(); ctx.drawImage(logoImage, centerX - logoRadius, centerY - logoRadius, logoRadius*2, logoRadius*2); ctx.restore(); }
-                if (style === 'circle_sharp') drawCircleSharp(dataArray, minDim, logoRadius, avgBass); else drawCircleBars(dataArray, minDim, logoRadius, avgBass);
-            } else if (style === 'linear_bars') drawLinearBars(dataArray); else if (style === 'linear_curve') drawLinearCurve(dataArray);
-
-            drawTextOverlay(minDim);
-            drawWatermark(minDim);
+            if (!isSubscribed) {
+                ctx.save(); ctx.globalAlpha = 0.6; const wmText = "Hertz Spectrum"; const wmFontSize = minDimension * 0.025; 
+                ctx.font = `800 ${wmFontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+                const padding = minDimension * 0.05; const logoSize = wmFontSize * 1.5; const textX = canvas.width - padding; const wmStartY = padding + logoSize / 2;
+                ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 10; ctx.fillText(wmText, textX, wmStartY);
+                const textWidth = ctx.measureText(wmText).width; const logoX = textX - textWidth - logoSize - 10;
+                if (watermarkImg.complete && watermarkImg.naturalWidth > 0) { ctx.drawImage(watermarkImg, logoX, wmStartY - logoSize/2, logoSize, logoSize); }
+                ctx.restore();
+            }
         }
 
-        // === STYLES ===
-        function drawCircleSharp(dataArray, minDim, pulsatingRadius, avgBass) {
-            const centerX = canvas.width / 2; const centerY = canvas.height / 2;
-            const pointsCount = 60; const usefulLength = Math.floor(analyser.frequencyBinCount * 0.65); let pointsRight = []; let pointsLeft = [];
+        function drawCircleSharp(dataArray, minDimension, bufferLength, avgBass) {
+            const centerX = canvas.width / 2; const centerY = canvas.height / 2; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
+            if (logoImage) { ctx.save(); ctx.beginPath(); ctx.arc(centerX, centerY, pulsatingLogoRadius, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(logoImage, centerX - pulsatingLogoRadius, centerY - pulsatingLogoRadius, pulsatingLogoRadius * 2, pulsatingLogoRadius * 2); ctx.restore(); }
+            const pointsCount = 60; const usefulDataLength = Math.floor(bufferLength * 0.65); let pointsRight = []; let pointsLeft = [];
             for (let i = 0; i <= pointsCount; i++) {
-                let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulLength); let val = dataArray[dataIndex] || 0;
-                let cleanVal = Math.max(0, val - 35); let normalized = cleanVal / 220; let boost = 1 + ratio * 2.5; 
-                let barHeight = Math.pow(normalized, 1.5) * minDim * 0.3 * boost; let dist = pulsatingRadius + barHeight; 
+                let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = dataArray[dataIndex] || 0;
+                let cleanVal = Math.max(0, val - 35); let normalized = cleanVal / 220; let eqBoost = 1 + (ratio * 2.5); 
+                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.15 * eqBoost; let dist = pulsatingLogoRadius + barHeight; 
                 let angleR = (Math.PI / 2) - ratio * Math.PI; pointsRight.push({x: centerX + Math.cos(angleR) * dist, y: centerY + Math.sin(angleR) * dist});
                 let angleL = (Math.PI / 2) + ratio * Math.PI; pointsLeft.push({x: centerX + Math.cos(angleL) * dist, y: centerY + Math.sin(angleL) * dist});
             }
-            ctx.beginPath(); ctx.moveTo(pointsRight[0].x, pointsRight[0].y);
-            for(let j=1; j<pointsRight.length; j++) ctx.lineTo(pointsRight[j].x, pointsRight[j].y);
-            for(let j=pointsLeft.length-2; j>=0; j--) ctx.lineTo(pointsLeft[j].x, pointsLeft[j].y); ctx.closePath(); 
-            let grad = ctx.createLinearGradient(centerX - pulsatingRadius, centerY, centerX + pulsatingRadius, centerY); grad.addColorStop(0, primaryColor); grad.addColorStop(0.5, 'white'); grad.addColorStop(1, secondaryColor);
-            ctx.strokeStyle = grad; ctx.lineWidth = minDim * 0.008; ctx.shadowBlur = (20 + (avgBass * 0.1)) * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0; 
+            ctx.beginPath(); ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.moveTo(pointsRight[0].x, pointsRight[0].y);
+            for(let j = 1; j < pointsRight.length; j++) ctx.lineTo(pointsRight[j].x, pointsRight[j].y);
+            for(let j = pointsLeft.length - 2; j >= 0; j--) ctx.lineTo(pointsLeft[j].x, pointsLeft[j].y);
+            ctx.closePath(); 
+            let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
+            ctx.strokeStyle = gradient; ctx.lineWidth = minDimension * 0.008; ctx.shadowBlur = (20 + (avgBass * 0.1)) * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0; 
         }
 
-        function drawCircleBars(dataArray, minDim, pulsatingRadius, avgBass) {
-            const centerX = canvas.width / 2; const centerY = canvas.height / 2;
-            const pointsCount = 70; const usefulLength = Math.floor(analyser.frequencyBinCount * 0.65);
-            let grad = ctx.createLinearGradient(centerX - pulsatingRadius, centerY, centerX + pulsatingRadius, centerY); grad.addColorStop(0, primaryColor); grad.addColorStop(0.5, 'white'); grad.addColorStop(1, secondaryColor);
-            ctx.strokeStyle = grad; ctx.lineWidth = minDim * 0.009; ctx.lineCap = 'round'; ctx.shadowBlur = 5 * glowSlider.value; ctx.shadowColor = primaryColor;
+        function drawCircleBars(dataArray, minDimension, bufferLength, avgBass) {
+            const centerX = canvas.width / 2; const centerY = canvas.height / 2; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
+            if (logoImage) { ctx.save(); ctx.beginPath(); ctx.arc(centerX, centerY, pulsatingLogoRadius, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(logoImage, centerX - pulsatingLogoRadius, centerY - pulsatingLogoRadius, pulsatingLogoRadius * 2, pulsatingLogoRadius * 2); ctx.restore(); }
+            const pointsCount = 70; const usefulDataLength = Math.floor(bufferLength * 0.65);
+            let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
+            ctx.strokeStyle = gradient; ctx.lineWidth = minDimension * 0.009; ctx.lineCap = 'round'; ctx.shadowBlur = 5 * glowSlider.value; ctx.shadowColor = primaryColor;
             for (let i = 0; i < pointsCount; i++) {
-                let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulLength); let val = dataArray[dataIndex] || 0;
-                let cleanVal = Math.max(0, val - 30); let normalized = cleanVal / 225; let boost = 1 + ratio * 2.0;
-                let barHeight = Math.pow(normalized, 1.5) * minDim * 0.4 * boost; if (barHeight < 2) barHeight = 2; 
+                let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = dataArray[dataIndex] || 0;
+                let cleanVal = Math.max(0, val - 30); let normalized = cleanVal / 225; let boost = 1 + (ratio * 2.0);
+                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.2 * boost; if (barHeight < 2) barHeight = 2; 
                 let angleR = (Math.PI / 2) - ratio * Math.PI;
-                ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleR) * (pulsatingRadius + 5), centerY + Math.sin(angleR) * (pulsatingRadius + 5)); ctx.lineTo(centerX + Math.cos(angleR) * (pulsatingRadius + 5 + barHeight), centerY + Math.sin(angleR) * (pulsatingRadius + 5 + barHeight)); ctx.stroke();
-                if (i !== 0 && i !== pointsCount - 1) { let angleL = (Math.PI / 2) + ratio * Math.PI; ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleL) * (pulsatingRadius + 5), centerY + Math.sin(angleL) * (pulsatingRadius + 5)); ctx.lineTo(centerX + Math.cos(angleL) * (pulsatingRadius + 5 + barHeight), centerY + Math.sin(angleL) * (pulsatingRadius + 5 + barHeight)); ctx.stroke(); }
+                ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5)); ctx.lineTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5 + barHeight)); ctx.stroke();
+                if (i !== 0 && i !== pointsCount - 1) { let angleL = (Math.PI / 2) + ratio * Math.PI; ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5)); ctx.lineTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5 + barHeight)); ctx.stroke(); }
             } ctx.shadowBlur = 0;
         }
 
-        function drawLinearBars(dataArray) {
-            const usefulLength = Math.floor(analyser.frequencyBinCount * 0.7); const barWidth = canvas.width / usefulLength;
+        function drawLinearBars(dataArray, minDimension, bufferLength) {
+            const usefulLength = Math.floor(bufferLength * 0.7); const barWidth = canvas.width / usefulLength;
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
             ctx.fillStyle = gradient; ctx.shadowBlur = 10 * glowSlider.value; ctx.shadowColor = primaryColor;
-            for (let i = 0; i < usefulLength; i++) { const barHeight = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6; ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 2, barHeight); } ctx.shadowBlur = 0;
+            for (let i = 0; i < usefulLength; i++) { const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6 * sharpnessSlider.value; ctx.fillRect(i * barWidth, canvas.height - barHeightScaled, barWidth - 2, barHeightScaled); }
+            ctx.shadowBlur = 0;
         }
 
-        function drawLinearCurve(dataArray) {
-            const usefulLength = Math.floor(analyser.frequencyBinCount * 0.7); const sliceWidth = canvas.width / (usefulLength - 1);
+        function drawLinearCurve(dataArray, minDimension, bufferLength) {
+            const usefulLength = Math.floor(bufferLength * 0.7); const sliceWidth = canvas.width / (usefulLength - 1);
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
             ctx.beginPath(); ctx.moveTo(0, canvas.height);
-            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.5); const y = canvas.height - (v * canvas.height * 0.5); const x = i * sliceWidth; ctx.lineTo(x, y); } ctx.lineTo(canvas.width, canvas.height); ctx.closePath(); ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fill();
-            ctx.lineWidth = 8; ctx.strokeStyle = gradient; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0;
+            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.5); const y = canvas.height - (v * canvas.height * 0.5 * sharpnessSlider.value); const x = i * sliceWidth; ctx.lineTo(x, y); }
+            ctx.lineTo(canvas.width, canvas.height); ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; ctx.fill();
+            ctx.lineWidth = 8; ctx.strokeStyle = gradient; ctx.lineJoin = 'round'; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0;
         }
 
-        // === ЕКСПОРТ ВІДЕО ===
+        function drawLinearSymmetry(dataArray, minDimension, bufferLength) {
+            const usefulLength = Math.floor(bufferLength * 0.65); const sliceWidth = canvas.width / (usefulLength * 2); const centerY = canvas.height / 2;
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
+            ctx.beginPath();
+            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = (usefulLength - 1 - i) * sliceWidth; if (i === usefulLength - 1) ctx.moveTo(x, centerY - amplitude); else ctx.lineTo(x, centerY - amplitude); }
+            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = (usefulLength + i) * sliceWidth; ctx.lineTo(x, centerY - amplitude); }
+            ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = gradient; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0;
+            ctx.beginPath();
+            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = (usefulLength - 1 - i) * sliceWidth; if (i === usefulLength - 1) ctx.moveTo(x, centerY + amplitude); else ctx.lineTo(x, centerY + amplitude); }
+            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = (usefulLength + i) * sliceWidth; ctx.lineTo(x, centerY + amplitude); }
+            ctx.stroke();
+        }
+
+        async function processSubscription(btnElement) {
+            if (!currentUser) { alert("Будь ласка, спочатку увійдіть або зареєструйтесь."); window.location.href = "login.html"; return; }
+            const originalText = btnElement.innerText; btnElement.innerText = 'Зачекайте...'; btnElement.disabled = true;
+            try {
+                const res = await fetch('https://andreygerc11-music-site.onrender.com/api/pay-subscription', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentUser.email }) });
+                const data = await res.json();
+                if (data.url) { window.location.href = data.url; } else { alert('Помилка платежу.'); btnElement.innerText = originalText; btnElement.disabled = false; }
+            } catch (err) { alert('Помилка сервера.'); btnElement.innerText = originalText; btnElement.disabled = false; }
+        }
+        
+        document.getElementById('sidebarSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
+        document.getElementById('modalSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
+
         const generateVideoBtn = document.getElementById('exportVideoBtn');
         const stopRenderBtn = document.getElementById('stopRenderBtn');
         const downloadVideoBtn = document.getElementById('downloadVideoBtn');
@@ -912,40 +957,100 @@
         const generateStatus = document.getElementById('generateStatus');
         const renderOverlay = document.getElementById('renderOverlay');
 
-        stopRenderBtn.addEventListener('click', () => { if (isGenerating && mediaRecorder && mediaRecorder.state !== 'inactive') { isCancelled = true; generateStatus.innerText = 'Скасування...'; mediaRecorder.stop(); } });
+        stopRenderBtn.addEventListener('click', () => {
+            if (isGenerating && mediaRecorder && mediaRecorder.state !== 'inactive') { isCancelled = true; generateStatus.innerText = 'Скасування...'; mediaRecorder.stop(); }
+        });
 
         generateVideoBtn.addEventListener('click', async () => {
-            if (!audioCtx) { alert('Завантажте аудіо!'); return; }
-            if (!isSubscribed) { document.getElementById('subscriptionModal').style.display = 'flex'; return; }
+            if (!audioCtx) { alert('Завантажте аудіо трек!'); return; }
+            let canFreeRender = false;
+            if (!isSubscribed) {
+                let lastRenderStr = localStorage.getItem('hz_last_free_render');
+                if (lastRenderStr) {
+                    let lastRenderTime = parseInt(lastRenderStr);
+                    if (Date.now() - lastRenderTime < 24 * 60 * 60 * 1000) { document.getElementById('subscriptionModal').style.display = 'flex'; return; } 
+                    else { canFreeRender = true; }
+                } else { canFreeRender = true; }
+            }
+
             if (isGenerating) return;
-            downloadVideoBtn.style.display = 'none'; isGenerating = true; isCancelled = false; chunks = [];
-            let mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm'; let fileExt = mimeType.split('/')[1];
+            if (!audioPlayer.duration || audioPlayer.duration < 2) { alert('Спочатку завантажте аудіо трек!'); return; }
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-            generateVideoBtn.style.display = 'none'; stopRenderBtn.style.display = 'block'; renderOverlay.style.display = 'flex'; generateProgress.value = 0;
+            downloadVideoBtn.style.display = 'none'; 
+            isGenerating = true; isCancelled = false; chunks = [];
+            let mimeType = ''; let fileExt = ''; let useWebmFix = false;
+
+            if (MediaRecorder.isTypeSupported('video/mp4')) { mimeType = 'video/mp4'; fileExt = 'mp4'; } 
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) { mimeType = 'video/webm;codecs=vp9'; fileExt = 'webm'; useWebmFix = true; } 
+            else { mimeType = 'video/webm'; fileExt = 'webm'; useWebmFix = true; }
+
+            generateVideoBtn.style.display = 'none'; stopRenderBtn.style.display = 'block';
+            renderOverlay.style.display = 'flex'; generateProgress.value = 0;
+
             cancelAnimationFrame(drawAnimationId); timerWorker.postMessage('start');
-            if (speakerGain) speakerGain.gain.value = isMutedDuringRender ? 0 : 1;
-            audioPlayer.currentTime = 0; if (backgroundVideo) { backgroundVideo.currentTime = 0; backgroundVideo.play(); } particles = []; audioPlayer.play();
 
-            const combinedStream = new MediaStream([...canvas.captureStream(30).getTracks(), ...mediaDest.stream.getTracks()]);
-            mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mimeType, videoBitsPerSecond: 8000000 });
-            mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+            const audioStream = mediaDest.stream;
+            const canvasStream = canvas.captureStream(30); 
+            const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
+            const options = { mimeType: mimeType, videoBitsPerSecond: 5000000 };
+            mediaRecorder = new MediaRecorder(combinedStream, options);
             
-            audioPlayer.onended = () => { if (isGenerating && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); };
-            
-            mediaRecorder.onstop = () => {
-                clearInterval(progInt); timerWorker.postMessage('stop'); drawAnimationId = requestAnimationFrame(draw);
-                if (isCancelled) { isGenerating = false; generateVideoBtn.style.display = 'flex'; stopRenderBtn.style.display = 'none'; renderOverlay.style.display = 'none'; audioPlayer.pause(); audioPlayer.currentTime = 0; if (backgroundVideo) backgroundVideo.pause(); return; }
-                const blob = new Blob(chunks, { type: mimeType });
-                ysFixWebmDuration(blob, audioPlayer.duration * 1000, (fixedBlob) => {
-                    if (generatedVideoUrl) URL.revokeObjectURL(generatedVideoUrl);
-                    generatedVideoUrl = URL.createObjectURL(fixedBlob);
-                    generateVideoBtn.style.display = 'flex'; stopRenderBtn.style.display = 'none'; downloadVideoBtn.style.display = 'block';
-                    downloadVideoBtn.onclick = () => { const a = document.createElement('a'); a.href = generatedVideoUrl; a.download = `${outputFileName}.${fileExt}`; a.click(); };
-                    isGenerating = false; renderOverlay.style.display = 'none'; if (backgroundVideo) backgroundVideo.pause();
-                });
+            mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) { chunks.push(e.data); } };
+
+            audioPlayer.onended = () => {
+                if (isGenerating && mediaRecorder.state !== 'inactive') {
+                    try { mediaRecorder.requestData(); } catch(e) {}
+                    setTimeout(() => { mediaRecorder.stop(); }, 500); 
+                }
             };
-            mediaRecorder.start(1000);
-            const progInt = setInterval(() => { if (isGenerating && !isCancelled) { const p = (audioPlayer.currentTime / audioPlayer.duration) * 100; generateProgress.value = p; generateStatus.innerText = `${audioPlayer.currentTime.toFixed(1)}с / ${audioPlayer.duration.toFixed(1)}с`; } }, 500); 
+
+            mediaRecorder.onstop = () => {
+                clearInterval(checkProgressInterval); timerWorker.postMessage('stop'); drawAnimationId = requestAnimationFrame(draw);
+                if (isCancelled) {
+                    isGenerating = false; generateVideoBtn.style.display = 'flex'; stopRenderBtn.style.display = 'none';
+                    renderOverlay.style.display = 'none';
+                    if (backgroundVideo) backgroundVideo.pause();
+                    audioPlayer.pause(); audioPlayer.currentTime = 0; 
+                    return; 
+                }
+
+                const rawBlob = new Blob(chunks, { type: mimeType });
+                const durationMs = audioPlayer.duration * 1000;
+                
+                generateStatus.innerText = 'Обробляємо файл...';
+                
+                const finalizeAndDownload = (finalBlob) => {
+                    if (generatedVideoUrl) { URL.revokeObjectURL(generatedVideoUrl); }
+                    generatedVideoUrl = URL.createObjectURL(finalBlob);
+                    generateVideoBtn.style.display = 'flex'; generateVideoBtn.innerHTML = '<i class="fas fa-redo"></i> Переробити відео';
+                    stopRenderBtn.style.display = 'none'; downloadVideoBtn.style.display = 'block';
+                    downloadVideoBtn.onclick = () => {
+                        const a = document.createElement('a'); a.style.display = 'none'; a.href = generatedVideoUrl; a.download = `${outputFileName}.${fileExt}`;
+                        document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); }, 100);
+                    };
+                    
+                    if (!isSubscribed) { localStorage.setItem('hz_last_free_render', Date.now().toString()); }
+                    isGenerating = false; renderOverlay.style.display = 'none';
+                    if (backgroundVideo) backgroundVideo.pause();
+                };
+
+                if (useWebmFix) { ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) { finalizeAndDownload(fixedBlob); });
+                } else { finalizeAndDownload(rawBlob); }
+            };
+
+            audioPlayer.currentTime = 0;
+            if (speakerGain) { speakerGain.gain.value = isMutedDuringRender ? 0 : 1; }
+            if (backgroundVideo) { backgroundVideo.currentTime = 0; backgroundVideo.play(); }
+            particles = []; audioPlayer.play(); mediaRecorder.start(1000);
+
+            const checkProgressInterval = setInterval(() => {
+                if (isGenerating && !isCancelled) {
+                    const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                    generateProgress.value = percent;
+                    generateStatus.innerText = `${audioPlayer.currentTime.toFixed(1)}с / ${audioPlayer.duration.toFixed(1)}с`;
+                }
+            }, 500); 
         });
     </script>
 </body>
