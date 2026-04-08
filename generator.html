@@ -23,7 +23,7 @@
             --text-muted: #888888;
             
             --top-height: 65px;
-            --bottom-height: 75px;
+            --bottom-height: 70px;
             --sidebar-width: 320px;
         }
 
@@ -63,23 +63,22 @@
 
         .top-right { display: flex; align-items: center; gap: 15px; }
         
-        /* КРУГЛІ КНОПКИ */
-        .btn-premium { background: rgba(255, 60, 0, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 8px 18px; border-radius: 50px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; transition: 0.3s;}
+        .btn-premium { background: rgba(255, 60, 0, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 8px 15px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; transition: 0.3s;}
         .btn-premium:hover { background: var(--accent); color: #fff; }
 
-        .btn-instruction { background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.2); padding: 8px 18px; border-radius: 50px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 6px;}
+        .btn-instruction { background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 6px;}
         .btn-instruction:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
         .btn-export {
-            background: var(--accent); color: #fff; border: none; padding: 10px 25px; border-radius: 50px;
+            background: var(--accent); color: #fff; border: none; padding: 10px 25px; border-radius: 6px;
             font-family: inherit; font-weight: 800; font-size: 0.85rem; text-transform: uppercase;
             cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(255, 60, 0, 0.2);
         }
         .btn-export:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 60, 0, 0.4); }
         .btn-export:disabled { background: #333; color: #777; cursor: not-allowed; box-shadow: none; transform: none;}
         
-        .btn-download { display: none; background: #4CAF50; color: white; border: none; padding: 10px 25px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; animation: pulse 2s infinite;}
-        .btn-stop { display: none; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 9px 18px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; }
+        .btn-download { display: none; background: #4CAF50; color: white; border: none; padding: 10px 25px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; animation: pulse 2s infinite;}
+        .btn-stop { display: none; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 9px 15px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; }
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); } }
 
@@ -106,7 +105,7 @@
         .panel-content { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
 
         /* Картки налаштувань */
-        .settings-block { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
+        .settings-block { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; }
         .block-title { font-size: 0.75rem; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
         .block-title i { color: var(--accent); }
 
@@ -117,7 +116,7 @@
         
         input[type="text"], select, textarea {
             width: 100%; padding: 10px; background: var(--bg-input);
-            border: 1px solid var(--border-color); border-radius: 8px; color: #fff;
+            border: 1px solid var(--border-color); border-radius: 6px; color: #fff;
             font-family: inherit; font-size: 0.8rem; outline: none; transition: 0.3s;
         }
         input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--accent); }
@@ -125,29 +124,24 @@
         #lyricsInput { font-family: monospace; font-size: 0.75rem; height: 120px; background: #000; }
 
         input[type="file"] { font-size: 0.7rem; color: var(--text-muted); width: 100%; }
-        input[type="file"]::file-selector-button { background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 6px 12px; border-radius: 50px; cursor: pointer; margin-right: 12px; font-weight: 600; transition: 0.3s; }
+        input[type="file"]::file-selector-button { background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-right: 12px; font-weight: 600; transition: 0.3s; }
         input[type="file"]::file-selector-button:hover { background: rgba(255,255,255,0.1); border-color: #fff;}
 
-        /* Слайдери */
+        /* Слайдери і Кольори */
         .slider-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         input[type="range"] { width: 100%; height: 4px; background: var(--bg-input); border-radius: 4px; appearance: none; outline: none; cursor: pointer;}
-        input[type="range"]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); }
+        input[type="range"]::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
         
-        /* КРУГЛІ КОЛЬОРИ */
-        .color-row { display: flex; justify-content: space-around; gap: 10px; margin-bottom: 10px;}
-        input[type="color"] { 
-            -webkit-appearance: none; border: 2px solid var(--border-color); border-radius: 50%; 
-            width: 45px; height: 45px; cursor: pointer; background: transparent; padding: 2px;
-        }
+        .color-row { display: flex; gap: 10px; }
+        input[type="color"] { -webkit-appearance: none; border: none; width: 100%; height: 35px; border-radius: 6px; cursor: pointer; background: transparent; padding: 0;}
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
-        input[type="color"]::-moz-color-swatch { border: none; border-radius: 50%; }
+        input[type="color"]::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 6px; }
 
         /* Кнопки в панелях */
         .btn-outline {
-            width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border-color);
-            color: #fff; border-radius: 50px; cursor: pointer; font-family: inherit;
-            font-weight: 700; font-size: 0.75rem; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; text-transform: uppercase;
+            width: 100%; padding: 8px; background: transparent; border: 1px solid var(--border-color);
+            color: #fff; border-radius: 6px; cursor: pointer; font-family: inherit;
+            font-weight: 600; font-size: 0.75rem; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; text-transform: uppercase;
         }
         .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: #fff;}
         .btn-ai { border-color: var(--accent); color: var(--accent); }
@@ -166,7 +160,7 @@
         
         #canvasWrapper {
             position: relative; box-shadow: 0 10px 50px rgba(0,0,0,0.8); border: 1px solid var(--border-color);
-            background: #000; border-radius: 12px; overflow: hidden; line-height: 0;
+            background: #000; border-radius: 8px; overflow: hidden; line-height: 0;
         }
         canvas { display: block; max-width: 100%; max-height: calc(100vh - var(--top-height) - var(--bottom-height) - 40px); object-fit: contain; cursor: crosshair; }
 
@@ -175,37 +169,37 @@
         /* ============================== */
         .bottom-bar {
             height: var(--bottom-height); background: var(--bg-panel); border-top: 1px solid var(--border-color);
-            display: flex; align-items: center; justify-content: center; padding: 0 20px; z-index: 50; position: relative;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 50; position: relative;
         }
 
-        .player-container { width: 100%; max-width: 700px; display: flex; align-items: center; }
-        audio { flex: 1; height: 45px; outline: none; border-radius: 50px; }
+        .player-container { width: 100%; max-width: 600px; margin: 0 auto; display: flex; align-items: center; }
+        audio { flex: 1; height: 36px; outline: none; border-radius: 4px; }
         
         .bottom-right { display: flex; align-items: center; gap: 15px; position: absolute; right: 20px; }
-        .btn-icon { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; }
+        .btn-icon { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); width: 36px; height: 36px; border-radius: 6px; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; }
         .btn-icon:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
         /* Прогрес рендеру */
         .render-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-panel); z-index: 60; align-items: center; justify-content: center; flex-direction: column; }
-        .render-info { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 600px; margin-bottom: 8px;}
+        .render-info { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 500px; margin-bottom: 8px;}
         .render-info span { font-size: 0.75rem; font-weight: 700; color: #fff; text-transform: uppercase;}
-        progress { width: 100%; max-width: 600px; height: 8px; border-radius: 50px; overflow: hidden; appearance: none; }
+        progress { width: 100%; max-width: 500px; height: 6px; border-radius: 10px; overflow: hidden; appearance: none; }
         progress::-webkit-progress-bar { background-color: var(--bg-input); }
         progress::-webkit-progress-value { background-color: var(--accent); }
 
         /* Статуси і Телесуфлер */
-        #syncStatus { display: none; background: rgba(255, 60, 0, 0.05); border: 1px solid rgba(255,60,0,0.2); padding: 12px; border-radius: 12px; text-align: center; margin-top: 10px; }
+        #syncStatus { display: none; background: rgba(255, 60, 0, 0.05); border: 1px solid rgba(255,60,0,0.2); padding: 12px; border-radius: 6px; text-align: center; margin-top: 10px; }
         .sync-btn-group { display: flex; gap: 8px; margin-top: 10px; }
         #syncStatus p { margin: 0 0 8px 0; font-size: 0.65rem; color: var(--accent); font-weight: bold; text-transform: uppercase; }
-        .teleprompter { background: #000; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
-        #currentLyricLine { color: #fff; font-size: 0.95rem; font-weight: 900; margin: 4px 0; text-shadow: 0 0 8px rgba(255,60,0,0.5); }
+        .teleprompter { background: #000; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); }
+        #currentLyricLine { color: #fff; font-size: 0.85rem; font-weight: 900; margin: 4px 0; }
         #prevLyricLine, #nextLyricLine { color: #666; font-size: 0.7rem; }
         #aiSyncStatusInfo, #aiLoadingStatus { display: none; font-size: 0.65rem; color: var(--accent); text-align: center; font-weight: bold; margin-top: 8px; }
         #aiSyncStatusInfo { color: #4CAF50; }
 
         /* Модалка підписки */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--bg-panel); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid var(--border-color); max-width: 400px; width: 90%; }
+        .modal-content { background: var(--bg-panel); padding: 30px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); max-width: 400px; width: 90%; }
         .modal-content h3 { color: #fff; margin-bottom: 10px; font-size: 1.2rem; font-weight: 900; text-transform: uppercase;}
         .modal-content p { color: #aaa; margin-bottom: 20px; font-size: 0.8rem; line-height: 1.5;}
         .modal-price { font-size: 2rem; color: var(--accent); font-weight: 900; margin-bottom: 5px; }
@@ -229,7 +223,9 @@
         
         <div class="top-right">
             <button id="sidebarSubscribeBtn" class="btn-premium" style="display: none;"><i class="fas fa-crown"></i> PRO Доступ</button>
+            
             <a href="instruction.html" target="_blank" class="btn-instruction"><i class="fas fa-question-circle"></i> Інструкція</a>
+            
             <button id="stopRenderBtn" class="btn-stop"><i class="fas fa-times"></i> Скасувати</button>
             <button id="downloadVideoBtn" class="btn-download"><i class="fas fa-download"></i> Завантажити MP4</button>
             <button id="exportVideoBtn" class="btn-export" disabled><i class="fas fa-bolt"></i> Експорт Відео</button>
@@ -243,7 +239,7 @@
             <div class="panel-content">
                 
                 <div class="settings-block">
-                    <div class="block-header"><i class="fas fa-info-circle"></i> Інформація</div>
+                    <div class="block-title"><i class="fas fa-info-circle"></i> Інформація</div>
                     <div class="control-group">
                         <label>Назва пісні</label>
                         <input type="text" id="songTitleInput" placeholder="Назва пісні">
@@ -256,14 +252,14 @@
                 </div>
 
                 <div class="settings-block">
-                    <div class="block-header"><i class="fas fa-compact-disc"></i> Аудіофайл</div>
+                    <div class="block-title"><i class="fas fa-compact-disc"></i> Аудіофайл</div>
                     <div class="control-group">
                         <input type="file" id="audioUpload" accept="audio/mp3, audio/wav">
                     </div>
                 </div>
 
                 <div class="settings-block">
-                    <div class="block-header"><i class="fas fa-microphone-alt"></i> Текст пісні</div>
+                    <div class="block-title"><i class="fas fa-microphone-alt"></i> Текст пісні</div>
                     <button id="aiSyncBtn" class="btn-outline btn-whisper" style="margin-bottom: 8px;">
                         <i class="fas fa-brain"></i> ШІ-Таймінг (Whisper)
                     </button>
@@ -306,7 +302,7 @@
             <div class="panel-content">
 
                 <div class="settings-block">
-                    <div class="block-header"><i class="fas fa-expand"></i> Формат та Стиль</div>
+                    <div class="block-title"><i class="fas fa-expand"></i> Формат та Стиль</div>
                     <div class="control-group">
                         <label>Формат (Розмір)</label>
                         <select id="formatSelect">
@@ -333,11 +329,11 @@
                 </div>
 
                 <div class="settings-block">
-                    <div class="block-header"><i class="fas fa-image"></i> Фон та Лого</div>
+                    <div class="block-title"><i class="fas fa-image"></i> Фон та Лого</div>
                     
                     <div class="control-group">
                         <label style="color: var(--accent);">ШІ-Генерація Фону (за текстом)</label>
-                        <input type="text" id="customAiPrompt" placeholder="Свій опис...">
+                        <input type="text" id="customAiPrompt" placeholder="Свій опис (опціонально)...">
                         <button id="generateAiBgBtn" class="btn-outline btn-ai" style="margin-top:5px;">
                             <i class="fas fa-magic"></i> Згенерувати
                         </button>
@@ -362,45 +358,27 @@
                 </div>
 
                 <div class="settings-block">
-                    <div class="block-header"><i class="fas fa-palette"></i> Кольори та Ефекти</div>
-                    
+                    <div class="block-title"><i class="fas fa-palette"></i> Кольори та Частинки</div>
                     <div class="color-row">
                         <input type="color" id="primaryColorInput" value="#ff4d4d"> 
                         <input type="color" id="secondaryColorInput" value="#4d4dff"> 
                     </div>
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:5px; font-weight: normal; color: #fff; font-size: 0.7rem; text-transform: none;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:8px; font-weight: normal; color: #fff; font-size: 0.7rem; text-transform: none;">
                         <input type="checkbox" id="autoColorCheckbox" checked style="accent-color:var(--accent);"> Авто-зміна кольорів
                     </label>
-
-                    <div class="control-group" style="margin-top: 15px;">
+                    <div class="control-group" style="margin-top: 10px;">
                         <div class="slider-flex"><label>Світіння (Неон)</label></div>
                         <input type="range" id="glowSlider" min="0.1" max="2.5" step="0.1" value="1.0">
                     </div>
-                    
                     <div class="control-group" style="margin-top: 10px;">
                         <label>Ефекти (Частинки)</label>
                         <select id="particleSelect">
                             <option value="none">Вимкнено</option>
-                            <option value="bubble">Бульбашки</option>
+                            <option value="bubbles">Бульбашки</option>
                             <option value="snow">Сніг</option>
-                            <option value="rain">Дощ</option>
-                            <option value="heart">Сердечка</option>
-                            <option value="star">Зірки</option>
-                            <option value="firefly">Світлячки</option>
-                            <option value="dust">Магічний пил</option>
-                            <option value="note">Ноти</option>
-                            <option value="lightning">Блискавки</option>
-                            <option value="spark">Іскри</option>
-                            <option value="confetti">Конфетті</option>
-                            <option value="triangle">Трикутники</option>
-                            <option value="diamond">Діаманти</option>
-                            <option value="cross">Хрестики</option>
-                            <option value="meteor">Метеорити</option>
-                            <option value="fire">Вогонь</option>
-                            <option value="smoke">Дим</option>
-                            <option value="matrix">Матриця (Цифри)</option>
-                            <option value="leaf">Осіннє листя</option>
-                            <option value="mixed">Магічний Мікс</option>
+                            <option value="hearts">Сердечка</option>
+                            <option value="stars">Зірки</option>
+                            <option value="mixed">Мікс</option>
                         </select>
                     </div>
                 </div>
@@ -428,6 +406,7 @@
             <button id="muteRenderBtn" class="btn-icon" title="Звук під час рендеру увімкнено"><i class="fas fa-volume-up"></i></button>
         </div>
     </footer>
+
 
     <div class="modal-overlay" id="subscriptionModal">
         <div class="modal-content">
@@ -567,7 +546,11 @@
             if (currentUser) { currentUser.status = 'premium'; localStorage.setItem('hz_user', JSON.stringify(currentUser)); }
             alert("Дякуємо за підтримку! Рендеринг розблоковано."); window.history.replaceState({}, document.title, window.location.pathname);
         }
-        if (!isSubscribed) { document.getElementById('sidebarSubscribeBtn').style.display = 'block'; }
+        
+        // ПОКАЗУЄМО КНОПКУ ПІДПИСКИ, ЯКЩО НЕМАЄ ДОСТУПУ
+        if (!isSubscribed) { 
+            document.getElementById('sidebarSubscribeBtn').style.display = 'block'; 
+        }
         
         let baseHue = 0; let particles = []; let lyricsData = []; let rawLyrics = []; let isSyncingLyrics = false; let currentSyncIndex = 0;
         const formats = { vertical: { w: 1080, h: 1920 }, horizontal: { w: 1920, h: 1080 }, square: { w: 1080, h: 1080 }, portrait: { w: 1080, h: 1350 }, cinema: { w: 2560, h: 1080 } };
@@ -719,7 +702,6 @@
             }
         });
 
-        // ВІЗУАЛІЗАТОР ТА ЧАСТИНКИ (20+ ЕФЕКТІВ)
         function initVisualizer() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)(); analyser = audioCtx.createAnalyser(); mediaDest = audioCtx.createMediaStreamDestination(); speakerGain = audioCtx.createGain(); 
@@ -996,6 +978,9 @@
                 if (data.url) { window.location.href = data.url; } else { alert('Помилка платежу.'); btnElement.innerText = originalText; btnElement.disabled = false; }
             } catch (err) { alert('Помилка сервера.'); btnElement.innerText = originalText; btnElement.disabled = false; }
         }
+        
+        // ВІДНОВЛЕНІ КНОПКИ ПІДПИСКИ
+        document.getElementById('sidebarSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
         document.getElementById('modalSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
 
         const generateVideoBtn = document.getElementById('exportVideoBtn');
