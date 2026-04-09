@@ -5,15 +5,21 @@ const cron = require('node-cron');
 const multer = require('multer');
 const fs = require('fs');
 const FormData = require('form-data');
-const app = express();
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 
+// Встановлюємо шлях до стискача аудіо
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+
+const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Обмеження 25 МБ для Groq, щоб сервер не падав
+// Мультер тепер може приймати великі файли від користувача (до 50 МБ), 
+// бо ми їх все одно стиснемо перед відправкою на ШІ.
 const upload = multer({ 
     dest: '/tmp/',
-    limits: { fileSize: 25 * 1024 * 1024 } 
+    limits: { fileSize: 50 * 1024 * 1024 } 
 });
 
 const MUSIC_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjzr5afDgy4pAWlwKVsatYaAK4JZC6c7itGdJaeScLCp-2iZP4PZ-8j_Kid7t0jIw/exec";
@@ -45,19 +51,6 @@ app.post('/api/login', async (req, res) => {
     try { const response = await axios.post(SUBS_SCRIPT_URL, { action: "login", email: req.body.email, password: req.body.password }); res.json(response.data); } catch (e) { res.status(500).json({ error: "Помилка сервера" }); }
 });
 
-app.post('/api/pay', async (req, res) => {
-    try {
-        const { songId, songName } = req.body;
-        if (!MONO_TOKEN) return res.status(500).json({ error: "Ключ Монобанку не налаштовано" });
-        
-        const response = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: 3736, ccy: 980, redirectUrl: `https://golos-proty-raku.pp.ua/success.html?file=${songId}`, webHookUrl: `${BACKEND_URL}/api/webhook`, 
-            merchantPaymInfo: { reference: songId, destination: `Оплата за трек: ${songName}` }
-        }, { headers: { 'X-Token': MONO_TOKEN } });
-        res.json({ url: response.data.pageUrl });
-    } catch (error) { res.status(500).json({ error: "Не вдалося створити платіж" }); }
-});
-
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         if (!MONO_TOKEN) return res.status(500).json({ error: "Ключ Монобанку не налаштовано" });
@@ -77,76 +70,53 @@ app.post('/api/webhook', async (req, res) => {
     const paymentData = req.body;
     if (paymentData.status === 'success') {
         const refParts = paymentData.reference.split('|');
-        const ref = refParts[0];
-        const email = refParts[1] || '';
-
+        const ref = refParts[0]; const email = refParts[1] || '';
         if (ref.startsWith('sub_')) {
             const nextDate = new Date(); nextDate.setDate(nextDate.getDate() + 5); 
             await axios.post(SUBS_SCRIPT_URL, { action: "new_sub", subId: ref, walletId: paymentData.walletId, nextPaymentDate: nextDate.toISOString().split('T')[0], email: email });
             await sendTelegramMessage(`🔥 <b>НОВА ПІДПИСКА!</b>\n📧 Юзер: ${email}`);
         } 
-        else if (ref.startsWith('ren_')) { await sendTelegramMessage(`💸 <b>АВТОМАТИЧНЕ СПИСАННЯ УСПІШНЕ!</b>`); }
-        else { await sendTelegramMessage(`✅ <b>Оплата за пісню!</b>\nID: <code>${ref}</code>`); }
     }
     res.status(200).send('OK');
 });
 
-
 // ==========================================
-// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ (GROQ LLAMA 3 + GEMINI IMAGE)
+// ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ
 // ==========================================
 app.post('/api/generate-image', async (req, res) => {
     try {
-        if (!GEMINI_API_KEY) return res.status(500).json({ error: "Ключ Gemini не налаштовано на сервері" });
-
+        if (!GEMINI_API_KEY) return res.status(500).json({ error: "Ключ Gemini не налаштовано" });
         const { lyrics, format, customPrompt } = req.body;
         
-        // Визначаємо формат для ШІ
         let aspectRatio = "1:1"; 
         if (format === 'vertical' || format === 'portrait') aspectRatio = "9:16"; 
         if (format === 'horizontal' || format === 'cinema') aspectRatio = "16:9";
 
         let safeVisualDescription = "abstract cinematic background, elegant lighting, 8k resolution";
 
-        // АНАЛІЗ ТЕКСТУ (Швидка та надійна Llama 3)
         if (customPrompt && customPrompt.length > 2) {
             safeVisualDescription = customPrompt;
         } else if (lyrics && lyrics.length > 5) {
             try {
                 if (!GROQ_API_KEY) throw new Error("Немає ключа Groq");
-                
-                const textAnalyzePrompt = `You are a visionary art director. Read the following song lyrics: "${lyrics.substring(0, 600)}". Create ONLY ONE SENTENCE in English describing a highly detailed, cinematic background image to be used as the album cover for this song. Describe the specific visual scene, mood, and objects based on the lyrics. Do NOT generate text or words on the image.`;
-                
+                const textAnalyzePrompt = `Read the following song lyrics: "${lyrics.substring(0, 600)}". Create ONLY ONE SENTENCE in English describing a highly detailed, cinematic background image for this song. Do NOT generate text or words on the image.`;
                 const textResponse = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: 'llama3-8b-8192',
-                    messages: [{ role: 'user', content: textAnalyzePrompt }]
-                }, {
-                    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` }
-                });
+                    model: 'llama3-8b-8192', messages: [{ role: 'user', content: textAnalyzePrompt }]
+                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
                 
                 if (textResponse.data && textResponse.data.choices) {
                     safeVisualDescription = textResponse.data.choices[0].message.content.trim();
-                    console.log("Llama 3 придумала обкладинку:", safeVisualDescription);
                 }
             } catch (e) {
-                console.error("Аналіз пісні не вдався:", e.message);
                 safeVisualDescription = "Cinematic background inspired by this text: " + lyrics.substring(0, 100).replace(/\n/g, ' ');
             }
         }
 
-        // ГЕНЕРАЦІЯ КАРТИНКИ (з жорсткою вимогою розміру)
         let aiPrompt = `Create a beautiful album cover based on a song. Visual scene: ${safeVisualDescription}. STRICT REQUIREMENT: Generate the image EXACTLY in ${aspectRatio} aspect ratio. Do not include any text, letters, or titles on the image. Cinematic lighting, highly detailed, 8k resolution.`;
         
-        console.log(`Промпт до художника: [${aiPrompt}]`);
-
-        const imageModel = "gemini-3.1-flash-image-preview"; 
-
         const generateResponse = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/${imageModel}:generateContent?key=${GEMINI_API_KEY}`,
-            {
-                contents: [{ parts: [{ text: aiPrompt }] }],
-                generationConfig: { responseModalities: ["IMAGE"] }
-            },
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
+            { contents: [{ parts: [{ text: aiPrompt }] }], generationConfig: { responseModalities: ["IMAGE"] } },
             { headers: { 'Content-Type': 'application/json' } }
         );
 
@@ -154,70 +124,66 @@ app.post('/api/generate-image', async (req, res) => {
             const part = generateResponse.data.candidates[0].content.parts.find(p => p.inlineData || p.inline_data);
             if (part) {
                 const inlineData = part.inlineData || part.inline_data;
-                const base64Image = inlineData.data;
-                const mimeType = inlineData.mimeType || "image/jpeg";
-                return res.json({ imageUrl: `data:${mimeType};base64,${base64Image}` });
+                return res.json({ imageUrl: `data:${inlineData.mimeType || "image/jpeg"};base64,${inlineData.data}` });
             }
         }
-        
         throw new Error("Відповідь успішна, але зображення не знайдено");
-
     } catch (error) {
-        console.error("--- ПОМИЛКА ГЕНЕРАЦІЇ ЗОБРАЖЕННЯ ---");
-        let clientErrorMessage = "ШІ не зміг згенерувати обкладинку.";
-        
-        if (error.response) {
-            if (error.response.status === 429) clientErrorMessage = "Зачекайте кілька секунд. Модель перевантажена.";
-            else if (error.response.status === 400) clientErrorMessage = "ШІ заблокував генерацію через фільтр безпеки.";
-            else clientErrorMessage = `Помилка Google API (${error.response.status}).`;
-        }
-        res.status(500).json({ error: clientErrorMessage });
+        res.status(500).json({ error: "ШІ не зміг згенерувати обкладинку. Спробуйте ще раз." });
     }
 });
 
+// Функція для стиснення аудіо
+function compressAudio(inputPath, outputPath) {
+    return new Promise((resolve, reject) => {
+        ffmpeg(inputPath)
+            .audioBitrate('32k')       // Дуже низький бітрейт (вистачить для голосу)
+            .audioChannels(1)          // Моно (робить файл вдвічі меншим)
+            .audioFrequency(16000)     // Знижуємо частоту
+            .toFormat('mp3')           // Конвертуємо в легкий mp3
+            .on('end', () => resolve(outputPath))
+            .on('error', (err) => reject(err))
+            .save(outputPath);
+    });
+}
 
 // ==========================================
-// АВТО-СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER + ФІЛЬТР)
+// WHISPER (ЗІ СТИСНЕННЯМ ФОРМАТУ ТА БЕЗ ЧИТАННЯ ТЕКСТУ)
 // ==========================================
-app.post('/api/sync-lyrics', function(req, res, next) {
-    // Відловлюємо помилку перевищення ліміту розміру файлу
-    upload.single('audio')(req, res, function (err) {
-        if (err instanceof multer.MulterError) {
-            return res.status(400).json({ error: "Помилка: файл завеликий (макс. 25МБ)." });
-        } else if (err) {
-            return res.status(500).json({ error: "Помилка передачі файлу." });
-        }
-        next();
-    });
-}, async (req, res) => {
+app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
+    let compressedPath = null;
+    
     try {
         if (!GROQ_API_KEY) return res.status(500).json({ error: "Ключ Groq API не налаштовано!" });
         if (!req.file) return res.status(400).json({ error: "Аудіофайл не отримано." });
 
-        const lyricsText = req.body.lyricsText;
+        // 1. Стискаємо файл перед відправкою (щоб не було тайм-аутів і перевищень ліміту)
+        compressedPath = req.file.path + '_compressed.mp3';
+        console.log("Починаю стиснення файлу...");
+        await compressAudio(req.file.path, compressedPath);
+        console.log("Файл успішно стиснуто!");
 
+        // 2. Готуємо дані для Whisper
         const formData = new FormData();
-        formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
+        formData.append('file', fs.createReadStream(compressedPath), 'audio.mp3');
         formData.append('model', 'whisper-large-v3'); 
         formData.append('response_format', 'verbose_json'); 
-        formData.append('language', 'uk'); 
+        formData.append('language', 'uk'); // Тільки українська
+        formData.append('temperature', '0.0'); // Без галюцинацій
         
-        // Жорстко забороняємо ШІ фантазувати (знижуємо галюцинації)
-        formData.append('temperature', '0.0'); 
+        // Я ПРИБРАВ prompt (читання тексту), як ти і просив. 
+        // Тепер ШІ просто слухає аудіо і видає текст.
 
-        // Передаємо текст як підказку (до 800 символів, почищений від [таймінгів])
-        if (lyricsText && lyricsText.trim().length > 0) {
-            let cleanPrompt = lyricsText.replace(/\[.*?\]/g, '').replace(/\n/g, ' ').substring(0, 800);
-            formData.append('prompt', cleanPrompt);
-        }
-
+        console.log("Відправляю стиснутий файл на Groq...");
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
             maxBodyLength: Infinity,
-            timeout: 60000 // Таймаут 60 сек, щоб не висіло вічно
+            timeout: 60000 // 60 секунд має вистачити з головою для стиснутого файлу
         });
 
-        fs.unlinkSync(req.file.path);
+        // 3. Видаляємо тимчасові файли
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        if (fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
 
         let lrcText = "";
         
@@ -225,13 +191,12 @@ app.post('/api/sync-lyrics', function(req, res, next) {
             response.data.segments.forEach(seg => {
                 let text = seg.text.trim();
                 
-                // === ЖОРСТКИЙ ФІЛЬТР СМІТТЯ ===
+                // Жорсткий фільтр сміття
                 const isTooShort = text.length <= 2;
-                const hasArabic = /[\u0600-\u06FF]/.test(text); // Блокуємо арабську в'язь
-                const isRepeatingChar = /^(.)\1+$/.test(text.replace(/\s/g, '')); // Блокуємо "н н н" або "аааа"
-                const isMusicMarker = text.toLowerCase() === "музика" || text.toLowerCase() === "програш" || text === "Ооо" || text.toLowerCase() === "о-о-о";
+                const hasArabic = /[\u0600-\u06FF]/.test(text);
+                const isRepeatingChar = /^(.)\1+$/.test(text.replace(/\s/g, ''));
+                const isMusicMarker = text.toLowerCase() === "музика" || text.toLowerCase() === "програш" || text === "Ооо";
 
-                // Записуємо тільки нормальні слова
                 if (!isTooShort && !hasArabic && !isRepeatingChar && !isMusicMarker) {
                     let d = new Date(seg.start * 1000);
                     let m = String(d.getUTCMinutes()).padStart(2, '0');
@@ -244,14 +209,14 @@ app.post('/api/sync-lyrics', function(req, res, next) {
         res.json({ lrc: lrcText });
 
     } catch (error) {
+        // Зачищаємо сліди при помилці
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        if (compressedPath && fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
         
+        console.error("Whisper Error:", error.message);
         let errorMessage = "Помилка розпізнавання.";
-        if (error.code === 'ECONNABORTED') {
-            errorMessage = "Час очікування вийшов (пісня занадто довга).";
-        } else if (error.response) {
-            errorMessage = `Сервер відхилив запит (${error.response.status}).`;
-        }
+        if (error.code === 'ECONNABORTED') errorMessage = "Час очікування вийшов.";
+        else if (error.response) errorMessage = `Сервер відхилив запит (${error.response.status}).`;
         
         res.status(500).json({ error: errorMessage });
     }
