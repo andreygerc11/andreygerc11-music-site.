@@ -3,6 +3,8 @@ const cors = require('cors');
 const axios = require('axios');
 const multer = require('multer');
 const fs = require('fs');
+const os = require('os'); // Безпечні шляхи для Render
+const path = require('path');
 const FormData = require('form-data');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
@@ -14,9 +16,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ОНОВЛЕНИЙ MULTER: Зберігаємо оригінальне розширення файлу для FFmpeg
+// ОНОВЛЕНИЙ MULTER: Безпечна папка os.tmpdir() для Render
 const storage = multer.diskStorage({
-    destination: '/tmp/',
+    destination: os.tmpdir(),
     filename: (req, file, cb) => {
         const ext = file.originalname.includes('.') ? file.originalname.split('.').pop() : 'mp3';
         cb(null, `${Date.now()}_original.${ext}`);
@@ -25,11 +27,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage, limits: { fileSize: 50 * 1024 * 1024 } });
 
 // ==========================================
-// КЛЮЧІ ТА НАЛАШТУВАННЯ (БЕЗПЕЧНО ЧЕРЕЗ ENV)
+// КЛЮЧІ ТА НАЛАШТУВАННЯ (З ENV RENDER)
 // ==========================================
 const BACKEND_URL = "https://andreygerc11-music-site.onrender.com"; 
 
-// Усі секретні ключі беруться з розділу Environment на Render
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 const GROQ_API_KEY = process.env.GROQ_API_KEY; 
 const MONO_TOKEN = process.env.MONO_TOKEN;
@@ -42,11 +43,9 @@ app.post('/api/register', async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ error: "Введіть email та пароль" });
-
         const response = await axios.post(GOOGLE_SCRIPT_URL, { action: "register", email, password });
         res.json(response.data);
     } catch (error) {
-        console.error("Помилка реєстрації:", error.message);
         res.status(500).json({ error: "Помилка сервера при реєстрації" });
     }
 });
@@ -55,11 +54,9 @@ app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ error: "Введіть email та пароль" });
-
         const response = await axios.post(GOOGLE_SCRIPT_URL, { action: "login", email, password });
         res.json(response.data);
     } catch (error) {
-        console.error("Помилка входу:", error.message);
         res.status(500).json({ error: "Помилка сервера при вході" });
     }
 });
@@ -70,13 +67,12 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         if (!MONO_TOKEN) throw new Error("Відсутній MONO_TOKEN");
-        
         const { email } = req.body;
-        const amount = 3900; // 39.00 грн у копійках
+        const amount = 3900; 
 
         const monoReq = {
             amount: amount,
-            ccy: 980, // UAH
+            ccy: 980, 
             merchantPaymInfo: {
                 reference: `sub_${email}_${Date.now()}`,
                 destination: `Підписка PRO (5 днів) для ${email || 'користувача'}`
@@ -91,65 +87,23 @@ app.post('/api/pay-subscription', async (req, res) => {
 
         res.json({ url: response.data.pageUrl, invoiceId: response.data.invoiceId });
     } catch (error) {
-        console.error("Помилка Monobank (Підписка):", error.response ? error.response.data : error.message);
+        console.error("Помилка Monobank:", error.message);
         res.status(500).json({ error: "Помилка створення платежу" });
     }
 });
 
-app.post('/api/pay', async (req, res) => {
-    try {
-        if (!MONO_TOKEN) throw new Error("Відсутній MONO_TOKEN");
-        
-        const { email, trackId } = req.body;
-        const amount = 3736; // 37.36 грн у копійках
-
-        const monoReq = {
-            amount: amount,
-            ccy: 980,
-            merchantPaymInfo: {
-                reference: `track_${trackId}_${Date.now()}`,
-                destination: `Купівля треку для ${email || 'користувача'}`
-            },
-            redirectUrl: `${BACKEND_URL}/success.html`,
-            webHookUrl: `${BACKEND_URL}/api/mono-webhook`
-        };
-
-        const response = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', monoReq, {
-            headers: { 'X-Token': MONO_TOKEN }
-        });
-
-        res.json({ url: response.data.pageUrl });
-    } catch (error) {
-        console.error("Помилка Monobank (Трек):", error.message);
-        res.status(500).json({ error: "Помилка створення платежу" });
-    }
-});
-
-// === ОБРОБКА УСПІШНОЇ ОПЛАТИ (WEBHOOK) ===
 app.post('/api/mono-webhook', async (req, res) => {
     try {
         const { invoiceId, status, reference } = req.body;
-        console.log("Отримано вебхук від Monobank, статус:", status);
-
         if (status === 'success' && reference && reference.startsWith('sub_')) {
             const email = reference.split('_')[1];
             const nextDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
-
-            // Відправляємо дані в Google Script для активації Premium
             await axios.post(GOOGLE_SCRIPT_URL, {
-                action: "new_sub",
-                subId: invoiceId,
-                walletId: "monobank",
-                nextPaymentDate: nextDate,
-                email: email
+                action: "new_sub", subId: invoiceId, walletId: "monobank", nextPaymentDate: nextDate, email: email
             });
-
-            console.log(`✅ Підписку успішно активовано для ${email}`);
         }
-
         res.status(200).send('OK');
     } catch (error) {
-        console.error("Помилка обробки вебхуку:", error.message);
         res.status(200).send('OK'); 
     }
 });
@@ -180,7 +134,7 @@ app.post('/api/generate-image', async (req, res) => {
                 
                 if (textResponse.data && textResponse.data.choices) safeVisualDescription = textResponse.data.choices[0].message.content.trim();
             } catch (e) { 
-                console.log("Помилка генерації промпту через Groq, використовуємо стандартний опис."); 
+                console.log("Помилка Groq"); 
             }
         }
 
@@ -188,10 +142,7 @@ app.post('/api/generate-image', async (req, res) => {
         
         const generateResponse = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_API_KEY}`,
-            { 
-                instances: [{ prompt: aiPrompt }],
-                parameters: { sampleCount: 1, aspectRatio: aspectRatio }
-            },
+            { instances: [{ prompt: aiPrompt }], parameters: { sampleCount: 1, aspectRatio: aspectRatio } },
             { headers: { 'Content-Type': 'application/json' } }
         );
 
@@ -200,13 +151,11 @@ app.post('/api/generate-image', async (req, res) => {
             const mimeType = generateResponse.data.predictions[0].mimeType || "image/jpeg";
             return res.json({ imageUrl: `data:${mimeType};base64,${base64Image}` });
         }
-        
-        throw new Error("Зображення не знайдено у відповіді API");
+        throw new Error("Зображення не знайдено");
 
     } catch (error) {
-        console.error("ПОМИЛКА ГЕНЕРАЦІЇ ЗОБРАЖЕННЯ:", error.response ? JSON.stringify(error.response.data, null, 2) : error.message);
-        const errorMessage = error.response?.data?.error?.message || "Не вдалося згенерувати ШІ-фон.";
-        res.status(500).json({ error: errorMessage });
+        console.error("ПОМИЛКА IMAGEN:", error.message);
+        res.status(500).json({ error: "Не вдалося згенерувати ШІ-фон." });
     }
 });
 
@@ -229,8 +178,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         if (!req.file) return res.status(400).json({ error: "Аудіофайл не отримано." });
 
         compressedPath = req.file.path + '_compressed.mp3';
-        
-        // Перебиваємо у потрібний формат (стискаємо)
         await compressAudio(req.file.path, compressedPath);
 
         const formData = new FormData();
@@ -253,7 +200,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         if (response.data.segments) {
             response.data.segments.forEach(seg => {
                 let text = seg.text.trim();
-                // Залишено лише перевірку на пустий рядок, жодних агресивних фільтрів
                 if (text.length > 0) {
                     let d = new Date(seg.start * 1000);
                     let m = String(d.getUTCMinutes()).padStart(2, '0');
@@ -268,14 +214,8 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     } catch (error) {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         if (compressedPath && fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
-        
-        console.error("ПОМИЛКА WHISPER:", error.response ? JSON.stringify(error.response.data, null, 2) : error.message);
-        
-        let errorMessage = "Помилка розпізнавання.";
-        if (error.code === 'ECONNABORTED') errorMessage = "Тайм-аут. Сервер занадто довго відповідав.";
-        else if (error.response) errorMessage = `Сервер відхилив запит: ${error.response.data?.error?.message || error.response.status}`;
-        
-        res.status(500).json({ error: errorMessage });
+        console.error("ПОМИЛКА WHISPER:", error.message);
+        res.status(500).json({ error: "Помилка розпізнавання." });
     }
 });
 
