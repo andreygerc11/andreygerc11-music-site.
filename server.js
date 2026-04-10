@@ -83,8 +83,10 @@ app.post('/api/generate-image', async (req, res) => {
         else if (format === 'portrait') aspectRatio = "3:4";
         else if (format === 'cinema') aspectRatio = "21:9";
         
-        const textToAnalyze = customPrompt || lyrics.substring(0, 1500) || "Beautiful cinematic background";
-        const safeText = textToAnalyze.replace(/"/g, "'").replace(/\n/g, " ");
+        // ВИПРАВЛЕННЯ: Жорстке очищення тексту від символів, які ламають JSON
+        let textToAnalyze = customPrompt || lyrics || "Beautiful cinematic background";
+        textToAnalyze = textToAnalyze.substring(0, 800); // Обрізаємо, щоб не перевантажувати запит
+        const safeText = textToAnalyze.replace(/[\r\n\t"']/g, " ").replace(/[^a-zA-Zа-яА-ЯіїєґІЇЄҐ0-9 \.,!?-]/g, "");
 
         const promptContent = `Analyze the following song lyrics: "${safeText}". Based on the mood, atmosphere, and imagery of these lyrics, write ONE short sentence in English describing a visual scene for a background image. NO TEXT ON IMAGE. Cinematic style.`;
 
@@ -96,14 +98,15 @@ app.post('/api/generate-image', async (req, res) => {
             }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
             
             finalPrompt = groqPromptRes.data.choices[0].message.content.trim();
+            console.log("Успішно проаналізовано через Groq:", finalPrompt);
         } catch (groqError) {
-            console.error("Groq Llama API Error:", groqError.message);
-            // Запасний варіант, якщо Llama впаде
-            finalPrompt = `Cinematic background inspired by this mood: ${safeText.substring(0, 200)}`;
+            console.error("Аналіз пісні не вдався (Groq Llama API Error):", groqError.response ? groqError.response.data : groqError.message);
+            // Надійний запасний варіант без проблемного тексту
+            finalPrompt = "Abstract cinematic background, elegant lighting, highly detailed.";
         }
 
-        // Жорстко забороняємо текст на картинці
-        const fullGeminiPrompt = `${finalPrompt}. Aspect ratio: ${aspectRatio}. ABSOLUTELY NO TEXT, NO LETTERS, NO TITLES ON IMAGE. Highly detailed, 8k resolution.`;
+        const fullGeminiPrompt = `${finalPrompt}. Aspect ratio: ${aspectRatio}. ABSOLUTELY NO TEXT, NO LETTERS, NO TITLES ON IMAGE. Cinematic lighting, highly detailed, 8k resolution.`;
+        console.log("Промпт до художника:", fullGeminiPrompt);
 
         const response = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
@@ -115,9 +118,9 @@ app.post('/api/generate-image', async (req, res) => {
             const data = part.inlineData || part.inline_data;
             return res.json({ imageUrl: `data:${data.mimeType};base64,${data.data}` });
         }
-        throw new Error("Не вдалося згенерувати зображення.");
+        throw new Error("Не вдалося згенерувати зображення (відповідь не містить даних).");
     } catch (error) { 
-        console.error("Image Gen Error:", error.message);
+        console.error("--- ПОМИЛКА ГЕНЕРАЦІЇ ЗОБРАЖЕННЯ ---", error.response ? error.response.data : error.message);
         res.status(500).json({ error: "Помилка генерації фону" }); 
     }
 });
@@ -143,8 +146,10 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('model', 'whisper-large-v3'); 
         formData.append('response_format', 'verbose_json'); 
         formData.append('temperature', '0'); 
-        // Ми видалили параметр prompt, щоб уникнути помилки 400.
-        // Whisper автоматично розпізнає потрібну мову.
+        
+        // ВИПРАВЛЕННЯ: Ми ПОВНІСТЮ видалили параметр prompt.
+        // Передача інструкцій (типу "Ignore Russian") у prompt викликає помилку 400 Bad Request від Whisper API.
+        // Мову Whisper визначить сам, а фільтрацію ми зробимо в JavaScript нижче.
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
