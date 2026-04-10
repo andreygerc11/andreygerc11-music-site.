@@ -77,28 +77,37 @@ app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, format, customPrompt } = req.body;
         
-        // Визначення правильних пропорцій для всіх форматів
         let aspectRatio = "1:1";
         if (format === 'vertical') aspectRatio = "9:16";
         else if (format === 'horizontal') aspectRatio = "16:9";
         else if (format === 'portrait') aspectRatio = "3:4";
         else if (format === 'cinema') aspectRatio = "21:9";
         
-        // Аналізуємо вірш/текст пісні і створюємо промпт для зображення
-        const textToAnalyze = customPrompt || lyrics.substring(0, 1500);
-        const promptContent = `Analyze the following poem/lyrics: "${textToAnalyze}". Based on the mood, atmosphere, and imagery of this text, create a short ONE SENTENCE visual description for a cinematic background image. Translate the description to English. NO TEXT ON IMAGE. Cinematic lighting, highly detailed. Aspect ratio: ${aspectRatio}.`;
+        const textToAnalyze = customPrompt || lyrics.substring(0, 1500) || "Beautiful cinematic background";
+        const safeText = textToAnalyze.replace(/"/g, "'").replace(/\n/g, " ");
 
-        const groqPromptRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-            model: 'llama3-8b-8192',
-            messages: [{ role: 'user', content: promptContent }]
-        }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
-        
-        const finalPrompt = groqPromptRes.data.choices[0].message.content.trim();
+        const promptContent = `Analyze the following song lyrics: "${safeText}". Based on the mood, atmosphere, and imagery of these lyrics, write ONE short sentence in English describing a visual scene for a background image. NO TEXT ON IMAGE. Cinematic style.`;
 
-        // Генеруємо зображення за допомогою Gemini 3.1 Flash
+        let finalPrompt = "";
+        try {
+            const groqPromptRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                model: 'llama3-8b-8192',
+                messages: [{ role: 'user', content: promptContent }]
+            }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
+            
+            finalPrompt = groqPromptRes.data.choices[0].message.content.trim();
+        } catch (groqError) {
+            console.error("Groq Llama API Error:", groqError.message);
+            // Запасний варіант, якщо Llama впаде
+            finalPrompt = `Cinematic background inspired by this mood: ${safeText.substring(0, 200)}`;
+        }
+
+        // Жорстко забороняємо текст на картинці
+        const fullGeminiPrompt = `${finalPrompt}. Aspect ratio: ${aspectRatio}. ABSOLUTELY NO TEXT, NO LETTERS, NO TITLES ON IMAGE. Highly detailed, 8k resolution.`;
+
         const response = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
-            { contents: [{ parts: [{ text: finalPrompt }] }], generationConfig: { responseModalities: ["IMAGE"] } }
+            { contents: [{ parts: [{ text: fullGeminiPrompt }] }], generationConfig: { responseModalities: ["IMAGE"] } }
         );
 
         const part = response.data.candidates?.[0]?.content?.parts?.find(p => p.inlineData || p.inline_data);
@@ -107,7 +116,10 @@ app.post('/api/generate-image', async (req, res) => {
             return res.json({ imageUrl: `data:${data.mimeType};base64,${data.data}` });
         }
         throw new Error("Не вдалося згенерувати зображення.");
-    } catch (error) { res.status(500).json({ error: "Помилка генерації фону" }); }
+    } catch (error) { 
+        console.error("Image Gen Error:", error.message);
+        res.status(500).json({ error: "Помилка генерації фону" }); 
+    }
 });
 
 // === СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER) ===
@@ -130,14 +142,9 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('file', fs.createReadStream(compressedPath), 'audio.mp3');
         formData.append('model', 'whisper-large-v3'); 
         formData.append('response_format', 'verbose_json'); 
-        formData.append('temperature', '0.0'); 
-        
-        // ВАЖЛИВО: Мультимовний промпт із вказівкою ігнорувати російську
-        let whisperPrompt = 'Текст пісні українською мовою, English, European languages. Ignore Russian.';
-        if (req.body.lyricsText) {
-            whisperPrompt += '\n' + req.body.lyricsText.substring(0, 800); // Використовуємо існуючий текст як контекст
-        }
-        formData.append('prompt', whisperPrompt);
+        formData.append('temperature', '0'); 
+        // Ми видалили параметр prompt, щоб уникнути помилки 400.
+        // Whisper автоматично розпізнає потрібну мову.
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
@@ -153,9 +160,9 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
                 // ЖОРСТКІ ФІЛЬТРИ ДЛЯ ВІДСІКАННЯ СМІТТЯ ТА РОСІЙСЬКОЇ МОВИ
                 const isTooShort = text.length <= 2;
                 const hasArabic = /[\u0600-\u06FF]/.test(text);
-                const hasRussian = /[ыЫэЭъЪёЁ]/.test(text); // Блокуємо специфічні російські літери
+                const hasRussian = /[ыЫэЭъЪёЁ]/.test(text); // <-- Блокування російської
                 const isRepeatingChar = /^(.)\1+$/.test(text.replace(/\s/g, ''));
-                const isMusicMarker = text.toLowerCase() === "музика" || text.toLowerCase() === "програш";
+                const isMusicMarker = text.toLowerCase().includes("музика") || text.toLowerCase().includes("програш");
 
                 if (!isTooShort && !hasArabic && !hasRussian && !isRepeatingChar && !isMusicMarker) {
                     let d = new Date(seg.start * 1000);
@@ -168,10 +175,9 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         }
         res.json({ lrc: lrcText });
     } catch (error) {
-        console.error("Whisper Error:", error.message);
+        console.error("Whisper Error:", error.response ? JSON.stringify(error.response.data) : error.message);
         res.status(500).json({ error: "Помилка розпізнавання." });
     } finally {
-        // Очищення тимчасових файлів
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         if (compressedPath && fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
     }
