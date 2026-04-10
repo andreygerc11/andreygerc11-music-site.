@@ -46,9 +46,6 @@
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-        /* ============================== */
-        /* 1. ВЕРХНЯ ПАНЕЛЬ (TOP BAR)     */
-        /* ============================== */
         .top-bar {
             height: var(--top-height); background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
             display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 50;
@@ -62,7 +59,6 @@
 
         .top-right { display: flex; align-items: center; gap: 12px; }
         
-        /* КРУГЛІ КНОПКИ */
         .btn-premium { background: rgba(255, 60, 0, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 10px 20px; border-radius: 50px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; transition: 0.3s;}
         .btn-premium:hover { background: var(--accent); color: #fff; }
 
@@ -83,12 +79,8 @@
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.5); } 70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); } }
 
-        /* ============================== */
-        /* 2. РОБОЧИЙ ПРОСТІР (WORKSPACE) */
-        /* ============================== */
         .workspace { display: flex; flex: 1; height: calc(100vh - var(--top-height) - var(--bottom-height)); overflow: hidden; }
 
-        /* Бокові панелі */
         .sidebar { width: var(--sidebar-width); background: var(--bg-panel); display: flex; flex-direction: column; overflow-y: auto; z-index: 40; }
         .sidebar-left { border-right: 1px solid var(--border-color); }
         .sidebar-right { border-left: 1px solid var(--border-color); }
@@ -100,7 +92,6 @@
         .settings-block { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
         .block-title { font-size: 0.75rem; font-weight: 800; color: #ddd; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
 
-        /* Інпути */
         .control-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
         .control-group:last-child { margin-bottom: 0; }
         label { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
@@ -117,7 +108,6 @@
         input[type="file"]::file-selector-button { background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; padding: 8px 15px; border-radius: 50px; cursor: pointer; margin-right: 15px; font-weight: 700; transition: 0.3s; }
         input[type="file"]::file-selector-button:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
 
-        /* Кнопки в панелях (КРУГЛІ КАПСУЛИ) */
         .btn-outline {
             width: 100%; padding: 12px; background: transparent; border: 1px solid var(--border-color); color: #fff; border-radius: 50px;
             cursor: pointer; font-family: inherit; font-weight: 800; font-size: 0.8rem; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; outline: none;
@@ -129,26 +119,21 @@
         .btn-whisper { border-color: #4CAF50; color: #4CAF50; }
         .btn-whisper:hover { background: #4CAF50; color: #fff; }
 
-        /* Слайдери */
         .slider-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         input[type="range"] { width: 100%; height: 6px; background: var(--bg-input); border-radius: 50px; appearance: none; outline: none; cursor: pointer; }
         input[type="range"]::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; }
 
-        /* Кольори (Ідеально круглі) */
         .color-row { display: flex; justify-content: space-around; gap: 15px; margin-bottom: 10px; }
         input[type="color"] { -webkit-appearance: none; border: 2px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; cursor: pointer; background: transparent; padding: 2px; transition: 0.3s; }
         input[type="color"]:hover { border-color: var(--accent); transform: scale(1.1); }
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
 
-        /* ============================== */
-        /* 3. ЦЕНТРАЛЬНА СЦЕНА (ІДЕАЛЬНИЙ ФІКС) */
-        /* ============================== */
         .center-stage {
             flex: 1; display: flex; align-items: center; justify-content: center;
             background: radial-gradient(circle at center, #18181b 0%, #09090b 100%);
             position: relative; padding: 30px;
-            overflow: hidden; /* Запобігає розриванню верстки */
+            overflow: hidden; 
         }
         
         #canvasWrapper {
@@ -167,9 +152,6 @@
             cursor: crosshair; 
         }
 
-        /* ============================== */
-        /* 4. НИЖНЯ ПАНЕЛЬ (ПЛЕЄР)        */
-        /* ============================== */
         .bottom-bar {
             height: var(--bottom-height); background: var(--bg-panel); border-top: 1px solid var(--border-color);
             display: flex; align-items: center; justify-content: center; padding: 0 30px; z-index: 50; position: relative;
@@ -181,7 +163,6 @@
         .btn-icon { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); width: 46px; height: 46px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; }
         .btn-icon:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
-        /* Прогрес рендеру */
         .render-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-panel); z-index: 60; align-items: center; justify-content: center; flex-direction: column; }
         .render-info { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 700px; margin-bottom: 10px;}
         .render-info span { font-size: 0.85rem; font-weight: 800; color: #fff; text-transform: uppercase;}
@@ -189,7 +170,6 @@
         progress::-webkit-progress-bar { background-color: var(--bg-input); }
         progress::-webkit-progress-value { background-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
 
-        /* Статуси і Телесуфлер */
         #syncStatus { display: none; background: rgba(255, 60, 0, 0.05); border: 1px solid var(--accent); padding: 15px; border-radius: 12px; text-align: center; margin-top: 15px; }
         .sync-btn-group { display: flex; gap: 10px; margin-top: 12px; }
         #syncStatus p { margin: 0 0 10px 0; font-size: 0.75rem; color: var(--accent); font-weight: 800; text-transform: uppercase; }
@@ -200,7 +180,6 @@
         #aiSyncStatusInfo, #aiLoadingStatus { display: none; font-size: 0.75rem; color: var(--accent); text-align: center; font-weight: bold; margin-top: 10px; }
         #aiSyncStatusInfo { color: #4CAF50; }
 
-        /* Модалка */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; }
         .modal-content { background: var(--bg-panel); padding: 40px 30px; border-radius: 16px; text-align: center; border: 2px solid var(--accent); max-width: 450px; width: 90%; position: relative;}
         .modal-content h3 { color: #fff; margin-bottom: 10px; font-size: 1.4rem; font-weight: 900; text-transform: uppercase; }
@@ -210,13 +189,47 @@
         .close-modal-btn:hover { color: #fff;}
 
         @media (max-width: 1100px) {
-            .workspace { flex-direction: column; overflow-y: auto; height: auto; }
-            .sidebar { width: 100%; height: auto; border: none; border-bottom: 1px solid var(--border-color); }
-            .center-stage { min-height: 60vh; padding: 10px; }
-            body { overflow: auto; }
-            .bottom-bar { position: sticky; bottom: 0; flex-direction: column; height: auto; padding: 15px; gap: 10px;}
-            .player-container { width: 100%; max-width: 100%;}
-            .bottom-right { position: static; width: 100%; justify-content: center;}
+            :root { --top-height: auto; }
+            body { overflow: auto; height: auto; }
+            .workspace { flex-direction: column; overflow: visible; height: auto; padding-bottom: 100px; }
+            
+            .center-stage { 
+                order: -1; 
+                width: 100%; 
+                min-height: 40vh; 
+                max-height: 50vh; 
+                padding: 10px; 
+                position: sticky; 
+                top: 0; 
+                z-index: 100; 
+                border-bottom: 2px solid var(--accent);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+                background: #000;
+            }
+            
+            .center-stage p { display: none; } 
+            
+            .sidebar { width: 100%; border: none; overflow: visible; }
+            .sidebar-left { order: 2; border-bottom: 2px dashed #333; }
+            .sidebar-right { order: 3; }
+            
+            .top-bar { flex-direction: column; padding: 15px; gap: 15px; height: auto; position: relative; z-index: 101; }
+            .top-left { width: 100%; justify-content: space-between; }
+            .top-right { width: 100%; flex-wrap: wrap; justify-content: space-between; gap: 10px;}
+            .btn-premium, .btn-instruction { flex: 1; text-align: center; justify-content: center; padding: 12px; font-size: 0.8rem;}
+            .btn-export, .btn-download, .btn-stop { width: 100%; margin-top: 5px; padding: 18px; font-size: 1.1rem; justify-content: center;}
+            
+            .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: auto; flex-direction: row; padding: 10px 15px; z-index: 105; box-shadow: 0 -5px 20px rgba(0,0,0,0.8); background: rgba(20, 20, 23, 0.95); backdrop-filter: blur(10px); }
+            .player-container { flex: 1; max-width: 100%; }
+            .bottom-right { position: static; margin-left: 10px; width: auto;}
+            
+            input[type="text"], select, textarea, .btn-outline { padding: 15px; font-size: 1rem; }
+            input[type="range"]::-webkit-slider-thumb { width: 28px; height: 28px; }
+            .color-row input[type="color"] { width: 60px; height: 60px; }
+            .panel-header { font-size: 1rem; padding: 20px; }
+            
+            .render-info { flex-direction: column; gap: 10px; text-align: center; }
+            #syncStatus { margin-bottom: 20px; }
         }
     </style>
 </head>
@@ -383,21 +396,21 @@
                             <option value="none">Вимкнено</option>
                             <option value="bubble">Бульбашки</option>
                             <option value="snow">Сніг</option>
-                            <option value="rain">Дощ</option>
+                            <option value="rain">Дощ (Злива)</option>
                             <option value="heart">Сердечка</option>
                             <option value="star">Зірки</option>
                             <option value="firefly">Світлячки</option>
                             <option value="dust">Магічний пил</option>
                             <option value="note">Ноти</option>
                             <option value="lightning">Блискавки</option>
-                            <option value="spark">Іскри</option>
+                            <option value="spark">Іскри (Реалістичні)</option>
                             <option value="confetti">Конфетті</option>
                             <option value="triangle">Трикутники</option>
                             <option value="diamond">Діаманти</option>
                             <option value="cross">Хрестики</option>
-                            <option value="meteor">Метеорити</option>
-                            <option value="fire">Вогонь</option>
-                            <option value="smoke">Дим</option>
+                            <option value="meteor">Метеорити (Швидкісні)</option>
+                            <option value="fire">Вогонь (Реалістичний)</option>
+                            <option value="smoke">Дим (Окремий)</option>
                             <option value="matrix">Матриця (Цифри)</option>
                             <option value="leaf">Осіннє листя</option>
                             <option value="mixed">Магічний Мікс</option>
@@ -414,7 +427,7 @@
         
         <div class="render-overlay" id="renderOverlay">
             <div class="render-info">
-                <span>Рендеринг відео... Не закривайте вкладку!</span>
+                <span>Рендеринг видео... Не закрывайте вкладку!</span>
                 <span id="generateStatus">0 / 0 сек</span>
             </div>
             <progress id="generateProgress" value="0" max="100"></progress>
@@ -626,9 +639,6 @@
             }
         });
 
-        // ==========================================
-        // ШІ ОБКЛАДИНКА (З відловом помилок API)
-        // ==========================================
         document.getElementById('generateAiBgBtn').addEventListener('click', async () => {
             const lyrics = document.getElementById('lyricsInput').value.trim(); const format = document.getElementById('formatSelect').value; const customPrompt = document.getElementById('customAiPrompt').value.trim();
             const btn = document.getElementById('generateAiBgBtn'); const status = document.getElementById('aiLoadingStatus');
@@ -647,9 +657,6 @@
             btn.disabled = false; status.style.display = 'none';
         });
 
-        // ==========================================
-        // WHISPER (З відловом помилок)
-        // ==========================================
         document.getElementById('aiSyncBtn').addEventListener('click', async () => {
             const audioFile = document.getElementById('audioUpload').files[0]; if (!audioFile) { alert("Спочатку завантажте аудіо трек!"); return; }
             const currentLyrics = document.getElementById('lyricsInput').value.trim(); const btn = document.getElementById('aiSyncBtn'); const statusInfo = document.getElementById('aiSyncStatusInfo');
@@ -664,7 +671,6 @@
             btn.disabled = false; statusInfo.style.display = 'none';
         });
 
-        // КАРАОКЕ
         const startSyncBtn = document.getElementById('startSyncBtn'); const syncStatus = document.getElementById('syncStatus'); const lyricsInput = document.getElementById('lyricsInput');
         const restartSyncBtn = document.getElementById('restartSyncBtn'); const cancelSyncBtn = document.getElementById('cancelSyncBtn');
 
@@ -718,7 +724,6 @@
             }
         });
 
-        // ВІЗУАЛІЗАТОР ТА 20 ЕФЕКТІВ
         function initVisualizer() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)(); analyser = audioCtx.createAnalyser(); mediaDest = audioCtx.createMediaStreamDestination(); speakerGain = audioCtx.createGain(); 
@@ -727,108 +732,340 @@
             }
         }
 
+        /* ============================================================== */
+        /* РЕАЛІСТИЧНИЙ ФІЗИЧНИЙ ДВИЖОК С ЖЕСТКОЙ ЗАЩИТОЙ ОТ NaN          */
+        /* ============================================================== */
         function createParticle(typeOption) {
             const typesList = ['bubble', 'snow', 'rain', 'heart', 'star', 'firefly', 'dust', 'note', 'lightning', 'spark', 'confetti', 'triangle', 'diamond', 'cross', 'meteor', 'fire', 'smoke', 'matrix', 'leaf'];
             let t = typeOption === 'mixed' ? typesList[Math.floor(Math.random() * typesList.length)] : typeOption;
             
             const minDim = Math.min(canvas.width, canvas.height);
             let p = {
-                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-                size: Math.random() * (minDim * 0.015) + (minDim * 0.005),
-                speedX: (Math.random() - 0.5) * 2, speedY: (Math.random() - 0.5) * 2,
-                type: t, opacity: Math.random() * 0.5 + 0.2, angle: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 0.1,
-                color: 'white', char: ''
+                x: Math.random() * canvas.width, 
+                y: Math.random() * canvas.height,
+                startX: Math.random() * canvas.width,
+                size: Math.max(0.5, Math.random() * (minDim * 0.015) + (minDim * 0.005)), 
+                vx: 0, vy: 0, gravity: 0, friction: 1, life: 1, maxLife: 100, length: 0,
+                type: t, opacity: Math.random() * 0.5 + 0.2, angle: Math.random() * Math.PI * 2, spin: 0,
+                color: 'white', char: '', wobbleSpeed: Math.random() * 0.05, wobbleAmp: Math.random() * 50,
+                path: []
             };
 
             switch(t) {
-                case 'bubble': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; break;
-                case 'snow': p.speedY = Math.random() * 2 + 1; p.y = -50; break;
-                case 'heart': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = '#ff3c00'; break;
-                case 'star': p.speedY = (Math.random() - 0.5) * 0.5; p.color = 'yellow'; break;
-                case 'rain': p.speedY = Math.random() * 5 + 5; p.speedX = (Math.random()-0.5); p.y = -50; p.size *= 0.5; p.color = 'rgba(200,220,255,0.6)'; break;
-                case 'firefly': p.speedY = (Math.random() - 0.5); p.speedX = (Math.random() - 0.5); p.color = '#ccff00'; p.size *= 0.3; break;
-                case 'dust': p.speedY = (Math.random() - 0.5)*0.5; p.speedX = (Math.random() - 0.5)*0.5; p.size *= 0.2; p.opacity = 0.3; break;
-                case 'note': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.char = Math.random() > 0.5 ? '🎵' : '🎶'; break;
-                case 'lightning': p.speedY = Math.random() * 10 + 10; p.speedX = (Math.random()-0.5)*2; p.y = -50; p.size *= 0.2; p.color = '#e0f0ff'; break;
-                case 'spark': p.speedY = -(Math.random() * 5 + 2); p.speedX = (Math.random() - 0.5) * 4; p.y = canvas.height + 50; p.color = '#ffaa00'; p.size *= 0.4; break;
-                case 'confetti': { p.speedY = Math.random() * 3 + 1; p.y = -50; const colors = ['#ff0000','#00ff00','#0000ff','#ffff00','#00ffff','#ff00ff']; p.color = colors[Math.floor(Math.random()*colors.length)]; break; }
-                case 'triangle': { p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; const tcols = ['#ff4d4d','#4d4dff','#4dff4d']; p.color = tcols[Math.floor(Math.random()*tcols.length)]; break; }
-                case 'diamond': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = '#00ffff'; break;
-                case 'cross': p.speedY = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = '#ff00ff'; break;
-                case 'meteor': p.speedY = Math.random() * 8 + 5; p.speedX = p.speedY; p.y = -50; p.x = Math.random() * canvas.width * 2 - canvas.width; p.size *= 0.5; break;
-                case 'fire': p.speedY = -(Math.random() * 3 + 2); p.y = canvas.height + 20; p.x = canvas.width/2 + (Math.random()-0.5)*canvas.width*0.8; p.color = Math.random() > 0.5 ? '#ff4000' : '#ff8800'; p.size *= 1.5; break;
-                case 'smoke': p.speedY = -(Math.random() * 1 + 0.5); p.y = canvas.height + 50; p.color = 'rgba(150,150,150,0.15)'; p.size *= 3; break;
-                case 'matrix': p.speedY = Math.random() * 3 + 2; p.speedX = 0; p.y = -50; p.color = '#00ff00'; p.char = String.fromCharCode(0x30A0 + Math.random() * 96); p.spin = 0; p.angle = 0; break;
-                case 'leaf': { p.speedY = Math.random() * 2 + 1; p.speedX = (Math.random() - 0.5) * 2; p.y = -50; const leaves = ['🍂', '🍁', '🍃']; p.char = leaves[Math.floor(Math.random()*leaves.length)]; break; }
+                case 'spark': 
+                    p.x = canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.6;
+                    p.y = canvas.height + 10;
+                    p.vx = (Math.random() - 0.5) * 20; 
+                    p.vy = -(Math.random() * 20 + 15); 
+                    p.gravity = 0.5;   
+                    p.friction = 0.94; 
+                    p.size = Math.max(1.5, Math.random() * 4 + 1.5);
+                    p.color = Math.random() > 0.5 ? '#ffaa00' : '#ff4400';
+                    p.life = Math.random() * 40 + 40;
+                    p.maxLife = p.life;
+                    break;
+                case 'meteor': 
+                    p.x = canvas.width + Math.random() * 500; 
+                    p.y = -Math.random() * 300 - 100; 
+                    p.vx = -(Math.random() * 20 + 30); 
+                    p.vy = Math.random() * 20 + 30;    
+                    p.size = Math.max(2, Math.random() * 3 + 2); 
+                    p.length = Math.max(100, Math.random() * 300 + 150); 
+                    break;
+                case 'rain': 
+                    p.x = Math.random() * canvas.width * 1.2; 
+                    p.y = -Math.random() * canvas.height;
+                    p.vy = Math.random() * 25 + 30; 
+                    p.vx = -3; 
+                    p.length = Math.max(15, Math.random() * 40 + 20);
+                    p.opacity = Math.max(0.1, Math.random() * 0.3 + 0.1);
+                    p.wobbleAmp = 0; 
+                    break;
+                case 'fire': 
+                    p.x = canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.3;
+                    p.y = canvas.height + 20;
+                    p.vx = (Math.random() - 0.5) * 3;
+                    p.vy = -(Math.random() * 6 + 4);
+                    p.size = Math.max(10, Math.random() * 30 + 15);
+                    p.maxLife = Math.random() * 60 + 60; 
+                    p.life = p.maxLife;
+                    break;
+                case 'smoke': 
+                    p.x = canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 1.2;
+                    p.y = canvas.height + 50;
+                    p.vy = -(Math.random() * 2 + 1); 
+                    p.vx = (Math.random() - 0.5) * 1.5; 
+                    p.size = Math.max(20, Math.random() * 30 + 20); 
+                    p.maxLife = 250;
+                    p.life = p.maxLife;
+                    p.opacity = 0.3;
+                    break;
+                case 'lightning':
+                    p.x = Math.random() * canvas.width; p.y = 0; p.life = 15; p.maxLife = 15; p.path.push({x: p.x, y: p.y});
+                    let currX = p.x; let currY = p.y;
+                    while (currY < canvas.height) {
+                        currX += (Math.random() - 0.5) * (canvas.width * 0.15); 
+                        currY += Math.random() * (canvas.height * 0.1) + 20;    
+                        p.path.push({x: currX, y: currY});
+                        if (Math.random() < 0.3) {
+                            let branchX = currX; let branchY = currY;
+                            for (let b = 0; b < 3; b++) {
+                                branchX += (Math.random() - 0.5) * 80; branchY += Math.random() * 80;
+                                p.path.push({x: branchX, y: branchY, isBranch: true});
+                            }
+                        }
+                    }
+                    break;
+
+                case 'bubble': p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.wobbleSpeed = 0.03; break;
+                case 'snow': p.vy = Math.random() * 2 + 1; p.y = -50; p.wobbleSpeed = 0.02; p.wobbleAmp = 30; p.opacity = Math.random() * 0.5 + 0.5; break;
+                case 'heart': p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = '#ff3c00'; p.wobbleSpeed = 0.04; break;
+                case 'star': p.vx = (Math.random() - 0.5) * 0.2; p.vy = (Math.random() - 0.5) * 0.2; p.color = '#fffacd'; break;
+                case 'firefly': p.vx = (Math.random() - 0.5) * 2; p.vy = (Math.random() - 0.5) * 2; p.color = '#adff2f'; p.size *= 0.8; break;
+                case 'dust': p.vx = (Math.random() - 0.5); p.vy = (Math.random() - 0.5); p.size *= 0.5; p.opacity = 0.2; break;
+                case 'note': p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.char = Math.random() > 0.5 ? '🎵' : '🎶'; break;
+                case 'confetti': p.vy = Math.random() * 3 + 2; p.y = -50; p.spin = Math.random() * 0.2; const colors = ['#ff0000','#00ff00','#0000ff','#ffff00','#00ffff','#ff00ff']; p.color = colors[Math.floor(Math.random()*colors.length)]; break;
+                case 'triangle': p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.spin = (Math.random() - 0.5) * 0.1; const tcols = ['#ff4d4d','#4d4dff','#4dff4d']; p.color = tcols[Math.floor(Math.random()*tcols.length)]; break;
+                case 'matrix': p.vy = Math.random() * 5 + 3; p.vx = 0; p.y = -50; p.color = '#00ff00'; p.char = String.fromCharCode(0x30A0 + Math.random() * 96); break;
+                case 'leaf': p.vy = Math.random() * 2 + 1; p.y = -50; p.wobbleSpeed = 0.02; p.wobbleAmp = 40; p.spin = Math.random() * 0.05; const leaves = ['🍂', '🍁', '🍃']; p.char = leaves[Math.floor(Math.random()*leaves.length)]; break;
+                default: p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = primaryColor; break;
             }
             return p;
         }
 
-        function drawShape(ctx, p, pulseSize) {
-            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle); 
-            let finalSize = Math.max(0.1, p.size + pulseSize * 0.5); 
-            ctx.globalAlpha = p.opacity;
+        function handleParticles(avgBass) {
+            const effect = particleSelect.value; if (effect === 'none') return;
+            const maxMap = { 'rain': 600, 'snow': 150, 'fire': 150, 'smoke': 80, 'matrix': 100, 'spark': 120, 'meteor': 15, 'lightning': 2 };
+            const maxParticles = maxMap[effect] || 60; 
+            
+            let spawnRate = 0.5;
+            if (['spark', 'fire'].includes(effect)) spawnRate = (avgBass / 255) * 6; 
+            if (effect === 'meteor') spawnRate = 0.03; 
+            if (effect === 'lightning') spawnRate = (avgBass > 220) ? 0.3 : 0.01; 
+            if (effect === 'smoke') spawnRate = 0.2;
+            if (effect === 'rain') spawnRate = 1.0; 
+            
+            let spawnsPerFrame = effect === 'rain' ? 4 : 1;
+            for (let s = 0; s < spawnsPerFrame; s++) {
+                if (particles.length < maxParticles && Math.random() < spawnRate) { particles.push(createParticle(effect)); }
+            }
+            
+            ctx.save();
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                
+                p.vy += p.gravity;
+                p.vx *= p.friction;
+                p.vy *= p.friction;
+                
+                if (p.wobbleAmp > 0) {
+                    p.angle += p.wobbleSpeed;
+                    p.x = p.startX + Math.sin(p.angle) * p.wobbleAmp;
+                } else {
+                    p.x += p.vx;
+                }
+                p.y += p.vy;
+                p.angle += p.spin;
 
-            if (p.type === 'bubble') { 
-                ctx.beginPath(); ctx.arc(0, 0, finalSize, 0, Math.PI * 2); ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke(); 
-                ctx.beginPath(); ctx.arc(-finalSize*0.3, -finalSize*0.3, finalSize*0.2, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill(); 
-            } 
-            else if (p.type === 'snow' || p.type === 'dust' || p.type === 'smoke' || p.type === 'fire') { 
-                ctx.fillStyle = p.color || 'white'; ctx.beginPath(); ctx.arc(0, 0, finalSize, 0, Math.PI * 2); ctx.fill(); 
-                if (p.type === 'snow') { ctx.shadowBlur = 10; ctx.shadowColor = 'white'; }
-                if (p.type === 'fire') { ctx.shadowBlur = 15; ctx.shadowColor = 'red'; }
-            }
-            else if (p.type === 'heart') { 
-                ctx.fillStyle = p.color; ctx.shadowBlur = 10; ctx.shadowColor = 'red'; let top = finalSize * 0.3; 
-                ctx.beginPath(); ctx.moveTo(0, top); ctx.bezierCurveTo(0, 0, -finalSize, 0, -finalSize, top); ctx.bezierCurveTo(-finalSize, finalSize * 0.8, 0, finalSize, 0, finalSize * 1.2); ctx.bezierCurveTo(0, finalSize, finalSize, finalSize * 0.8, finalSize, top); ctx.bezierCurveTo(finalSize, 0, 0, 0, 0, top); ctx.fill(); 
-            }
-            else if (p.type === 'star' || p.type === 'firefly' || p.type === 'spark') { 
-                ctx.fillStyle = p.color; ctx.shadowBlur = 10; ctx.shadowColor = p.color; ctx.beginPath(); 
-                for (let i = 0; i < 5; i++) { ctx.lineTo(Math.cos((18 + i * 72) / 180 * Math.PI) * finalSize, -Math.sin((18 + i * 72) / 180 * Math.PI) * finalSize); ctx.lineTo(Math.cos((54 + i * 72) / 180 * Math.PI) * (finalSize * 0.4), -Math.sin((54 + i * 72) / 180 * Math.PI) * (finalSize * 0.4)); } 
-                ctx.closePath(); ctx.fill(); 
-            }
-            else if (p.type === 'rain' || p.type === 'lightning') {
-                ctx.fillStyle = p.color; ctx.fillRect(0, 0, finalSize*0.5, finalSize * 10);
-            }
-            else if (p.type === 'confetti' || p.type === 'diamond') {
-                ctx.fillStyle = p.color; ctx.fillRect(-finalSize/2, -finalSize/2, finalSize, finalSize);
-            }
-            else if (p.type === 'triangle') {
-                ctx.fillStyle = p.color; ctx.beginPath(); ctx.moveTo(0, -finalSize); ctx.lineTo(finalSize, finalSize); ctx.lineTo(-finalSize, finalSize); ctx.closePath(); ctx.fill();
-            }
-            else if (p.type === 'cross') {
-                ctx.fillStyle = p.color; ctx.fillRect(-finalSize, -finalSize*0.2, finalSize*2, finalSize*0.4); ctx.fillRect(-finalSize*0.2, -finalSize, finalSize*0.4, finalSize*2);
-            }
-            else if (p.type === 'meteor') {
-                ctx.fillStyle = p.color || 'white'; ctx.shadowBlur = 10; ctx.shadowColor = 'white';
-                ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(finalSize*10, finalSize*10); ctx.lineWidth = finalSize; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke();
-                ctx.beginPath(); ctx.arc(finalSize*10, finalSize*10, finalSize, 0, Math.PI*2); ctx.fill();
-            }
-            else if (['note', 'matrix', 'leaf'].includes(p.type)) {
-                ctx.fillStyle = p.color || 'white'; ctx.font = `${finalSize * 2}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                if(p.type==='matrix') { ctx.shadowBlur = 10; ctx.shadowColor = '#00ff00'; }
-                ctx.fillText(p.char, 0, 0);
+                let pulse = (avgBass / 255) * 10; 
+                
+                // РЕНДЕР
+                if (p.type === 'lightning') {
+                    p.life--;
+                    if (p.life > 0) {
+                        ctx.globalCompositeOperation = 'lighter';
+                        ctx.fillStyle = `rgba(255, 255, 255, ${p.life / p.maxLife * 0.15})`;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(200, 230, 255, ${p.life / p.maxLife})`;
+                        ctx.lineWidth = Math.max(0.1, Math.random() * 5 + 2);
+                        ctx.lineJoin = 'miter';
+                        
+                        let mainPath = p.path.filter(pt => !pt.isBranch);
+                        let branches = p.path.filter(pt => pt.isBranch);
+                        
+                        if (mainPath.length > 0) {
+                            ctx.moveTo(mainPath[0].x, mainPath[0].y);
+                            for (let j = 1; j < mainPath.length; j++) { ctx.lineTo(mainPath[j].x, mainPath[j].y); }
+                        }
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(200, 230, 255, ${(p.life / p.maxLife) * 0.5})`;
+                        ctx.lineWidth = 1.5;
+                        for (let j = 0; j < branches.length; j++) { ctx.lineTo(branches[j].x, branches[j].y); }
+                        ctx.stroke();
+                        ctx.globalCompositeOperation = 'source-over';
+                    }
+                } 
+                else if (p.type === 'spark') {
+                    p.life--;
+                    if (p.life > 0) {
+                        let speed = Math.max(0.1, Math.sqrt(p.vx * p.vx + p.vy * p.vy)); // Захист від NaN
+                        let tailLength = speed * 1.5;
+                        let safeSize = Math.max(0.1, p.size * (p.life / p.maxLife)); // Захист від від'ємної товщини
+                        
+                        ctx.globalCompositeOperation = 'lighter';
+                        ctx.beginPath();
+                        ctx.lineCap = 'round';
+                        ctx.lineWidth = safeSize;
+                        ctx.strokeStyle = p.color;
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p.x - (p.vx / speed) * tailLength, p.y - (p.vy / speed) * tailLength);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                        ctx.arc(p.x, p.y, safeSize * 0.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalCompositeOperation = 'source-over';
+                    }
+                } 
+                else if (p.type === 'meteor') {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'lighter';
+                    ctx.translate(p.x, p.y);
+                    let angle = Math.atan2(p.vy, p.vx); 
+                    ctx.rotate(angle);
+                    
+                    let safeLength = Math.max(1, p.length);
+                    let mGrad = ctx.createLinearGradient(0, 0, -safeLength, 0);
+                    mGrad.addColorStop(0, 'rgba(255, 255, 255, 1)'); 
+                    mGrad.addColorStop(0.05, 'rgba(100, 200, 255, 0.8)'); 
+                    mGrad.addColorStop(0.3, 'rgba(50, 100, 255, 0.3)'); 
+                    mGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    
+                    ctx.strokeStyle = mGrad;
+                    ctx.lineCap = 'round';
+                    ctx.lineWidth = Math.max(0.1, p.size);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(-safeLength, 0);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, Math.max(0.1, p.size * 1.5), 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.restore();
+                } 
+                else if (p.type === 'rain') {
+                    ctx.strokeStyle = `rgba(200, 220, 255, ${Math.max(0, p.opacity)})`;
+                    ctx.lineWidth = 1.0; 
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    let safeVy = Math.max(0.1, p.vy);
+                    ctx.lineTo(p.x - p.vx * (p.length/safeVy), p.y - p.length);
+                    ctx.stroke();
+                } 
+                else if (p.type === 'fire') {
+                    p.life -= 1;
+                    if (p.life > 0) {
+                        let ratio = Math.max(0, p.life / p.maxLife); 
+                        
+                        if (ratio > 0.4) {
+                            let fireRatio = Math.max(0, (ratio - 0.4) / 0.6); 
+                            p.size = Math.max(0.1, p.size * 0.96); 
+                            
+                            let r = 255;
+                            let g = Math.floor(255 * fireRatio);
+                            let b = Math.floor(100 * Math.pow(fireRatio, 2));
+                            
+                            let fGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size));
+                            fGrad.addColorStop(0, `rgba(${r},${g},${b}, ${fireRatio})`);
+                            fGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                            
+                            ctx.globalCompositeOperation = 'lighter';
+                            ctx.fillStyle = fGrad;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.globalCompositeOperation = 'source-over';
+                        } else {
+                            let smokeRatio = Math.max(0, ratio / 0.4); 
+                            p.size = Math.max(0.1, p.size * 1.04); 
+                            p.vx *= 0.95; 
+                            p.vy *= 0.95; 
+                            
+                            let sGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size));
+                            sGrad.addColorStop(0, `rgba(150, 150, 150, ${smokeRatio * 0.4})`);
+                            sGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                            
+                            ctx.globalCompositeOperation = 'source-over';
+                            ctx.fillStyle = sGrad;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                } 
+                else if (p.type === 'smoke') {
+                    p.life--;
+                    if (p.life > 0) {
+                        p.size = Math.max(0.1, p.size * 1.015);
+                        p.opacity = Math.max(0, (p.life / p.maxLife) * 0.25);
+                        let grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size));
+                        grad.addColorStop(0, `rgba(180, 180, 180, ${p.opacity})`);
+                        grad.addColorStop(1, 'rgba(0,0,0,0)');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2); ctx.fill();
+                    }
+                } 
+                else {
+                    if (['star','firefly','dust'].includes(p.type)) p.opacity += (Math.random() - 0.5) * 0.1;
+                    if (p.type === 'matrix' && Math.random() < 0.05) p.char = String.fromCharCode(0x30A0 + Math.random() * 96);
+                    p.opacity = Math.max(0, Math.min(1, p.opacity));
+                    
+                    ctx.save();
+                    if (['star', 'firefly'].includes(p.type)) ctx.globalCompositeOperation = 'lighter';
+                    ctx.globalAlpha = p.opacity;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle);
+                    let s = Math.max(0.1, p.size + (['star','heart','bubble'].includes(p.type) ? pulse * 0.5 : 0));
+
+                    if (p.type === 'snow') {
+                        let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s);
+                        grad.addColorStop(0, 'rgba(255,255,255,1)');
+                        grad.addColorStop(1, 'rgba(255,255,255,0)');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
+                    } else if (p.type === 'bubble') {
+                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); 
+                        ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+                        ctx.beginPath(); ctx.arc(-s*0.3, -s*0.3, s*0.2, 0, Math.PI*2); 
+                        ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill(); 
+                    } else if (p.type === 'confetti') {
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(-s/2, -s/2 * Math.cos(p.angle*5), s, Math.max(0.1, s * Math.abs(Math.cos(p.angle*5))));
+                    } else if (p.type === 'triangle') {
+                        ctx.fillStyle = p.color; 
+                        ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s * 0.866, s * 0.5); ctx.lineTo(-s * 0.866, s * 0.5); ctx.closePath(); ctx.fill();
+                    } else if (p.type === 'heart') {
+                        ctx.fillStyle = p.color; ctx.shadowBlur = 15; ctx.shadowColor = p.color;
+                        let top = s * 0.3; 
+                        ctx.beginPath(); ctx.moveTo(0, top); ctx.bezierCurveTo(0, 0, -s, 0, -s, top); ctx.bezierCurveTo(-s, s * 0.8, 0, s, 0, s * 1.2); ctx.bezierCurveTo(0, s, s, s * 0.8, s, top); ctx.bezierCurveTo(s, 0, 0, 0, 0, top); ctx.fill(); 
+                        ctx.shadowBlur = 0;
+                    } else if (['note', 'matrix', 'leaf'].includes(p.type)) {
+                        ctx.fillStyle = p.color || 'white'; ctx.font = `${s * 2}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        if(p.type === 'matrix') { ctx.shadowBlur = 10; ctx.shadowColor = '#00ff00'; }
+                        ctx.fillText(p.char, 0, 0); ctx.shadowBlur = 0;
+                    } else {
+                        ctx.fillStyle = p.color || 'white';
+                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                if (p.opacity <= 0.01 || p.life <= 0 || p.y < -100 || p.y > canvas.height + 100 || p.x < -200 || p.x > canvas.width + 200) {
+                    particles.splice(i, 1);
+                }
             }
             ctx.restore();
         }
-
-        function handleParticles(avgBass) {
-            const effect = particleSelect.value; if (effect === 'none') return;
-            const maxParticles = (effect === 'rain' || effect === 'snow' || effect === 'matrix') ? 150 : 80; 
-            if (particles.length < maxParticles && Math.random() < 0.4) { particles.push(createParticle(effect)); }
-            
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i]; p.x += p.speedX; p.y += p.speedY; p.angle += p.spin; 
-                let pulse = (avgBass / 255) * 10; 
-                if(['star','firefly','spark'].includes(p.type)) p.opacity += (Math.random() - 0.5) * 0.15; 
-                if(p.type === 'fire' || p.type === 'smoke') { p.size *= 0.98; p.opacity -= 0.01; } 
-                if(p.type === 'matrix') { if(Math.random() < 0.05) p.char = String.fromCharCode(0x30A0 + Math.random() * 96); }
-
-                p.opacity = Math.max(0.01, Math.min(0.9, p.opacity));
-                drawShape(ctx, p, pulse); 
-                if (p.opacity <= 0.02 || p.y < -100 || p.y > canvas.height + 100 || p.x < -100 || p.x > canvas.width + 100) { particles.splice(i, 1); }
-            }
-        }
+        /* ============================================================== */
 
         function drawTextOverlay(minDimension) {
             const titleText = songTitleInput.value.trim(); const authorText = authorInput.value.trim();
@@ -903,6 +1140,7 @@
             } else { ctx.restore(); ctx.fillStyle = 'rgba(10, 10, 11, 1.0)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
             handleParticles(avgBass);
+            
             if (autoColorCheckbox.checked) { baseHue = (baseHue + 1.5) % 360; primaryColor = `hsl(${Math.floor(baseHue)}, 100%, 50%)`; secondaryColor = `hsl(${Math.floor((baseHue + 60) % 360)}, 100%, 50%)`; }
 
             const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
