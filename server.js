@@ -133,15 +133,8 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('file', fs.createReadStream(compressedPath));
         formData.append('model', 'whisper-large-v3');
         formData.append('response_format', 'verbose_json');
-
-        // ВИПРАВЛЕНО: Жорсткий ліміт на довжину підказки (800 символів)
-        if (req.body.lyricsText) {
-            let safeHint = req.body.lyricsText.replace(/[\r\n\t"'\\]/g, " ");
-            safeHint = safeHint.substring(0, 800).trim(); 
-            if (safeHint.length > 0) {
-                formData.append('prompt', safeHint);
-            }
-        }
+        
+        // ВАЖЛИВО: Параметр 'prompt' ПОВНІСТЮ видалено, щоб уникнути помилки довжини (896 characters max)
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
