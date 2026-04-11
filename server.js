@@ -71,7 +71,7 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// === ГЕНЕРАЦІЯ ОБКЛАДИНКИ ЗА ВІРШЕМ ===
+// === ГЕНЕРАЦІЯ ОБКЛАДИНКИ ЗА ВІРШЕМ (ПОКРАЩЕНИЙ АНАЛІЗ) ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, format, customPrompt } = req.body;
@@ -82,12 +82,12 @@ app.post('/api/generate-image', async (req, res) => {
         else if (format === 'portrait') { width = 1080; height = 1350; }
         else if (format === 'cinema') { width = 2560; height = 1080; }
         
-        // Очищення тексту для стабільного запиту в Groq
         let textToAnalyze = customPrompt || lyrics || "Beautiful cinematic background";
         textToAnalyze = textToAnalyze.replace(/[\r\n\t"']/g, " ").replace(/[^a-zA-Zа-яА-ЯіїєґІЇЄҐ0-9 \.,!?-]/g, "");
         textToAnalyze = textToAnalyze.substring(0, 2000).trim();
 
-        const promptContent = `Read the following song lyrics: "${textToAnalyze}". Analyze the OVERALL emotional theme and atmosphere of the ENTIRE song. Write EXACTLY ONE short sentence in English describing a beautiful, atmospheric, cinematic background image for this song. NO TEXT ON IMAGE.`;
+        // ВИПРАВЛЕННЯ: Додано інструкцію для кращого розуміння загальної теми, а не тільки перших слів.
+        const promptContent = `Read the following complete song lyrics: "${textToAnalyze}". Analyze the OVERALL core emotional theme, main subject, and true meaning of the ENTIRE song (do not focus only on the first few words or literal translations of single words). Write EXACTLY ONE short sentence in English describing a beautiful, atmospheric, cinematic background image that captures this overall true meaning. NO TEXT ON IMAGE.`;
 
         let finalPrompt = "Abstract cinematic background, elegant lighting, highly detailed.";
         try {
@@ -148,7 +148,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
             response.data.segments.forEach(seg => {
                 let text = seg.text.trim();
                 
-                // ПРОСТІ ФІЛЬТРИ: Видалено перевірку на російську мову.
                 const isTooShort = text.length <= 2;
                 const hasArabic = /[\u0600-\u06FF]/.test(text);
                 const isRepeatingChar = /^(.)\1+$/.test(text.replace(/\s/g, ''));
