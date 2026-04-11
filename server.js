@@ -67,7 +67,6 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// ГЕНЕРАЦІЯ ФОНУ (Gemini 503 Fix -> Pollinations)
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, format, customPrompt } = req.body;
@@ -78,22 +77,27 @@ app.post('/api/generate-image', async (req, res) => {
         else if (format === 'portrait') { width = 1080; height = 1350; }
         else if (format === 'cinema') { width = 2560; height = 1080; }
         
-        // Жорстка очистка тексту
-        let safeText = (customPrompt || lyrics || "cinematic background").replace(/[\r\n\t"'\\]/g, " ").substring(0, 1000);
+        const textToAnalyze = (customPrompt || lyrics || "Cinematic background").substring(0, 1500);
 
-        let finalPrompt = "Abstract cinematic background, elegant lighting, highly detailed.";
+        let finalPrompt = "Beautiful atmospheric cinematic background";
         try {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: 'llama3-8b-8192',
-                messages: [{ role: 'user', content: `Write EXACTLY ONE short sentence in English describing a cinematic background image for this song context: "${safeText}". DO NOT include text, letters, or words in the image.` }]
+                messages: [{ 
+                    role: 'user', 
+                    content: `Read these lyrics: "${textToAnalyze}". Write EXACTLY ONE short sentence in English describing a visual background scene. Capture the true emotional core of the whole song (e.g. if it's a birthday, show warm celebration vibes, not winter/Christmas). NO TEXT, NO LETTERS on the image.` 
+                }]
             }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
             
             if (groqRes.data.choices && groqRes.data.choices[0]) {
                 finalPrompt = groqRes.data.choices[0].message.content.trim();
             }
-        } catch (e) { console.error("Groq Llama Error"); }
+        } catch (e) {
+            console.error("Groq Llama Error, using fallback");
+            finalPrompt = `Cinematic scene, inspired by: ${textToAnalyze.substring(0, 50)}`;
+        }
 
-        const fullPrompt = `${finalPrompt}, highly detailed, 8k resolution, cinematic lighting, masterpiece, no text, no letters.`;
+        const fullPrompt = `${finalPrompt}, highly detailed, 8k resolution, cinematic lighting, masterpiece, NO TEXT, NO LETTERS.`;
         const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${width}&height=${height}&nologo=true`;
         
         const imageRes = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 30000 });
@@ -108,12 +112,17 @@ app.post('/api/generate-image', async (req, res) => {
 
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
-        ffmpeg(inputPath).audioBitrate('32k').audioChannels(1).audioFrequency(16000).toFormat('mp3')
-            .on('end', () => resolve(outputPath)).on('error', reject).save(outputPath);
+        ffmpeg(inputPath)
+            .audioBitrate('96k') // Піднята якість звуку для Whisper
+            .audioChannels(1)
+            .audioFrequency(44100) // Піднята частота для музики
+            .toFormat('mp3')
+            .on('end', () => resolve(outputPath))
+            .on('error', reject)
+            .save(outputPath);
     });
 }
 
-// WHISPER (Groq 400 Fix)
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     let compressedPath = null;
     try {
@@ -126,7 +135,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('file', fs.createReadStream(compressedPath), 'audio.mp3');
         formData.append('model', 'whisper-large-v3'); 
         formData.append('response_format', 'verbose_json'); 
-        // Видалені ВСІ інші параметри (prompt, temperature), щоб уникнути помилки 400
+        formData.append('prompt', 'Текст пісні. Будь ласка, розпізнай кожне слово, починаючи з першої секунди.');
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
