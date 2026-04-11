@@ -15,14 +15,12 @@ app.use(express.json());
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
-// === ЗМІННІ ОТОЧЕННЯ ===
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_URL;
 
-// === TELEGRAM БОТ ===
 async function sendTelegramMessage(text) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
     try {
@@ -31,10 +29,9 @@ async function sendTelegramMessage(text) {
             text: text,
             parse_mode: 'HTML'
         });
-    } catch (e) { console.error("Помилка Telegram:", e.message); }
+    } catch (e) {}
 }
 
-// === БАЗА ДАНИХ (GOOGLE SHEETS) ===
 app.post('/api/register', async (req, res) => {
     try { const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'register', ...req.body }); res.json(response.data); } 
     catch (e) { res.status(500).json({ error: "Помилка реєстрації" }); }
@@ -45,7 +42,6 @@ app.post('/api/login', async (req, res) => {
     catch (e) { res.status(500).json({ error: "Помилка входу" }); }
 });
 
-// === ОПЛАТА MONOBANK ===
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         const { email, amount } = req.body;
@@ -71,7 +67,7 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// === ГЕНЕРАЦІЯ ОБКЛАДИНКИ ЗА ВІРШЕМ (ПОКРАЩЕНИЙ АНАЛІЗ) ===
+// ГЕНЕРАЦІЯ ФОНУ (Gemini 503 Fix -> Pollinations)
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, format, customPrompt } = req.body;
@@ -82,27 +78,22 @@ app.post('/api/generate-image', async (req, res) => {
         else if (format === 'portrait') { width = 1080; height = 1350; }
         else if (format === 'cinema') { width = 2560; height = 1080; }
         
-        let textToAnalyze = customPrompt || lyrics || "Beautiful cinematic background";
-        textToAnalyze = textToAnalyze.replace(/[\r\n\t"']/g, " ").replace(/[^a-zA-Zа-яА-ЯіїєґІЇЄҐ0-9 \.,!?-]/g, "");
-        textToAnalyze = textToAnalyze.substring(0, 2000).trim();
-
-        // ВИПРАВЛЕННЯ: Додано інструкцію для кращого розуміння загальної теми, а не тільки перших слів.
-        const promptContent = `Read the following complete song lyrics: "${textToAnalyze}". Analyze the OVERALL core emotional theme, main subject, and true meaning of the ENTIRE song (do not focus only on the first few words or literal translations of single words). Write EXACTLY ONE short sentence in English describing a beautiful, atmospheric, cinematic background image that captures this overall true meaning. NO TEXT ON IMAGE.`;
+        // Жорстка очистка тексту
+        let safeText = (customPrompt || lyrics || "cinematic background").replace(/[\r\n\t"'\\]/g, " ").substring(0, 1000);
 
         let finalPrompt = "Abstract cinematic background, elegant lighting, highly detailed.";
         try {
-            const groqPromptRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: 'llama3-8b-8192',
-                messages: [{ role: 'user', content: promptContent }]
+                messages: [{ role: 'user', content: `Write EXACTLY ONE short sentence in English describing a cinematic background image for this song context: "${safeText}". DO NOT include text, letters, or words in the image.` }]
             }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
             
-            finalPrompt = groqPromptRes.data.choices[0].message.content.trim();
-        } catch (groqError) {
-            console.error("Groq Llama API Error:", groqError.response ? groqError.response.data : groqError.message);
-        }
+            if (groqRes.data.choices && groqRes.data.choices[0]) {
+                finalPrompt = groqRes.data.choices[0].message.content.trim();
+            }
+        } catch (e) { console.error("Groq Llama Error"); }
 
         const fullPrompt = `${finalPrompt}, highly detailed, 8k resolution, cinematic lighting, masterpiece, no text, no letters.`;
-        
         const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${width}&height=${height}&nologo=true`;
         
         const imageRes = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 30000 });
@@ -111,12 +102,10 @@ app.post('/api/generate-image', async (req, res) => {
         res.json({ imageUrl: `data:image/jpeg;base64,${base64}` });
 
     } catch (error) { 
-        console.error("Image Gen Error:", error.message);
         res.status(500).json({ error: "Помилка генерації фону" }); 
     }
 });
 
-// === СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER) ===
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
         ffmpeg(inputPath).audioBitrate('32k').audioChannels(1).audioFrequency(16000).toFormat('mp3')
@@ -124,6 +113,7 @@ function compressAudio(inputPath, outputPath) {
     });
 }
 
+// WHISPER (Groq 400 Fix)
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     let compressedPath = null;
     try {
@@ -136,18 +126,19 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('file', fs.createReadStream(compressedPath), 'audio.mp3');
         formData.append('model', 'whisper-large-v3'); 
         formData.append('response_format', 'verbose_json'); 
+        // Видалені ВСІ інші параметри (prompt, temperature), щоб уникнути помилки 400
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
             maxBodyLength: Infinity,
+            maxContentLength: Infinity,
             timeout: 120000
         });
 
         let lrcText = "";
-        if (response.data.segments) {
+        if (response.data && response.data.segments) {
             response.data.segments.forEach(seg => {
                 let text = seg.text.trim();
-                
                 const isTooShort = text.length <= 2;
                 const hasArabic = /[\u0600-\u06FF]/.test(text);
                 const isRepeatingChar = /^(.)\1+$/.test(text.replace(/\s/g, ''));
@@ -164,7 +155,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         }
         res.json({ lrc: lrcText });
     } catch (error) {
-        console.error("Whisper Error:", error.response ? JSON.stringify(error.response.data) : error.message);
         res.status(500).json({ error: "Помилка розпізнавання." });
     } finally {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
