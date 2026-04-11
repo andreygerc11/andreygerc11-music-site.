@@ -15,6 +15,7 @@ app.use(express.json());
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Використовуємо безкоштовний Gemini
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -67,7 +68,7 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// ГЕНЕРАЦІЯ ОБКЛАДИНКИ
+// ГЕНЕРАЦІЯ ОБКЛАДИНКИ (ПЕРЕВЕДЕНО НА БЕЗКОШТОВНИЙ GEMINI 1.5 FLASH)
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, format, customPrompt } = req.body;
@@ -82,19 +83,19 @@ app.post('/api/generate-image', async (req, res) => {
 
         if (rawText.length > 10) {
             try {
-                const promptContent = `Analyze the following lyrics and write EXACTLY ONE short sentence in English describing a visual background scene. Capture the true emotional core (e.g., if it's a birthday, show celebration vibes, not winter). NO TEXT ON IMAGE. Lyrics: ${rawText}`;
+                const promptContent = `Analyze these lyrics and write EXACTLY ONE short sentence in English describing a visual background scene. Capture the true emotional core (e.g., if it's a birthday, show celebration vibes, not winter). NO TEXT ON IMAGE. Lyrics: ${rawText}`;
                 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: 'llama-3.1-8b-instant', 
-                    messages: [{ role: 'user', content: promptContent }],
-                    temperature: 0.2
-                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' } });
+                // Використовуємо безкоштовний Google Gemini для аналізу тексту замість платного/лімітованого Groq
+                const geminiRes = await axios.post(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                    { contents: [{ parts: [{ text: promptContent }] }] }
+                );
                 
-                if (groqRes.data.choices && groqRes.data.choices[0]) {
-                    finalPrompt = groqRes.data.choices[0].message.content.trim();
+                if (geminiRes.data.candidates && geminiRes.data.candidates[0].content.parts[0].text) {
+                    finalPrompt = geminiRes.data.candidates[0].content.parts[0].text.trim();
                 }
             } catch (e) {
-                console.error("Groq Llama Error:", e.response ? JSON.stringify(e.response.data) : e.message);
+                console.error("Gemini Text Error:", e.response ? JSON.stringify(e.response.data) : e.message);
                 finalPrompt = "Beautiful atmospheric cinematic background.";
             }
         }
@@ -121,7 +122,7 @@ function compressAudio(inputPath, outputPath) {
     });
 }
 
-// СИНХРОНІЗАЦІЯ ТЕКСТУ
+// СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER)
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     let compressedPath = null;
     try {
@@ -133,8 +134,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('file', fs.createReadStream(compressedPath));
         formData.append('model', 'whisper-large-v3');
         formData.append('response_format', 'verbose_json');
-        
-        // ВАЖЛИВО: Параметр 'prompt' ПОВНІСТЮ видалено, щоб уникнути помилки довжини (896 characters max)
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
