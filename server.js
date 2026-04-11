@@ -32,7 +32,6 @@ async function sendTelegramMessage(text) {
     } catch (e) {}
 }
 
-// Реєстрація та вхід
 app.post('/api/register', async (req, res) => {
     try { const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'register', ...req.body }); res.json(response.data); } 
     catch (e) { res.status(500).json({ error: "Помилка реєстрації" }); }
@@ -43,7 +42,6 @@ app.post('/api/login', async (req, res) => {
     catch (e) { res.status(500).json({ error: "Помилка входу" }); }
 });
 
-// Платежі
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         const { email, amount } = req.body;
@@ -63,13 +61,12 @@ app.post('/api/webhook', async (req, res) => {
         const { invoiceId, status, reference } = req.body;
         if (status === 'success') {
             await axios.post(GOOGLE_SHEETS_URL, { action: 'update_sub', invoiceId, status });
-            await sendTelegramMessage(`🔥 <b>Новий донат!</b>\nEmail: ${reference}`);
+            await sendTelegramMessage(`🔥 <b>Новий донат/підписка!</b>\nСтатус: Оплачено\nEmail: ${reference}`);
         }
         res.status(200).send("OK");
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// Генерація обкладинки
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, format, customPrompt } = req.body;
@@ -79,28 +76,25 @@ app.post('/api/generate-image', async (req, res) => {
         else if (format === 'portrait') { width = 1080; height = 1350; }
         else if (format === 'cinema') { width = 2560; height = 1080; }
 
-        const textToAnalyze = (customPrompt || lyrics || "").substring(0, 2000);
-        let finalPrompt = "Atmospheric cinematic background, elegant lighting, professional photography style.";
+        const rawText = (customPrompt || lyrics || "").substring(0, 1500);
+        let finalPrompt = "Beautiful cinematic background, highly detailed.";
 
-        if (textToAnalyze.length > 10) {
+        if (rawText.length > 10) {
             try {
+                const promptContent = `Analyze the following lyrics and write EXACTLY ONE short sentence in English describing a visual background scene. Capture the true emotional core (e.g., if it's a birthday, show celebration vibes, not winter). NO TEXT ON IMAGE. Lyrics: ${rawText}`;
+                
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: 'llama3-8b-8192',
-                    messages: [
-                        { 
-                            role: 'system', 
-                            content: 'You are a visual artist. Analyze lyrics and describe a background scene. If the song is about a birthday, show celebration, sunshine, or spring vibes. Avoid Christmas/New Year unless explicitly mentioned. Output ONLY one sentence in English. No text on image.' 
-                        },
-                        { role: 'user', content: `Lyrics: ${textToAnalyze}` }
-                    ],
-                    temperature: 0.5
+                    messages: [{ role: 'user', content: promptContent }],
+                    temperature: 0.2
                 }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' } });
                 
-                if (groqRes.data.choices?.[0]?.message?.content) {
+                if (groqRes.data.choices && groqRes.data.choices[0]) {
                     finalPrompt = groqRes.data.choices[0].message.content.trim();
                 }
             } catch (e) {
-                console.error("Groq Llama Error:", e.message);
+                console.error("Groq Llama Error:", e.response ? JSON.stringify(e.response.data) : e.message);
+                finalPrompt = "Beautiful atmospheric cinematic background.";
             }
         }
 
@@ -114,7 +108,6 @@ app.post('/api/generate-image', async (req, res) => {
     }
 });
 
-// Синхронізація тексту
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
         ffmpeg(inputPath)
