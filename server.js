@@ -15,7 +15,6 @@ app.use(express.json());
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Використовуємо безкоштовний Gemini
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -68,9 +67,10 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// ГЕНЕРАЦІЯ ОБКЛАДИНКИ (ПЕРЕВЕДЕНО НА БЕЗКОШТОВНИЙ GEMINI 1.5 FLASH)
+// === ГЕНЕРАЦІЯ ОБКЛАДИНКИ З ДЕТАЛЬНИМ ЛОГУВАННЯМ ===
 app.post('/api/generate-image', async (req, res) => {
     try {
+        console.log("\n=== ПОЧАТОК ГЕНЕРАЦІЇ ОБКЛАДИНКИ ===");
         const { lyrics, format, customPrompt } = req.body;
         let width = 1080, height = 1920;
         if (format === 'horizontal') { width = 1920; height = 1080; }
@@ -83,29 +83,43 @@ app.post('/api/generate-image', async (req, res) => {
 
         if (rawText.length > 10) {
             try {
-                const promptContent = `Analyze these lyrics and write EXACTLY ONE short sentence in English describing a visual background scene. Capture the true emotional core (e.g., if it's a birthday, show celebration vibes, not winter). NO TEXT ON IMAGE. Lyrics: ${rawText}`;
+                const promptContent = `Analyze the following lyrics and write EXACTLY ONE short sentence in English describing a visual background scene. Capture the true emotional core (e.g., if it's a birthday, show warm spring celebration vibes, absolutely NO winter or Christmas). NO TEXT ON IMAGE. Lyrics: ${rawText}`;
                 
-                // Використовуємо безкоштовний Google Gemini для аналізу тексту замість платного/лімітованого Groq
-                const geminiRes = await axios.post(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-                    { contents: [{ parts: [{ text: promptContent }] }] }
-                );
+                console.log("1. Відправляю запит до Groq LLaMA для аналізу вірша...");
+                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                    model: 'llama-3.1-8b-instant', 
+                    messages: [{ role: 'user', content: promptContent }],
+                    temperature: 0.2
+                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' } });
                 
-                if (geminiRes.data.candidates && geminiRes.data.candidates[0].content.parts[0].text) {
-                    finalPrompt = geminiRes.data.candidates[0].content.parts[0].text.trim();
+                if (groqRes.data.choices && groqRes.data.choices[0]) {
+                    finalPrompt = groqRes.data.choices[0].message.content.trim();
+                    console.log("2. Успіх! Опис сцени від LLaMA:", finalPrompt);
                 }
             } catch (e) {
-                console.error("Gemini Text Error:", e.response ? JSON.stringify(e.response.data) : e.message);
-                finalPrompt = "Beautiful atmospheric cinematic background.";
+                console.error("Увага: Помилка Groq LLaMA:", e.message, "- Використовую стандартний опис.");
+                finalPrompt = "Beautiful atmospheric cinematic background, spring vibes.";
             }
         }
 
         const fullPrompt = `${finalPrompt}, highly detailed, 8k resolution, cinematic lighting, masterpiece, no text, no letters.`;
         const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${width}&height=${height}&nologo=true&seed=${Math.floor(Math.random()*100000)}`;
         
-        const imageRes = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 30000 });
+        console.log("3. Відправляю запит на малювання до Pollinations AI...");
+        console.log("URL картинки:", imageUrl);
+        
+        const imageRes = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 40000 }); // Збільшено таймаут до 40 секунд
+        
+        console.log("4. Успіх! Картинка завантажена, відправляю на сайт.");
+        console.log("=========================================\n");
+        
         res.json({ imageUrl: `data:image/jpeg;base64,${Buffer.from(imageRes.data).toString('base64')}` });
     } catch (error) { 
+        console.error("!!! ФАТАЛЬНА ПОМИЛКА ГЕНЕРАЦІЇ КАРТИНКИ !!!");
+        console.error("Деталі помилки:", error.message);
+        if (error.response) {
+            console.error("Код статусу від API:", error.response.status);
+        }
         res.status(500).json({ error: "Помилка генерації зображення" }); 
     }
 });
@@ -122,7 +136,6 @@ function compressAudio(inputPath, outputPath) {
     });
 }
 
-// СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER)
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     let compressedPath = null;
     try {
@@ -156,7 +169,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         }
         res.json({ lrc });
     } catch (error) {
-        console.error("Whisper Error:", error.response ? JSON.stringify(error.response.data) : error.message);
+        console.error("Whisper Error:", error.message);
         res.status(500).json({ error: "Помилка Whisper" });
     } finally {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
