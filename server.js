@@ -67,6 +67,7 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
+// ГЕНЕРАЦІЯ ОБКЛАДИНКИ (ДВА ШІ: LLaMA 3.1 -> Pollinations)
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, format, customPrompt } = req.body;
@@ -83,8 +84,9 @@ app.post('/api/generate-image', async (req, res) => {
             try {
                 const promptContent = `Analyze the following lyrics and write EXACTLY ONE short sentence in English describing a visual background scene. Capture the true emotional core (e.g., if it's a birthday, show celebration vibes, not winter). NO TEXT ON IMAGE. Lyrics: ${rawText}`;
                 
+                // ВИПРАВЛЕНО: Використовуємо нову робочу модель замість видаленої
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: 'llama3-8b-8192',
+                    model: 'llama-3.1-8b-instant', 
                     messages: [{ role: 'user', content: promptContent }],
                     temperature: 0.2
                 }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' } });
@@ -120,6 +122,7 @@ function compressAudio(inputPath, outputPath) {
     });
 }
 
+// СИНХРОНІЗАЦІЯ ТЕКСТУ (ШІ WHISPER + ШПАРГАЛКА)
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     let compressedPath = null;
     try {
@@ -131,6 +134,15 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('file', fs.createReadStream(compressedPath));
         formData.append('model', 'whisper-large-v3');
         formData.append('response_format', 'verbose_json');
+
+        // ВИПРАВЛЕНО: Даємо Whisper-у шпаргалку з твого тексту, щоб він не губив слова!
+        if (req.body.lyricsText) {
+            let safeHint = req.body.lyricsText.replace(/[\r\n\t"'\\]/g, " ");
+            safeHint = safeHint.substring(0, 800).trim();
+            if (safeHint.length > 0) {
+                formData.append('prompt', safeHint);
+            }
+        }
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
@@ -153,6 +165,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         }
         res.json({ lrc });
     } catch (error) {
+        console.error("Whisper Error:", error.response ? JSON.stringify(error.response.data) : error.message);
         res.status(500).json({ error: "Помилка Whisper" });
     } finally {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
