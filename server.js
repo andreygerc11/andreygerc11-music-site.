@@ -67,7 +67,7 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// === ГЕНЕРАЦІЯ ОБКЛАДИНКИ З ДЕТАЛЬНИМ ЛОГУВАННЯМ ===
+// === ГЕНЕРАЦІЯ ОБКЛАДИНКИ: РЕЖИМ ПРЯМОГО ПОСИЛАННЯ ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         console.log("\n=== ПОЧАТОК ГЕНЕРАЦІЇ ОБКЛАДИНКИ ===");
@@ -78,7 +78,9 @@ app.post('/api/generate-image', async (req, res) => {
         else if (format === 'portrait') { width = 1080; height = 1350; }
         else if (format === 'cinema') { width = 2560; height = 1080; }
 
-        const rawText = (customPrompt || lyrics || "").substring(0, 1500);
+        let rawText = (customPrompt || lyrics || "").substring(0, 1500);
+        rawText = rawText.replace(/[\r\n\t]/g, " ").replace(/\s+/g, " ").trim();
+        
         let finalPrompt = "Beautiful cinematic background, highly detailed.";
 
         if (rawText.length > 10) {
@@ -102,25 +104,21 @@ app.post('/api/generate-image', async (req, res) => {
             }
         }
 
+        finalPrompt = finalPrompt.replace(/[^a-zA-Z0-9 \.,!?-]/g, "");
         const fullPrompt = `${finalPrompt}, highly detailed, 8k resolution, cinematic lighting, masterpiece, no text, no letters.`;
+        
+        // Генеруємо пряме посилання на картинку з унікальним seed, щоб вона щоразу була новою
         const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${width}&height=${height}&nologo=true&seed=${Math.floor(Math.random()*100000)}`;
         
-        console.log("3. Відправляю запит на малювання до Pollinations AI...");
+        console.log("3. Відправляю ПРЯМЕ ПОСИЛАННЯ на фронтенд (щоб уникнути таймаутів)...");
         console.log("URL картинки:", imageUrl);
         
-        const imageRes = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 40000 }); // Збільшено таймаут до 40 секунд
-        
-        console.log("4. Успіх! Картинка завантажена, відправляю на сайт.");
-        console.log("=========================================\n");
-        
-        res.json({ imageUrl: `data:image/jpeg;base64,${Buffer.from(imageRes.data).toString('base64')}` });
+        // Замість того, щоб сервер качав картинку, він віддає URL браузеру.
+        res.json({ imageUrl: imageUrl });
+
     } catch (error) { 
-        console.error("!!! ФАТАЛЬНА ПОМИЛКА ГЕНЕРАЦІЇ КАРТИНКИ !!!");
-        console.error("Деталі помилки:", error.message);
-        if (error.response) {
-            console.error("Код статусу від API:", error.response.status);
-        }
-        res.status(500).json({ error: "Помилка генерації зображення" }); 
+        console.error("!!! ФАТАЛЬНА ПОМИЛКА !!!", error.message);
+        res.status(500).json({ error: "Помилка формування запиту" }); 
     }
 });
 
@@ -136,6 +134,7 @@ function compressAudio(inputPath, outputPath) {
     });
 }
 
+// СИНХРОНІЗАЦІЯ ТЕКСТУ
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     let compressedPath = null;
     try {
