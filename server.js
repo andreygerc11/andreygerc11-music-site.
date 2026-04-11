@@ -67,7 +67,7 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// ГЕНЕРАЦІЯ ОБКЛАДИНКИ (ДВА ШІ: LLaMA 3.1 -> Pollinations)
+// ГЕНЕРАЦІЯ ОБКЛАДИНКИ
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, format, customPrompt } = req.body;
@@ -84,7 +84,6 @@ app.post('/api/generate-image', async (req, res) => {
             try {
                 const promptContent = `Analyze the following lyrics and write EXACTLY ONE short sentence in English describing a visual background scene. Capture the true emotional core (e.g., if it's a birthday, show celebration vibes, not winter). NO TEXT ON IMAGE. Lyrics: ${rawText}`;
                 
-                // ВИПРАВЛЕНО: Використовуємо нову робочу модель замість видаленої
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: 'llama-3.1-8b-instant', 
                     messages: [{ role: 'user', content: promptContent }],
@@ -122,7 +121,7 @@ function compressAudio(inputPath, outputPath) {
     });
 }
 
-// СИНХРОНІЗАЦІЯ ТЕКСТУ (ШІ WHISPER + ШПАРГАЛКА)
+// СИНХРОНІЗАЦІЯ ТЕКСТУ
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     let compressedPath = null;
     try {
@@ -135,10 +134,10 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('model', 'whisper-large-v3');
         formData.append('response_format', 'verbose_json');
 
-        // ВИПРАВЛЕНО: Даємо Whisper-у шпаргалку з твого тексту, щоб він не губив слова!
+        // ВИПРАВЛЕНО: Жорсткий ліміт на довжину підказки (800 символів)
         if (req.body.lyricsText) {
             let safeHint = req.body.lyricsText.replace(/[\r\n\t"'\\]/g, " ");
-            safeHint = safeHint.substring(0, 800).trim();
+            safeHint = safeHint.substring(0, 800).trim(); 
             if (safeHint.length > 0) {
                 formData.append('prompt', safeHint);
             }
