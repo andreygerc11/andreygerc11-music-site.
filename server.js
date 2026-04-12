@@ -32,14 +32,46 @@ async function sendTelegramMessage(text) {
     } catch (e) {}
 }
 
+// === ПОСИЛЕНЕ ЛОГУВАННЯ ДЛЯ РЕЄСТРАЦІЇ ===
 app.post('/api/register', async (req, res) => {
-    try { const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'register', ...req.body }); res.json(response.data); } 
-    catch (e) { res.status(500).json({ error: "Помилка реєстрації" }); }
+    try { 
+        console.log("=== СПРОБА РЕЄСТРАЦІЇ ===");
+        console.log("URL Таблиці (має бути не undefined):", GOOGLE_SHEETS_URL ? "Встановлено" : "ВІДСУТНІЙ!");
+        console.log("Дані користувача:", req.body);
+        
+        if (!GOOGLE_SHEETS_URL) throw new Error("GOOGLE_SHEETS_URL не налаштовано на сервері Render!");
+
+        const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'register', ...req.body }, {
+            headers: { 'Content-Type': 'application/json' }
+        }); 
+        console.log("Відповідь від Google Sheets:", response.data);
+        res.json(response.data); 
+    } 
+    catch (e) { 
+        console.error("Помилка реєстрації:", e.response ? e.response.data : e.message);
+        res.status(500).json({ error: "Помилка реєстрації", details: e.message }); 
+    }
 });
 
+// === ПОСИЛЕНЕ ЛОГУВАННЯ ДЛЯ ЛОГІНУ ===
 app.post('/api/login', async (req, res) => {
-    try { const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'login', ...req.body }); res.json(response.data); } 
-    catch (e) { res.status(500).json({ error: "Помилка входу" }); }
+    try { 
+        console.log("=== СПРОБА ЛОГІНУ ===");
+        console.log("URL Таблиці (має бути не undefined):", GOOGLE_SHEETS_URL ? "Встановлено" : "ВІДСУТНІЙ!");
+        console.log("Дані для входу:", req.body.email);
+
+        if (!GOOGLE_SHEETS_URL) throw new Error("GOOGLE_SHEETS_URL не налаштовано на сервері Render!");
+
+        const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'login', ...req.body }, {
+            headers: { 'Content-Type': 'application/json' }
+        }); 
+        console.log("Відповідь від Google Sheets:", response.data);
+        res.json(response.data); 
+    } 
+    catch (e) { 
+        console.error("Помилка входу:", e.response ? e.response.data : e.message);
+        res.status(500).json({ error: "Помилка входу", details: e.message }); 
+    }
 });
 
 // === ОПЛАТА ПІДПИСКИ PRO (39 грн) ===
@@ -71,7 +103,7 @@ app.post('/api/pay', async (req, res) => {
     try {
         const { songId, songName } = req.body;
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: 3736, // 37 грн 36 копійок
+            amount: 3736, 
             ccy: 980,
             merchantPaymInfo: { 
                 destination: `Придбання треку: ${songName}`, 
@@ -102,12 +134,10 @@ app.post('/api/webhook', async (req, res) => {
 // === ОТРИМАННЯ СПИСКУ ПІСЕНЬ ДЛЯ MUSIC.HTML ===
 app.get('/api/music', async (req, res) => {
     try {
-        // Якщо список пісень лежить у файлі music.json на сервері
         if (fs.existsSync('music.json')) {
             const musicData = JSON.parse(fs.readFileSync('music.json', 'utf8'));
             res.json(musicData);
         } else {
-            // Віддаємо пустий масив, якщо файлу немає, щоб сторінка не зависала
             res.json([]);
         }
     } catch (error) {
@@ -119,6 +149,7 @@ app.get('/api/music', async (req, res) => {
 // === ГЕНЕРАЦІЯ ОБКЛАДИНКИ ===
 app.post('/api/generate-image', async (req, res) => {
     try {
+        console.log("\n=== ПОЧАТОК ГЕНЕРАЦІЇ ОБКЛАДИНКИ ===");
         const { lyrics, format, customPrompt } = req.body;
         let width = 1080, height = 1920;
         if (format === 'horizontal') { width = 1920; height = 1080; }
