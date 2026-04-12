@@ -42,13 +42,10 @@ app.post('/api/login', async (req, res) => {
     catch (e) { res.status(500).json({ error: "Помилка входу" }); }
 });
 
-// === ВИПРАВЛЕНА ЛОГІКА ОПЛАТИ (39 ГРН ПРОБНИЙ ПЕРІОД) ===
+// === ОПЛАТА ПІДПИСКИ PRO (39 грн) ===
 app.post('/api/pay-subscription', async (req, res) => {
     try {
-        console.log("Отримано запит на оплату...");
         const { email, amount } = req.body;
-        
-        // Ставимо 3900 копійок (39 грн) за замовчуванням для пробного періоду
         const finalAmount = amount || 3900; 
 
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
@@ -62,10 +59,31 @@ app.post('/api/pay-subscription', async (req, res) => {
             webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
         }, { headers: { 'X-Token': MONO_TOKEN } });
         
-        console.log("Посилання на оплату успішно створено!");
         res.json({ url: monoRes.data.pageUrl, pageUrl: monoRes.data.pageUrl });
     } catch (error) { 
-        console.error("Помилка Монобанку:", error.response ? JSON.stringify(error.response.data) : error.message);
+        console.error("Помилка підписки:", error.message);
+        res.status(500).json({ error: "Помилка створення платежу" }); 
+    }
+});
+
+// === ОПЛАТА ОКРЕМОГО ТРЕКУ З MUSIC.HTML (37.36 грн) ===
+app.post('/api/pay', async (req, res) => {
+    try {
+        const { songId, songName } = req.body;
+        const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
+            amount: 3736, // 37 грн 36 копійок
+            ccy: 980,
+            merchantPaymInfo: { 
+                destination: `Придбання треку: ${songName}`, 
+                reference: songId 
+            },
+            redirectUrl: "https://golos-proty-raku.pp.ua/success.html",
+            webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
+        }, { headers: { 'X-Token': MONO_TOKEN } });
+        
+        res.json({ url: monoRes.data.pageUrl });
+    } catch (error) { 
+        console.error("Помилка покупки пісні:", error.message);
         res.status(500).json({ error: "Помилка створення платежу" }); 
     }
 });
@@ -75,16 +93,32 @@ app.post('/api/webhook', async (req, res) => {
         const { invoiceId, status, reference } = req.body;
         if (status === 'success') {
             await axios.post(GOOGLE_SHEETS_URL, { action: 'update_sub', invoiceId, status });
-            await sendTelegramMessage(`🔥 <b>Новий донат/підписка!</b>\nСтатус: Оплачено\nEmail: ${reference}`);
+            await sendTelegramMessage(`🔥 <b>Новий донат/оплата!</b>\nСтатус: Оплачено\nДеталі: ${reference}`);
         }
         res.status(200).send("OK");
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
+// === ОТРИМАННЯ СПИСКУ ПІСЕНЬ ДЛЯ MUSIC.HTML ===
+app.get('/api/music', async (req, res) => {
+    try {
+        // Якщо список пісень лежить у файлі music.json на сервері
+        if (fs.existsSync('music.json')) {
+            const musicData = JSON.parse(fs.readFileSync('music.json', 'utf8'));
+            res.json(musicData);
+        } else {
+            // Віддаємо пустий масив, якщо файлу немає, щоб сторінка не зависала
+            res.json([]);
+        }
+    } catch (error) {
+        console.error("Помилка списку пісень:", error.message);
+        res.status(500).json({ error: "Помилка завантаження пісень" });
+    }
+});
+
 // === ГЕНЕРАЦІЯ ОБКЛАДИНКИ ===
 app.post('/api/generate-image', async (req, res) => {
     try {
-        console.log("\n=== ПОЧАТОК ГЕНЕРАЦІЇ ОБКЛАДИНКИ ===");
         const { lyrics, format, customPrompt } = req.body;
         let width = 1080, height = 1920;
         if (format === 'horizontal') { width = 1920; height = 1080; }
@@ -101,7 +135,6 @@ app.post('/api/generate-image', async (req, res) => {
             try {
                 const promptContent = `Analyze the following lyrics and write EXACTLY ONE short sentence in English describing a visual background scene. Capture the true emotional core (e.g., if it's a birthday, show warm spring celebration vibes, absolutely NO winter or Christmas). NO TEXT ON IMAGE. Lyrics: ${rawText}`;
                 
-                console.log("1. Відправляю запит до Groq LLaMA для аналізу вірша...");
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: 'llama-3.1-8b-instant', 
                     messages: [{ role: 'user', content: promptContent }],
@@ -110,10 +143,9 @@ app.post('/api/generate-image', async (req, res) => {
                 
                 if (groqRes.data.choices && groqRes.data.choices[0]) {
                     finalPrompt = groqRes.data.choices[0].message.content.trim();
-                    console.log("2. Успіх! Опис сцени від LLaMA:", finalPrompt);
                 }
             } catch (e) {
-                console.error("Увага: Помилка Groq LLaMA:", e.message, "- Використовую стандартний опис.");
+                console.error("Помилка Groq LLaMA:", e.message);
                 finalPrompt = "Beautiful atmospheric cinematic background, spring vibes.";
             }
         }
@@ -122,17 +154,14 @@ app.post('/api/generate-image', async (req, res) => {
         const fullPrompt = `${finalPrompt}, highly detailed, 8k resolution, cinematic lighting, masterpiece, no text, no letters.`;
         
         const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${width}&height=${height}&nologo=true&seed=${Math.floor(Math.random()*100000)}`;
-        
-        console.log("3. Відправляю ПРЯМЕ ПОСИЛАННЯ на фронтенд...");
         res.json({ imageUrl: imageUrl });
 
     } catch (error) { 
-        console.error("!!! ФАТАЛЬНА ПОМИЛКА !!!", error.message);
         res.status(500).json({ error: "Помилка формування запиту" }); 
     }
 });
 
-// === СТУДІЙНА ФІЛЬТРАЦІЯ ЗВУКУ ===
+// СТУДІЙНИЙ ФІЛЬТР ДЛЯ ВИДІЛЕННЯ ГОЛОСУ
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
         ffmpeg(inputPath)
@@ -140,9 +169,10 @@ function compressAudio(inputPath, outputPath) {
             .audioFrequency(16000) 
             .audioBitrate('64k') 
             .audioFilters([
-                'highpass=f=200',  
-                'lowpass=f=3000',  
-                'acompressor'      
+                'highpass=f=100',  
+                'lowpass=f=5000',  
+                'volume=2.0',      
+                'acompressor=threshold=-20dB:ratio=4:makeup=5' 
             ])
             .toFormat('mp3')
             .on('end', () => resolve(outputPath))
