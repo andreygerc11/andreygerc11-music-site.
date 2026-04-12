@@ -26,7 +26,7 @@
             --text-main: #f0f0f0;
             --text-muted: #888888;
             
-            --top-height: 65px;
+            --top-height: auto;
             --bottom-height: 80px;
             --sidebar-width: 340px;
         }
@@ -47,8 +47,8 @@
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
         .top-bar {
-            height: var(--top-height); background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 50;
+            min-height: 65px; height: auto; background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; z-index: 50; flex-wrap: wrap; gap: 10px;
         }
 
         .top-left { display: flex; align-items: center; gap: 20px; }
@@ -56,6 +56,20 @@
         .logo span { color: var(--accent); }
         .back-link { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: 0.3s;}
         .back-link:hover { color: #fff; }
+
+        /* НОВА ЦЕНТРАЛЬНА ПАНЕЛЬ ЕФЕКТІВ ТА КОЛЬОРІВ */
+        .top-center {
+            display: flex; align-items: center; gap: 15px; background: var(--bg-card); 
+            padding: 8px 25px; border-radius: 50px; border: 1px solid var(--border-color);
+            flex-wrap: wrap; justify-content: center;
+        }
+        .top-center-divider { width: 1px; height: 20px; background: var(--border-color); }
+        
+        .color-mini-row { display: flex; gap: 8px; align-items: center; }
+        .color-mini-row input[type="color"] { -webkit-appearance: none; border: 2px solid var(--border-color); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; background: transparent; padding: 0; transition: 0.3s; }
+        .color-mini-row input[type="color"]:hover { border-color: var(--accent); transform: scale(1.1); }
+        .color-mini-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-mini-row input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
 
         .top-right { display: flex; align-items: center; gap: 12px; }
         
@@ -123,12 +137,6 @@
         input[type="range"] { width: 100%; height: 6px; background: var(--bg-input); border-radius: 50px; appearance: none; outline: none; cursor: pointer; }
         input[type="range"]::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; }
 
-        .color-row { display: flex; justify-content: space-around; gap: 15px; margin-bottom: 10px; }
-        input[type="color"] { -webkit-appearance: none; border: 2px solid var(--border-color); border-radius: 50%; width: 50px; height: 50px; cursor: pointer; background: transparent; padding: 2px; transition: 0.3s; }
-        input[type="color"]:hover { border-color: var(--accent); transform: scale(1.1); }
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
-
         .center-stage {
             flex: 1; display: flex; align-items: center; justify-content: center;
             background: radial-gradient(circle at center, #18181b 0%, #09090b 100%);
@@ -189,47 +197,17 @@
         .close-modal-btn:hover { color: #fff;}
 
         @media (max-width: 1100px) {
-            :root { --top-height: auto; }
-            body { overflow: auto; height: auto; }
             .workspace { flex-direction: column; overflow: visible; height: auto; padding-bottom: 100px; }
-            
-            .center-stage { 
-                order: -1; 
-                width: 100%; 
-                min-height: 40vh; 
-                max-height: 50vh; 
-                padding: 10px; 
-                position: sticky; 
-                top: 0; 
-                z-index: 100; 
-                border-bottom: 2px solid var(--accent);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.8);
-                background: #000;
-            }
-            
+            .center-stage { order: -1; width: 100%; min-height: 40vh; max-height: 50vh; padding: 10px; position: sticky; top: 0; z-index: 100; border-bottom: 2px solid var(--accent); background: #000; }
             .center-stage p { display: none; } 
-            
             .sidebar { width: 100%; border: none; overflow: visible; }
             .sidebar-left { order: 2; border-bottom: 2px dashed #333; }
             .sidebar-right { order: 3; }
-            
-            .top-bar { flex-direction: column; padding: 15px; gap: 15px; height: auto; position: relative; z-index: 101; }
-            .top-left { width: 100%; justify-content: space-between; }
-            .top-right { width: 100%; flex-wrap: wrap; justify-content: space-between; gap: 10px;}
-            .btn-premium, .btn-instruction { flex: 1; text-align: center; justify-content: center; padding: 12px; font-size: 0.8rem;}
-            .btn-export, .btn-download, .btn-stop { width: 100%; margin-top: 5px; padding: 18px; font-size: 1.1rem; justify-content: center;}
-            
+            .top-bar { flex-direction: column; padding: 15px; gap: 15px; }
+            .top-left, .top-right, .top-center { width: 100%; justify-content: center; }
             .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: auto; flex-direction: row; padding: 10px 15px; z-index: 105; box-shadow: 0 -5px 20px rgba(0,0,0,0.8); background: rgba(20, 20, 23, 0.95); backdrop-filter: blur(10px); }
             .player-container { flex: 1; max-width: 100%; }
             .bottom-right { position: static; margin-left: 10px; width: auto;}
-            
-            input[type="text"], select, textarea, .btn-outline { padding: 15px; font-size: 1rem; }
-            input[type="range"]::-webkit-slider-thumb { width: 28px; height: 28px; }
-            .color-row input[type="color"] { width: 60px; height: 60px; }
-            .panel-header { font-size: 1rem; padding: 20px; }
-            
-            .render-info { flex-direction: column; gap: 10px; text-align: center; }
-            #syncStatus { margin-bottom: 20px; }
         }
     </style>
 </head>
@@ -241,6 +219,50 @@
             <a href="#" class="logo">HERTZ <span>SPECTRUM</span></a>
         </div>
         
+        <div class="top-center">
+            <div class="color-mini-row">
+                <input type="color" id="primaryColorInput" value="#ff3c00" title="Основний колір">
+                <input type="color" id="secondaryColorInput" value="#ffffff" title="Додатковий колір">
+                <label style="color:#fff; font-size:0.7rem; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="autoColorCheckbox" checked style="accent-color:var(--accent);"> Авто-зміна</label>
+            </div>
+            
+            <div class="top-center-divider"></div>
+            
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="color:var(--accent); font-size:0.75rem; margin:0;"><i class="fas fa-magic"></i> Частинки:</label>
+                <select id="particleSelect" style="width: auto; padding: 5px 10px; border-radius: 50px;">
+                    <option value="none">Вимкнено</option>
+                    <option value="bubble">Бульбашки</option>
+                    <option value="snow">Сніг</option>
+                    <option value="rain">Дощ (Злива)</option>
+                    <option value="heart">Сердечка</option>
+                    <option value="star">Зірки</option>
+                    <option value="firefly">Світлячки</option>
+                    <option value="dust">Магічний пил</option>
+                    <option value="note">Ноти</option>
+                    <option value="lightning">Блискавки</option>
+                    <option value="spark">Іскри</option>
+                    <option value="confetti">Конфетті</option>
+                    <option value="triangle">Трикутники</option>
+                    <option value="diamond">Діаманти</option>
+                    <option value="cross">Хрестики</option>
+                    <option value="meteor">Метеорити</option>
+                    <option value="fire">Вогонь</option>
+                    <option value="smoke">Дим</option>
+                    <option value="matrix">Матриця</option>
+                    <option value="leaf">Осіннє листя</option>
+                    <option value="mixed">Мікс</option>
+                </select>
+            </div>
+
+            <div class="top-center-divider"></div>
+
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="color:#fff; font-size:0.7rem; margin:0;"><i class="fas fa-lightbulb"></i> Неон:</label>
+                <input type="range" id="glowSlider" min="0.1" max="2.5" step="0.1" value="1.0" style="width: 80px;">
+            </div>
+        </div>
+
         <div class="top-right">
             <button id="sidebarSubscribeBtn" class="btn-premium" style="display: none;"><i class="fas fa-crown"></i> PRO Доступ</button>
             <a href="instruction.html" target="_blank" class="btn-instruction"><i class="fas fa-question-circle"></i> Інструкція</a>
@@ -267,7 +289,7 @@
                         <label>Автор</label>
                         <input type="text" id="authorInput" placeholder="@andreygerc11">
                     </div>
-                    <button id="resetTextPosBtn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.65rem; font-weight:bold; margin-top:5px; text-align: right; width: 100%; text-transform: uppercase;"><i class="fas fa-undo"></i> Скинути всі позиції</button>
+                    <button id="resetTextPosBtn" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.7rem; font-weight:bold; margin-top:5px; text-align: right; width: 100%; text-transform: uppercase;"><i class="fas fa-bullseye"></i> Відцентрувати все (Скидання)</button>
                 </div>
 
                 <div class="settings-block">
@@ -385,47 +407,6 @@
                     </div>
                 </div>
 
-                <div class="settings-block">
-                    <div class="block-title"><i class="fas fa-palette"></i> Кольори та Ефекти</div>
-                    <div class="color-row">
-                        <input type="color" id="primaryColorInput" value="#ff3c00"> 
-                        <input type="color" id="secondaryColorInput" value="#ffffff"> 
-                    </div>
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-top:10px; font-weight: 600; color: #fff; font-size: 0.75rem; text-transform: none;">
-                        <input type="checkbox" id="autoColorCheckbox" checked style="width: 17px; height: 17px; accent-color:var(--accent);"> Авто-зміна кольорів
-                    </label>
-                    <div class="control-group" style="margin-top: 15px;">
-                        <div class="slider-flex"><label>Світіння (Неон)</label></div>
-                        <input type="range" id="glowSlider" min="0.1" max="2.5" step="0.1" value="1.0">
-                    </div>
-                    <div class="control-group" style="margin-top: 15px;">
-                        <label style="color: var(--accent);">Ефекти (Частинки)</label>
-                        <select id="particleSelect">
-                            <option value="none">Вимкнено</option>
-                            <option value="bubble">Бульбашки</option>
-                            <option value="snow">Сніг</option>
-                            <option value="rain">Дощ (Злива)</option>
-                            <option value="heart">Сердечка</option>
-                            <option value="star">Зірки</option>
-                            <option value="firefly">Світлячки</option>
-                            <option value="dust">Магічний пил</option>
-                            <option value="note">Ноти</option>
-                            <option value="lightning">Блискавки</option>
-                            <option value="spark">Іскри (Реалістичні)</option>
-                            <option value="confetti">Конфетті</option>
-                            <option value="triangle">Трикутники</option>
-                            <option value="diamond">Діаманти</option>
-                            <option value="cross">Хрестики</option>
-                            <option value="meteor">Метеорити (Швидкісні)</option>
-                            <option value="fire">Вогонь (Реалістичний)</option>
-                            <option value="smoke">Дим (Окремий)</option>
-                            <option value="matrix">Матриця (Цифри)</option>
-                            <option value="leaf">Осіннє листя</option>
-                            <option value="mixed">Магічний Мікс</option>
-                        </select>
-                    </div>
-                </div>
-
             </div>
         </aside>
 
@@ -498,10 +479,10 @@
         let backgroundVideo = null;
         let outputFileName = "hertz_spectrum_video"; 
 
-        // --- СТАН ЛОГОТИПУ ---
+        // --- СТАН ЛОГОТИПУ (Відносно центру спектра!) ---
         let logoImage = null;
         let logoState = {
-            x: 50, y: 50, 
+            x: 0, y: 0, 
             width: 150, height: 150, 
             scale: 1.0,
             isDragging: false, offsetX: 0, offsetY: 0, isHovering: false
@@ -525,15 +506,15 @@
                         logoState.width *= ratio;
                         logoState.height *= ratio;
                     }
-                    logoState.x = (canvas.width - logoState.width) / 2;
-                    logoState.y = 50; 
+                    // Встановлюємо 0, 0 - це ідеальний центр відносно спектра
+                    logoState.x = 0;
+                    logoState.y = 0; 
                     drawPreviewFrame(); 
                 }; 
                 img.src = URL.createObjectURL(e.target.files[0]); 
             }
         });
 
-        // --- СТАН СПЕКТРУ (ВІЗУАЛІЗАТОРА) ---
         let spectrumState = {
             offsetX: 0, offsetY: 0, scale: 1.0,
             isDragging: false, dragStartX: 0, dragStartY: 0, isHovering: false
@@ -543,7 +524,6 @@
             spectrumState.scale = e.target.value / 100;
             if (!audioCtx) drawPreviewFrame();
         });
-        // ---------------------------------------------
 
         const primaryColorInput = document.getElementById('primaryColorInput');
         const secondaryColorInput = document.getElementById('secondaryColorInput');
@@ -565,7 +545,12 @@
 
         document.getElementById('resetTextPosBtn').addEventListener('click', () => {
             textOffsetX = 0; textOffsetY = 0; lyricsOffsetX = 0; lyricsOffsetY = 0; 
-            if(logoImage) { logoState.x = (canvas.width - logoState.width) / 2; logoState.y = 50; logoState.scale = 1.0; document.getElementById('logoScaleSlider').value = 100; }
+            if(logoImage) { 
+                logoState.x = 0; 
+                logoState.y = 0; 
+                logoState.scale = 1.0; 
+                document.getElementById('logoScaleSlider').value = 100; 
+            }
             spectrumState.offsetX = 0; spectrumState.offsetY = 0; spectrumState.scale = 1.0; document.getElementById('spectrumScaleSlider').value = 100;
             if (!audioCtx) drawPreviewFrame();
         });
@@ -578,36 +563,44 @@
             return { x: (cx - rect.left) * sX, y: (cy - rect.top) * sY };
         }
 
-        // --- ЛОГІКА ДРАГ АНД ДРОП (Мишка) ---
+        // Переведення глобальних координат миші в локальні координати спектра (для Лого)
+        function getLocalMousePos(p) {
+            return {
+                x: (p.x - (canvas.width / 2 + spectrumState.offsetX)) / spectrumState.scale,
+                y: (p.y - (canvas.height / 2 + spectrumState.offsetY)) / spectrumState.scale
+            };
+        }
+
         function handleDown(evt) {
             if (isGenerating) return;
             const p = getMousePos(evt);
+            const localP = getLocalMousePos(p);
             
-            // 1. Клік по Логотипу
+            // 1. Клік по Логотипу (Він тепер всередині спектра)
             if (logoImage) {
                 const drawW = logoState.width * logoState.scale;
                 const drawH = logoState.height * logoState.scale;
-                if (p.x >= logoState.x && p.x <= logoState.x + drawW && p.y >= logoState.y && p.y <= logoState.y + drawH) {
+                // Перевірка хітбоксу по локальних координатах
+                if (localP.x >= logoState.x - drawW/2 && localP.x <= logoState.x + drawW/2 &&
+                    localP.y >= logoState.y - drawH/2 && localP.y <= logoState.y + drawH/2) {
                     logoState.isDragging = true;
-                    logoState.offsetX = p.x - logoState.x;
-                    logoState.offsetY = p.y - logoState.y;
+                    logoState.offsetX = localP.x - logoState.x;
+                    logoState.offsetY = localP.y - logoState.y;
                     return; 
                 }
             }
 
-            // 2. Клік по Тексту пісні (Караоке)
             if (p.x >= lyricsBB.x && p.x <= lyricsBB.x + lyricsBB.w && p.y >= lyricsBB.y && p.y <= lyricsBB.y + lyricsBB.h) { 
                 isDraggingLyrics = true; dragStartX = p.x; dragStartY = p.y; 
                 return;
             }
 
-            // 3. Клік по Назві пісні
             if (p.x >= textBB.x && p.x <= textBB.x + textBB.w && p.y >= textBB.y && p.y <= textBB.y + textBB.h) { 
                 isDraggingText = true; dragStartX = p.x; dragStartY = p.y; 
                 return;
             }
 
-            // 4. Клік по Спектру (Візуалізатору)
+            // Клік по самому спектру
             const cx = canvas.width / 2 + spectrumState.offsetX;
             const cy = canvas.height / 2 + spectrumState.offsetY;
             const specHitSize = Math.min(canvas.width, canvas.height) * 0.4 * spectrumState.scale;
@@ -622,16 +615,19 @@
         function handleMove(evt) {
             if (isGenerating) return;
             const p = getMousePos(evt);
+            const localP = getLocalMousePos(p);
             
+            // Рухаємо Логотип окремо (але відносно спектра)
             if (logoState.isDragging) {
                 if (evt.cancelable) evt.preventDefault();
-                logoState.x = p.x - logoState.offsetX;
-                logoState.y = p.y - logoState.offsetY;
+                logoState.x = localP.x - logoState.offsetX;
+                logoState.y = localP.y - logoState.offsetY;
                 canvas.style.cursor = 'grabbing';
                 if (!audioCtx) drawPreviewFrame();
                 return;
             }
 
+            // Рухаємо Спектр (а логотип поїде разом з ним!)
             if (spectrumState.isDragging) {
                 if (evt.cancelable) evt.preventDefault();
                 spectrumState.offsetX = p.x - spectrumState.dragStartX;
@@ -650,7 +646,6 @@
                 lyricsOffsetX += (p.x - dragStartX); lyricsOffsetY += (p.y - dragStartY); dragStartX = p.x; dragStartY = p.y;
                 canvas.style.cursor = 'grabbing'; if (!audioCtx) drawPreviewFrame();
             } else {
-                // Перевірка Hover (наведення миші)
                 isHoveringText = (p.x >= textBB.x && p.x <= textBB.x + textBB.w && p.y >= textBB.y && p.y <= textBB.y + textBB.h);
                 isHoveringLyrics = (p.x >= lyricsBB.x && p.x <= lyricsBB.x + lyricsBB.w && p.y >= lyricsBB.y && p.y <= lyricsBB.y + lyricsBB.h);
                 
@@ -658,7 +653,8 @@
                 if (logoImage) {
                     const drawW = logoState.width * logoState.scale;
                     const drawH = logoState.height * logoState.scale;
-                    if (p.x >= logoState.x && p.x <= logoState.x + drawW && p.y >= logoState.y && p.y <= logoState.y + drawH) {
+                    if (localP.x >= logoState.x - drawW/2 && localP.x <= logoState.x + drawW/2 &&
+                        localP.y >= logoState.y - drawH/2 && localP.y <= logoState.y + drawH/2) {
                         logoState.isHovering = true;
                     }
                 }
@@ -666,7 +662,7 @@
                 const cx = canvas.width / 2 + spectrumState.offsetX;
                 const cy = canvas.height / 2 + spectrumState.offsetY;
                 const specHitSize = Math.min(canvas.width, canvas.height) * 0.4 * spectrumState.scale;
-                spectrumState.isHovering = (p.x >= cx - specHitSize && p.x <= cx + specHitSize && p.y >= cy - specHitSize && p.y <= cy + specHitSize);
+                spectrumState.isHovering = (!logoState.isHovering && p.x >= cx - specHitSize && p.x <= cx + specHitSize && p.y >= cy - specHitSize && p.y <= cy + specHitSize);
 
                 canvas.style.cursor = (isHoveringText || isHoveringLyrics || logoState.isHovering || spectrumState.isHovering) ? 'grab' : 'crosshair';
                 if (!audioCtx) drawPreviewFrame();
@@ -685,7 +681,6 @@
         canvas.addEventListener('mousedown', handleDown); canvas.addEventListener('touchstart', handleDown, { passive: false });
         canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('touchmove', handleMove, { passive: false });
         window.addEventListener('mouseup', handleUp); window.addEventListener('touchend', handleUp);
-        // -------------------------------------------
 
         let isMutedDuringRender = false;
         const muteRenderBtn = document.getElementById('muteRenderBtn');
@@ -742,7 +737,6 @@
             } else if (file.type.startsWith('image/')) { const img = new Image(); img.onload = () => { backgroundImage = img; drawPreviewFrame(); }; img.src = URL.createObjectURL(file); }
         });
 
-        // ПРЕВ'Ю КАДР (Доки музика не грає)
         function drawPreviewFrame() {
             if (!audioCtx) {
                 ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height); const centerX = canvas.width / 2; const centerY = canvas.height / 2; ctx.save();
@@ -752,23 +746,24 @@
                 ctx.restore();
                 if (backgroundVideo || backgroundImage) { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height); }
                 
-                // Малюємо макет спектру для прев'ю (щоб можна було його рухати до запуску музики)
                 ctx.save();
                 ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
                 ctx.scale(spectrumState.scale, spectrumState.scale);
-                ctx.translate(-(canvas.width / 2), -(canvas.height / 2));
+                
+                // Малюємо макет спектра
                 const dummyData = new Uint8Array(512); for(let i=0; i<512; i++) dummyData[i] = 100;
                 const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
                 ctx.globalAlpha = 0.4;
                 if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); else if (style === 'circle_bars') drawCircleBars(dummyData, minDimension, 512, 50); else if (style === 'linear_bars') drawLinearBars(dummyData, minDimension, 512); else if (style === 'linear_curve') drawLinearCurve(dummyData, minDimension, 512); else if (style === 'linear_symmetry') drawLinearSymmetry(dummyData, minDimension, 512);
-                ctx.restore();
+                ctx.globalAlpha = 1.0;
 
-                // Логотип
+                // Малюємо ЛОГОТИП (всередині простору спектра!)
                 if (logoImage) {
                     const drawW = logoState.width * logoState.scale;
                     const drawH = logoState.height * logoState.scale;
-                    ctx.drawImage(logoImage, logoState.x, logoState.y, drawW, drawH);
+                    ctx.drawImage(logoImage, logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH);
                 }
+                ctx.restore();
                 
                 drawTextOverlay(minDimension);
                 drawHoverIndicators(minDimension);
@@ -882,9 +877,6 @@
             }
         }
 
-        /* ============================================================== */
-        /* ОПТИМІЗОВАНІ ЕФЕКТИ ЧАСТИНОК                                   */
-        /* ============================================================== */
         function createParticle(typeOption) {
             const typesList = ['bubble', 'snow', 'rain', 'heart', 'star', 'firefly', 'dust', 'note', 'lightning', 'spark', 'confetti', 'triangle', 'diamond', 'cross', 'meteor', 'fire', 'smoke', 'matrix', 'leaf'];
             let t = typeOption === 'mixed' ? typesList[Math.floor(Math.random() * typesList.length)] : typeOption;
@@ -912,7 +904,10 @@
                     break;
                 case 'rain': 
                     p.x = Math.random() * canvas.width * 1.2; p.y = -Math.random() * canvas.height;
-                    p.vy = Math.random() * 25 + 30; p.vx = -3; p.length = Math.max(15, Math.random() * 40 + 20); p.opacity = Math.max(0.1, Math.random() * 0.3 + 0.1); p.wobbleAmp = 0; 
+                    p.vy = Math.random() * 25 + 35; p.vx = -4; 
+                    p.length = Math.max(40, Math.random() * 80 + 40); 
+                    p.opacity = Math.max(0.3, Math.random() * 0.5 + 0.2); 
+                    p.wobbleAmp = 0; 
                     break;
                 case 'fire': 
                     p.x = canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.3; p.y = canvas.height + 20;
@@ -1014,7 +1009,8 @@
                     ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(0, 0, Math.max(0.1, p.size * 1.5), 0, Math.PI * 2); ctx.fill(); ctx.restore();
                 } 
                 else if (p.type === 'rain') {
-                    ctx.strokeStyle = `rgba(200, 220, 255, ${Math.max(0, p.opacity)})`; ctx.lineWidth = 1.0; 
+                    ctx.strokeStyle = `rgba(200, 220, 255, ${Math.max(0, p.opacity)})`; 
+                    ctx.lineWidth = Math.random() * 2 + 2;
                     ctx.beginPath(); ctx.moveTo(p.x, p.y); let safeVy = Math.max(0.1, p.vy); ctx.lineTo(p.x - p.vx * (p.length/safeVy), p.y - p.length); ctx.stroke();
                 } 
                 else if (p.type === 'fire') {
@@ -1078,7 +1074,6 @@
             }
             ctx.restore();
         }
-        /* ============================================================== */
 
         function drawTextOverlay(minDimension) {
             const titleText = songTitleInput.value.trim(); const authorText = authorInput.value.trim();
@@ -1102,7 +1097,6 @@
                 textBB = { x: centerXText - (maxLineWidth / 2) - 30, y: startY - (minDimension * 0.065 / 2) - 20, w: maxLineWidth + 60, h: totalHeight + 40 };
             } else { textBB = { x: 0, y: 0, w: 0, h: 0 }; }
 
-            // Логіка для Караоке (Жодного тексту-заглушки у відео!)
             let activeText = ""; 
             let currentTime = audioPlayer ? audioPlayer.currentTime : 0;
             if (lyricsData.length > 0) { 
@@ -1111,14 +1105,12 @@
                 } 
             }
             
-            // Якщо ми редагуємо (не генеруємо) і тексту немає, показуємо підказку для перетягування
             let isPlaceholder = false;
             if (!isGenerating && activeText === "" && (document.getElementById('lyricsInput').value.trim() !== "" || lyricsData.length > 0)) { 
                 activeText = "🎵 Перетягніть текст сюди"; 
                 isPlaceholder = true; 
             }
 
-            // ЗАХИСТ: якщо генеруємо відео, повністю очищаємо заглушку
             if (isGenerating && isPlaceholder) {
                 activeText = "";
             }
@@ -1144,30 +1136,27 @@
             } else { lyricsBB = { x: 0, y: 0, w: 0, h: 0 }; }
         }
 
-        // ВІДМАЛЬОВУВАННЯ ПІДКАЗОК ДЛЯ ДРАГ АНД ДРОП
         function drawHoverIndicators(minDimension) {
             if (!isGenerating) {
-                // Логотип
                 if (logoState.isHovering) {
+                    ctx.save(); 
+                    ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
+                    ctx.scale(spectrumState.scale, spectrumState.scale);
                     const drawW = logoState.width * logoState.scale;
                     const drawH = logoState.height * logoState.scale;
-                    ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); 
-                    ctx.strokeRect(logoState.x, logoState.y, drawW, drawH); 
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Логотип', logoState.x + drawW / 2, logoState.y - 15);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3 / spectrumState.scale; ctx.setLineDash([10 / spectrumState.scale, 10 / spectrumState.scale]); 
+                    ctx.strokeRect(logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH); 
                     ctx.restore();
                 }
-                // Назва
                 if (isHoveringText && textBB.w > 0) {
                     ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(textBB.x, textBB.y, textBB.w, textBB.h);
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Назва', textBB.x + textBB.w / 2, textBB.y - 15); ctx.restore();
                 }
-                // Караоке
                 if (isHoveringLyrics && lyricsBB.w > 0) {
                     ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(lyricsBB.x, lyricsBB.y, lyricsBB.w, lyricsBB.h);
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Караоке', lyricsBB.x + lyricsBB.w / 2, lyricsBB.y - 15); ctx.restore();
                 }
-                // Спектр
-                if (spectrumState.isHovering) {
+                if (spectrumState.isHovering && !logoState.isHovering) {
                     const cx = canvas.width / 2 + spectrumState.offsetX;
                     const cy = canvas.height / 2 + spectrumState.offsetY;
                     const specHitSize = minDimension * 0.4 * spectrumState.scale;
@@ -1200,25 +1189,24 @@
 
             const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
             
-            // ВІДМАЛЬОВУВАННЯ СПЕКТРУ (З позицією та масштабом)
             ctx.save();
             ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
             ctx.scale(spectrumState.scale, spectrumState.scale);
-            ctx.translate(-(canvas.width / 2), -(canvas.height / 2));
             
+            // Спочатку малюємо спектр
             if (style === 'circle_sharp') drawCircleSharp(dataArray, minDimension, bufferLength, avgBass); 
             else if (style === 'circle_bars') drawCircleBars(dataArray, minDimension, bufferLength, avgBass); 
             else if (style === 'linear_bars') drawLinearBars(dataArray, minDimension, bufferLength); 
             else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength); 
             else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
-            ctx.restore();
 
-            // ВІДМАЛЬОВУВАННЯ ЛОГОТИПУ (Незалежно від спектру)
+            // Потім Логотип ЗВЕРХУ спектра, але в тій самій системі координат
             if (logoImage) {
                 const drawW = logoState.width * logoState.scale;
                 const drawH = logoState.height * logoState.scale;
-                ctx.drawImage(logoImage, logoState.x, logoState.y, drawW, drawH);
+                ctx.drawImage(logoImage, logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH);
             }
+            ctx.restore();
 
             drawTextOverlay(minDimension);
             drawHoverIndicators(minDimension);
@@ -1234,9 +1222,8 @@
             }
         }
 
-        // У функціях малювання кіл видалено жорстке малювання логотипу всередині (тепер Лого 100% незалежне)
         function drawCircleSharp(dataArray, minDimension, bufferLength, avgBass) {
-            const centerX = canvas.width / 2; const centerY = canvas.height / 2; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
+            const centerX = 0; const centerY = 0; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
             const pointsCount = 60; const usefulDataLength = Math.floor(bufferLength * 0.65); let pointsRight = []; let pointsLeft = [];
             for (let i = 0; i <= pointsCount; i++) {
                 let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = dataArray[dataIndex] || 0;
@@ -1254,7 +1241,7 @@
         }
 
         function drawCircleBars(dataArray, minDimension, bufferLength, avgBass) {
-            const centerX = canvas.width / 2; const centerY = canvas.height / 2; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
+            const centerX = 0; const centerY = 0; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
             const pointsCount = 70; const usefulDataLength = Math.floor(bufferLength * 0.65);
             let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
             ctx.strokeStyle = gradient; ctx.lineWidth = minDimension * 0.009; ctx.lineCap = 'round'; ctx.shadowBlur = 5 * glowSlider.value; ctx.shadowColor = primaryColor;
@@ -1270,31 +1257,31 @@
 
         function drawLinearBars(dataArray, minDimension, bufferLength) {
             const usefulLength = Math.floor(bufferLength * 0.7); const barWidth = canvas.width / usefulLength;
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
+            const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
             ctx.fillStyle = gradient; ctx.shadowBlur = 10 * glowSlider.value; ctx.shadowColor = primaryColor;
-            for (let i = 0; i < usefulLength; i++) { const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6 * sharpnessSlider.value; ctx.fillRect(i * barWidth, canvas.height - barHeightScaled, barWidth - 2, barHeightScaled); }
+            for (let i = 0; i < usefulLength; i++) { const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6 * sharpnessSlider.value; ctx.fillRect((i * barWidth) - canvas.width/2, canvas.height/2 - barHeightScaled, barWidth - 2, barHeightScaled); }
             ctx.shadowBlur = 0;
         }
 
         function drawLinearCurve(dataArray, minDimension, bufferLength) {
             const usefulLength = Math.floor(bufferLength * 0.7); const sliceWidth = canvas.width / (usefulLength - 1);
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            ctx.beginPath(); ctx.moveTo(0, canvas.height);
-            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.5); const y = canvas.height - (v * canvas.height * 0.5 * sharpnessSlider.value); const x = i * sliceWidth; ctx.lineTo(x, y); }
-            ctx.lineTo(canvas.width, canvas.height); ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; ctx.fill();
+            const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
+            ctx.beginPath(); ctx.moveTo(-canvas.width/2, canvas.height/2);
+            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.5); const y = canvas.height/2 - (v * canvas.height * 0.5 * sharpnessSlider.value); const x = (i * sliceWidth) - canvas.width/2; ctx.lineTo(x, y); }
+            ctx.lineTo(canvas.width/2, canvas.height/2); ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; ctx.fill();
             ctx.lineWidth = 8; ctx.strokeStyle = gradient; ctx.lineJoin = 'round'; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0;
         }
 
         function drawLinearSymmetry(dataArray, minDimension, bufferLength) {
-            const usefulLength = Math.floor(bufferLength * 0.65); const sliceWidth = canvas.width / (usefulLength * 2); const centerY = canvas.height / 2;
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
+            const usefulLength = Math.floor(bufferLength * 0.65); const sliceWidth = canvas.width / (usefulLength * 2); const centerY = 0;
+            const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
             ctx.beginPath();
-            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = (usefulLength - 1 - i) * sliceWidth; if (i === usefulLength - 1) ctx.moveTo(x, centerY - amplitude); else ctx.lineTo(x, centerY - amplitude); }
-            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = (usefulLength + i) * sliceWidth; ctx.lineTo(x, centerY - amplitude); }
+            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY - amplitude); else ctx.lineTo(x, centerY - amplitude); }
+            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY - amplitude); }
             ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = gradient; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0;
             ctx.beginPath();
-            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = (usefulLength - 1 - i) * sliceWidth; if (i === usefulLength - 1) ctx.moveTo(x, centerY + amplitude); else ctx.lineTo(x, centerY + amplitude); }
-            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = (usefulLength + i) * sliceWidth; ctx.lineTo(x, centerY + amplitude); }
+            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY + amplitude); else ctx.lineTo(x, centerY + amplitude); }
+            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY + amplitude); }
             ctx.stroke();
         }
 
