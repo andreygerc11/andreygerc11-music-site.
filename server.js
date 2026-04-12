@@ -42,18 +42,26 @@ app.post('/api/login', async (req, res) => {
     catch (e) { res.status(500).json({ error: "Помилка входу" }); }
 });
 
+// === ВИПРАВЛЕНА ОПЛАТА ===
 app.post('/api/pay-subscription', async (req, res) => {
     try {
+        console.log("Отримано запит на оплату...");
         const { email, amount } = req.body;
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: amount || 5000,
+            amount: amount || 5000, // 50 грн
             ccy: 980,
             merchantPaymInfo: { destination: "Підтримка проєкту 'Голос проти раку'", comment: email },
             redirectUrl: "https://golos-proty-raku.pp.ua/success.html",
             webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
         }, { headers: { 'X-Token': MONO_TOKEN } });
-        res.json({ pageUrl: monoRes.data.pageUrl });
-    } catch (error) { res.status(500).json({ error: "Помилка створення платежу" }); }
+        
+        console.log("Посилання на оплату успішно створено!");
+        // ВИПРАВЛЕНО: Віддаємо і url, і pageUrl, щоб будь-який фронтенд точно це зрозумів
+        res.json({ url: monoRes.data.pageUrl, pageUrl: monoRes.data.pageUrl });
+    } catch (error) { 
+        console.error("Помилка Монобанку:", error.response ? JSON.stringify(error.response.data) : error.message);
+        res.status(500).json({ error: "Помилка створення платежу" }); 
+    }
 });
 
 app.post('/api/webhook', async (req, res) => {
@@ -67,7 +75,7 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// === ГЕНЕРАЦІЯ ОБКЛАДИНКИ: РЕЖИМ ПРЯМОГО ПОСИЛАННЯ ===
+// === ГЕНЕРАЦІЯ ОБКЛАДИНКИ ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         console.log("\n=== ПОЧАТОК ГЕНЕРАЦІЇ ОБКЛАДИНКИ ===");
@@ -107,13 +115,9 @@ app.post('/api/generate-image', async (req, res) => {
         finalPrompt = finalPrompt.replace(/[^a-zA-Z0-9 \.,!?-]/g, "");
         const fullPrompt = `${finalPrompt}, highly detailed, 8k resolution, cinematic lighting, masterpiece, no text, no letters.`;
         
-        // Генеруємо пряме посилання на картинку з унікальним seed, щоб вона щоразу була новою
         const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${width}&height=${height}&nologo=true&seed=${Math.floor(Math.random()*100000)}`;
         
-        console.log("3. Відправляю ПРЯМЕ ПОСИЛАННЯ на фронтенд (щоб уникнути таймаутів)...");
-        console.log("URL картинки:", imageUrl);
-        
-        // Замість того, щоб сервер качав картинку, він віддає URL браузеру.
+        console.log("3. Відправляю ПРЯМЕ ПОСИЛАННЯ на фронтенд...");
         res.json({ imageUrl: imageUrl });
 
     } catch (error) { 
@@ -122,11 +126,18 @@ app.post('/api/generate-image', async (req, res) => {
     }
 });
 
+// === СТУДІЙНА ФІЛЬТРАЦІЯ ЗВУКУ ===
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
         ffmpeg(inputPath)
-            .audioBitrate('128k')
-            .audioFrequency(44100)
+            .audioChannels(1) 
+            .audioFrequency(16000) 
+            .audioBitrate('64k') 
+            .audioFilters([
+                'highpass=f=200',  
+                'lowpass=f=3000',  
+                'acompressor'      
+            ])
             .toFormat('mp3')
             .on('end', () => resolve(outputPath))
             .on('error', reject)
@@ -134,18 +145,21 @@ function compressAudio(inputPath, outputPath) {
     });
 }
 
-// СИНХРОНІЗАЦІЯ ТЕКСТУ
+// === СИНХРОНІЗАЦІЯ ТЕКСТУ (WHISPER) ===
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     let compressedPath = null;
     try {
         if (!req.file) return res.status(400).json({ error: "Аудіо не отримано" });
         compressedPath = req.file.path + '_comp.mp3';
+        
         await compressAudio(req.file.path, compressedPath);
 
         const formData = new FormData();
         formData.append('file', fs.createReadStream(compressedPath));
         formData.append('model', 'whisper-large-v3');
         formData.append('response_format', 'verbose_json');
+        formData.append('language', 'uk'); 
+        formData.append('temperature', '0');
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() },
@@ -168,7 +182,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         }
         res.json({ lrc });
     } catch (error) {
-        console.error("Whisper Error:", error.message);
+        console.error("Whisper Error:", error.response ? JSON.stringify(error.response.data) : error.message);
         res.status(500).json({ error: "Помилка Whisper" });
     } finally {
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
