@@ -42,21 +42,27 @@ app.post('/api/login', async (req, res) => {
     catch (e) { res.status(500).json({ error: "Помилка входу" }); }
 });
 
-// === ВИПРАВЛЕНА ОПЛАТА ===
+// === ВИПРАВЛЕНА ЛОГІКА ОПЛАТИ (39 ГРН ПРОБНИЙ ПЕРІОД) ===
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         console.log("Отримано запит на оплату...");
         const { email, amount } = req.body;
+        
+        // Ставимо 3900 копійок (39 грн) за замовчуванням для пробного періоду
+        const finalAmount = amount || 3900; 
+
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: amount || 5000, // 50 грн
+            amount: finalAmount,
             ccy: 980,
-            merchantPaymInfo: { destination: "Підтримка проєкту 'Голос проти раку'", comment: email },
+            merchantPaymInfo: { 
+                destination: "Підписка Hertz Spectrum PRO (39 грн / 5 днів)", 
+                comment: email || "PRO Підписка" 
+            },
             redirectUrl: "https://golos-proty-raku.pp.ua/success.html",
             webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
         }, { headers: { 'X-Token': MONO_TOKEN } });
         
         console.log("Посилання на оплату успішно створено!");
-        // ВИПРАВЛЕНО: Віддаємо і url, і pageUrl, щоб будь-який фронтенд точно це зрозумів
         res.json({ url: monoRes.data.pageUrl, pageUrl: monoRes.data.pageUrl });
     } catch (error) { 
         console.error("Помилка Монобанку:", error.response ? JSON.stringify(error.response.data) : error.message);
