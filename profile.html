@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Особистий Кабінет | Hertz Spectrum</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-base: #09090b;      
+            --bg-panel: #141417;     
+            --bg-card: #1c1c21;      
+            --bg-input: #000000;     
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent: #ff3c00;       
+            --text-main: #f0f0f0;
+            --text-muted: #888888;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+        }
+
+        .top-bar {
+            min-height: 65px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between; padding: 15px 30px;
+        }
+        .logo { font-size: 1.2rem; font-weight: 900; text-transform: uppercase; color: #fff; text-decoration: none; letter-spacing: 1px; }
+        .logo span { color: var(--accent); }
+        .btn-back { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 700; transition: 0.3s;}
+        .btn-back:hover { color: #fff; }
+
+        .container {
+            max-width: 900px; margin: 40px auto; padding: 0 20px; width: 100%;
+            display: grid; grid-template-columns: 1fr 2fr; gap: 30px;
+        }
+
+        .profile-sidebar {
+            background: var(--bg-panel); border: 1px solid var(--border-color);
+            border-radius: 15px; padding: 30px 20px; text-align: center; height: fit-content;
+        }
+        .avatar-circle {
+            width: 100px; height: 100px; background: linear-gradient(45deg, #333, var(--accent));
+            border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center;
+            justify-content: center; font-size: 2.5rem; color: #fff; font-weight: 900;
+            box-shadow: 0 0 20px rgba(255, 60, 0, 0.2);
+        }
+        .profile-email { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; word-break: break-all;}
+        .profile-role { font-size: 0.8rem; color: var(--accent); text-transform: uppercase; font-weight: 900; margin-bottom: 25px; }
+
+        .btn-logout {
+            width: 100%; padding: 12px; background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d;
+            border-radius: 50px; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.3s;
+        }
+        .btn-logout:hover { background: #ff4d4d; color: #fff; }
+
+        .settings-content { display: flex; flex-direction: column; gap: 20px; }
+
+        .settings-card {
+            background: var(--bg-panel); border: 1px solid var(--border-color);
+            border-radius: 15px; padding: 25px;
+        }
+        .settings-card h2 { font-size: 1.2rem; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; display: flex; align-items: center; gap: 10px;}
+        .settings-card h2 i { color: var(--accent); }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+        .form-group input {
+            width: 100%; padding: 12px 15px; background: var(--bg-input); border: 1px solid var(--border-color);
+            border-radius: 8px; color: #fff; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s;
+        }
+        .form-group input:focus { border-color: var(--accent); }
+
+        .btn-save {
+            background: var(--accent); color: #fff; border: none; padding: 12px 25px;
+            border-radius: 50px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s;
+        }
+        .btn-save:hover { box-shadow: 0 0 15px rgba(255, 60, 0, 0.4); transform: translateY(-2px); }
+
+        .card-item {
+            background: var(--bg-input); border: 1px solid var(--border-color); padding: 15px;
+            border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .card-item span { font-weight: 700; letter-spacing: 1px; }
+        .btn-remove-card { background: none; border: none; color: var(--text-muted); cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .btn-remove-card:hover { color: #ff4d4d; }
+        
+        .btn-add-card {
+            width: 100%; padding: 12px; background: transparent; border: 1px dashed var(--text-muted);
+            color: var(--text-muted); border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.3s;
+        }
+        .btn-add-card:hover { border-color: #fff; color: #fff; }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; margin: 20px auto;}
+            .top-bar { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <a href="index.html" class="logo">HERTZ <span>SPECTRUM</span></a>
+        <a href="generator.html" class="btn-back"><i class="fas fa-arrow-left"></i> Назад до генератора</a>
+    </header>
+
+    <div class="container">
+        
+        <aside class="profile-sidebar">
+            <div class="avatar-circle" id="userInitial">?</div>
+            <div class="profile-email" id="userEmail">Завантаження...</div>
+            <div class="profile-role" id="userRole">Користувач</div>
+            <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Вийти з акаунта</button>
+        </aside>
+
+        <main class="settings-content">
+            
+            <div class="settings-card">
+                <h2><i class="fas fa-crown"></i> Статус підписки</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color);">
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Поточний план</div>
+                        <div id="subStatusText" style="font-weight: 900; font-size: 1.2rem; color: #fff;">Базовий</div>
+                    </div>
+                    <button id="upgradeBtn" class="btn-save" style="display: none;">Оновити до PRO</button>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h2><i class="fas fa-credit-card"></i> Платіжні картки</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Прив'язані картки для швидкої оплати підписки або музики.</p>
+                
+                <div id="cardsList">
+                    <p style="font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 15px;" id="noCardsMsg">У вас ще немає доданих карток.</p>
+                </div>
+                <button class="btn-add-card" onclick="alert('Інтеграція з платіжним шлюзом (напр. LiqPay або Mono) у процесі розробки.')">+ Додати нову картку</button>
+            </div>
+
+            <div class="settings-card">
+                <h2><i class="fas fa-lock"></i> Безпека та Дані</h2>
+                <div class="form-group">
+                    <label>Новий пароль</label>
+                    <input type="password" placeholder="Введіть новий пароль">
+                </div>
+                <div class="form-group">
+                    <label>Підтвердження пароля</label>
+                    <input type="password" placeholder="Повторіть новий пароль">
+                </div>
+                <button class="btn-save" onclick="alert('Дані успішно оновлено!')">Зберегти зміни</button>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        let currentUser = null;
+        try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
+
+        // Якщо не авторизований - викидаємо на логін
+        if (!currentUser) {
+            window.location.href = "login.html";
+        } else {
+            // Заповнюємо дані
+            document.getElementById('userEmail').innerText = currentUser.email;
+            document.getElementById('userInitial').innerText = currentUser.email.charAt(0).toUpperCase();
+
+            // Перевірка підписки (можна додати перевірку токена з URL як у генераторі, якщо потрібно)
+            if (currentUser.status === 'premium') {
+                document.getElementById('userRole').innerText = "Premium Користувач";
+                const subText = document.getElementById('subStatusText');
+                subText.innerText = "PRO ДОСТУП АКТИВНИЙ";
+                subText.style.color = "var(--accent)";
+            } else {
+                document.getElementById('upgradeBtn').style.display = 'block';
+                document.getElementById('upgradeBtn').onclick = () => window.location.href = "generator.html"; // Перекидаємо в генератор для оплати
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('hz_user');
+            window.location.href = "index.html"; // На головну
+        });
+    </script>
+</body>
+</html>

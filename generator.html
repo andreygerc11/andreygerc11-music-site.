@@ -57,7 +57,6 @@
         .back-link { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: 0.3s;}
         .back-link:hover { color: #fff; }
 
-        /* НОВА ЦЕНТРАЛЬНА ПАНЕЛЬ ЕФЕКТІВ ТА КОЛЬОРІВ */
         .top-center {
             display: flex; align-items: center; gap: 15px; background: var(--bg-card); 
             padding: 8px 25px; border-radius: 50px; border: 1px solid var(--border-color);
@@ -90,6 +89,9 @@
         .btn-download { display: none; background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 50px; font-weight: 900; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; animation: pulse 2s infinite;}
         .btn-stop { display: none; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 12px 25px; border-radius: 50px; font-weight: 900; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
         .btn-stop:hover { background: rgba(255,60,0,0.1); }
+        
+        .btn-profile { text-decoration: none; color: #fff; border: 1px solid #555; padding: 10px 20px; border-radius: 50px; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .btn-profile:hover { background: #333; border-color: #fff; }
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.5); } 70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); } }
 
@@ -264,11 +266,13 @@
         </div>
 
         <div class="top-right">
+            <a href="profile.html" id="userProfileBtn" class="btn-profile" style="display: none;"><i class="fas fa-user"></i> Кабінет</a>
+            
             <button id="sidebarSubscribeBtn" class="btn-premium" style="display: none;"><i class="fas fa-crown"></i> PRO Доступ</button>
             <a href="instruction.html" target="_blank" class="btn-instruction"><i class="fas fa-question-circle"></i> Інструкція</a>
             
             <button id="stopRenderBtn" class="btn-stop"><i class="fas fa-times"></i> Скасувати</button>
-            <button id="downloadVideoBtn" class="btn-download"><i class="fas fa-download"></i> Завантажити Відео</button>
+            <button id="downloadVideoBtn" class="btn-download"><i class="fas fa-download"></i> Завантажити MP4</button>
             <button id="exportVideoBtn" class="btn-export" disabled><i class="fas fa-bolt"></i> Експорт Відео</button>
         </div>
     </header>
@@ -479,7 +483,6 @@
         let backgroundVideo = null;
         let outputFileName = "hertz_spectrum_video"; 
 
-        // --- СТАН ЛОГОТИПУ (Відносно центру спектра!) ---
         let logoImage = null;
         let logoState = {
             x: 0, y: 0, 
@@ -506,7 +509,6 @@
                         logoState.width *= ratio;
                         logoState.height *= ratio;
                     }
-                    // Встановлюємо 0, 0 - це ідеальний центр відносно спектра
                     logoState.x = 0;
                     logoState.y = 0; 
                     drawPreviewFrame(); 
@@ -563,7 +565,6 @@
             return { x: (cx - rect.left) * sX, y: (cy - rect.top) * sY };
         }
 
-        // Переведення глобальних координат миші в локальні координати спектра (для Лого)
         function getLocalMousePos(p) {
             return {
                 x: (p.x - (canvas.width / 2 + spectrumState.offsetX)) / spectrumState.scale,
@@ -576,11 +577,9 @@
             const p = getMousePos(evt);
             const localP = getLocalMousePos(p);
             
-            // 1. Клік по Логотипу (Він тепер всередині спектра)
             if (logoImage) {
                 const drawW = logoState.width * logoState.scale;
                 const drawH = logoState.height * logoState.scale;
-                // Перевірка хітбоксу по локальних координатах
                 if (localP.x >= logoState.x - drawW/2 && localP.x <= logoState.x + drawW/2 &&
                     localP.y >= logoState.y - drawH/2 && localP.y <= logoState.y + drawH/2) {
                     logoState.isDragging = true;
@@ -600,7 +599,6 @@
                 return;
             }
 
-            // Клік по самому спектру
             const cx = canvas.width / 2 + spectrumState.offsetX;
             const cy = canvas.height / 2 + spectrumState.offsetY;
             const specHitSize = Math.min(canvas.width, canvas.height) * 0.4 * spectrumState.scale;
@@ -617,7 +615,6 @@
             const p = getMousePos(evt);
             const localP = getLocalMousePos(p);
             
-            // Рухаємо Логотип окремо (але відносно спектра)
             if (logoState.isDragging) {
                 if (evt.cancelable) evt.preventDefault();
                 logoState.x = localP.x - logoState.offsetX;
@@ -627,7 +624,6 @@
                 return;
             }
 
-            // Рухаємо Спектр (а логотип поїде разом з ним!)
             if (spectrumState.isDragging) {
                 if (evt.cancelable) evt.preventDefault();
                 spectrumState.offsetX = p.x - spectrumState.dragStartX;
@@ -697,12 +693,24 @@
             }
         });
 
+        // ПЕРЕВІРКА АВТОРИЗАЦІЇ (КНОПКА КАБІНЕТУ)
         let currentUser = null;
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
+        
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('dev_token') === 'hz_auth_9942_xPq') { isSubscribed = true; }
         if (currentUser && currentUser.status === 'premium') { isSubscribed = true; }
-        if (!isSubscribed) { document.getElementById('sidebarSubscribeBtn').style.display = 'flex'; }
+
+        const userProfileBtn = document.getElementById('userProfileBtn');
+        const sidebarSubscribeBtn = document.getElementById('sidebarSubscribeBtn');
+
+        if (currentUser) {
+            userProfileBtn.style.display = 'inline-flex'; // Показуємо кнопку
+        } else {
+            userProfileBtn.style.display = 'none';
+        }
+
+        if (!isSubscribed) { sidebarSubscribeBtn.style.display = 'flex'; }
         
         let baseHue = 0; let particles = []; let lyricsData = []; let rawLyrics = []; let isSyncingLyrics = false; let currentSyncIndex = 0;
         const formats = { vertical: { w: 1080, h: 1920 }, horizontal: { w: 1920, h: 1080 }, square: { w: 1080, h: 1080 }, portrait: { w: 1080, h: 1350 }, cinema: { w: 2560, h: 1080 } };
@@ -750,14 +758,12 @@
                 ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
                 ctx.scale(spectrumState.scale, spectrumState.scale);
                 
-                // Малюємо макет спектра
                 const dummyData = new Uint8Array(512); for(let i=0; i<512; i++) dummyData[i] = 100;
                 const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
                 ctx.globalAlpha = 0.4;
                 if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); else if (style === 'circle_bars') drawCircleBars(dummyData, minDimension, 512, 50); else if (style === 'linear_bars') drawLinearBars(dummyData, minDimension, 512); else if (style === 'linear_curve') drawLinearCurve(dummyData, minDimension, 512); else if (style === 'linear_symmetry') drawLinearSymmetry(dummyData, minDimension, 512);
                 ctx.globalAlpha = 1.0;
 
-                // Малюємо ЛОГОТИП (всередині простору спектра!)
                 if (logoImage) {
                     const drawW = logoState.width * logoState.scale;
                     const drawH = logoState.height * logoState.scale;
@@ -949,17 +955,17 @@
 
         function handleParticles(avgBass) {
             const effect = particleSelect.value; if (effect === 'none') return;
-            const maxMap = { 'rain': 300, 'snow': 80, 'fire': 80, 'smoke': 40, 'matrix': 50, 'spark': 60, 'meteor': 10, 'lightning': 2, 'note': 40 };
-            const maxParticles = maxMap[effect] || 40; 
+            const maxMap = { 'rain': 600, 'snow': 150, 'fire': 150, 'smoke': 80, 'matrix': 100, 'spark': 120, 'meteor': 15, 'lightning': 2 };
+            const maxParticles = maxMap[effect] || 60; 
             
-            let spawnRate = 0.3;
-            if (['spark', 'fire'].includes(effect)) spawnRate = (avgBass / 255) * 4; 
-            if (effect === 'meteor') spawnRate = 0.02; 
-            if (effect === 'lightning') spawnRate = (avgBass > 220) ? 0.2 : 0.01; 
-            if (effect === 'smoke') spawnRate = 0.1;
-            if (effect === 'rain') spawnRate = 0.8; 
+            let spawnRate = 0.5;
+            if (['spark', 'fire'].includes(effect)) spawnRate = (avgBass / 255) * 6; 
+            if (effect === 'meteor') spawnRate = 0.03; 
+            if (effect === 'lightning') spawnRate = (avgBass > 220) ? 0.3 : 0.01; 
+            if (effect === 'smoke') spawnRate = 0.2;
+            if (effect === 'rain') spawnRate = 1.0; 
             
-            let spawnsPerFrame = effect === 'rain' ? 2 : 1;
+            let spawnsPerFrame = effect === 'rain' ? 4 : 1;
             for (let s = 0; s < spawnsPerFrame; s++) {
                 if (particles.length < maxParticles && Math.random() < spawnRate) { particles.push(createParticle(effect)); }
             }
@@ -976,8 +982,11 @@
                 if (p.wobbleAmp > 0) {
                     p.angle += p.wobbleSpeed;
                     p.x = p.startX + Math.sin(p.angle) * p.wobbleAmp;
-                } else { p.x += p.vx; }
-                p.y += p.vy; p.angle += p.spin;
+                } else {
+                    p.x += p.vx;
+                }
+                p.y += p.vy;
+                p.angle += p.spin;
 
                 let pulse = (avgBass / 255) * 10; 
                 
@@ -987,54 +996,141 @@
                         ctx.globalCompositeOperation = 'lighter';
                         ctx.fillStyle = `rgba(255, 255, 255, ${p.life / p.maxLife * 0.15})`;
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        ctx.beginPath(); ctx.strokeStyle = `rgba(200, 230, 255, ${p.life / p.maxLife})`; ctx.lineWidth = Math.max(0.1, Math.random() * 5 + 2); ctx.lineJoin = 'miter';
-                        let mainPath = p.path.filter(pt => !pt.isBranch); let branches = p.path.filter(pt => pt.isBranch);
-                        if (mainPath.length > 0) { ctx.moveTo(mainPath[0].x, mainPath[0].y); for (let j = 1; j < mainPath.length; j++) { ctx.lineTo(mainPath[j].x, mainPath[j].y); } }
-                        ctx.stroke(); ctx.beginPath(); ctx.strokeStyle = `rgba(200, 230, 255, ${(p.life / p.maxLife) * 0.5})`; ctx.lineWidth = 1.5;
-                        for (let j = 0; j < branches.length; j++) { ctx.lineTo(branches[j].x, branches[j].y); } ctx.stroke(); ctx.globalCompositeOperation = 'source-over';
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(200, 230, 255, ${p.life / p.maxLife})`;
+                        ctx.lineWidth = Math.max(0.1, Math.random() * 5 + 2);
+                        ctx.lineJoin = 'miter';
+                        
+                        let mainPath = p.path.filter(pt => !pt.isBranch);
+                        let branches = p.path.filter(pt => pt.isBranch);
+                        
+                        if (mainPath.length > 0) {
+                            ctx.moveTo(mainPath[0].x, mainPath[0].y);
+                            for (let j = 1; j < mainPath.length; j++) { ctx.lineTo(mainPath[j].x, mainPath[j].y); }
+                        }
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(200, 230, 255, ${(p.life / p.maxLife) * 0.5})`;
+                        ctx.lineWidth = 1.5;
+                        for (let j = 0; j < branches.length; j++) { ctx.lineTo(branches[j].x, branches[j].y); }
+                        ctx.stroke();
+                        ctx.globalCompositeOperation = 'source-over';
                     }
                 } 
                 else if (p.type === 'spark') {
                     p.life--;
                     if (p.life > 0) {
-                        let speed = Math.max(0.1, Math.sqrt(p.vx * p.vx + p.vy * p.vy)); let tailLength = speed * 1.5; let safeSize = Math.max(0.1, p.size * (p.life / p.maxLife)); 
-                        ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.lineCap = 'round'; ctx.lineWidth = safeSize; ctx.strokeStyle = p.color; ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - (p.vx / speed) * tailLength, p.y - (p.vy / speed) * tailLength); ctx.stroke();
-                        ctx.beginPath(); ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.arc(p.x, p.y, safeSize * 0.5, 0, Math.PI * 2); ctx.fill(); ctx.globalCompositeOperation = 'source-over';
+                        let speed = Math.max(0.1, Math.sqrt(p.vx * p.vx + p.vy * p.vy)); 
+                        let tailLength = speed * 1.5;
+                        let safeSize = Math.max(0.1, p.size * (p.life / p.maxLife)); 
+                        
+                        ctx.globalCompositeOperation = 'lighter';
+                        ctx.beginPath();
+                        ctx.lineCap = 'round';
+                        ctx.lineWidth = safeSize;
+                        ctx.strokeStyle = p.color;
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p.x - (p.vx / speed) * tailLength, p.y - (p.vy / speed) * tailLength);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                        ctx.arc(p.x, p.y, safeSize * 0.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalCompositeOperation = 'source-over';
                     }
                 } 
                 else if (p.type === 'meteor') {
-                    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y); let angle = Math.atan2(p.vy, p.vx); ctx.rotate(angle);
-                    let safeLength = Math.max(1, p.length); let mGrad = ctx.createLinearGradient(0, 0, -safeLength, 0); mGrad.addColorStop(0, 'rgba(255, 255, 255, 1)'); mGrad.addColorStop(0.05, 'rgba(100, 200, 255, 0.8)'); mGrad.addColorStop(0.3, 'rgba(50, 100, 255, 0.3)'); mGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                    ctx.strokeStyle = mGrad; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(0.1, p.size); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-safeLength, 0); ctx.stroke();
-                    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(0, 0, Math.max(0.1, p.size * 1.5), 0, Math.PI * 2); ctx.fill(); ctx.restore();
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'lighter';
+                    ctx.translate(p.x, p.y);
+                    let angle = Math.atan2(p.vy, p.vx); 
+                    ctx.rotate(angle);
+                    
+                    let safeLength = Math.max(1, p.length);
+                    let mGrad = ctx.createLinearGradient(0, 0, -safeLength, 0);
+                    mGrad.addColorStop(0, 'rgba(255, 255, 255, 1)'); 
+                    mGrad.addColorStop(0.05, 'rgba(100, 200, 255, 0.8)'); 
+                    mGrad.addColorStop(0.3, 'rgba(50, 100, 255, 0.3)'); 
+                    mGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    
+                    ctx.strokeStyle = mGrad;
+                    ctx.lineCap = 'round';
+                    ctx.lineWidth = Math.max(0.1, p.size);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(-safeLength, 0);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, Math.max(0.1, p.size * 1.5), 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.restore();
                 } 
                 else if (p.type === 'rain') {
-                    ctx.strokeStyle = `rgba(200, 220, 255, ${Math.max(0, p.opacity)})`; 
-                    ctx.lineWidth = Math.random() * 2 + 2;
-                    ctx.beginPath(); ctx.moveTo(p.x, p.y); let safeVy = Math.max(0.1, p.vy); ctx.lineTo(p.x - p.vx * (p.length/safeVy), p.y - p.length); ctx.stroke();
+                    ctx.strokeStyle = `rgba(200, 220, 255, ${Math.max(0, p.opacity)})`;
+                    ctx.lineWidth = 1.0; 
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    let safeVy = Math.max(0.1, p.vy);
+                    ctx.lineTo(p.x - p.vx * (p.length/safeVy), p.y - p.length);
+                    ctx.stroke();
                 } 
                 else if (p.type === 'fire') {
                     p.life -= 1;
                     if (p.life > 0) {
                         let ratio = Math.max(0, p.life / p.maxLife); 
+                        
                         if (ratio > 0.4) {
-                            let fireRatio = Math.max(0, (ratio - 0.4) / 0.6); p.size = Math.max(0.1, p.size * 0.96); 
-                            let r = 255; let g = Math.floor(255 * fireRatio); let b = Math.floor(100 * Math.pow(fireRatio, 2));
-                            let fGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size)); fGrad.addColorStop(0, `rgba(${r},${g},${b}, ${fireRatio})`); fGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                            ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = fGrad; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2); ctx.fill(); ctx.globalCompositeOperation = 'source-over';
+                            let fireRatio = Math.max(0, (ratio - 0.4) / 0.6); 
+                            p.size = Math.max(0.1, p.size * 0.96); 
+                            
+                            let r = 255;
+                            let g = Math.floor(255 * fireRatio);
+                            let b = Math.floor(100 * Math.pow(fireRatio, 2));
+                            
+                            let fGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size));
+                            fGrad.addColorStop(0, `rgba(${r},${g},${b}, ${fireRatio})`);
+                            fGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                            
+                            ctx.globalCompositeOperation = 'lighter';
+                            ctx.fillStyle = fGrad;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.globalCompositeOperation = 'source-over';
                         } else {
-                            let smokeRatio = Math.max(0, ratio / 0.4); p.size = Math.max(0.1, p.size * 1.04); p.vx *= 0.95; p.vy *= 0.95; 
-                            let sGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size)); sGrad.addColorStop(0, `rgba(150, 150, 150, ${smokeRatio * 0.4})`); sGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                            ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = sGrad; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2); ctx.fill();
+                            let smokeRatio = Math.max(0, ratio / 0.4); 
+                            p.size = Math.max(0.1, p.size * 1.04); 
+                            p.vx *= 0.95; 
+                            p.vy *= 0.95; 
+                            
+                            let sGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size));
+                            sGrad.addColorStop(0, `rgba(150, 150, 150, ${smokeRatio * 0.4})`);
+                            sGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                            
+                            ctx.globalCompositeOperation = 'source-over';
+                            ctx.fillStyle = sGrad;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2);
+                            ctx.fill();
                         }
                     }
                 } 
                 else if (p.type === 'smoke') {
                     p.life--;
                     if (p.life > 0) {
-                        p.size = Math.max(0.1, p.size * 1.015); p.opacity = Math.max(0, (p.life / p.maxLife) * 0.25);
-                        let grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size)); grad.addColorStop(0, `rgba(180, 180, 180, ${p.opacity})`); grad.addColorStop(1, 'rgba(0,0,0,0)');
-                        ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2); ctx.fill();
+                        p.size = Math.max(0.1, p.size * 1.015);
+                        p.opacity = Math.max(0, (p.life / p.maxLife) * 0.25);
+                        let grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size));
+                        grad.addColorStop(0, `rgba(180, 180, 180, ${p.opacity})`);
+                        grad.addColorStop(1, 'rgba(0,0,0,0)');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2); ctx.fill();
                     }
                 } 
                 else {
@@ -1044,27 +1140,41 @@
                     
                     ctx.save();
                     if (['star', 'firefly'].includes(p.type)) ctx.globalCompositeOperation = 'lighter';
-                    ctx.globalAlpha = p.opacity; ctx.translate(p.x, p.y); ctx.rotate(p.angle);
+                    ctx.globalAlpha = p.opacity;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle);
                     let s = Math.max(0.1, p.size + (['star','heart','bubble'].includes(p.type) ? pulse * 0.5 : 0));
 
                     if (p.type === 'snow') {
-                        let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s); grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
-                        ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
+                        let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s);
+                        grad.addColorStop(0, 'rgba(255,255,255,1)');
+                        grad.addColorStop(1, 'rgba(255,255,255,0)');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
                     } else if (p.type === 'bubble') {
-                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
-                        ctx.beginPath(); ctx.arc(-s*0.3, -s*0.3, s*0.2, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill(); 
+                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); 
+                        ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+                        ctx.beginPath(); ctx.arc(-s*0.3, -s*0.3, s*0.2, 0, Math.PI*2); 
+                        ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill(); 
                     } else if (p.type === 'confetti') {
-                        ctx.fillStyle = p.color; ctx.fillRect(-s/2, -s/2 * Math.cos(p.angle*5), s, Math.max(0.1, s * Math.abs(Math.cos(p.angle*5))));
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(-s/2, -s/2 * Math.cos(p.angle*5), s, Math.max(0.1, s * Math.abs(Math.cos(p.angle*5))));
                     } else if (p.type === 'triangle') {
-                        ctx.fillStyle = p.color; ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s * 0.866, s * 0.5); ctx.lineTo(-s * 0.866, s * 0.5); ctx.closePath(); ctx.fill();
+                        ctx.fillStyle = p.color; 
+                        ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s * 0.866, s * 0.5); ctx.lineTo(-s * 0.866, s * 0.5); ctx.closePath(); ctx.fill();
                     } else if (p.type === 'heart') {
-                        ctx.fillStyle = p.color; ctx.shadowBlur = 15; ctx.shadowColor = p.color; let top = s * 0.3; 
-                        ctx.beginPath(); ctx.moveTo(0, top); ctx.bezierCurveTo(0, 0, -s, 0, -s, top); ctx.bezierCurveTo(-s, s * 0.8, 0, s, 0, s * 1.2); ctx.bezierCurveTo(0, s, s, s * 0.8, s, top); ctx.bezierCurveTo(s, 0, 0, 0, 0, top); ctx.fill(); ctx.shadowBlur = 0;
+                        ctx.fillStyle = p.color; ctx.shadowBlur = 15; ctx.shadowColor = p.color;
+                        let top = s * 0.3; 
+                        ctx.beginPath(); ctx.moveTo(0, top); ctx.bezierCurveTo(0, 0, -s, 0, -s, top); ctx.bezierCurveTo(-s, s * 0.8, 0, s, 0, s * 1.2); ctx.bezierCurveTo(0, s, s, s * 0.8, s, top); ctx.bezierCurveTo(s, 0, 0, 0, 0, top); ctx.fill(); 
+                        ctx.shadowBlur = 0;
                     } else if (['note', 'matrix', 'leaf'].includes(p.type)) {
                         ctx.fillStyle = p.color || 'white'; ctx.font = `${s * 2}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                         if(p.type === 'matrix') { ctx.shadowBlur = 10; ctx.shadowColor = '#00ff00'; }
                         ctx.fillText(p.char, 0, 0); ctx.shadowBlur = 0;
-                    } else { ctx.fillStyle = p.color || 'white'; ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill(); }
+                    } else {
+                        ctx.fillStyle = p.color || 'white';
+                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
+                    }
                     ctx.restore();
                 }
 
@@ -1107,8 +1217,19 @@
             
             let isPlaceholder = false;
             if (!isGenerating && activeText === "" && (document.getElementById('lyricsInput').value.trim() !== "" || lyricsData.length > 0)) { 
-                activeText = "🎵 Перетягніть текст сюди"; 
-                isPlaceholder = true; 
+                ctx.save(); 
+                ctx.globalAlpha = 0.5;
+                const fontSize = minDimension * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                const centerXText = (canvas.width / 2) + lyricsOffsetX;
+                const startY = (canvas.height * 0.85) + lyricsOffsetY;
+                
+                ctx.strokeStyle = '#000'; ctx.lineWidth = fontSize * 0.15; ctx.strokeText("🎵 Перетягніть текст сюди", centerXText, startY);
+                ctx.fillStyle = '#fff'; ctx.fillText("🎵 Перетягніть текст сюди", centerXText, startY);
+                
+                const maxLyricsWidth = ctx.measureText("🎵 Перетягніть текст сюди").width;
+                lyricsBB = { x: centerXText - (maxLyricsWidth / 2) - 30, y: startY - (fontSize / 2) - 20, w: maxLyricsWidth + 60, h: (fontSize * 1.3) + 40 };
+                ctx.restore();
+                return; 
             }
 
             if (isGenerating && isPlaceholder) {
@@ -1116,7 +1237,7 @@
             }
 
             if (activeText !== "") {
-                ctx.save(); if (isPlaceholder) ctx.globalAlpha = 0.5;
+                ctx.save();
                 const fontSize = minDimension * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 const padding = minDimension * 0.05; const maxWidthLyrics = canvas.width - (padding * 2); const centerXText = (canvas.width / 2) + lyricsOffsetX;
                 let words = activeText.split(' '); let line = ''; let linesToDraw = [];
@@ -1193,14 +1314,12 @@
             ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
             ctx.scale(spectrumState.scale, spectrumState.scale);
             
-            // Спочатку малюємо спектр
             if (style === 'circle_sharp') drawCircleSharp(dataArray, minDimension, bufferLength, avgBass); 
             else if (style === 'circle_bars') drawCircleBars(dataArray, minDimension, bufferLength, avgBass); 
             else if (style === 'linear_bars') drawLinearBars(dataArray, minDimension, bufferLength); 
             else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength); 
             else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
 
-            // Потім Логотип ЗВЕРХУ спектра, але в тій самій системі координат
             if (logoImage) {
                 const drawW = logoState.width * logoState.scale;
                 const drawH = logoState.height * logoState.scale;
@@ -1327,15 +1446,11 @@
 
             downloadVideoBtn.style.display = 'none'; 
             isGenerating = true; isCancelled = false; chunks = [];
-            
-            let mimeType = ''; let fileExt = 'webm'; let useWebmFix = true;
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) { 
-                mimeType = 'video/webm;codecs=vp9,opus'; 
-            } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) { 
-                mimeType = 'video/webm;codecs=vp8,opus'; 
-            } else { 
-                mimeType = 'video/webm'; 
-            }
+            let mimeType = ''; let fileExt = ''; let useWebmFix = false;
+
+            if (MediaRecorder.isTypeSupported('video/mp4')) { mimeType = 'video/mp4'; fileExt = 'mp4'; } 
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) { mimeType = 'video/webm;codecs=vp9'; fileExt = 'webm'; useWebmFix = true; } 
+            else { mimeType = 'video/webm'; fileExt = 'webm'; useWebmFix = true; }
 
             generateVideoBtn.style.display = 'none'; stopRenderBtn.style.display = 'block';
             renderOverlay.style.display = 'flex'; generateProgress.value = 0;
@@ -1345,13 +1460,7 @@
             const audioStream = mediaDest.stream;
             const canvasStream = canvas.captureStream(30); 
             const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
-            
-            const options = { 
-                mimeType: mimeType, 
-                videoBitsPerSecond: 8000000, 
-                audioBitsPerSecond: 128000
-            };
-            
+            const options = { mimeType: mimeType, videoBitsPerSecond: 5000000 };
             mediaRecorder = new MediaRecorder(combinedStream, options);
             
             mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) { chunks.push(e.data); } };

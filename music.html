@@ -57,7 +57,7 @@
             flex-wrap: wrap;
         }
 
-        .btn-back, .btn-generator { 
+        .btn-back, .btn-generator, .btn-profile { 
             text-decoration: none; 
             color: #fff; 
             border: 1px solid var(--accent); 
@@ -70,6 +70,9 @@
             font-size: 0.9rem;
         }
         .btn-back:hover, .btn-generator:hover { background: var(--accent); }
+        
+        .btn-profile { border-color: #555; display: none; } /* Прихована за замовчуванням */
+        .btn-profile:hover { background: #333; border-color: #fff; }
 
         .btn-whatsapp {
             text-decoration: none;
@@ -116,7 +119,6 @@
         .download-info h2 { font-size: 1.3rem; margin-bottom: 10px; color: var(--accent); }
         .download-info p { font-size: 1rem; color: #ccc; }
 
-        /* Промо-блок генератора */
         .generator-promo {
             background: linear-gradient(145deg, var(--card) 0%, #1a0f0f 100%);
             border: 2px solid var(--accent);
@@ -149,7 +151,6 @@
             background: rgba(255,255,255,0.05);
         }
 
-        /* 4 КОЛОНКИ */
         #music-container { 
             display: grid; 
             grid-template-columns: repeat(4, 1fr); 
@@ -203,7 +204,6 @@
         .btn-buy:hover { opacity: 0.8; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.4); transform: translateY(-2px); }
         .btn-buy:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
         
-        /* ПЛЕЄР */
         .player-wrapper { 
             width: 100%; height: 55px; margin-top: 5px; 
             border-radius: 8px; overflow: hidden; position: relative; background: var(--card);
@@ -238,7 +238,6 @@
         }
         .play-btn:hover { background: #333; border-color: var(--accent); color: var(--accent); }
 
-        /* МОДАЛЬНЕ ВІКНО */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center;
@@ -263,7 +262,6 @@
         }
         .close-modal:hover { color: #fff; }
 
-        /* Адаптивність */
         @media (max-width: 1200px) { #music-container { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 900px) { #music-container { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { #music-container { grid-template-columns: 1fr; } }
@@ -322,6 +320,8 @@
         <a href="generator.html" class="btn-generator"><i class="fas fa-video"></i> Hertz Spectrum</a>
         <a href="https://chat.whatsapp.com/EQJv9AjMfOTBBjccFFlYnM" target="_blank" class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Чат WhatsApp</a>
         <a href="https://www.youtube.com/@golosprotyrakuppua" target="_blank" class="btn-youtube"><i class="fab fa-youtube"></i> YouTube Канал</a>
+        
+        <a href="profile.html" id="userProfileBtn" class="btn-profile"><i class="fas fa-user"></i> Кабінет</a>
     </div>
     <h1>Музична Сповідь</h1>
 </div>
@@ -390,6 +390,14 @@
 </footer>
 
 <script>
+    // ПЕРЕВІРКА АВТОРИЗАЦІЇ (КНОПКА КАБІНЕТУ)
+    let currentUser = null;
+    try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
+    
+    if (currentUser) {
+        document.getElementById('userProfileBtn').style.display = 'inline-flex';
+    }
+
     const apiURL = "https://andreygerc11-music-site.onrender.com/api/music";
     const payURL = "https://andreygerc11-music-site.onrender.com/api/pay";
     
