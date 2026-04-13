@@ -15,17 +15,15 @@ app.use(express.json());
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
-// Змінні точно як у тебе на скріншоті Render:
+// Змінні з Render
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const MONO_TOKEN = process.env.MONO_TOKEN;
-const BOT_TOKEN = process.env.BOT_TOKEN; // Виправлено назву!
+const BOT_TOKEN = process.env.BOT_TOKEN; 
 const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_URL; 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
-
-// Твій Chat ID (можеш додати його в Render як TELEGRAM_CHAT_ID, або я залишив фоллбек)
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "ТВІЙ_ID_ЯКЩО_НЕ_ДОДАВ_У_RENDER";
 
-// ID папок з твоєї адмінки
+// Твої ID папок
 const PREVIEW_FOLDER_ID = "1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S"; 
 const FULL_FOLDER_ID = "1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j";
 
@@ -38,11 +36,11 @@ async function sendTelegramMessage(text) {
             parse_mode: 'HTML'
         });
     } catch (e) {
-        console.error("Помилка відправки в Telegram:", e.message);
+        console.error("Помилка Telegram:", e.message);
     }
 }
 
-// === РЕЄСТРАЦІЯ ТА ЛОГІН (Через Apps Script) ===
+// === РЕЄСТРАЦІЯ ТА ЛОГІН ===
 app.post('/api/register', async (req, res) => {
     try { 
         const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'register', ...req.body }); 
@@ -57,27 +55,17 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Помилка входу" }); }
 });
 
-// === ЗАВАНТАЖЕННЯ ПІСЕНЬ (Прямий API запит завдяки відкритим папкам) ===
+// === ОТРИМАННЯ СПИСКУ ПІСЕНЬ ===
 app.get('/api/music', async (req, res) => {
     try {
         if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
 
-        // 1. Читаємо папку з прев'ю
         const prevRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${PREVIEW_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,createdTime)&key=${GOOGLE_API_KEY}`);
-        
-        // 2. Читаємо папку з повними треками
         const fullRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${FULL_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name)&key=${GOOGLE_API_KEY}`);
 
-        // 3. Збираємо їх до купи
         const musicList = prevRes.data.files.map(f => {
-            // Відрізаємо " (Прев'ю).mp3" з назви
             const cleanName = f.name.replace(/\.[^/.]+$/, "").replace(" (Прев'ю)", "").trim();
-            
-            // Знаходимо повну версію за цією ж назвою
-            const fullFile = fullRes.data.files.find(full => {
-                const cleanFullName = full.name.replace(/\.[^/.]+$/, "").trim();
-                return cleanFullName === cleanName;
-            });
+            const fullFile = fullRes.data.files.find(full => full.name.replace(/\.[^/.]+$/, "").trim() === cleanName);
             
             return {
                 name: cleanName,
@@ -85,12 +73,35 @@ app.get('/api/music', async (req, res) => {
                 fullId: fullFile ? fullFile.id : null,
                 date: f.createdTime
             };
-        }).filter(m => m.fullId); // Показуємо тільки ті, де успішно знайшлись обидві версії
+        }).filter(m => m.fullId);
 
         res.json(musicList);
     } catch (error) {
-        console.error("Помилка завантаження музики:", error.response ? error.response.data : error.message);
-        res.status(500).json({ error: "Не вдалося завантажити музику з Google Диску." });
+        console.error("Помилка завантаження списку:", error.message);
+        res.status(500).json({ error: "Не вдалося завантажити музику" });
+    }
+});
+
+// === СТРІМІНГ АУДІО (ОБХІД БЛОКУВАННЯ GOOGLE) ===
+app.get('/api/stream/:fileId', async (req, res) => {
+    try {
+        if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
+        
+        // Сервер сам завантажує медіа-файл з Диску як потік
+        const response = await axios({
+            method: 'get',
+            url: `https://www.googleapis.com/drive/v3/files/${req.params.fileId}?alt=media&key=${GOOGLE_API_KEY}`,
+            responseType: 'stream'
+        });
+
+        // Віддаємо його браузеру як чистий MP3
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Accept-Ranges', 'bytes');
+        response.data.pipe(res);
+
+    } catch (error) {
+        console.error("Помилка стрімінгу:", error.message);
+        res.status(500).send("Помилка відтворення");
     }
 });
 
@@ -134,7 +145,7 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// === WHISPER (ШІ Таймінг) ===
+// === WHISPER ТА ГЕНЕРАТОР ===
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
         ffmpeg(inputPath)
@@ -159,7 +170,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         res.json({ lrc: response.data.text }); 
     } catch (error) { res.status(500).json({ error: "Whisper Error" }); }
     finally { 
-        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        if (req.file) fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         if (compressedPath && fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
     }
 });

@@ -697,7 +697,7 @@
             }
         });
 
-        // ПЕРЕВІРКА АВТОРИЗАЦІЇ (КНОПКА КАБІНЕТУ ТА ВХОДУ)
+        // ПЕРЕВІРКА АВТОРИЗАЦІЇ (КНОПКИ ВХОДУ ТА КАБІНЕТУ)
         let currentUser = null;
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
         
@@ -1453,14 +1453,25 @@
 
             downloadVideoBtn.style.display = 'none'; 
             isGenerating = true; isCancelled = false; chunks = [];
-            let mimeType = ''; let fileExt = 'webm'; let useWebmFix = true;
 
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) { 
+            // ==========================================
+            // ПЕРЕВІРКА MP4 ТА WEBM (САМЕ ЦЕЙ БЛОК БУВ СТАРИМ)
+            // ==========================================
+            let mimeType = 'video/webm';
+            let fileExt = 'webm';
+            let useWebmFix = true;
+
+            // Якщо браузер (Safari/iPhone) підтримує MP4 напряму
+            if (MediaRecorder.isTypeSupported('video/mp4')) {
+                mimeType = 'video/mp4';
+                fileExt = 'mp4';
+                useWebmFix = false; // MP4 не потрібно "лікувати"
+            } 
+            // Якщо браузер (Chrome) підтримує тільки WebM
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) { 
                 mimeType = 'video/webm;codecs=vp9,opus'; 
             } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) { 
                 mimeType = 'video/webm;codecs=vp8,opus'; 
-            } else { 
-                mimeType = 'video/webm'; 
             }
 
             generateVideoBtn.style.display = 'none'; stopRenderBtn.style.display = 'block';
@@ -1508,7 +1519,8 @@
                     generateVideoBtn.style.display = 'flex'; generateVideoBtn.innerHTML = '<i class="fas fa-redo"></i> Переробити відео';
                     stopRenderBtn.style.display = 'none'; downloadVideoBtn.style.display = 'block';
                     downloadVideoBtn.onclick = () => {
-                        const a = document.createElement('a'); a.style.display = 'none'; a.href = generatedVideoUrl; a.download = `${outputFileName}.${fileExt}`;
+                        const a = document.createElement('a'); a.style.display = 'none'; a.href = generatedVideoUrl; 
+                        a.download = `${outputFileName}.${fileExt}`; // ТУТ ВКАЗУЄТЬСЯ .mp4 або .webm
                         document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); }, 100);
                     };
                     
@@ -1517,8 +1529,12 @@
                     if (backgroundVideo) backgroundVideo.pause();
                 };
 
-                if (useWebmFix) { ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) { finalizeAndDownload(fixedBlob); });
-                } else { finalizeAndDownload(rawBlob); }
+                // Якщо це WebM - лікуємо. Якщо MP4 - віддаємо напряму.
+                if (useWebmFix) { 
+                    ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) { finalizeAndDownload(fixedBlob); });
+                } else { 
+                    finalizeAndDownload(rawBlob); 
+                }
             };
 
             audioPlayer.currentTime = 0;
