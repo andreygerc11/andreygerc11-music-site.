@@ -55,6 +55,20 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Помилка входу" }); }
 });
 
+// === АВТОРИЗАЦІЯ ЧЕРЕЗ GOOGLE ===
+app.post('/api/social-auth', async (req, res) => {
+    try { 
+        const response = await axios.post(GOOGLE_SHEETS_URL, { 
+            action: 'social_auth', 
+            email: req.body.email,
+            name: req.body.name 
+        }); 
+        res.json(response.data); 
+    } catch (e) { 
+        res.status(500).json({ error: "Помилка соціальної авторизації" }); 
+    }
+});
+
 // === ОТРИМАННЯ СПИСКУ ПІСЕНЬ ===
 app.get('/api/music', async (req, res) => {
     try {
@@ -87,14 +101,12 @@ app.get('/api/stream/:fileId', async (req, res) => {
     try {
         if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
         
-        // Сервер сам завантажує медіа-файл з Диску як потік
         const response = await axios({
             method: 'get',
             url: `https://www.googleapis.com/drive/v3/files/${req.params.fileId}?alt=media&key=${GOOGLE_API_KEY}`,
             responseType: 'stream'
         });
 
-        // Віддаємо його браузеру як чистий MP3
         res.setHeader('Content-Type', 'audio/mpeg');
         res.setHeader('Accept-Ranges', 'bytes');
         response.data.pipe(res);
@@ -170,7 +182,8 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         res.json({ lrc: response.data.text }); 
     } catch (error) { res.status(500).json({ error: "Whisper Error" }); }
     finally { 
-        if (req.file) fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        // ОСЬ ТУТ БУЛА ПОМИЛКА, ВИПРАВЛЕНО:
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         if (compressedPath && fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
     }
 });
