@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вхід у кабінет | Hertz Spectrum</title>
+    <title>Реєстрація | Hertz Spectrum</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -32,22 +32,22 @@
 
 <div class="login-card">
     <a href="index.html" class="btn-back">← На головну</a>
-    <h2>ВХІД У КАБІНЕТ</h2>
+    <h2>РЕЄСТРАЦІЯ</h2>
 
-    <form id="loginForm">
+    <form id="registerForm">
         <input type="email" id="email" placeholder="Ваш Email" required>
-        <input type="password" id="password" placeholder="Пароль" required>
-        <button type="submit" class="btn-main">УВІЙТИ</button>
+        <input type="password" id="password" placeholder="Придумайте пароль" required>
+        <button type="submit" class="btn-main">СТВОРИТИ АКАУНТ</button>
     </form>
 
-    <a href="register.html" class="link-bottom">Немає акаунту? Зареєструватися</a>
+    <a href="login.html" class="link-bottom">Вже є акаунт? Увійти</a>
 
     <div class="divider">АБО</div>
 
     <div style="display: flex; justify-content: center;">
         <div id="g_id_onload" 
              data-client_id="724333690730-kjj7rl1tn72vq452flbdhb1ngq3q7dqd.apps.googleusercontent.com" 
-             data-context="signin" 
+             data-context="signup" 
              data-ux_mode="popup" 
              data-callback="handleGoogleLogin" 
              data-auto_prompt="false">
@@ -56,7 +56,7 @@
              data-type="standard" 
              data-shape="pill" 
              data-theme="filled_black" 
-             data-text="signin_with" 
+             data-text="signup_with" 
              data-size="large" 
              data-logo_alignment="center">
         </div>
@@ -64,13 +64,13 @@
 </div>
 
 <script>
-    // Обробка звичайного входу
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    // Обробка звичайної реєстрації
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button');
         btn.innerText = 'Зачекайте...'; btn.disabled = true;
         try {
-            const res = await fetch('https://andreygerc11-music-site.onrender.com/api/login', {
+            const res = await fetch('https://andreygerc11-music-site.onrender.com/api/register', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('password').value })
             });
@@ -78,8 +78,8 @@
             if (data.success) {
                 localStorage.setItem('hz_user', JSON.stringify({ email: document.getElementById('email').value, status: data.status }));
                 window.location.href = 'profile.html';
-            } else { alert(data.error); btn.innerText = 'УВІЙТИ'; btn.disabled = false; }
-        } catch (err) { alert('Помилка сервера. Спробуйте пізніше.'); btn.innerText = 'УВІЙТИ'; btn.disabled = false; }
+            } else { alert(data.error); btn.innerText = 'СТВОРИТИ АКАУНТ'; btn.disabled = false; }
+        } catch (err) { alert('Помилка сервера. Спробуйте пізніше.'); btn.innerText = 'СТВОРИТИ АКАУНТ'; btn.disabled = false; }
     });
 
     // Розшифровка токена Google
@@ -92,7 +92,7 @@
         return JSON.parse(jsonPayload);
     }
 
-    // Обробка входу через Google
+    // Обробка реєстрації через Google
     async function handleGoogleLogin(response) {
         const payload = parseJwt(response.credential);
         try {
