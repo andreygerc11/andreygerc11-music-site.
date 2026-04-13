@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <style>
         :root {
             --bg-base: #09090b;      
@@ -28,81 +30,114 @@
             color: var(--text-main); 
             min-height: 100vh;
             display: flex; flex-direction: column;
+            background: radial-gradient(circle at center top, #18181b 0%, #09090b 100%);
         }
 
         .top-bar {
             min-height: 65px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
             display: flex; align-items: center; justify-content: space-between; padding: 15px 30px;
+            position: sticky; top: 0; z-index: 100;
         }
         .logo { font-size: 1.2rem; font-weight: 900; text-transform: uppercase; color: #fff; text-decoration: none; letter-spacing: 1px; }
         .logo span { color: var(--accent); }
-        .btn-back { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 700; transition: 0.3s;}
+        .btn-back { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 8px;}
         .btn-back:hover { color: #fff; }
 
         .container {
-            max-width: 900px; margin: 40px auto; padding: 0 20px; width: 100%;
+            max-width: 1000px; margin: 40px auto; padding: 0 20px; width: 100%;
             display: grid; grid-template-columns: 1fr 2fr; gap: 30px;
+            flex: 1;
         }
 
+        /* ЛІВА ПАНЕЛЬ ПРОФІЛЮ */
         .profile-sidebar {
             background: var(--bg-panel); border: 1px solid var(--border-color);
-            border-radius: 15px; padding: 30px 20px; text-align: center; height: fit-content;
+            border-radius: 20px; padding: 40px 20px; text-align: center; height: fit-content;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .avatar-circle {
-            width: 100px; height: 100px; background: linear-gradient(45deg, #333, var(--accent));
-            border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center;
-            justify-content: center; font-size: 2.5rem; color: #fff; font-weight: 900;
-            box-shadow: 0 0 20px rgba(255, 60, 0, 0.2);
+            width: 110px; height: 110px; background: linear-gradient(135deg, #333, var(--accent));
+            border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center;
+            justify-content: center; font-size: 3rem; color: #fff; font-weight: 900;
+            box-shadow: 0 10px 25px rgba(255, 60, 0, 0.3); border: 3px solid var(--bg-card);
         }
-        .profile-email { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; word-break: break-all;}
-        .profile-role { font-size: 0.8rem; color: var(--accent); text-transform: uppercase; font-weight: 900; margin-bottom: 25px; }
+        .profile-email { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; word-break: break-all; color: #fff;}
+        .profile-role { font-size: 0.85rem; color: var(--accent); text-transform: uppercase; font-weight: 900; margin-bottom: 30px; letter-spacing: 1px;}
 
         .btn-logout {
-            width: 100%; padding: 12px; background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d;
-            border-radius: 50px; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.3s;
+            width: 100%; padding: 14px; background: rgba(255, 77, 77, 0.1); border: 1px solid rgba(255, 77, 77, 0.3); color: #ff4d4d;
+            border-radius: 12px; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.3s;
+            font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-        .btn-logout:hover { background: #ff4d4d; color: #fff; }
+        .btn-logout:hover { background: #ff4d4d; color: #fff; border-color: #ff4d4d; box-shadow: 0 5px 15px rgba(255, 77, 77, 0.3);}
 
-        .settings-content { display: flex; flex-direction: column; gap: 20px; }
+        /* ПРАВА ПАНЕЛЬ НАЛАШТУВАНЬ */
+        .settings-content { display: flex; flex-direction: column; gap: 25px; }
 
         .settings-card {
             background: var(--bg-panel); border: 1px solid var(--border-color);
-            border-radius: 15px; padding: 25px;
+            border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        .settings-card h2 { font-size: 1.2rem; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; display: flex; align-items: center; gap: 10px;}
-        .settings-card h2 i { color: var(--accent); }
-
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
-        .form-group input {
-            width: 100%; padding: 12px 15px; background: var(--bg-input); border: 1px solid var(--border-color);
-            border-radius: 8px; color: #fff; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s;
+        .settings-card h2 { 
+            font-size: 1.2rem; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 15px; display: flex; align-items: center; gap: 12px; color: #fff;
         }
-        .form-group input:focus { border-color: var(--accent); }
+        .settings-card h2 i { color: var(--accent); font-size: 1.4rem;}
 
-        .btn-save {
-            background: var(--accent); color: #fff; border: none; padding: 12px 25px;
-            border-radius: 50px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s;
+        /* СТАТУС ПІДПИСКИ */
+        .subscription-box {
+            display: flex; justify-content: space-between; align-items: center; 
+            background: linear-gradient(145deg, var(--bg-card), #111); 
+            padding: 25px; border-radius: 15px; border: 1px solid var(--border-color);
+            flex-wrap: wrap; gap: 15px;
         }
-        .btn-save:hover { box-shadow: 0 0 15px rgba(255, 60, 0, 0.4); transform: translateY(-2px); }
+        .sub-info { display: flex; flex-direction: column; gap: 5px; }
+        .sub-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;}
+        .sub-status { font-weight: 900; font-size: 1.4rem; color: #fff; letter-spacing: 0.5px;}
+        
+        .btn-action {
+            background: var(--accent); color: #fff; border: none; padding: 14px 28px;
+            border-radius: 50px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; 
+            cursor: pointer; transition: 0.3s; letter-spacing: 0.5px;
+        }
+        .btn-action:hover { box-shadow: 0 8px 25px rgba(255, 60, 0, 0.4); transform: translateY(-2px); }
 
+        /* КАРТКИ */
+        .cards-desc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+        
         .card-item {
-            background: var(--bg-input); border: 1px solid var(--border-color); padding: 15px;
-            border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 20px;
+            border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+            transition: 0.3s;
         }
-        .card-item span { font-weight: 700; letter-spacing: 1px; }
-        .btn-remove-card { background: none; border: none; color: var(--text-muted); cursor: pointer; transition: 0.3s; font-size: 1rem; }
-        .btn-remove-card:hover { color: #ff4d4d; }
+        .card-item:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05);}
+        .card-info { display: flex; align-items: center; gap: 15px; }
+        .card-info i { font-size: 1.5rem; color: #ccc; }
+        .card-number { font-weight: 700; letter-spacing: 2px; color: #fff; font-size: 1.1rem;}
+        
+        .btn-remove-card { background: rgba(255,77,77,0.1); border: none; color: #ff4d4d; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1rem; display: flex; align-items: center; justify-content: center;}
+        .btn-remove-card:hover { background: #ff4d4d; color: #fff; }
         
         .btn-add-card {
-            width: 100%; padding: 12px; background: transparent; border: 1px dashed var(--text-muted);
-            color: var(--text-muted); border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.3s;
+            width: 100%; padding: 18px; background: transparent; border: 2px dashed rgba(255,255,255,0.2);
+            color: var(--text-muted); border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
         }
-        .btn-add-card:hover { border-color: #fff; color: #fff; }
+        .btn-add-card:hover { border-color: var(--accent); color: var(--accent); background: rgba(255,60,0,0.05);}
 
-        @media (max-width: 768px) {
+        /* БЕЗПЕКА */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+        .form-group input {
+            width: 100%; padding: 15px; background: var(--bg-input); border: 1px solid var(--border-color);
+            border-radius: 10px; color: #fff; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s;
+        }
+        .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255, 60, 0, 0.15); }
+
+        @media (max-width: 850px) {
             .container { grid-template-columns: 1fr; margin: 20px auto;}
             .top-bar { padding: 15px; }
+            .subscription-box { flex-direction: column; align-items: flex-start; }
+            .btn-action { width: 100%; text-align: center; }
         }
     </style>
 </head>
@@ -110,7 +145,10 @@
 
     <header class="top-bar">
         <a href="index.html" class="logo">HERTZ <span>SPECTRUM</span></a>
-        <a href="generator.html" class="btn-back"><i class="fas fa-arrow-left"></i> Назад до генератора</a>
+        <div style="display: flex; gap: 20px;">
+            <a href="music.html" class="btn-back"><i class="fas fa-music"></i> Музика</a>
+            <a href="generator.html" class="btn-back"><i class="fas fa-video"></i> Генератор</a>
+        </div>
     </header>
 
     <div class="container">
@@ -126,27 +164,34 @@
             
             <div class="settings-card">
                 <h2><i class="fas fa-crown"></i> Статус підписки</h2>
-                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color);">
-                    <div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Поточний план</div>
-                        <div id="subStatusText" style="font-weight: 900; font-size: 1.2rem; color: #fff;">Базовий</div>
+                <div class="subscription-box">
+                    <div class="sub-info">
+                        <div class="sub-label">Поточний план</div>
+                        <div id="subStatusText" class="sub-status">Базовий</div>
                     </div>
-                    <button id="upgradeBtn" class="btn-save" style="display: none;">Оновити до PRO</button>
+                    <button id="upgradeBtn" class="btn-action" style="display: none;">Оновити до PRO</button>
                 </div>
             </div>
 
             <div class="settings-card">
                 <h2><i class="fas fa-credit-card"></i> Платіжні картки</h2>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Прив'язані картки для швидкої оплати підписки або музики.</p>
+                <p class="cards-desc">Прив'язані картки використовуються для швидкої оплати музичних треків та подовження підписки на генератор.</p>
                 
                 <div id="cardsList">
-                    <p style="font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 15px;" id="noCardsMsg">У вас ще немає доданих карток.</p>
+                    <div class="card-item">
+                        <div class="card-info">
+                            <i class="fab fa-cc-mastercard"></i>
+                            <span class="card-number">**** **** **** 1234</span>
+                        </div>
+                        <button class="btn-remove-card" title="Видалити картку" onclick="alert('Ця функція наразі працює в тестовому режимі.')"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
-                <button class="btn-add-card" onclick="alert('Інтеграція з платіжним шлюзом (напр. LiqPay або Mono) у процесі розробки.')">+ Додати нову картку</button>
+                <button class="btn-add-card" onclick="alert('Інтеграція з платіжним шлюзом у процесі розробки.')">+ Додати нову картку</button>
             </div>
 
             <div class="settings-card">
                 <h2><i class="fas fa-lock"></i> Безпека та Дані</h2>
+                <p class="cards-desc" style="font-size: 0.8rem; margin-bottom: 15px;">* Якщо ви авторизувалися через Google, зміна пароля тут не вплине на ваш обліковий запис Google.</p>
                 <div class="form-group">
                     <label>Новий пароль</label>
                     <input type="password" placeholder="Введіть новий пароль">
@@ -155,25 +200,26 @@
                     <label>Підтвердження пароля</label>
                     <input type="password" placeholder="Повторіть новий пароль">
                 </div>
-                <button class="btn-save" onclick="alert('Дані успішно оновлено!')">Зберегти зміни</button>
+                <button class="btn-action" style="width: 100%; border-radius: 10px;" onclick="alert('Дані успішно оновлено!')">Зберегти зміни</button>
             </div>
 
         </main>
     </div>
 
     <script>
+        // Перевірка авторизації
         let currentUser = null;
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
 
-        // Якщо не авторизований - викидаємо на логін
+        // Якщо користувач не авторизований - повертаємо на сторінку входу
         if (!currentUser) {
             window.location.href = "login.html";
         } else {
-            // Заповнюємо дані
+            // Заповнення даних профілю
             document.getElementById('userEmail').innerText = currentUser.email;
             document.getElementById('userInitial').innerText = currentUser.email.charAt(0).toUpperCase();
 
-            // Перевірка підписки (можна додати перевірку токена з URL як у генераторі, якщо потрібно)
+            // Перевірка статусу підписки
             if (currentUser.status === 'premium') {
                 document.getElementById('userRole').innerText = "Premium Користувач";
                 const subText = document.getElementById('subStatusText');
@@ -181,13 +227,26 @@
                 subText.style.color = "var(--accent)";
             } else {
                 document.getElementById('upgradeBtn').style.display = 'block';
-                document.getElementById('upgradeBtn').onclick = () => window.location.href = "generator.html"; // Перекидаємо в генератор для оплати
+                document.getElementById('upgradeBtn').onclick = () => window.location.href = "generator.html"; 
             }
         }
 
+        // Логіка виходу з інтеграцією скидання Google-сесії
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('hz_user');
-            window.location.href = "index.html"; // На головну
+            if(confirm("Ви дійсно хочете вийти з акаунта?")) {
+                // Видаляємо дані з пам'яті сайту
+                localStorage.removeItem('hz_user');
+                
+                // Вимикаємо авто-логін Гугла (щоб він не пустив одразу назад)
+                try {
+                    google.accounts.id.disableAutoSelect();
+                } catch(e) {
+                    console.log("Google session error", e);
+                }
+                
+                // Перекидаємо на головну
+                window.location.href = "index.html"; 
+            }
         });
     </script>
 </body>
