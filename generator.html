@@ -266,6 +266,7 @@
         </div>
 
         <div class="top-right">
+            <a href="login.html" id="authBtn" class="btn-profile" style="border-color: var(--accent);"><i class="fas fa-sign-in-alt"></i> Увійти</a>
             <a href="profile.html" id="userProfileBtn" class="btn-profile" style="display: none;"><i class="fas fa-user"></i> Кабінет</a>
             
             <button id="sidebarSubscribeBtn" class="btn-premium" style="display: none;"><i class="fas fa-crown"></i> PRO Доступ</button>
@@ -696,7 +697,7 @@
             }
         });
 
-        // ПЕРЕВІРКА АВТОРИЗАЦІЇ (КНОПКА КАБІНЕТУ)
+        // ПЕРЕВІРКА АВТОРИЗАЦІЇ (КНОПКА КАБІНЕТУ ТА ВХОДУ)
         let currentUser = null;
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
         
@@ -705,12 +706,15 @@
         if (currentUser && currentUser.status === 'premium') { isSubscribed = true; }
 
         const userProfileBtn = document.getElementById('userProfileBtn');
+        const authBtn = document.getElementById('authBtn');
         const sidebarSubscribeBtn = document.getElementById('sidebarSubscribeBtn');
 
         if (currentUser) {
-            userProfileBtn.style.display = 'inline-flex'; // Показуємо кнопку
+            userProfileBtn.style.display = 'inline-flex';
+            if (authBtn) authBtn.style.display = 'none';
         } else {
             userProfileBtn.style.display = 'none';
+            if (authBtn) authBtn.style.display = 'inline-flex';
         }
 
         if (!isSubscribed) { sidebarSubscribeBtn.style.display = 'flex'; }
@@ -1449,10 +1453,8 @@
 
             downloadVideoBtn.style.display = 'none'; 
             isGenerating = true; isCancelled = false; chunks = [];
-            
             let mimeType = ''; let fileExt = 'webm'; let useWebmFix = true;
 
-            // ЖОРСТКИЙ ФІКС: Більше ніяких спроб записувати MP4, який ламає звук
             if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) { 
                 mimeType = 'video/webm;codecs=vp9,opus'; 
             } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) { 
@@ -1469,13 +1471,11 @@
             const audioStream = mediaDest.stream;
             const canvasStream = canvas.captureStream(30); 
             const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
-            
             const options = { 
                 mimeType: mimeType, 
                 videoBitsPerSecond: 8000000,
-                audioBitsPerSecond: 128000 // Гарантуємо якість звуку
+                audioBitsPerSecond: 128000
             };
-            
             mediaRecorder = new MediaRecorder(combinedStream, options);
             
             mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) { chunks.push(e.data); } };

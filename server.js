@@ -19,7 +19,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_URL;
+const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_URL; // Твій скрипт, який керує і юзерами, і музикою на G-Drive
 
 async function sendTelegramMessage(text) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
@@ -32,56 +32,45 @@ async function sendTelegramMessage(text) {
     } catch (e) {}
 }
 
-// === ПОСИЛЕНЕ ЛОГУВАННЯ ДЛЯ РЕЄСТРАЦІЇ ===
+// === РЕЄСТРАЦІЯ ТА ЛОГІН (ЧЕРЕЗ APPS SCRIPT) ===
 app.post('/api/register', async (req, res) => {
     try { 
-        console.log("=== СПРОБА РЕЄСТРАЦІЇ ===");
-        console.log("URL Таблиці (має бути не undefined):", GOOGLE_SHEETS_URL ? "Встановлено" : "ВІДСУТНІЙ!");
-        console.log("Дані користувача:", req.body);
-        
-        if (!GOOGLE_SHEETS_URL) throw new Error("GOOGLE_SHEETS_URL не налаштовано на сервері Render!");
-
-        const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'register', ...req.body }, {
-            headers: { 'Content-Type': 'application/json' }
-        }); 
-        console.log("Відповідь від Google Sheets:", response.data);
+        if (!GOOGLE_SHEETS_URL) throw new Error("GOOGLE_SHEETS_URL не налаштовано!");
+        const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'register', ...req.body }); 
         res.json(response.data); 
     } 
-    catch (e) { 
-        console.error("Помилка реєстрації:", e.response ? e.response.data : e.message);
-        res.status(500).json({ error: "Помилка реєстрації", details: e.message }); 
-    }
+    catch (e) { res.status(500).json({ error: "Помилка реєстрації" }); }
 });
 
-// === ПОСИЛЕНЕ ЛОГУВАННЯ ДЛЯ ЛОГІНУ ===
 app.post('/api/login', async (req, res) => {
     try { 
-        console.log("=== СПРОБА ЛОГІНУ ===");
-        console.log("URL Таблиці (має бути не undefined):", GOOGLE_SHEETS_URL ? "Встановлено" : "ВІДСУТНІЙ!");
-        console.log("Дані для входу:", req.body.email);
-
-        if (!GOOGLE_SHEETS_URL) throw new Error("GOOGLE_SHEETS_URL не налаштовано на сервері Render!");
-
-        const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'login', ...req.body }, {
-            headers: { 'Content-Type': 'application/json' }
-        }); 
-        console.log("Відповідь від Google Sheets:", response.data);
+        if (!GOOGLE_SHEETS_URL) throw new Error("GOOGLE_SHEETS_URL не налаштовано!");
+        const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'login', ...req.body }); 
         res.json(response.data); 
     } 
-    catch (e) { 
-        console.error("Помилка входу:", e.response ? e.response.data : e.message);
-        res.status(500).json({ error: "Помилка входу", details: e.message }); 
+    catch (e) { res.status(500).json({ error: "Помилка входу" }); }
+});
+
+// === ЗАВАНТАЖЕННЯ ПІСЕНЬ З GOOGLE DRIVE ===
+app.get('/api/music', async (req, res) => {
+    try {
+        if (!GOOGLE_SHEETS_URL) throw new Error("GOOGLE_SHEETS_URL не налаштовано!");
+        
+        // Звертаємось до Apps Script, щоб він віддав список треків з Google Drive
+        const response = await axios.get(`${GOOGLE_SHEETS_URL}?action=getMusic`);
+        res.json(response.data);
+    } catch (error) {
+        console.error("Помилка завантаження пісень з Apps Script:", error.message);
+        res.status(500).json({ error: "Не вдалося завантажити музику з Google Drive." });
     }
 });
 
 // === ОПЛАТА ПІДПИСКИ PRO (39 грн) ===
 app.post('/api/pay-subscription', async (req, res) => {
     try {
-        const { email, amount } = req.body;
-        const finalAmount = amount || 3900; 
-
+        const { email } = req.body;
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: finalAmount,
+            amount: 3900, 
             ccy: 980,
             merchantPaymInfo: { 
                 destination: "Підписка Hertz Spectrum PRO (39 грн / 5 днів)", 
@@ -92,13 +81,10 @@ app.post('/api/pay-subscription', async (req, res) => {
         }, { headers: { 'X-Token': MONO_TOKEN } });
         
         res.json({ url: monoRes.data.pageUrl, pageUrl: monoRes.data.pageUrl });
-    } catch (error) { 
-        console.error("Помилка підписки:", error.message);
-        res.status(500).json({ error: "Помилка створення платежу" }); 
-    }
+    } catch (error) { res.status(500).json({ error: "Помилка створення платежу" }); }
 });
 
-// === ОПЛАТА ОКРЕМОГО ТРЕКУ З MUSIC.HTML (37.36 грн) ===
+// === ОПЛАТА ОКРЕМОГО ТРЕКУ (37.36 грн) ===
 app.post('/api/pay', async (req, res) => {
     try {
         const { songId, songName } = req.body;
@@ -114,12 +100,10 @@ app.post('/api/pay', async (req, res) => {
         }, { headers: { 'X-Token': MONO_TOKEN } });
         
         res.json({ url: monoRes.data.pageUrl });
-    } catch (error) { 
-        console.error("Помилка покупки пісні:", error.message);
-        res.status(500).json({ error: "Помилка створення платежу" }); 
-    }
+    } catch (error) { res.status(500).json({ error: "Помилка створення платежу" }); }
 });
 
+// === ВЕБХУК МОНОБАНКУ ===
 app.post('/api/webhook', async (req, res) => {
     try {
         const { invoiceId, status, reference } = req.body;
@@ -131,25 +115,9 @@ app.post('/api/webhook', async (req, res) => {
     } catch (e) { res.status(500).send("Webhook Error"); }
 });
 
-// === ОТРИМАННЯ СПИСКУ ПІСЕНЬ ДЛЯ MUSIC.HTML ===
-app.get('/api/music', async (req, res) => {
-    try {
-        if (fs.existsSync('music.json')) {
-            const musicData = JSON.parse(fs.readFileSync('music.json', 'utf8'));
-            res.json(musicData);
-        } else {
-            res.json([]);
-        }
-    } catch (error) {
-        console.error("Помилка списку пісень:", error.message);
-        res.status(500).json({ error: "Помилка завантаження пісень" });
-    }
-});
-
 // === ГЕНЕРАЦІЯ ОБКЛАДИНКИ ===
 app.post('/api/generate-image', async (req, res) => {
     try {
-        console.log("\n=== ПОЧАТОК ГЕНЕРАЦІЇ ОБКЛАДИНКИ ===");
         const { lyrics, format, customPrompt } = req.body;
         let width = 1080, height = 1920;
         if (format === 'horizontal') { width = 1920; height = 1080; }
@@ -176,7 +144,6 @@ app.post('/api/generate-image', async (req, res) => {
                     finalPrompt = groqRes.data.choices[0].message.content.trim();
                 }
             } catch (e) {
-                console.error("Помилка Groq LLaMA:", e.message);
                 finalPrompt = "Beautiful atmospheric cinematic background, spring vibes.";
             }
         }
@@ -192,7 +159,7 @@ app.post('/api/generate-image', async (req, res) => {
     }
 });
 
-// СТУДІЙНИЙ ФІЛЬТР ДЛЯ ВИДІЛЕННЯ ГОЛОСУ
+// === СТУДІЙНИЙ ФІЛЬТР ЗВУКУ (ДЛЯ ШІ) ===
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
         ffmpeg(inputPath)

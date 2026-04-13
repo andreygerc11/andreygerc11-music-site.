@@ -71,7 +71,6 @@
         }
         .btn-back:hover, .btn-generator:hover { background: var(--accent); }
         
-        /* КНОПКА КАБІНЕТУ */
         .btn-profile { border-color: #555; display: none; }
         .btn-profile:hover { background: #333; border-color: #fff; }
 
@@ -322,6 +321,7 @@
         <a href="https://chat.whatsapp.com/EQJv9AjMfOTBBjccFFlYnM" target="_blank" class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Чат WhatsApp</a>
         <a href="https://www.youtube.com/@golosprotyrakuppua" target="_blank" class="btn-youtube"><i class="fab fa-youtube"></i> YouTube Канал</a>
         
+        <a href="login.html" id="authBtn" class="btn-profile" style="border-color: var(--accent);"><i class="fas fa-sign-in-alt"></i> Увійти</a>
         <a href="profile.html" id="userProfileBtn" class="btn-profile"><i class="fas fa-user"></i> Кабінет</a>
     </div>
     <h1>Музична Сповідь</h1>
@@ -391,12 +391,16 @@
 </footer>
 
 <script>
-    // ПЕРЕВІРКА АВТОРИЗАЦІЇ (КНОПКА КАБІНЕТУ)
+    // ПЕРЕВІРКА АВТОРИЗАЦІЇ (КНОПКИ ВХОДУ ТА КАБІНЕТУ)
     let currentUser = null;
     try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
     
     if (currentUser) {
         document.getElementById('userProfileBtn').style.display = 'inline-flex';
+        document.getElementById('authBtn').style.display = 'none';
+    } else {
+        document.getElementById('userProfileBtn').style.display = 'none';
+        document.getElementById('authBtn').style.display = 'inline-flex';
     }
 
     const apiURL = "https://andreygerc11-music-site.onrender.com/api/music";
