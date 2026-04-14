@@ -408,6 +408,9 @@
                     <div class="control-group" style="margin-top: 15px;">
                         <label>Ваш Логотип (Будь-який розмір)</label>
                         <input type="file" id="logoUpload" accept="image/*">
+                        <button id="removeLogoBtn" class="btn-outline" style="margin-top: 8px; color: #ff4d4d; border-color: #ff4d4d; display: none;">
+                            <i class="fas fa-trash"></i> Видалити лого
+                        </button>
                     </div>
                     <div class="control-group" style="margin-top: 5px;">
                         <div class="slider-flex"><label>Масштаб Логотипу</label></div>
@@ -500,6 +503,7 @@
             if (!audioCtx) drawPreviewFrame();
         });
 
+        const removeLogoBtn = document.getElementById('removeLogoBtn');
         document.getElementById('logoUpload').addEventListener('change', function(e) {
             if (e.target.files[0]) { 
                 const img = new Image(); 
@@ -515,10 +519,19 @@
                     }
                     logoState.x = 0;
                     logoState.y = 0; 
+                    removeLogoBtn.style.display = 'flex'; // Показуємо кнопку видалення
                     drawPreviewFrame(); 
                 }; 
                 img.src = URL.createObjectURL(e.target.files[0]); 
             }
+        });
+
+        // Логіка видалення логотипу
+        removeLogoBtn.addEventListener('click', () => {
+            logoImage = null;
+            document.getElementById('logoUpload').value = '';
+            removeLogoBtn.style.display = 'none';
+            if (!audioCtx) drawPreviewFrame();
         });
 
         let spectrumState = {
@@ -697,7 +710,6 @@
             }
         });
 
-        // ПЕРЕВІРКА АВТОРИЗАЦІЇ (КНОПКИ ВХОДУ ТА КАБІНЕТУ)
         let currentUser = null;
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
         
@@ -1327,9 +1339,12 @@
             else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength); 
             else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
 
+            // ТУТ ВАШЕ ЛОГО І МАТЕМАТИКА ПУЛЬСАЦІЇ
             if (logoImage) {
-                const drawW = logoState.width * logoState.scale;
-                const drawH = logoState.height * logoState.scale;
+                // Додаємо пульсацію в залежності від басу
+                const logoPulse = 1 + (avgBass / 255) * 0.15;
+                const drawW = logoState.width * logoState.scale * logoPulse;
+                const drawH = logoState.height * logoState.scale * logoPulse;
                 ctx.drawImage(logoImage, logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH);
             }
             ctx.restore();
@@ -1455,23 +1470,26 @@
             isGenerating = true; isCancelled = false; chunks = [];
 
             // ==========================================
-            // ПЕРЕВІРКА MP4 ТА WEBM (САМЕ ЦЕЙ БЛОК БУВ СТАРИМ)
+            // ВИПРАВЛЕНИЙ БЛОК: ПРІОРИТЕТ WebM
+            // Це вирішує проблему з відсутністю звуку і перемоткою
             // ==========================================
-            let mimeType = 'video/webm';
+            let mimeType = '';
             let fileExt = 'webm';
             let useWebmFix = true;
 
-            // Якщо браузер (Safari/iPhone) підтримує MP4 напряму
-            if (MediaRecorder.isTypeSupported('video/mp4')) {
+            // Пріоритет #1: WebM (Chrome, Edge, Firefox, Android)
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
+                mimeType = 'video/webm;codecs=vp9,opus';
+            } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
+                mimeType = 'video/webm;codecs=vp8,opus';
+            } else if (MediaRecorder.isTypeSupported('video/webm')) {
+                mimeType = 'video/webm';
+            }
+            // Пріоритет #2: MP4 (ТІЛЬКИ ДЛЯ Safari / iOS, де WebM взагалі не працює)
+            else if (MediaRecorder.isTypeSupported('video/mp4')) {
                 mimeType = 'video/mp4';
                 fileExt = 'mp4';
-                useWebmFix = false; // MP4 не потрібно "лікувати"
-            } 
-            // Якщо браузер (Chrome) підтримує тільки WebM
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) { 
-                mimeType = 'video/webm;codecs=vp9,opus'; 
-            } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) { 
-                mimeType = 'video/webm;codecs=vp8,opus'; 
+                useWebmFix = false; // Для MP4 лікування не працює
             }
 
             generateVideoBtn.style.display = 'none'; stopRenderBtn.style.display = 'block';
@@ -1520,7 +1538,7 @@
                     stopRenderBtn.style.display = 'none'; downloadVideoBtn.style.display = 'block';
                     downloadVideoBtn.onclick = () => {
                         const a = document.createElement('a'); a.style.display = 'none'; a.href = generatedVideoUrl; 
-                        a.download = `${outputFileName}.${fileExt}`; // ТУТ ВКАЗУЄТЬСЯ .mp4 або .webm
+                        a.download = `${outputFileName}.${fileExt}`;
                         document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); }, 100);
                     };
                     
@@ -1529,7 +1547,7 @@
                     if (backgroundVideo) backgroundVideo.pause();
                 };
 
-                // Якщо це WebM - лікуємо. Якщо MP4 - віддаємо напряму.
+                // Лікуємо WebM для повзунка перемотки
                 if (useWebmFix) { 
                     ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) { finalizeAndDownload(fixedBlob); });
                 } else { 
