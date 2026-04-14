@@ -40,32 +40,43 @@ async function sendTelegramMessage(text) {
     }
 }
 
+// === ІНТЕГРАЦІЯ З GOOGLE SHEETS (ВИПРАВЛЕНО РЕДИРЕКТ) ===
+async function sendToGoogle(data) {
+    const response = await fetch(GOOGLE_SHEETS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        redirect: 'follow' 
+    });
+
+    if (!response.ok) throw new Error(`Google Script повернув статус: ${response.status}`);
+
+    const textResponse = await response.text();
+    try {
+        return JSON.parse(textResponse);
+    } catch (e) {
+        console.error("Помилка парсингу від Гугла:", textResponse);
+        throw new Error("Невідомий формат відповіді від сервера бази даних");
+    }
+}
+
 // === РЕЄСТРАЦІЯ ТА ЛОГІН ===
 app.post('/api/register', async (req, res) => {
-    try { 
-        const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'register', ...req.body }); 
-        res.json(response.data); 
-    } catch (e) { res.status(500).json({ error: "Помилка реєстрації" }); }
+    try { res.json(await sendToGoogle({ action: 'register', ...req.body })); } 
+    catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/login', async (req, res) => {
-    try { 
-        const response = await axios.post(GOOGLE_SHEETS_URL, { action: 'login', ...req.body }); 
-        res.json(response.data); 
-    } catch (e) { res.status(500).json({ error: "Помилка входу" }); }
+    try { res.json(await sendToGoogle({ action: 'login', ...req.body })); } 
+    catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // === АВТОРИЗАЦІЯ ЧЕРЕЗ GOOGLE ===
 app.post('/api/social-auth', async (req, res) => {
     try { 
-        const response = await axios.post(GOOGLE_SHEETS_URL, { 
-            action: 'social_auth', 
-            email: req.body.email,
-            name: req.body.name 
-        }); 
-        res.json(response.data); 
+        res.json(await sendToGoogle({ action: 'social_auth', email: req.body.email, name: req.body.name })); 
     } catch (e) { 
-        res.status(500).json({ error: "Помилка соціальної авторизації" }); 
+        res.status(500).json({ error: e.message }); 
     }
 });
 
@@ -96,7 +107,7 @@ app.get('/api/music', async (req, res) => {
     }
 });
 
-// === СТРІМІНГ АУДІО (ОБХІД БЛОКУВАННЯ GOOGLE) ===
+// === СТРІМІНГ АУДІО ===
 app.get('/api/stream/:fileId', async (req, res) => {
     try {
         if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
@@ -117,7 +128,7 @@ app.get('/api/stream/:fileId', async (req, res) => {
     }
 });
 
-// === ОПЛАТИ ===
+// === ОПЛАТИ (MONOBANK) ===
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         const { email } = req.body;
@@ -150,14 +161,14 @@ app.post('/api/webhook', async (req, res) => {
     try {
         const { invoiceId, status, reference } = req.body;
         if (status === 'success') {
-            await axios.post(GOOGLE_SHEETS_URL, { action: 'update_sub', invoiceId, status });
+            await sendToGoogle({ action: 'update_sub', invoiceId, status });
             await sendTelegramMessage(`🔥 <b>Нова оплата!</b>\nРеференс: ${reference}`);
         }
         res.status(200).send("OK");
     } catch (e) { res.status(500).send("Error"); }
 });
 
-// === WHISPER ТА ГЕНЕРАТОР ===
+// === WHISPER (GROQ) ===
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
         ffmpeg(inputPath)
@@ -182,20 +193,23 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         res.json({ lrc: response.data.text }); 
     } catch (error) { res.status(500).json({ error: "Whisper Error" }); }
     finally { 
-        // ОСЬ ТУТ БУЛА ПОМИЛКА, ВИПРАВЛЕНО:
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         if (compressedPath && fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
     }
 });
 
+// === ГЕНЕРАТОР ОБКЛАДИНОК (ВИПРАВЛЕНО КЕШ / СИД) ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, customPrompt } = req.body;
-        const prompt = customPrompt || lyrics || "Cinematic background";
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1920&nologo=true`;
+        const prompt = customPrompt || lyrics || "Cinematic abstract music background";
+        
+        const randomSeed = Math.floor(Math.random() * 10000000);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1920&nologo=true&seed=${randomSeed}`;
+        
         res.json({ imageUrl });
     } catch (error) { res.status(500).send("Error"); }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => { console.log(`Порт: ${PORT}`); });
