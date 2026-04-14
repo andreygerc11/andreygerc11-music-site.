@@ -13,7 +13,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Обмеження на завантаження файлів до 50МБ і тимчасова папка
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
 // === ЗМІННІ З RENDER ===
@@ -47,7 +46,7 @@ async function sendToGoogle(data) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-        redirect: 'follow' // Вирішує проблему з "undefined" при редиректах Гугла
+        redirect: 'follow'
     });
 
     if (!response.ok) throw new Error(`Google Script повернув статус: ${response.status}`);
@@ -208,31 +207,57 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
-// === ГЕНЕРАТОР ОБКЛАДИНОК (ВИПРАВЛЕНО КОМБІНУВАННЯ ТЕКСТУ) ===
+// === ГЕНЕРАТОР ОБКЛАДИНОК (ПОВНИЙ ШІ-ПЕРЕКЛАД) ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, customPrompt } = req.body;
         
-        let finalPrompt = "Cinematic abstract music background";
-        
-        // 1. Беремо тільки перші 400 символів пісні
-        const shortLyrics = lyrics ? lyrics.substring(0, 400) : "";
-
-        // 2. ПРАВИЛЬНО об'єднуємо твій опис і текст пісні
-        if (customPrompt && shortLyrics) {
-            finalPrompt = `masterpiece, highly detailed, ${customPrompt}. Visual mood inspired by song lyrics: ${shortLyrics}`;
+        let textToTranslate = "";
+        if (customPrompt && lyrics) {
+            textToTranslate = `Опис від користувача: ${customPrompt}. Атмосфера з тексту пісні: ${lyrics.substring(0, 500)}`;
         } else if (customPrompt) {
-            finalPrompt = `masterpiece, highly detailed music cover, ${customPrompt}`;
-        } else if (shortLyrics) {
-            finalPrompt = `Cinematic music album cover, highly detailed, inspired by these lyrics: ${shortLyrics}`;
+            textToTranslate = `Опис від користувача: ${customPrompt}`;
+        } else if (lyrics) {
+            textToTranslate = `Атмосфера з тексту пісні: ${lyrics.substring(0, 600)}`;
+        } else {
+            textToTranslate = "Cinematic abstract music background";
         }
 
-        // 3. Збиваємо кеш, щоб картинка завжди була новою
+        let finalPrompt = "masterpiece, highly detailed music album cover";
+
+        if (textToTranslate !== "Cinematic abstract music background") {
+            try {
+                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                    model: "llama3-8b-8192", 
+                    messages: [
+                        { 
+                            role: "system", 
+                            content: "You are a professional prompt engineer for an AI image generator. Translate the user's request into a highly descriptive visual prompt in English. Maximum 40 words. Focus on visual details, lighting, and mood. Output ONLY the English prompt." 
+                        },
+                        { 
+                            role: "user", 
+                            content: textToTranslate 
+                        }
+                    ]
+                }, {
+                    headers: { 
+                        'Authorization': `Bearer ${GROQ_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                finalPrompt = groqRes.data.choices[0].message.content.trim();
+                console.log("Groq згенерував англійський промпт:", finalPrompt);
+            } catch (groqError) {
+                console.error("Помилка Groq (Переклад):", groqError.message);
+                finalPrompt = "masterpiece, highly detailed music album cover, cinematic lighting"; 
+            }
+        } else {
+            finalPrompt = textToTranslate;
+        }
+
         const randomSeed = Math.floor(Math.random() * 10000000);
-        
-        // Формуємо запит
         const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1080&height=1920&nologo=true&seed=${randomSeed}`;
-        
         res.json({ imageUrl });
     } catch (error) { 
         console.error("Image Error:", error);
@@ -240,7 +265,7 @@ app.post('/api/generate-image', async (req, res) => {
     }
 });
 
-// === ЗАПУСК СЕРВЕРА (ОСЬ ЦІ РЯДКИ ТИ ВИПАДКОВО ВИДАЛИВ!) ===
+// === ЗАПУСК СЕРВЕРА ===
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Сервер успішно запущено на порту ${PORT}`);
