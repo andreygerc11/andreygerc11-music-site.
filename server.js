@@ -207,7 +207,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
-// === ГЕНЕРАТОР ОБКЛАДИНОК (ПОВНИЙ ШІ-ПЕРЕКЛАД GROQ) ===
+// === ГЕНЕРАТОР ОБКЛАДИНОК (ВИПРАВЛЕНО GROQ ТА ДОДАНО ЛОГУВАННЯ) ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, customPrompt } = req.body;
@@ -227,19 +227,21 @@ app.post('/api/generate-image', async (req, res) => {
 
         if (textToTranslate !== "Cinematic abstract music background") {
             try {
-                // Відправляємо текст у GROQ для перекладу на правильну англійську
+                // Відправляємо в GROQ (з оновленою моделлю та потрібними параметрами)
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: "llama3-8b-8192", 
+                    model: "llama-3.1-8b-instant", // Стабільна, найновіша модель
                     messages: [
                         { 
                             role: "system", 
-                            content: "You are a professional prompt engineer for an AI image generator. Translate the user's request into a highly descriptive visual prompt in English. Maximum 70 words. Focus on visual details, objects, and mood. Output ONLY the English prompt." 
+                            content: "You are a professional prompt engineer for an AI image generator. Translate the user's request into a highly descriptive visual prompt in English. Maximum 40 words. Focus on visual details, objects, and mood. Output ONLY the English prompt." 
                         },
                         { 
                             role: "user", 
-                            content: textToTranslate 
+                            content: String(textToTranslate) 
                         }
-                    ]
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 150
                 }, {
                     headers: { 
                         'Authorization': `Bearer ${GROQ_API_KEY}`,
@@ -250,7 +252,8 @@ app.post('/api/generate-image', async (req, res) => {
                 finalPrompt = groqRes.data.choices[0].message.content.trim();
                 console.log("Groq згенерував англійський промпт:", finalPrompt);
             } catch (groqError) {
-                console.error("Помилка Groq (Переклад):", groqError.message);
+                // Тепер ми будемо бачити ТОЧНУ причину помилки в логах Render
+                console.error("Помилка Groq (Деталі):", groqError.response?.data || groqError.message);
                 finalPrompt = "masterpiece, highly detailed music album cover, cinematic lighting"; 
             }
         } else {
