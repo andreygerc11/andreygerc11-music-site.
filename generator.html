@@ -1516,7 +1516,7 @@
                 }
             };
 
-            mediaRecorder.onstop = () => {
+mediaRecorder.onstop = () => {
                 clearInterval(checkProgressInterval); timerWorker.postMessage('stop'); drawAnimationId = requestAnimationFrame(draw);
                 if (isCancelled) {
                     isGenerating = false; generateVideoBtn.style.display = 'flex'; stopRenderBtn.style.display = 'none';
@@ -1527,9 +1527,10 @@
                 }
 
                 const rawBlob = new Blob(chunks, { type: mimeType });
-                const durationMs = audioPlayer.duration * 1000;
+                // Округлюємо час до цілого числа, щоб скрипт не зависав!
+                const durationMs = Math.floor(audioPlayer.duration * 1000); 
                 
-                generateStatus.innerText = 'Обробляємо файл...';
+                generateStatus.innerText = 'Збереження файлу...';
                 
                 const finalizeAndDownload = (finalBlob) => {
                     if (generatedVideoUrl) { URL.revokeObjectURL(generatedVideoUrl); }
@@ -1547,9 +1548,24 @@
                     if (backgroundVideo) backgroundVideo.pause();
                 };
 
-                // Лікуємо WebM для повзунка перемотки
-                if (useWebmFix) { 
-                    ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) { finalizeAndDownload(fixedBlob); });
+                // Безвідмовний блок лікування відео із запобіжником
+                if (useWebmFix && typeof ysFixWebmDuration !== 'undefined') { 
+                    try {
+                        ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) { 
+                            finalizeAndDownload(fixedBlob); 
+                        });
+                        
+                        // Запобіжник: якщо скрипт завис, через 3 секунди примусово видаємо кнопку!
+                        setTimeout(() => {
+                            if (isGenerating) {
+                                console.warn("Лікування тривалості зависло. Віддаємо сирий файл.");
+                                finalizeAndDownload(rawBlob);
+                            }
+                        }, 3000);
+                    } catch (e) {
+                        console.error("Помилка скрипта WebM:", e);
+                        finalizeAndDownload(rawBlob); 
+                    }
                 } else { 
                     finalizeAndDownload(rawBlob); 
                 }
