@@ -198,18 +198,37 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
-// === ГЕНЕРАТОР ОБКЛАДИНОК (ВИПРАВЛЕНО КЕШ / СИД) ===
+// === ГЕНЕРАТОР ОБКЛАДИНОК (ВИПРАВЛЕНО КОМБІНУВАННЯ ТЕКСТУ) ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, customPrompt } = req.body;
-        const prompt = customPrompt || lyrics || "Cinematic abstract music background";
         
+        let finalPrompt = "Cinematic abstract music background";
+        
+        // 1. Беремо тільки перші 400 символів пісні, щоб не "задушити" генератор довгим текстом
+        const shortLyrics = lyrics ? lyrics.substring(0, 400) : "";
+
+        // 2. ПРАВИЛЬНО об'єднуємо твій опис і текст пісні (щоб нічого не втрачалось)
+        if (customPrompt && shortLyrics) {
+            // Якщо є і опис, і текст
+            finalPrompt = `masterpiece, highly detailed, ${customPrompt}. Visual mood inspired by song lyrics: ${shortLyrics}`;
+        } else if (customPrompt) {
+            // Якщо є тільки твій опис
+            finalPrompt = `masterpiece, highly detailed music cover, ${customPrompt}`;
+        } else if (shortLyrics) {
+            // Якщо є тільки текст пісні
+            finalPrompt = `Cinematic music album cover, highly detailed, inspired by these lyrics: ${shortLyrics}`;
+        }
+
+        // 3. Збиваємо кеш, щоб картинка завжди була новою
         const randomSeed = Math.floor(Math.random() * 10000000);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1080&height=1920&nologo=true&seed=${randomSeed}`;
+        
+        // Формуємо запит
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1080&height=1920&nologo=true&seed=${randomSeed}`;
         
         res.json({ imageUrl });
-    } catch (error) { res.status(500).send("Error"); }
+    } catch (error) { 
+        console.error("Image Error:", error);
+        res.status(500).send("Помилка генерації зображення"); 
+    }
 });
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => { console.log(`Порт: ${PORT}`); });
