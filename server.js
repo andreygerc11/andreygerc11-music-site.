@@ -13,9 +13,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Обмеження на завантаження файлів до 50МБ і тимчасова папка
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
-// Змінні з Render
+// === ЗМІННІ З RENDER ===
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const BOT_TOKEN = process.env.BOT_TOKEN; 
@@ -23,7 +24,7 @@ const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_URL;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "ТВІЙ_ID_ЯКЩО_НЕ_ДОДАВ_У_RENDER";
 
-// Твої ID папок
+// === ТВОЇ ID ПАПОК GOOGLE DRIVE ===
 const PREVIEW_FOLDER_ID = "1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S"; 
 const FULL_FOLDER_ID = "1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j";
 
@@ -40,13 +41,13 @@ async function sendTelegramMessage(text) {
     }
 }
 
-// === ІНТЕГРАЦІЯ З GOOGLE SHEETS (ВИПРАВЛЕНО РЕДИРЕКТ) ===
+// === ІНТЕГРАЦІЯ З GOOGLE SHEETS ===
 async function sendToGoogle(data) {
     const response = await fetch(GOOGLE_SHEETS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-        redirect: 'follow' 
+        redirect: 'follow' // Вирішує проблему з "undefined" при редиректах Гугла
     });
 
     if (!response.ok) throw new Error(`Google Script повернув статус: ${response.status}`);
@@ -71,16 +72,12 @@ app.post('/api/login', async (req, res) => {
     catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// === АВТОРИЗАЦІЯ ЧЕРЕЗ GOOGLE ===
 app.post('/api/social-auth', async (req, res) => {
-    try { 
-        res.json(await sendToGoogle({ action: 'social_auth', email: req.body.email, name: req.body.name })); 
-    } catch (e) { 
-        res.status(500).json({ error: e.message }); 
-    }
+    try { res.json(await sendToGoogle({ action: 'social_auth', email: req.body.email, name: req.body.name })); } 
+    catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// === ОТРИМАННЯ СПИСКУ ПІСЕНЬ ===
+// === ОТРИМАННЯ СПИСКУ ПІСЕНЬ ТА ПІДПИСОК ===
 app.get('/api/music', async (req, res) => {
     try {
         if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
@@ -105,6 +102,19 @@ app.get('/api/music', async (req, res) => {
         console.error("Помилка завантаження списку:", error.message);
         res.status(500).json({ error: "Не вдалося завантажити музику" });
     }
+});
+
+app.post('/api/subscriptions', async (req, res) => {
+    try { res.json(await sendToGoogle({ action: 'new_sub', ...req.body })); } 
+    catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+app.get('/api/subscriptions', async (req, res) => {
+    try {
+        const response = await fetch(`${GOOGLE_SHEETS_URL}?action=getSubs`, { redirect: 'follow' });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 // === СТРІМІНГ АУДІО ===
@@ -205,18 +215,15 @@ app.post('/api/generate-image', async (req, res) => {
         
         let finalPrompt = "Cinematic abstract music background";
         
-        // 1. Беремо тільки перші 400 символів пісні, щоб не "задушити" генератор довгим текстом
+        // 1. Беремо тільки перші 400 символів пісні
         const shortLyrics = lyrics ? lyrics.substring(0, 400) : "";
 
-        // 2. ПРАВИЛЬНО об'єднуємо твій опис і текст пісні (щоб нічого не втрачалось)
+        // 2. ПРАВИЛЬНО об'єднуємо твій опис і текст пісні
         if (customPrompt && shortLyrics) {
-            // Якщо є і опис, і текст
             finalPrompt = `masterpiece, highly detailed, ${customPrompt}. Visual mood inspired by song lyrics: ${shortLyrics}`;
         } else if (customPrompt) {
-            // Якщо є тільки твій опис
             finalPrompt = `masterpiece, highly detailed music cover, ${customPrompt}`;
         } else if (shortLyrics) {
-            // Якщо є тільки текст пісні
             finalPrompt = `Cinematic music album cover, highly detailed, inspired by these lyrics: ${shortLyrics}`;
         }
 
@@ -231,4 +238,10 @@ app.post('/api/generate-image', async (req, res) => {
         console.error("Image Error:", error);
         res.status(500).send("Помилка генерації зображення"); 
     }
+});
+
+// === ЗАПУСК СЕРВЕРА (ОСЬ ЦІ РЯДКИ ТИ ВИПАДКОВО ВИДАЛИВ!) ===
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+    console.log(`Сервер успішно запущено на порту ${PORT}`);
 });
