@@ -207,18 +207,18 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
-// === ГЕНЕРАТОР ОБКЛАДИНОК (ПОВНИЙ ШІ-ПЕРЕКЛАД) ===
+// === ГЕНЕРАТОР ОБКЛАДИНОК (ПОВНИЙ ШІ-ПЕРЕКЛАД GROQ) ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, customPrompt } = req.body;
         
         let textToTranslate = "";
         if (customPrompt && lyrics) {
-            textToTranslate = `Опис від користувача: ${customPrompt}. Атмосфера з тексту пісні: ${lyrics.substring(0, 500)}`;
+            textToTranslate = `Опис: ${customPrompt}. Атмосфера пісні: ${lyrics.substring(0, 500)}`;
         } else if (customPrompt) {
-            textToTranslate = `Опис від користувача: ${customPrompt}`;
+            textToTranslate = `Опис: ${customPrompt}`;
         } else if (lyrics) {
-            textToTranslate = `Атмосфера з тексту пісні: ${lyrics.substring(0, 600)}`;
+            textToTranslate = `Атмосфера пісні: ${lyrics.substring(0, 600)}`;
         } else {
             textToTranslate = "Cinematic abstract music background";
         }
@@ -227,12 +227,13 @@ app.post('/api/generate-image', async (req, res) => {
 
         if (textToTranslate !== "Cinematic abstract music background") {
             try {
+                // Відправляємо текст у GROQ для перекладу на правильну англійську
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama3-8b-8192", 
                     messages: [
                         { 
                             role: "system", 
-                            content: "You are a professional prompt engineer for an AI image generator. Translate the user's request into a highly descriptive visual prompt in English. Maximum 40 words. Focus on visual details, lighting, and mood. Output ONLY the English prompt." 
+                            content: "You are a professional prompt engineer for an AI image generator. Translate the user's request into a highly descriptive visual prompt in English. Maximum 70 words. Focus on visual details, objects, and mood. Output ONLY the English prompt." 
                         },
                         { 
                             role: "user", 
