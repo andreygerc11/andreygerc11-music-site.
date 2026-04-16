@@ -207,10 +207,11 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
-// === ГЕНЕРАТОР ОБКЛАДИНОК (ВИПРАВЛЕНО GROQ ТА ДОДАНО ЛОГУВАННЯ) ===
+// === ГЕНЕРАТОР ОБКЛАДИНОК (ШІ-ПЕРЕКЛАД + ДИНАМІЧНИЙ РОЗМІР) ===
 app.post('/api/generate-image', async (req, res) => {
     try {
-        const { lyrics, customPrompt } = req.body;
+        // ДОДАНО format для отримання формату з фронтенду
+        const { lyrics, customPrompt, format } = req.body;
         
         let textToTranslate = "";
         if (customPrompt && lyrics) {
@@ -227,9 +228,8 @@ app.post('/api/generate-image', async (req, res) => {
 
         if (textToTranslate !== "Cinematic abstract music background") {
             try {
-                // Відправляємо в GROQ (з оновленою моделлю та потрібними параметрами)
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: "llama-3.1-8b-instant", // Стабільна, найновіша модель
+                    model: "llama-3.1-8b-instant",
                     messages: [
                         { 
                             role: "system", 
@@ -252,7 +252,6 @@ app.post('/api/generate-image', async (req, res) => {
                 finalPrompt = groqRes.data.choices[0].message.content.trim();
                 console.log("Groq згенерував англійський промпт:", finalPrompt);
             } catch (groqError) {
-                // Тепер ми будемо бачити ТОЧНУ причину помилки в логах Render
                 console.error("Помилка Groq (Деталі):", groqError.response?.data || groqError.message);
                 finalPrompt = "masterpiece, highly detailed music album cover, cinematic lighting"; 
             }
@@ -260,8 +259,28 @@ app.post('/api/generate-image', async (req, res) => {
             finalPrompt = textToTranslate;
         }
 
+        // === ЛОГІКА ДИНАМІЧНОГО РОЗМІРУ (БЕЗ РОЗТЯГУВАННЯ) ===
+        let imgWidth = 1080;
+        let imgHeight = 1920; // За замовчуванням TikTok / Vertical
+        
+        if (format === 'horizontal') {
+            imgWidth = 1920;
+            imgHeight = 1080; // YouTube / Facebook
+        } else if (format === 'square') {
+            imgWidth = 1080;
+            imgHeight = 1080; // Instagram Post
+        } else if (format === 'portrait') {
+            imgWidth = 1080;
+            imgHeight = 1350; // Instagram Portrait
+        } else if (format === 'cinema') {
+            imgWidth = 2560;
+            imgHeight = 1080; // Ultra Wide
+        }
+
         const randomSeed = Math.floor(Math.random() * 10000000);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1080&height=1920&nologo=true&seed=${randomSeed}`;
+        
+        // Використовуємо imgWidth та imgHeight у посиланні
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${imgWidth}&height=${imgHeight}&nologo=true&seed=${randomSeed}`;
         res.json({ imageUrl });
     } catch (error) { 
         console.error("Image Error:", error);
