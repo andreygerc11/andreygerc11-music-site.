@@ -37,7 +37,32 @@
             color: #fff; 
             line-height: 1.7; 
             overflow-x: hidden; 
+            position: relative;
         }
+
+        /* === АНІМОВАНИЙ ФОН === */
+        .animated-background {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0;
+            overflow: hidden; pointer-events: none; background: radial-gradient(circle at center, #111 0%, #0a0a0b 100%);
+        }
+        .bg-text-container {
+            position: absolute; top: -20%; left: -10%; width: 120vw; height: 140vh;
+            display: flex; flex-direction: column; justify-content: space-evenly;
+            transform: rotate(-10deg);
+        }
+        .bg-text-row {
+            font-size: 3.5vw; font-weight: 900; white-space: nowrap;
+            color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.04);
+            text-transform: uppercase; letter-spacing: 5px;
+        }
+        .row-1, .row-3 { animation: scrollLeft 90s linear infinite; }
+        .row-2, .row-4 { animation: scrollRight 90s linear infinite; }
+        
+        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+        /* Захист контенту */
+        .header-nav, .article-hero, main, footer { position: relative; z-index: 2; }
 
         /* Навігація */
         .header-nav { 
@@ -60,20 +85,18 @@
 
         /* Шапка статті */
         .article-hero {
-            margin-top: 70px;
+            margin-top: 60px;
             height: 50vh;
             min-height: 400px;
-            /* Третє фото для фону */
-            background: linear-gradient(to bottom, rgba(10, 10, 11, 0.4), var(--dark)), url('article_support.png') center/cover;
+            /* ТУТ ІНША КАРТИНКА */
+            background: linear-gradient(to bottom, rgba(10, 10, 11, 0.4), rgba(10, 10, 11, 0.9)), url('article_support.png') center/cover;
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
             padding: 40px 20px;
             text-align: center;
         }
-        .article-hero-content {
-            max-width: 800px;
-        }
+        .article-hero-content { max-width: 800px; margin-top: 40px; }
         .article-tag {
             background: var(--accent); color: white; padding: 6px 15px; border-radius: 50px;
             font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
@@ -83,13 +106,19 @@
             font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; line-height: 1.2; margin-bottom: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.8);
         }
 
-        /* Тіло статті */
+        /* Тіло статті (Ефект скла) */
         .article-body {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 60px 20px;
+            max-width: 900px;
+            margin: -60px auto 60px;
+            padding: 60px 50px;
+            background: rgba(20, 20, 23, 0.85); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
             font-size: 1.1rem;
             color: #ddd;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
         .article-body p { margin-bottom: 25px; text-align: justify; }
         .article-body h2 { color: #fff; font-size: 1.8rem; margin: 40px 0 20px; font-weight: 700; border-left: 4px solid var(--accent); padding-left: 15px; text-transform: none; text-align: left; }
@@ -97,25 +126,20 @@
         .article-body ul { margin-bottom: 30px; padding-left: 20px; list-style: none; }
         .article-body ul li { margin-bottom: 15px; position: relative; padding-left: 30px; }
         .article-body ul li::before {
-            content: "\f0a9"; /* FontAwesome arrow */
+            content: "\f0a9"; 
             font-family: "Font Awesome 6 Free"; font-weight: 900;
             position: absolute; left: 0; color: var(--accent);
         }
 
         .important-box {
-            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 30px; border-radius: 15px; margin: 40px 0; border-left: 4px solid var(--accent);
+            background: rgba(255, 77, 77, 0.05); border: 1px solid rgba(255, 77, 77, 0.2);
+            padding: 30px; border-radius: 15px; margin: 40px 0;
         }
-        .important-box h3 { color: #fff; margin-bottom: 15px; font-size: 1.3rem; }
+        .important-box h3 { color: var(--accent); margin-bottom: 15px; font-size: 1.3rem; }
         .important-box p:last-child { margin-bottom: 0; }
-        
-        .quote-block {
-            font-style: italic; color: #fff; padding: 20px 30px; border-left: 4px solid var(--accent);
-            margin: 35px 0; background: rgba(255, 77, 77, 0.05); border-radius: 0 15px 15px 0; font-size: 1.2rem;
-        }
 
         /* Футер */
-        footer { text-align: center; padding: 40px 20px; background: #0a0a0b; border-top: 1px solid rgba(255,255,255,0.05); }
+        footer { text-align: center; padding: 40px 20px; background: rgba(10, 10, 11, 0.95); border-top: 1px solid rgba(255,255,255,0.05); }
         .footer-logo { font-weight: 900; font-size: 1.1rem; text-transform: uppercase; margin-bottom: 10px; display: block; text-decoration: none; color: #fff;}
         .footer-logo span { color: var(--accent); }
         footer p { color: #666; font-size: 0.8rem; }
@@ -129,9 +153,23 @@
         }
         .share-btn:hover { background: var(--accent); border-color: var(--accent); }
 
+        @media (max-width: 768px) {
+            .article-body { margin: -30px 15px 40px; padding: 40px 25px; border-radius: 16px; }
+            .bg-text-row { font-size: 8vw; }
+        }
+
     </style>
 </head>
 <body>
+
+<div class="animated-background">
+    <div class="bg-text-container">
+        <div class="bg-text-row row-1">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-2">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-3">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-4">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+    </div>
+</div>
 
 <nav class="header-nav">
     <div class="nav-container">
@@ -148,35 +186,23 @@
 </header>
 
 <main class="article-body">
-    <p data-aos="fade-up">Рак — це війна на два фронти. Один фронт — медичний, де працюють лікарі, протоколи, крапельниці та ліки. Але є й другий фронт — внутрішній. Психологічний стан людини, яка почула діагноз "онкологія", зазнає колосального удару. І дуже часто саме ця, невидима битва виявляється найвиснажливішою.</p>
+    <p data-aos="fade-up">Рак вражає не лише тіло, а й душу. Звістка про діагноз часто стає більшим шоком, ніж перші етапи лікування. Світ ніби перевертається з ніг на голову, і здається, що ти залишився сам на сам зі своїм страхом. Але це не так.</p>
 
-    <p data-aos="fade-up">Як військовий, я звик бути сильним. Звик тримати удар, вирішувати проблеми і бути опорою для інших. Але хвороба не питає про твоє звання чи витримку. Вона приходить і вибиває ґрунт з-під ніг. У цій статті я хочу поділитися думками про те, чому просити про допомогу — це не слабкість, а стратегія виживання.</p>
+    <h2 data-aos="fade-up">Де брати сили, коли хочеться здатися?</h2>
+    <p data-aos="fade-up">Кожна людина реагує на хворобу по-своєму: хтось закривається в собі, хтось відчуває гнів, хтось — розпач. Усе це абсолютно нормальні реакції. Важливо не намагатися "задушити" ці емоції, а дозволити собі їх прожити. Але не залишайтеся в них назавжди.</p>
 
-    <h2 data-aos="fade-up">Право на слабкість</h2>
-    <p data-aos="fade-up">Перше, що потрібно зробити після встановлення діагнозу, — дати собі право на емоції. Це нормально — відчувати страх, злість, відчай або несправедливість. Суспільство часто нав'язує хворим образ "позитивного борця", який має завжди посміхатися і казати, що все добре. Але постійне приховування своїх справжніх емоцій забирає ту енергію, яка потрібна для одужання.</p>
-
-    <div class="quote-block" data-aos="fade-up">
-        "Дозвольте собі іноді опустити руки, щоб потім знову їх підняти. Зламатися на день чи два — нормально. Головне — не залишатися в цьому стані назавжди."
-    </div>
-
-    <h2 data-aos="fade-up">Мистецтво приймати допомогу</h2>
-    <p data-aos="fade-up">Найскладнішим для мене було навчитися приймати допомогу. Нам здається, що ми стаємо тягарем для родини та друзів. Але правда полягає в іншому: ваші близькі теж налякані, і можливість допомогти вам — це єдиний спосіб для них відчути, що вони контролюють ситуацію.</p>
-    
     <ul data-aos="fade-up">
-        <li><strong>Говоріть прямо.</strong> Близькі не вміють читати думки. Якщо вам хочеться побути на самоті — скажіть про це. Якщо страшно і хочеться, щоб просто посиділи поруч — попросіть.</li>
-        <li><strong>Розподіляйте задачі.</strong> Хтось може допомогти з пошуком ліків, хтось — відвезти в лікарню, а хтось — просто відволікти розмовою. Дайте людям можливість бути корисними.</li>
-        <li><strong>Не ізолюйте себе.</strong> Рак любить самотність. Хвороба нашіптує, що вас ніхто не розуміє. Не піддавайтеся цьому. Спілкування — це місток до нормального життя.</li>
+        <li><strong>Спілкуйтеся з тими, хто вас розуміє.</strong> Групи підтримки, форуми чи просто розмова з людиною, яка пройшла схожий шлях, часто діють краще за заспокійливі. Вони доводять головне: цей шлях можна пройти.</li>
+        <li><strong>Дозвольте іншим допомогти.</strong> Ми часто відштовхуємо близьких, бо не хочемо бути для них тягарем. Але вашим рідним так само важко, і допомога вам — це їхній спосіб впоратися зі своїм безсиллям. Приймайте цю допомогу з вдячністю.</li>
+        <li><strong>Знайдіть свій "якір".</strong> Для мене таким якорем стала моя родина, служба та творчість. Знайдіть те, що змушує вас щоранку підніматися з ліжка: улюблена справа, плани на майбутнє чи просто бажання побачити, як ростуть діти.</li>
     </ul>
 
-    <h2 data-aos="fade-up">Сила творчості та мети</h2>
-    <p data-aos="fade-up">У моєму випадку рятівним колом стала музика. Проєкт «Голос проти раку» народився з потреби вилити свій біль і перетворити його на щось значуще. Коли у вас є мета, яка виходить за межі лікарняної палати, мозок починає працювати інакше. Знайдіть свою точку опори: це може бути творчість, ведення щоденника, волонтерство або навіть просто планування життя після Перемоги над хворобою.</p>
-
     <div class="important-box" data-aos="fade-up">
-        <h3>Не соромтеся професійної допомоги</h3>
-        <p>Фаховий онкопсихолог — це такий самий важливий лікар у вашій команді, як і гематолог чи хіміотерапевт. Працювати зі спеціалістом — це не визнання того, що ви "не справляєтесь". Це залучення ще одного потужного інструменту для вашого одужання. Психолог допоможе розплутати клубок страхів і знайти ресурс для подальшої боротьби.</p>
+        <h3>Професійна допомога — це не слабкість</h3>
+        <p>Звернення до онкопсихолога — це такий самий етап лікування, як крапельниця чи таблетки. Фахівець допоможе розплутати клубок думок, навчить технікам зниження тривожності і поверне контроль над власним життям.</p>
     </div>
 
-    <p data-aos="fade-up">Шлях до одужання — це марафон, а не спринт. Зберігайте свої сили, спирайтеся на близьких і пам'ятайте: надія — це теж ліки. І вони завжди у ваших руках.</p>
+    <p data-aos="fade-up">Я знаю, як важко буває зібратися з думками після чергового важкого дня. Але пам'ятайте: кожен пройдений день — це ще один крок до перемоги. Тримайтеся за своїх близьких і пам'ятайте: надія — це теж ліки. І вони завжди у ваших руках.</p>
 
     <div class="share-section" data-aos="fade-up">
         <p style="margin-bottom: 15px; color: #aaa;">Якщо ці слова відгукнулися вам, поділіться статтею з тими, кому зараз потрібна підтримка:</p>
@@ -201,7 +227,7 @@
         navigator.clipboard.writeText(url).then(() => {
             const btn = document.querySelector('.share-btn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check"></i> Посилання скопійовано!';
+            btn.innerHTML = '<i class=\"fas fa-check\"></i> Посилання скопійовано!';
             btn.style.background = '#4CAF50';
             btn.style.borderColor = '#4CAF50';
             

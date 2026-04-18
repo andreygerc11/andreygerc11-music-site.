@@ -37,7 +37,32 @@
             color: #fff; 
             line-height: 1.7; 
             overflow-x: hidden; 
+            position: relative;
         }
+
+        /* === АНІМОВАНИЙ ФОН === */
+        .animated-background {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0;
+            overflow: hidden; pointer-events: none; background: radial-gradient(circle at center, #111 0%, #0a0a0b 100%);
+        }
+        .bg-text-container {
+            position: absolute; top: -20%; left: -10%; width: 120vw; height: 140vh;
+            display: flex; flex-direction: column; justify-content: space-evenly;
+            transform: rotate(-10deg);
+        }
+        .bg-text-row {
+            font-size: 3.5vw; font-weight: 900; white-space: nowrap;
+            color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.04);
+            text-transform: uppercase; letter-spacing: 5px;
+        }
+        .row-1, .row-3 { animation: scrollLeft 90s linear infinite; }
+        .row-2, .row-4 { animation: scrollRight 90s linear infinite; }
+        
+        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+        /* Захист контенту (щоб він був поверх фону) */
+        .header-nav, .article-hero, main, footer { position: relative; z-index: 2; }
 
         /* Навігація */
         .header-nav { 
@@ -60,19 +85,17 @@
 
         /* Шапка статті */
         .article-hero {
-            margin-top: 70px;
+            margin-top: 60px;
             height: 50vh;
             min-height: 400px;
-            background: linear-gradient(to bottom, rgba(10, 10, 11, 0.3), var(--dark)), url('article_cells.png') center/cover;
+            background: linear-gradient(to bottom, rgba(10, 10, 11, 0.4), rgba(10, 10, 11, 0.9)), url('article_cells.png') center/cover;
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
             padding: 40px 20px;
             text-align: center;
         }
-        .article-hero-content {
-            max-width: 800px;
-        }
+        .article-hero-content { max-width: 800px; margin-top: 40px; }
         .article-tag {
             background: var(--accent); color: white; padding: 6px 15px; border-radius: 50px;
             font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
@@ -82,13 +105,19 @@
             font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; line-height: 1.2; margin-bottom: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.8);
         }
 
-        /* Тіло статті */
+        /* Тіло статті (Ефект скла) */
         .article-body {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 60px 20px;
+            max-width: 900px;
+            margin: -60px auto 60px; /* Трохи наїжджає на картинку зверху */
+            padding: 60px 50px;
+            background: rgba(20, 20, 23, 0.85); /* Напівпрозорий фон */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
             font-size: 1.1rem;
             color: #ddd;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
         .article-body p { margin-bottom: 25px; text-align: justify; }
         .article-body h2 { color: #fff; font-size: 1.8rem; margin: 40px 0 20px; font-weight: 700; border-left: 4px solid var(--accent); padding-left: 15px; text-transform: none; text-align: left; }
@@ -96,7 +125,7 @@
         .article-body ul { margin-bottom: 30px; padding-left: 20px; list-style: none; }
         .article-body ul li { margin-bottom: 15px; position: relative; padding-left: 30px; }
         .article-body ul li::before {
-            content: "\f0a9"; /* FontAwesome arrow */
+            content: "\f0a9"; 
             font-family: "Font Awesome 6 Free"; font-weight: 900;
             position: absolute; left: 0; color: var(--accent);
         }
@@ -109,12 +138,12 @@
         .important-box p:last-child { margin-bottom: 0; }
 
         /* Футер */
-        footer { text-align: center; padding: 40px 20px; background: #0a0a0b; border-top: 1px solid rgba(255,255,255,0.05); }
+        footer { text-align: center; padding: 40px 20px; background: rgba(10, 10, 11, 0.95); border-top: 1px solid rgba(255,255,255,0.05); }
         .footer-logo { font-weight: 900; font-size: 1.1rem; text-transform: uppercase; margin-bottom: 10px; display: block; text-decoration: none; color: #fff;}
         .footer-logo span { color: var(--accent); }
         footer p { color: #666; font-size: 0.8rem; }
         
-        /* Кнопка "Поділитися" в кінці статті */
+        /* Кнопка "Поділитися" */
         .share-section { text-align: center; margin-top: 50px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.05); }
         .share-btn {
             background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);
@@ -123,9 +152,23 @@
         }
         .share-btn:hover { background: var(--accent); border-color: var(--accent); }
 
+        @media (max-width: 768px) {
+            .article-body { margin: -30px 15px 40px; padding: 40px 25px; border-radius: 16px; }
+            .bg-text-row { font-size: 8vw; }
+        }
+
     </style>
 </head>
 <body>
+
+<div class="animated-background">
+    <div class="bg-text-container">
+        <div class="bg-text-row row-1">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-2">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-3">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-4">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+    </div>
+</div>
 
 <nav class="header-nav">
     <div class="nav-container">
