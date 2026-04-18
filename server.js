@@ -25,8 +25,16 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 // === ГЛОБАЛЬНІ ЗМІННІ ===
 let aiBlogPosts = [];
 
-// === 1. ЛОГІКА РОБОТИ З GITHUB АРХІВОМ ===
+// === КОЛЕКЦІЯ РЕЗЕРВНИХ HD-ФОТО (Якщо ШІ не встигне) ===
+const hdMedicalImages = [
+    "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=1200&auto=format&fit=crop", 
+    "https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=1200&auto=format&fit=crop", 
+    "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?q=80&w=1200&auto=format&fit=crop", 
+    "https://images.unsplash.com/photo-1576086213369-97a306d36557?q=80&w=1200&auto=format&fit=crop", 
+    "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?q=80&w=1200&auto=format&fit=crop"
+];
 
+// === 1. ЛОГІКА РОБОТИ З GITHUB АРХІВОМ ===
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
@@ -51,7 +59,8 @@ async function saveBlogToGitHub() {
             sha = getRes.data.sha;
         } catch (e) {}
 
-        const contentEncoded = Buffer.from(JSON.stringify(aiBlogPosts, null, 2)).toString('base64');
+        // ДОДАНО 'utf8' для правильного збереження українських літер
+        const contentEncoded = Buffer.from(JSON.stringify(aiBlogPosts, null, 2), 'utf8').toString('base64');
         const data = { message: "Автоматичне оновлення блогу ШІ", content: contentEncoded };
         if (sha) data.sha = sha;
 
@@ -63,7 +72,6 @@ async function saveBlogToGitHub() {
 }
 
 // === 2. АВТОМАТИЧНА ГЕНЕРАЦІЯ НОВИН (ШІ) ===
-
 const rssSources = [
     "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
     "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk",
@@ -76,13 +84,13 @@ const rssSources = [
 async function fetchAndRewriteNews() {
     if (!GROQ_API_KEY) return;
     try {
-        console.log("Шукаю нові медичні статті по всіх джерелах...");
+        console.log("Шукаю нові медичні статті...");
         const allSources = rssSources.sort(() => 0.5 - Math.random());
         let addedCount = 0;
 
         for (const rssUrl of allSources) {
             try {
-                const response = await axios.get(rssUrl);
+                const response = await axios.get(rssUrl, { timeout: 10000 }); // Захист від зависання джерела
                 const xml = response.data;
                 const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
                 if (!itemMatch) continue;
@@ -104,12 +112,19 @@ async function fetchAndRewriteNews() {
                     if (ytMatch) {
                         foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
                     } else {
+                        // === ЛОГІКА "ПРОГРІВУ" КАРТИНКИ ===
                         const seed = Math.floor(Math.random() * 1000000);
                         const prompt = encodeURIComponent("optimistic modern medical research laboratory abstract cinematic high quality photography");
                         foundImageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=800&nologo=true&seed=${seed}`;
                         
-                        console.log("⏳ Прогріваємо ШІ-картинку...");
-                        try { await axios.get(foundImageUrl, { timeout: 15000 }); } catch(e) {}
+                        console.log("⏳ Прогріваємо ШІ-картинку (до 15 сек)...");
+                        try { 
+                            await axios.get(foundImageUrl, { responseType: 'arraybuffer', timeout: 15000 }); 
+                            console.log("✅ Картинка готова!");
+                        } catch(e) {
+                            console.log("⚠️ ШІ не встиг. Ставимо резервне HD фото.");
+                            foundImageUrl = hdMedicalImages[Math.floor(Math.random() * hdMedicalImages.length)];
+                        }
                     }
 
                     console.log(`📝 Groq пише статтю: ${rawTitle}`);
@@ -132,7 +147,7 @@ async function fetchAndRewriteNews() {
                         videoUrl: foundVideoUrl
                     });
                     addedCount++;
-                    await new Promise(r => setTimeout(r, 12000));
+                    await new Promise(r => setTimeout(r, 10000));
                 }
             } catch (e) { console.error("Помилка джерела:", e.message); }
         }
@@ -144,34 +159,35 @@ async function fetchAndRewriteNews() {
 
 app.get('/api/blog', (req, res) => res.json(aiBlogPosts));
 
+// 👇 ТУТ МАЄ БУТИ ТВОЯ СТАРА ЛОГІКА ДЛЯ МУЗИКИ ТА РЕЄСТРАЦІЇ 👇
+
 app.post('/api/register', (req, res) => {
-    // Тут твоя логіка реєстрації (Google Sheets або База)
+    // Встав сюди свій оригінальний код реєстрації
     res.json({ success: true });
 });
 
 app.post('/api/login', (req, res) => {
-    // Тут твоя логіка входу
+    // Встав сюди свій оригінальний код входу
     res.json({ success: true });
 });
 
 app.get('/api/music', async (req, res) => {
-    // Тут твоя логіка отримання списку музики
+    // Встав сюди свій оригінальний код видачі списку пісень!!!
     res.json([]);
 });
 
 app.post('/api/pay', async (req, res) => {
-    // Тут твоя логіка Monobank
+    // Встав сюди логіку Monobank
     res.json({ url: "https://send.monobank.ua/..." });
 });
 
-// === 4. ЗАПУСК ТА ТАЙМЕРИ ===
+// 👆 ======================================================== 👆
 
+// === 4. ЗАПУСК ТА ТАЙМЕРИ ===
 const PORT = process.env.PORT || 10000;
 syncBlogFromGitHub().then(() => {
     app.listen(PORT, () => console.log(`Сервер працює на порту ${PORT}`));
     
-    // Запуск першої перевірки через 15 сек після старту
-    setTimeout(fetchAndRewriteNews, 15000);
-    // Далі - раз на 24 години
-    setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000);
+    setTimeout(fetchAndRewriteNews, 15000); // Перший запуск після старту
+    setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000); // Далі - раз на добу
 });
