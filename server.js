@@ -335,106 +335,129 @@ async function saveBlogToGitHub() {
 }
 
 const rssSources = [
-    // Текстові новини
+    // --- УКРАЇНСЬКІ ДЖЕРЕЛА ---
     "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
+    "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk",
+    
+    // --- НАУКОВІ АМЕРИКАНСЬКІ ТА БРИТАНСЬКІ ДЖЕРЕЛА ---
     "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en",
+    "https://news.google.com/rss/search?q=targeted+cancer+therapy&hl=en-US&gl=US&ceid=US:en",
     "https://medicalxpress.com/rss-feed/cancer-news/",
-    // ВІДЕО-НОВИНИ (YouTube RSS) - National Cancer Institute
+    "https://www.sciencedaily.com/rss/health_medicine/cancer.xml",
+    
+    // --- ВІДЕО-НОВИНИ (YouTube RSS) ---
     "https://www.youtube.com/feeds/videos.xml?channel_id=UC3S13n7_p_A7-HIt5f0-6Lg"
 ];
 
 async function fetchAndRewriteNews() {
     if (!GROQ_API_KEY) return;
     try {
-        console.log("Шукаю нові медичні статті для блогу...");
-        const rssUrl = rssSources[Math.floor(Math.random() * rssSources.length)];
-        const response = await axios.get(rssUrl);
-        const xml = response.data;
+        console.log("Шукаю нові медичні статті по ВСІХ 7 джерелах...");
 
-        // Пошук як для звичайних RSS (<item>), так і для YouTube (<entry>)
-        const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
-        if (!itemMatch) return;
+        // Беремо ВСІ джерела (лише злегка перемішуємо їх порядок, щоб новини на сайті чергувалися цікавіше)
+        const allSources = rssSources.sort(() => 0.5 - Math.random());
+        let addedCount = 0;
 
-        const itemXml = itemMatch[1];
-        
-        const titleMatch = itemXml.match(/<title>(.*?)<\/title>/);
-        const linkMatch = itemXml.match(/<link[^>]*href="([^"]+)"/) || itemXml.match(/<link>(.*?)<\/link>/);
-        const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\/pubDate>/) || itemXml.match(/<published>(.*?)<\/published>/);
+        for (const rssUrl of allSources) {
+            try {
+                const response = await axios.get(rssUrl);
+                const xml = response.data;
 
-        if (titleMatch && linkMatch) {
-            let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-            let sourceLink = linkMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-            let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
+                const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
+                if (!itemMatch) continue;
 
-            const isDuplicate = aiBlogPosts.some(post => post.originalTitle === rawTitle);
-            if (isDuplicate) {
-                console.log("Ця стаття вже є в архіві. Чекаю.");
-                return; 
-            }
+                const itemXml = itemMatch[1];
+                const titleMatch = itemXml.match(/<title>(.*?)<\/title>/);
+                const linkMatch = itemXml.match(/<link[^>]*href="([^"]+)"/) || itemXml.match(/<link>(.*?)<\/link>/);
+                const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\/pubDate>/) || itemXml.match(/<published>(.*?)<\/published>/);
 
-            // === ТОЧНИЙ ПОШУК YOUTUBE ВІДЕО ТА КАРТИНОК ===
-            let foundImageUrl = null;
-            let foundVideoUrl = null;
+                if (titleMatch && linkMatch) {
+                    let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
+                    let sourceLink = linkMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
+                    let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-            // Перевіряємо, чи це відео з YouTube
-            const ytMatch = itemXml.match(/<yt:videoId>(.*?)<\/yt:videoId>/i);
-            if (ytMatch) {
-                foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
-            } else {
-                // Якщо не YouTube, шукаємо звичайну картинку
-                const imgMatch = itemXml.match(/<(?:media:content|media:thumbnail|enclosure)[^>]+url="([^"]+)"/i) || itemXml.match(/<img[^>]+src="([^"]+)"/i);
-                if (imgMatch) foundImageUrl = imgMatch[1];
-            }
-
-            console.log("Відправляю Groq на переклад...");
-            
-            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                model: "llama-3.1-8b-instant",
-                messages: [
-                    { 
-                        role: "system", 
-                        content: "Ти — медичний журналіст-емпат. Твоє завдання: прочитати заголовок і суть новини (оригінал може бути АНГЛІЙСЬКОЮ або іншою мовою) і написати статтю-вижимку ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ для блогу підтримки онкохворих. Обсяг: 3-4 абзаци. Пиши зрозуміло, оптимістично, без складної термінології. Тільки текст статті, без заголовка." 
-                    },
-                    { 
-                        role: "user", 
-                        content: `Опрацюй і переклади цю новину/відео: "${rawTitle}"` 
+                    const isDuplicate = aiBlogPosts.some(post => post.originalTitle === rawTitle);
+                    if (isDuplicate) {
+                        console.log(`Новина "${rawTitle.substring(0,30)}..." вже є. Пропускаю.`);
+                        continue; 
                     }
-                ],
-                temperature: 0.6,
-                max_tokens: 700
-            }, {
-                headers: { 
-                    'Authorization': `Bearer ${GROQ_API_KEY}`,
-                    'Content-Type': 'application/json'
+
+                    let foundImageUrl = null;
+                    let foundVideoUrl = null;
+
+                    const ytMatch = itemXml.match(/<yt:videoId>(.*?)<\/yt:videoId>/i);
+                    if (ytMatch) {
+                        foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+                    } else {
+                        const imgMatch = itemXml.match(/<(?:media:content|media:thumbnail|enclosure)[^>]+url="([^"]+)"/i) || itemXml.match(/<img[^>]+src="([^"]+)"/i);
+                        if (imgMatch) foundImageUrl = imgMatch[1];
+                    }
+
+                    console.log(`Відправляю Groq завдання на ВЕЛИКУ статтю: "${rawTitle}"...`);
+                    
+                    const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                        model: "llama-3.1-8b-instant",
+                        messages: [
+                            { 
+                                role: "system", 
+                                content: "Ти — професійний медичний журналіст. Твоє завдання: написати розгорнуту, глибоку і зрозумілу статтю на основі новини ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Обсяг: 5-7 великих абзаців. Структура: Цікавий вступ, Детальний розбір теми (використовуй підзаголовки та списки для зручності), і Оптимістичний висновок для пацієнтів. Тільки текст статті." 
+                            },
+                            { 
+                                role: "user", 
+                                content: `Напиши велику, розгорнуту статтю про це: "${rawTitle}"` 
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 2000 
+                    }, {
+                        headers: { 
+                            'Authorization': `Bearer ${GROQ_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const rewrittenText = groqRes.data.choices[0].message.content.trim();
+                    let shortTitle = rawTitle.split(" - ")[0]; 
+
+                    const newPost = {
+                        id: Date.now() + Math.floor(Math.random() * 1000), 
+                        date: pubDate,
+                        originalTitle: rawTitle,
+                        title: shortTitle, 
+                        content: rewrittenText,
+                        sourceUrl: sourceLink,
+                        imageUrl: foundImageUrl, 
+                        videoUrl: foundVideoUrl  
+                    };
+
+                    aiBlogPosts.unshift(newPost);
+                    addedCount++;
+
+                    // ПАУЗА 15 СЕКУНД: Надійний захист від блокування API
+                    console.log("ШІ відпочиває 15 секунд перед наступною статтею...");
+                    await new Promise(resolve => setTimeout(resolve, 15000));
                 }
-            });
-
-            const rewrittenText = groqRes.data.choices[0].message.content.trim();
-            let shortTitle = rawTitle.split(" - ")[0]; 
-
-            const newPost = {
-                id: Date.now(),
-                date: pubDate,
-                originalTitle: rawTitle,
-                title: "Медичні новини: " + shortTitle,
-                content: rewrittenText,
-                sourceUrl: sourceLink,
-                imageUrl: foundImageUrl, 
-                videoUrl: foundVideoUrl  
-            };
-
-            aiBlogPosts.unshift(newPost);
-            await saveBlogToGitHub();
-            console.log("✅ ШІ успішно написав статтю з медіа та відправив на GitHub!");
+            } catch (err) {
+                console.error("Помилка при читанні одного з джерел, пропускаємо...", err.message);
+            }
         }
+
+        if (addedCount > 0) {
+            await saveBlogToGitHub();
+            console.log(`✅ Успіх! Додано та збережено ${addedCount} нових ВЕЛИКИХ статей (Опрацьовано всі 7 джерел)!`);
+        } else {
+            console.log("Нових унікальних статей у джерелах сьогодні не знайдено.");
+        }
+
     } catch (error) {
-        console.error("Помилка генерації блогу:", error.message);
+        console.error("Помилка авто-блогу:", error.message);
     }
 }
 
 syncBlogFromGitHub().then(() => {
     setTimeout(fetchAndRewriteNews, 15000); 
-    setInterval(fetchAndRewriteNews, 8 * 60 * 60 * 1000);
+    // ТАЙМЕР: 1 раз на добу
+    setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000);
 });
 
 app.get('/api/blog', (req, res) => {
