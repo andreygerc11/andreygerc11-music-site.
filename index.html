@@ -41,14 +41,38 @@
             color: #fff; 
             line-height: 1.6; 
             overflow-x: hidden; 
+            position: relative;
         }
+
+        /* === АНІМОВАНИЙ ФОН (KINETIC TYPOGRAPHY) === */
+        .animated-background {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0;
+            overflow: hidden; pointer-events: none; background: radial-gradient(circle at center, #111 0%, #0a0a0b 100%);
+        }
+        .bg-text-container {
+            position: absolute; top: -20%; left: -10%; width: 120vw; height: 140vh;
+            display: flex; flex-direction: column; justify-content: space-evenly;
+            transform: rotate(-10deg);
+        }
+        .bg-text-row {
+            font-size: 3.5vw; font-weight: 900; white-space: nowrap;
+            color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.04);
+            text-transform: uppercase; letter-spacing: 5px;
+        }
+        .row-1, .row-3 { animation: scrollLeft 90s linear infinite; }
+        .row-2, .row-4 { animation: scrollRight 90s linear infinite; }
+        
+        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+        /* Захист контенту (щоб він був поверх фону) */
+        .header-nav, .hero, main, footer, .support-widget { position: relative; z-index: 2; }
 
         /* Навігація */
         .header-nav { 
             position: fixed; top: 0; width: 100%; 
-            background: var(--glass); backdrop-filter: blur(10px);
-            z-index: 1000; padding: 15px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(10, 10, 11, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .nav-container { 
             max-width: 1200px; margin: 0 auto; padding: 0 20px; 
@@ -60,34 +84,24 @@
         .nav-links a { text-decoration: none; color: #ccc; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; transition: 0.3s; }
         .nav-links a:hover { color: #fff; }
 
-        /* Герой (Темний градієнт) */
+        /* Герой (Темний градієнт з напівпрозорістю) */
         .hero { 
             min-height: 100vh; height: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; 
-            background: radial-gradient(circle at center, #2a0a0a 0%, var(--dark) 70%);
-            padding: 100px 20px 80px; position: relative;
+            background: radial-gradient(circle at center, rgba(42, 10, 10, 0.7) 0%, transparent 70%);
+            padding: 100px 20px 80px;
         }
         
-        /* НОВИЙ СТИЛЬ ДЛЯ ШИРОКОГО БАНЕРА */
         .hero-banner {
-            width: 100%;
-            max-width: 1200px;
-            margin: 20px auto 40px auto;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.1);
+            width: 100%; max-width: 1200px; margin: 20px auto 40px auto;
+            border-radius: 20px; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);
         }
-        .hero-banner img {
-            width: 100%;
-            display: block;
-            object-fit: cover;
-        }
+        .hero-banner img { width: 100%; display: block; object-fit: cover; }
 
-        .hero-content { max-width: 900px; z-index: 2; width: 100%; }
+        .hero-content { max-width: 900px; width: 100%; }
         .hero h1 { 
             font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 900; text-transform: uppercase; 
-            line-height: 1.1; margin-bottom: 20px; color: #fff;
-            text-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
+            line-height: 1.1; margin-bottom: 20px; color: #fff; text-shadow: 0 0 30px rgba(255, 77, 77, 0.3);
         }
         .hero p { font-size: 1.15rem; color: #ccc; margin-bottom: 40px; max-width: 700px; margin-left: auto; margin-right: auto; }
         
@@ -97,21 +111,21 @@
             text-decoration: none; font-weight: 900; border-radius: 50px; 
             text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;
             transition: 0.3s ease; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); border: 2px solid var(--accent);
+            backdrop-filter: blur(5px);
         }
         .btn:hover { background: #fff; color: var(--accent); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(255, 77, 77, 0.5); }
-        .btn-outline { background: transparent; border: 2px solid #fff; box-shadow: none; }
+        .btn-outline { background: rgba(0,0,0,0.3); border: 2px solid #fff; box-shadow: none; }
         .btn-outline:hover { background: #fff; color: var(--dark); }
         
-        /* Кнопки соцмереж */
-        .btn-whatsapp { background: #25D366; border-color: #25D366; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
+        .btn-whatsapp { background: rgba(37, 211, 102, 0.8); border-color: #25D366; }
         .btn-whatsapp:hover { background: #fff; color: #25D366; }
-        .btn-youtube { background: #ff0000; border-color: #ff0000; box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4); }
+        .btn-youtube { background: rgba(255, 0, 0, 0.8); border-color: #ff0000; }
         .btn-youtube:hover { background: #fff; color: #ff0000; }
-        .btn-tiktok { background: #111111; border-color: #111111; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
+        .btn-tiktok { background: rgba(17, 17, 17, 0.8); border-color: #111111; }
         .btn-tiktok:hover { background: #fff; color: #111111; border-color: #fff; }
 
         /* Спільні стилі для секцій */
-        section { padding: 80px 20px; max-width: 1100px; margin: 0 auto; }
+        section { padding: 80px 20px; max-width: 1100px; margin: 0 auto; position: relative;}
         h2 { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; text-align: center; margin-bottom: 15px; color: #fff; }
         .section-desc { text-align: center; color: #aaa; max-width: 700px; margin: 0 auto 50px auto; font-size: 1rem;}
 
@@ -120,58 +134,41 @@
         .about-text p { margin-bottom: 15px; color: #ccc; text-align: justify; }
         .about-img { width: 100%; border-radius: 20px; border: 2px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
         
-        .info-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin-top: 15px; border-left: 3px solid var(--accent); }
+        .info-box { background: rgba(20, 20, 23, 0.6); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; margin-top: 15px; border-left: 3px solid var(--accent); }
         .info-box h4 { color: var(--accent); margin-bottom: 5px; font-size: 1.1rem; }
         .info-box p { font-size: 0.9rem; margin-bottom: 0; color: #bbb; text-align: left; }
         
-        .quote { font-style: italic; color: #fff; padding: 15px 20px; border-left: 3px solid var(--accent); margin: 25px 0; background: rgba(255, 77, 77, 0.05); border-radius: 0 10px 10px 0; }
+        .quote { font-style: italic; color: #fff; padding: 15px 20px; border-left: 3px solid var(--accent); margin: 25px 0; background: rgba(255, 77, 77, 0.05); border-radius: 0 10px 10px 0; backdrop-filter: blur(5px);}
 
         /* Блок статистики */
         .statistics-block {
-            margin-top: 50px;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            border-left: 4px solid var(--accent);
+            margin-top: 50px; padding: 30px; background: rgba(20, 20, 23, 0.6); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; border-left: 4px solid var(--accent);
         }
-        .statistics-block p {
-            font-size: 1rem;
-            color: #bbb;
-            text-align: justify;
-            margin-bottom: 0;
-            line-height: 1.8;
-        }
+        .statistics-block p { font-size: 1rem; color: #bbb; text-align: justify; margin-bottom: 0; line-height: 1.8; }
 
         /* Музика */
         .music-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
         .music-card { 
-            background: var(--card); padding: 30px; border-radius: 20px; text-align: center; 
-            border: 1px solid rgba(255,255,255,0.03); transition: 0.3s;
+            background: rgba(22, 22, 24, 0.7); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; text-align: center; 
+            border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;
         }
-        .music-card:hover { border-color: rgba(255, 77, 77, 0.2); transform: translateY(-5px); }
+        .music-card:hover { border-color: rgba(255, 77, 77, 0.3); transform: translateY(-5px); }
         .music-card h3 { font-size: 1.2rem; margin-bottom: 15px; color: #fff; }
         audio { width: 100%; outline: none; border-radius: 30px; }
 
         /* Генератор Відео */
         .generator-promo-box {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
+            background: rgba(20, 20, 23, 0.6); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 40px;
+            text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;
         }
 
         /* БЛОК СТАТЕЙ (ІНФОРМАЦІЙНИЙ ФРОНТ) */
         .articles-section { margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 40px; }
         .articles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-top: 30px; }
-        .article-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; overflow: hidden; transition: 0.4s ease; display: flex; flex-direction: column; }
-        .article-card:hover { transform: translateY(-10px); border-color: rgba(255, 77, 77, 0.4); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4); background: rgba(255, 255, 255, 0.05); }
+        .article-card { background: rgba(20, 20, 23, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; overflow: hidden; transition: 0.4s ease; display: flex; flex-direction: column; }
+        .article-card:hover { transform: translateY(-10px); border-color: rgba(255, 77, 77, 0.4); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4); }
         .article-img-wrapper { overflow: hidden; position: relative; height: 200px; background-color: #1a1a1c; }
         .article-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         .article-card:hover .article-image { transform: scale(1.08); }
@@ -186,22 +183,14 @@
         .support-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; text-align: center;}
         
         .support-card { 
-            background: rgba(255,255,255,0.03); 
-            padding: 25px 15px; 
-            border-radius: 20px; 
-            border: 1px solid rgba(255,255,255,0.05);
-            text-decoration: none; 
-            color: #fff;
-            display: block; 
-            transition: all 0.3s ease;
-            cursor: pointer;
+            background: rgba(20, 20, 23, 0.6); backdrop-filter: blur(10px);
+            padding: 25px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
+            text-decoration: none; color: #fff; display: block; transition: all 0.3s ease; cursor: pointer;
         }
         
         .support-card:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: var(--accent);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.1); border-color: var(--accent);
+            transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
 
         .support-card i { font-size: 2.5rem; margin-bottom: 15px; transition: 0.3s; }
@@ -213,7 +202,7 @@
         /* Віджет підтримки (Чат) */
         .support-widget {
             position: fixed; top: 50%; right: -320px; transform: translateY(-50%);
-            width: 320px; background: var(--glass); backdrop-filter: blur(20px);
+            width: 320px; background: rgba(10, 10, 11, 0.9); backdrop-filter: blur(20px);
             border: 1px solid var(--accent); border-right: none;
             border-radius: 20px 0 0 20px; padding: 25px;
             transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999;
@@ -250,7 +239,7 @@
         .gdpr-checkbox a { color: var(--accent); text-decoration: underline; }
 
         /* Футер */
-        footer { text-align: center; padding: 40px 20px; background: #0a0a0b; border-top: 1px solid rgba(255,255,255,0.05); }
+        footer { text-align: center; padding: 40px 20px; background: rgba(10, 10, 11, 0.95); border-top: 1px solid rgba(255,255,255,0.05); }
         .footer-logo { font-weight: 900; font-size: 1.1rem; text-transform: uppercase; margin-bottom: 10px; display: block; text-decoration: none; color: #fff;}
         .footer-logo span { color: var(--accent); }
         footer p { color: #666; font-size: 0.8rem; }
@@ -265,10 +254,20 @@
             .nav-links { display: none; }
             .btn-group { flex-direction: column; width: 100%; }
             .btn-group .btn { width: 100%; }
+            .bg-text-row { font-size: 8vw; }
         }
     </style>
 </head>
 <body>
+
+<div class="animated-background">
+    <div class="bg-text-container">
+        <div class="bg-text-row row-1">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-2">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-3">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-4">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+    </div>
+</div>
 
 <nav class="header-nav">
     <div class="nav-container">
