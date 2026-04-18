@@ -335,9 +335,12 @@ async function saveBlogToGitHub() {
 }
 
 const rssSources = [
+    // Текстові новини
     "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
     "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en",
-    "https://medicalxpress.com/rss-feed/cancer-news/"
+    "https://medicalxpress.com/rss-feed/cancer-news/",
+    // ВІДЕО-НОВИНИ (YouTube RSS) - National Cancer Institute
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UC3S13n7_p_A7-HIt5f0-6Lg"
 ];
 
 async function fetchAndRewriteNews() {
@@ -348,17 +351,19 @@ async function fetchAndRewriteNews() {
         const response = await axios.get(rssUrl);
         const xml = response.data;
 
-        const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
+        // Пошук як для звичайних RSS (<item>), так і для YouTube (<entry>)
+        const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
         if (!itemMatch) return;
 
         const itemXml = itemMatch[1];
+        
         const titleMatch = itemXml.match(/<title>(.*?)<\/title>/);
-        const linkMatch = itemXml.match(/<link>(.*?)<\/link>/);
-        const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\/pubDate>/);
+        const linkMatch = itemXml.match(/<link[^>]*href="([^"]+)"/) || itemXml.match(/<link>(.*?)<\/link>/);
+        const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\/pubDate>/) || itemXml.match(/<published>(.*?)<\/published>/);
 
         if (titleMatch && linkMatch) {
             let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-            let sourceLink = linkMatch[1];
+            let sourceLink = linkMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
             let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
             const isDuplicate = aiBlogPosts.some(post => post.originalTitle === rawTitle);
@@ -367,15 +372,19 @@ async function fetchAndRewriteNews() {
                 return; 
             }
 
-            // === НОВИЙ БЛОК: ШУКАЄМО КАРТИНКИ ТА ВІДЕО ===
+            // === ТОЧНИЙ ПОШУК YOUTUBE ВІДЕО ТА КАРТИНОК ===
             let foundImageUrl = null;
             let foundVideoUrl = null;
 
-            const imgMatch = itemXml.match(/<(?:media:content|media:thumbnail|enclosure)[^>]+url="([^"]+)"/i) || itemXml.match(/<img[^>]+src="([^"]+)"/i);
-            if (imgMatch) foundImageUrl = imgMatch[1];
-
-            const videoMatch = itemXml.match(/<iframe[^>]+src="([^"]+(?:youtube\.com|youtu\.be)\/[^"]+)"/i);
-            if (videoMatch) foundVideoUrl = videoMatch[1];
+            // Перевіряємо, чи це відео з YouTube
+            const ytMatch = itemXml.match(/<yt:videoId>(.*?)<\/yt:videoId>/i);
+            if (ytMatch) {
+                foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+            } else {
+                // Якщо не YouTube, шукаємо звичайну картинку
+                const imgMatch = itemXml.match(/<(?:media:content|media:thumbnail|enclosure)[^>]+url="([^"]+)"/i) || itemXml.match(/<img[^>]+src="([^"]+)"/i);
+                if (imgMatch) foundImageUrl = imgMatch[1];
+            }
 
             console.log("Відправляю Groq на переклад...");
             
@@ -388,7 +397,7 @@ async function fetchAndRewriteNews() {
                     },
                     { 
                         role: "user", 
-                        content: `Опрацюй і переклади цю новину: "${rawTitle}"` 
+                        content: `Опрацюй і переклади цю новину/відео: "${rawTitle}"` 
                     }
                 ],
                 temperature: 0.6,
@@ -410,8 +419,8 @@ async function fetchAndRewriteNews() {
                 title: "Медичні новини: " + shortTitle,
                 content: rewrittenText,
                 sourceUrl: sourceLink,
-                imageUrl: foundImageUrl, // Зберігаємо лінк на фото
-                videoUrl: foundVideoUrl  // Зберігаємо лінк на відео
+                imageUrl: foundImageUrl, 
+                videoUrl: foundVideoUrl  
             };
 
             aiBlogPosts.unshift(newPost);
