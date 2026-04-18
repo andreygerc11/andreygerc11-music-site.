@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DHLXH7C8QT"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DHLXH7C8QT');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Блог та Новини | Голос проти раку</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent: #ff4d4d;
+            --dark-bg: #0a0a0b;
+            --card-bg: #141417;
+            --text-main: #f0f0f0;
+            --text-muted: #a0a0a0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Шапка */
+        header {
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 11, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 900;
+            text-decoration: none;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .logo span { color: var(--accent); }
+
+        .btn-home {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-home:hover { color: var(--accent); }
+
+        /* Hero секція */
+        .blog-hero {
+            padding: 80px 5% 40px;
+            text-align: center;
+            background: linear-gradient(to bottom, rgba(255,77,77,0.05) 0%, transparent 100%);
+        }
+
+        .blog-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .blog-hero p {
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Контейнер для постів */
+        .blog-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 5%;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        /* Картка посту */
+        .post-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.4s translateY, 0.4s border-color;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .post-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255,77,77,0.3);
+        }
+
+        .post-content { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+
+        .post-date {
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .post-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .post-excerpt {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            white-space: pre-wrap; /* Щоб абзаци від ШІ зберігалися */
+        }
+
+        .post-link {
+            margin-top: auto;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+
+        .post-link:hover { gap: 12px; color: var(--accent); }
+        
+        .loader-text {
+            text-align: center;
+            grid-column: 1 / -1;
+            color: var(--text-muted);
+            padding: 40px;
+        }
+
+        /* Футер */
+        footer {
+            padding: 60px 5% 30px;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: 60px;
+        }
+
+        .footer-logo { margin-bottom: 15px; display: inline-block; }
+
+        footer p { color: var(--text-muted); font-size: 0.85rem; }
+
+        /* Адаптивність */
+        @media (max-width: 768px) {
+            .blog-hero h1 { font-size: 1.8rem; }
+            .blog-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="index.html" class="logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
+    <a href="index.html" class="btn-home"><i class="fas fa-arrow-left"></i> На головну</a>
+</header>
+
+<main>
+    <section class="blog-hero" data-aos="fade-up">
+        <h1>Блог та Новини</h1>
+        <p>Актуальні дослідження, новини онкології та історії, що надихають. Ми збираємо найважливіше, щоб ви залишалися проінформованими.</p>
+    </section>
+
+    <div class="blog-container" id="blog-posts">
+        <div class="loader-text"><i class="fas fa-spinner fa-spin"></i> Завантаження свіжих новин...</div>
+    </div>
+</main>
+
+<footer>
+    <a href="index.html" class="footer-logo logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
+    <p>© 2026 Андрій Герц. Слава Україні! 🇺🇦</p>
+</footer>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({ duration: 800, once: true });
+
+    // === ЛОГІКА ЗАВАНТАЖЕННЯ АВТО-БЛОГУ З СЕРВЕРА ===
+    async function fetchBlogPosts() {
+        const container = document.getElementById('blog-posts');
+        try {
+            // Звертаємося до твого бекенду на Render
+            const response = await fetch('https://andreygerc11-music-site.onrender.com/api/blog');
+            const posts = await response.json();
+
+            container.innerHTML = ''; // Очищаємо текст завантаження
+
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="loader-text">Сьогодні нових публікацій ще немає. ШІ збирає інформацію.</div>';
+                return;
+            }
+
+            // Малюємо картки для кожної новини
+            posts.forEach((post, index) => {
+                const delay = index * 100; // Анімація появи по черзі
+                const postHTML = `
+                    <article class="post-card" data-aos="fade-up" data-aos-delay="${delay}">
+                        <div class="post-content">
+                            <div class="post-date"><i class="far fa-calendar"></i> ${post.date}</div>
+                            <h2 class="post-title">${post.title}</h2>
+                            <p class="post-excerpt">${post.content}</p>
+                            <a href="${post.sourceUrl}" target="_blank" rel="nofollow" class="post-link">
+                                Читати першоджерело <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </article>
+                `;
+                container.innerHTML += postHTML;
+            });
+
+        } catch (error) {
+            console.error("Помилка завантаження блогу:", error);
+            container.innerHTML = '<div class="loader-text">Не вдалося завантажити новини. Перевірте з\'єднання з сервером.</div>';
+        }
+    }
+
+    // Запускаємо завантаження при відкритті сторінки
+    document.addEventListener('DOMContentLoaded', fetchBlogPosts);
+</script>
+
+</body>
+</html>
