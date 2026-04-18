@@ -3,6 +3,7 @@ const cors = require('cors');
 const axios = require('axios');
 const multer = require('multer');
 const fs = require('fs');
+const path = require('path');
 const FormData = require('form-data');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
@@ -13,28 +14,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
-
 // === ЗМІННІ З RENDER (СЕКРЕТИ) ===
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO; 
 const BOT_TOKEN = process.env.BOT_TOKEN; 
+const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_URL;
 
-// === ГЛОБАЛЬНІ ЗМІННІ ===
+// ВЧОРАШНІ ЗМІННІ ДЛЯ GOOGLE DRIVE
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
+const PREVIEW_FOLDER_ID = process.env.PREVIEW_FOLDER_ID; // ID папки з уривками
+const FULL_FOLDER_ID = process.env.FULL_FOLDER_ID;       // ID папки з повними треками
+
 let aiBlogPosts = [];
 
-// === КОЛЕКЦІЯ РЕЗЕРВНИХ HD-ФОТО (Якщо ШІ не встигне) ===
 const hdMedicalImages = [
     "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=1200&auto=format&fit=crop", 
     "https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=1200&auto=format&fit=crop", 
-    "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?q=80&w=1200&auto=format&fit=crop", 
-    "https://images.unsplash.com/photo-1576086213369-97a306d36557?q=80&w=1200&auto=format&fit=crop", 
-    "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?q=80&w=1200&auto=format&fit=crop"
+    "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?q=80&w=1200&auto=format&fit=crop"
 ];
 
-// === 1. ЛОГІКА РОБОТИ З GITHUB АРХІВОМ ===
+// === 1. ЛОГІКА GITHUB (АРХІВ БЛОГУ) ===
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
@@ -42,11 +43,8 @@ async function syncBlogFromGitHub() {
         const response = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
         const content = Buffer.from(response.data.content, 'base64').toString('utf8');
         aiBlogPosts = JSON.parse(content);
-        console.log(`✅ Архів завантажено з GitHub: ${aiBlogPosts.length} статей.`);
-    } catch (error) {
-        console.log("ℹ️ Архів на GitHub ще не створений або порожній.");
-        aiBlogPosts = [];
-    }
+        console.log(`✅ Архів блогу завантажено: ${aiBlogPosts.length} статей.`);
+    } catch (error) { aiBlogPosts = []; }
 }
 
 async function saveBlogToGitHub() {
@@ -58,39 +56,28 @@ async function saveBlogToGitHub() {
             const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
             sha = getRes.data.sha;
         } catch (e) {}
-
-        // ДОДАНО 'utf8' для правильного збереження українських літер
         const contentEncoded = Buffer.from(JSON.stringify(aiBlogPosts, null, 2), 'utf8').toString('base64');
-        const data = { message: "Автоматичне оновлення блогу ШІ", content: contentEncoded };
+        const data = { message: "Оновлення блогу", content: contentEncoded };
         if (sha) data.sha = sha;
-
         await axios.put(url, data, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-        console.log("🚀 Архів успішно збережено на GitHub!");
-    } catch (error) {
-        console.error("Помилка збереження на GitHub:", error.message);
-    }
+    } catch (e) { console.error("Помилка GitHub:", e.message); }
 }
 
-// === 2. АВТОМАТИЧНА ГЕНЕРАЦІЯ НОВИН (ШІ) ===
+// === 2. АВТОМАТИЗАЦІЯ БЛОГУ (ШІ) ===
 const rssSources = [
     "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
-    "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk",
-    "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en",
-    "https://medicalxpress.com/rss-feed/cancer-news/",
-    "https://www.sciencedaily.com/rss/health_medicine/cancer.xml",
-    "https://www.youtube.com/feeds/videos.xml?channel_id=UC3S13n7_p_A7-HIt5f0-6Lg"
+    "https://medicalxpress.com/rss-feed/cancer-news/"
 ];
 
 async function fetchAndRewriteNews() {
     if (!GROQ_API_KEY) return;
     try {
-        console.log("Шукаю нові медичні статті...");
         const allSources = rssSources.sort(() => 0.5 - Math.random());
         let addedCount = 0;
 
         for (const rssUrl of allSources) {
             try {
-                const response = await axios.get(rssUrl, { timeout: 10000 }); // Захист від зависання джерела
+                const response = await axios.get(rssUrl, { timeout: 10000 });
                 const xml = response.data;
                 const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
                 if (!itemMatch) continue;
@@ -107,32 +94,24 @@ async function fetchAndRewriteNews() {
 
                     let foundImageUrl = null;
                     let foundVideoUrl = null;
-
                     const ytMatch = itemXml.match(/<yt:videoId>(.*?)<\/yt:videoId>/i);
+                    
                     if (ytMatch) {
                         foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
                     } else {
-                        // === ЛОГІКА "ПРОГРІВУ" КАРТИНКИ ===
                         const seed = Math.floor(Math.random() * 1000000);
-                        const prompt = encodeURIComponent("optimistic modern medical research laboratory abstract cinematic high quality photography");
+                        const prompt = encodeURIComponent(`High quality digital art, cinematic lighting, medical and science concept: ${rawTitle}. Hope, abstract background, 8k resolution`);
                         foundImageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=800&nologo=true&seed=${seed}`;
                         
-                        console.log("⏳ Прогріваємо ШІ-картинку (до 15 сек)...");
-                        try { 
-                            await axios.get(foundImageUrl, { responseType: 'arraybuffer', timeout: 15000 }); 
-                            console.log("✅ Картинка готова!");
-                        } catch(e) {
-                            console.log("⚠️ ШІ не встиг. Ставимо резервне HD фото.");
-                            foundImageUrl = hdMedicalImages[Math.floor(Math.random() * hdMedicalImages.length)];
-                        }
+                        try { await axios.get(foundImageUrl, { responseType: 'arraybuffer', timeout: 15000 }); } 
+                        catch(e) { foundImageUrl = hdMedicalImages[Math.floor(Math.random() * hdMedicalImages.length)]; }
                     }
 
-                    console.log(`📝 Groq пише статтю: ${rawTitle}`);
                     const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                         model: "llama-3.1-8b-instant",
                         messages: [{ 
                             role: "system", 
-                            content: "Ти — професійний медичний журналіст. Напиши розгорнуту статтю УКРАЇНСЬКОЮ (5-7 абзаців) з підзаголовками та оптимістичним висновком." 
+                            content: "Ти — професійний журналіст. Напиши розгорнуту статтю УКРАЇНСЬКОЮ (5-7 абзаців)." 
                         }, { role: "user", content: `Тема: ${rawTitle}` }],
                         max_tokens: 2000
                     }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
@@ -149,45 +128,100 @@ async function fetchAndRewriteNews() {
                     addedCount++;
                     await new Promise(r => setTimeout(r, 10000));
                 }
-            } catch (e) { console.error("Помилка джерела:", e.message); }
+            } catch (e) { }
         }
         if (addedCount > 0) await saveBlogToGitHub();
-    } catch (e) { console.error("Помилка авто-блогу:", e.message); }
+    } catch (e) { }
 }
+
 
 // === 3. ЕНДПОІНТИ (API) ===
 
+// Блог
 app.get('/api/blog', (req, res) => res.json(aiBlogPosts));
 
-// 👇 ТУТ МАЄ БУТИ ТВОЯ СТАРА ЛОГІКА ДЛЯ МУЗИКИ ТА РЕЄСТРАЦІЇ 👇
-
-app.post('/api/register', (req, res) => {
-    // Встав сюди свій оригінальний код реєстрації
-    res.json({ success: true });
-});
-
-app.post('/api/login', (req, res) => {
-    // Встав сюди свій оригінальний код входу
-    res.json({ success: true });
-});
-
+// === МАГАЗИН МУЗИКИ (Відновлено логіку Google Drive з 18.04) ===
 app.get('/api/music', async (req, res) => {
-    // Встав сюди свій оригінальний код видачі списку пісень!!!
-    res.json([]);
+    if (!GOOGLE_API_KEY || !PREVIEW_FOLDER_ID || !FULL_FOLDER_ID) {
+        return res.status(500).json({ error: "Ключі Google Drive не налаштовані" });
+    }
+    try {
+        // Отримуємо списки файлів з папок Google Drive
+        const prevRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${PREVIEW_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,createdTime)&key=${GOOGLE_API_KEY}`);
+        const fullRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${FULL_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name)&key=${GOOGLE_API_KEY}`);
+        
+        const prevFiles = prevRes.data.files || [];
+        const fullFiles = fullRes.data.files || [];
+        
+        // Збираємо все в єдиний список для фронтенду
+        const musicList = prevFiles.map(prev => {
+            let cleanName = prev.name.replace('.mp3', '').replace('_prev', '').replace(' (Preview)', '').trim();
+            const fullMatch = fullFiles.find(f => f.name.includes(cleanName));
+            
+            return {
+                name: cleanName,
+                previewId: prev.id,
+                fullId: fullMatch ? fullMatch.id : 'not_found',
+                date: prev.createdTime.split('T')[0]
+            };
+        });
+        
+        res.json(musicList);
+    } catch (error) { 
+        console.error("Помилка Google Drive API:", error.message);
+        res.status(500).json({ error: "Помилка завантаження треків" }); 
+    }
 });
 
+// === СТРІМІНГ МУЗИКИ ПРЯМО З GOOGLE DRIVE ===
+app.get('/api/stream/:fileId', async (req, res) => {
+    try {
+        const response = await axios({
+            method: 'get',
+            url: `https://www.googleapis.com/drive/v3/files/${req.params.fileId}?alt=media&key=${GOOGLE_API_KEY}`,
+            responseType: 'stream'
+        });
+        res.setHeader('Content-Type', 'audio/mpeg');
+        response.data.pipe(res); // Передаємо аудіопотік у плеєр
+    } catch (error) { 
+        console.error("Помилка стрімінгу:", error.message);
+        res.status(500).send("Помилка відтворення аудіо"); 
+    }
+});
+
+// Оплата
 app.post('/api/pay', async (req, res) => {
-    // Встав сюди логіку Monobank
-    res.json({ url: "https://send.monobank.ua/..." });
+    const { songId, songName } = req.body;
+    if (!MONO_TOKEN) return res.json({ url: "https://send.monobank.ua/..." }); // Запасний варіант
+    try {
+        const response = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
+            amount: 3736,
+            ccy: 980,
+            merchantPaymInfo: { destination: `Музична Сповідь: ${songName}`, comment: `ID:${songId}` },
+            redirectUrl: "https://andreygerc11.github.io/music_confession/success.html"
+        }, { headers: { 'X-Token': MONO_TOKEN } });
+        res.json({ url: response.data.pageUrl });
+    } catch (err) { res.status(500).json({ error: "Помилка" }); }
 });
 
-// 👆 ======================================================== 👆
+// Авторизація
+app.post('/api/social-auth', (req, res) => {
+    res.json({ success: true, status: 'user', name: req.body.name });
+});
 
-// === 4. ЗАПУСК ТА ТАЙМЕРИ ===
+app.post('/api/login', (req, res) => res.json({ success: true, status: 'user' }));
+
+app.post('/api/register', async (req, res) => {
+    if (GOOGLE_SHEETS_URL) {
+        try { await axios.post(GOOGLE_SHEETS_URL, { ...req.body, date: new Date().toISOString() }); } catch(e){}
+    }
+    res.json({ success: true });
+});
+
+// === 4. ЗАПУСК ===
 const PORT = process.env.PORT || 10000;
 syncBlogFromGitHub().then(() => {
-    app.listen(PORT, () => console.log(`Сервер працює на порту ${PORT}`));
-    
-    setTimeout(fetchAndRewriteNews, 15000); // Перший запуск після старту
-    setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000); // Далі - раз на добу
+    app.listen(PORT, () => console.log(`🚀 Сервер на порту ${PORT}`));
+    setTimeout(fetchAndRewriteNews, 15000); 
+    setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000); 
 });
