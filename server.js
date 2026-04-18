@@ -207,7 +207,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
-// === ГЕНЕРАТОР ОБКЛАДИНОК (ШІ-ПЕРЕКЛАД + ДИНАМІЧНИЙ РОЗМІР) ===
+// === ГЕНЕРАТОР ОБКЛАДИНОК ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, customPrompt, format } = req.body;
@@ -249,9 +249,7 @@ app.post('/api/generate-image', async (req, res) => {
                 });
                 
                 finalPrompt = groqRes.data.choices[0].message.content.trim();
-                console.log("Groq згенерував англійський промпт:", finalPrompt);
             } catch (groqError) {
-                console.error("Помилка Groq (Деталі):", groqError.response?.data || groqError.message);
                 finalPrompt = "masterpiece, highly detailed music album cover, cinematic lighting"; 
             }
         } else {
@@ -279,27 +277,44 @@ app.post('/api/generate-image', async (req, res) => {
         const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${imgWidth}&height=${imgHeight}&nologo=true&seed=${randomSeed}`;
         res.json({ imageUrl });
     } catch (error) { 
-        console.error("Image Error:", error);
         res.status(500).send("Помилка генерації зображення"); 
     }
 });
 
-// === ШІ АВТО-БЛОГ (НОВИНИ ОНКОЛОГІЇ) ===
+// === ШІ АВТО-БЛОГ (МУЛЬТИДЖЕРЕЛА + АРХІВ + ПЕРЕКЛАД) ===
+const BLOG_FILE = './blog_posts.json'; // Файл, де будуть вічно зберігатися статті
 let aiBlogPosts = []; 
 
-async function fetchAndRewriteNews() {
-    if (!GROQ_API_KEY) {
-        console.log("Немає ключа GROQ, авто-блог не оновлюється.");
-        return;
+// 1. При старті сервера читаємо всі старі статті з файлу (якщо він є)
+if (fs.existsSync(BLOG_FILE)) {
+    try {
+        aiBlogPosts = JSON.parse(fs.readFileSync(BLOG_FILE, 'utf8'));
+        console.log(`✅ Завантажено ${aiBlogPosts.length} статей з локального архіву.`);
+    } catch (e) {
+        console.error("Помилка читання архіву блогу:", e.message);
     }
+}
+
+// 2. Список джерел (Українські та Західні)
+const rssSources = [
+    "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk", // Google Новини Україна
+    "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en", // Google Новини США (Дослідження)
+    "https://medicalxpress.com/rss-feed/cancer-news/" // Medical Xpress (Англомовний науковий портал)
+];
+
+async function fetchAndRewriteNews() {
+    if (!GROQ_API_KEY) return;
     try {
         console.log("Шукаю нові медичні статті для блогу...");
-        // RSS стрічка новин (запит: онкологія лікування рак)
-        const rssUrl = "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk";
+        
+        // Вибираємо випадкове джерело зі списку
+        const rssUrl = rssSources[Math.floor(Math.random() * rssSources.length)];
+        console.log(`Перевіряю джерело: ${rssUrl}`);
+        
         const response = await axios.get(rssUrl);
         const xml = response.data;
 
-        // Витягуємо першу новину (найсвіжішу)
+        // Беремо найсвіжішу новину зі стрічки
         const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
         if (!itemMatch) return;
 
@@ -313,29 +328,30 @@ async function fetchAndRewriteNews() {
             let sourceLink = linkMatch[1];
             let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-            // Якщо новина вже є в базі, нічого не робимо
-            if (aiBlogPosts.length > 0 && aiBlogPosts[0].originalTitle === rawTitle) {
-                console.log("Нових статей поки немає.");
+            // Перевіряємо, чи немає цієї новини вже в нашому архіві
+            const isDuplicate = aiBlogPosts.some(post => post.originalTitle === rawTitle);
+            if (isDuplicate) {
+                console.log("Ця стаття вже є в архіві. Чекаємо наступного оновлення.");
                 return; 
             }
 
-            console.log("Знайдено статтю для рерайту:", rawTitle);
+            console.log("Знайдено нову статтю:", rawTitle);
             
-            // Відправляємо Groq завдання написати унікальний пост
+            // Відправляємо Groq завдання на ПЕРЕКЛАД та РЕРАЙТ
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.1-8b-instant",
                 messages: [
                     { 
                         role: "system", 
-                        content: "Ти — медичний журналіст-емпат. Твоє завдання: написати коротку, унікальну новину для блогу підтримки онкохворих. Текст має бути українською мовою, 6 абзаци. Пиши зрозуміло, оптимістично, без складної термінології. Тільки текст статті, без заголовка." 
+                        content: "Ти — медичний журналіст-емпат. Твоє завдання: прочитати заголовок і суть новини (оригінал може бути АНГЛІЙСЬКОЮ або іншою мовою) і написати статтю-вижимку ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ для блогу підтримки онкохворих. Обсяг: 3-4 абзаци. Пиши зрозуміло, оптимістично, без складної термінології. Тільки текст статті, без заголовка." 
                     },
                     { 
                         role: "user", 
-                        content: `Напиши оптимістичну статтю на основі цієї новини: "${rawTitle}"` 
+                        content: `Опрацюй і переклади цю новину: "${rawTitle}"` 
                     }
                 ],
                 temperature: 0.6,
-                max_tokens: 600
+                max_tokens: 700
             }, {
                 headers: { 
                     'Authorization': `Bearer ${GROQ_API_KEY}`,
@@ -344,7 +360,7 @@ async function fetchAndRewriteNews() {
             });
 
             const rewrittenText = groqRes.data.choices[0].message.content.trim();
-            let shortTitle = rawTitle.split(" - ")[0]; // Забираємо назву видання, щоб заголовок був чистим
+            let shortTitle = rawTitle.split(" - ")[0]; // Чистимо заголовок від назви видання
 
             const newPost = {
                 id: Date.now(),
@@ -355,22 +371,24 @@ async function fetchAndRewriteNews() {
                 sourceUrl: sourceLink
             };
 
-            // Додаємо статтю найпершою і зберігаємо не більше 10 штук у пам'яті
+            // Додаємо нову статтю в початок нашого архіву
             aiBlogPosts.unshift(newPost);
-            if (aiBlogPosts.length > 10) aiBlogPosts.pop();
+            
+            // ФІЗИЧНО ЗАПИСУЄМО АРХІВ У ФАЙЛ
+            fs.writeFileSync(BLOG_FILE, JSON.stringify(aiBlogPosts, null, 2));
 
-            console.log("ШІ успішно додав нову статтю в блог!");
+            console.log("✅ ШІ успішно переклав, написав та зберіг нову статтю в архів!");
         }
     } catch (error) {
         console.error("Помилка генерації блогу:", error.message);
     }
 }
 
-// Запускаємо перевірку новин через 10 секунд після старту сервера, а далі - кожні 12 годин
-setTimeout(fetchAndRewriteNews, 10000); 
-setInterval(fetchAndRewriteNews, 12 * 60 * 60 * 1000);
+// Запускаємо перевірку новин через 15 секунд після старту сервера, а далі - кожні 8 годин
+setTimeout(fetchAndRewriteNews, 15000); 
+setInterval(fetchAndRewriteNews, 8 * 60 * 60 * 1000);
 
-// API-ендпоінт для сторінки блогу
+// API-ендпоінт віддає весь збережений архів
 app.get('/api/blog', (req, res) => {
     res.json(aiBlogPosts);
 });
