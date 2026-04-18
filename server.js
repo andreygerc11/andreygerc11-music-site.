@@ -23,6 +23,11 @@ const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_URL;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "ТВІЙ_ID_ЯКЩО_НЕ_ДОДАВ_У_RENDER";
 
+// === ЗМІННІ ДЛЯ GITHUB АРХІВУ ===
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO = process.env.GITHUB_REPO; 
+const GITHUB_EMAIL = process.env.GITHUB_EMAIL;
+
 // === ТВОЇ ID ПАПОК GOOGLE DRIVE ===
 const PREVIEW_FOLDER_ID = "1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S"; 
 const FULL_FOLDER_ID = "1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j";
@@ -281,40 +286,75 @@ app.post('/api/generate-image', async (req, res) => {
     }
 });
 
-// === ШІ АВТО-БЛОГ (МУЛЬТИДЖЕРЕЛА + АРХІВ + ПЕРЕКЛАД) ===
-const BLOG_FILE = './blog_posts.json'; // Файл, де будуть вічно зберігатися статті
-let aiBlogPosts = []; 
+// === ШІ АВТО-БЛОГ З GITHUB АРХІВОМ ===
+const BLOG_FILE_PATH = 'blog_posts.json';
+let aiBlogPosts = [];
 
-// 1. При старті сервера читаємо всі старі статті з файлу (якщо він є)
-if (fs.existsSync(BLOG_FILE)) {
+// Функція завантаження архіву з GitHub
+async function syncBlogFromGitHub() {
+    if (!GITHUB_TOKEN || !GITHUB_REPO) {
+        console.log("⚠️ GitHub Token або Repo не налаштовані. Перевір змінні в Render!");
+        return;
+    }
     try {
-        aiBlogPosts = JSON.parse(fs.readFileSync(BLOG_FILE, 'utf8'));
-        console.log(`✅ Завантажено ${aiBlogPosts.length} статей з локального архіву.`);
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${BLOG_FILE_PATH}`;
+        const res = await axios.get(url, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        const content = Buffer.from(res.data.content, 'base64').toString('utf8');
+        aiBlogPosts = JSON.parse(content);
+        console.log(`✅ Архів успішно завантажено з GitHub: знайдено ${aiBlogPosts.length} статей.`);
     } catch (e) {
-        console.error("Помилка читання архіву блогу:", e.message);
+        console.log("ℹ️ Архів на GitHub ще не створений або порожній. Він буде створений при першій новині.");
     }
 }
 
-// 2. Список джерел (Українські та Західні)
+// Функція збереження оновленого архіву назад на GitHub
+async function saveBlogToGitHub() {
+    if (!GITHUB_TOKEN || !GITHUB_REPO) return;
+    try {
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${BLOG_FILE_PATH}`;
+        let sha = null;
+
+        // Отримуємо поточний SHA файлу
+        try {
+            const currentFile = await axios.get(url, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            sha = currentFile.data.sha;
+        } catch (e) {}
+
+        const content = Buffer.from(JSON.stringify(aiBlogPosts, null, 2)).toString('base64');
+        
+        await axios.put(url, {
+            message: "Авто-оновлення архіву блогу [ШІ]",
+            content: content,
+            sha: sha,
+            committer: { name: "Hertz AI", email: GITHUB_EMAIL || "bot@hertz.com" }
+        }, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        
+        console.log("🚀 Архів успішно збережено на GitHub!");
+    } catch (e) {
+        console.error("❌ Помилка синхронізації з GitHub:", e.response?.data || e.message);
+    }
+}
+
 const rssSources = [
-    "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk", // Google Новини Україна
-    "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en", // Google Новини США (Дослідження)
-    "https://medicalxpress.com/rss-feed/cancer-news/" // Medical Xpress (Англомовний науковий портал)
+    "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
+    "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en",
+    "https://medicalxpress.com/rss-feed/cancer-news/"
 ];
 
 async function fetchAndRewriteNews() {
     if (!GROQ_API_KEY) return;
     try {
         console.log("Шукаю нові медичні статті для блогу...");
-        
-        // Вибираємо випадкове джерело зі списку
         const rssUrl = rssSources[Math.floor(Math.random() * rssSources.length)];
-        console.log(`Перевіряю джерело: ${rssUrl}`);
-        
         const response = await axios.get(rssUrl);
         const xml = response.data;
 
-        // Беремо найсвіжішу новину зі стрічки
         const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
         if (!itemMatch) return;
 
@@ -328,16 +368,14 @@ async function fetchAndRewriteNews() {
             let sourceLink = linkMatch[1];
             let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-            // Перевіряємо, чи немає цієї новини вже в нашому архіві
             const isDuplicate = aiBlogPosts.some(post => post.originalTitle === rawTitle);
             if (isDuplicate) {
-                console.log("Ця стаття вже є в архіві. Чекаємо наступного оновлення.");
+                console.log("Ця стаття вже є в архіві. Чекаю.");
                 return; 
             }
 
-            console.log("Знайдено нову статтю:", rawTitle);
+            console.log("Знайдено нову статтю, відправляю Groq на переклад...");
             
-            // Відправляємо Groq завдання на ПЕРЕКЛАД та РЕРАЙТ
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.1-8b-instant",
                 messages: [
@@ -360,7 +398,7 @@ async function fetchAndRewriteNews() {
             });
 
             const rewrittenText = groqRes.data.choices[0].message.content.trim();
-            let shortTitle = rawTitle.split(" - ")[0]; // Чистимо заголовок від назви видання
+            let shortTitle = rawTitle.split(" - ")[0]; 
 
             const newPost = {
                 id: Date.now(),
@@ -371,24 +409,24 @@ async function fetchAndRewriteNews() {
                 sourceUrl: sourceLink
             };
 
-            // Додаємо нову статтю в початок нашого архіву
             aiBlogPosts.unshift(newPost);
             
-            // ФІЗИЧНО ЗАПИСУЄМО АРХІВ У ФАЙЛ
-            fs.writeFileSync(BLOG_FILE, JSON.stringify(aiBlogPosts, null, 2));
+            // ЗБЕРІГАЄМО НА GITHUB
+            await saveBlogToGitHub();
 
-            console.log("✅ ШІ успішно переклав, написав та зберіг нову статтю в архів!");
+            console.log("✅ ШІ успішно написав статтю та відправив на GitHub!");
         }
     } catch (error) {
         console.error("Помилка генерації блогу:", error.message);
     }
 }
 
-// Запускаємо перевірку новин через 15 секунд після старту сервера, а далі - кожні 8 годин
-setTimeout(fetchAndRewriteNews, 15000); 
-setInterval(fetchAndRewriteNews, 8 * 60 * 60 * 1000);
+// Запуск логіки: спочатку тягнемо архів з GitHub, потім запускаємо перевірку новин
+syncBlogFromGitHub().then(() => {
+    setTimeout(fetchAndRewriteNews, 15000); 
+    setInterval(fetchAndRewriteNews, 8 * 60 * 60 * 1000);
+});
 
-// API-ендпоінт віддає весь збережений архів
 app.get('/api/blog', (req, res) => {
     res.json(aiBlogPosts);
 });
