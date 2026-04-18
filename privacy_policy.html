@@ -3,40 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Політика конфіденційності | Музична Сповідь</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>Політика конфіденційності | Голос проти раку</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        body { font-family: 'Montserrat', sans-serif; background-color: #0a0a0b; color: #fff; line-height: 1.6; padding: 40px 20px; }
-        .container { max-width: 800px; margin: auto; background: #161618; padding: 40px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
-        h1 { color: #ff4d4d; text-align: center; text-transform: uppercase; margin-bottom: 30px; }
-        h2 { color: #ff4d4d; margin-top: 30px; font-size: 1.2rem; }
-        p, li { color: #ccc; font-size: 0.95rem; margin-bottom: 10px; }
-        .btn-back { display: inline-block; margin-bottom: 20px; color: #fff; text-decoration: none; border: 1px solid #ff4d4d; padding: 8px 20px; border-radius: 50px; }
-        .btn-back:hover { background: #ff4d4d; }
+        :root {
+            --accent: #ff4d4d;
+            --dark: #0a0a0b;
+            --glass: rgba(20, 20, 23, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f0f0;
+            --text-muted: #aaa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 50px;
+        }
+
+        /* === АНІМОВАНИЙ ФОН === */
+        .animated-background {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            overflow: hidden; pointer-events: none; background: radial-gradient(circle at center, #111 0%, #0a0a0b 100%);
+        }
+        .bg-text-container {
+            position: absolute; top: -20%; left: -10%; width: 120vw; height: 140vh;
+            display: flex; flex-direction: column; justify-content: space-evenly;
+            transform: rotate(-10deg);
+        }
+        .bg-text-row {
+            font-size: 3.5vw; font-weight: 900; white-space: nowrap;
+            color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.04);
+            text-transform: uppercase; letter-spacing: 5px;
+        }
+        .row-1, .row-3 { animation: scrollLeft 90s linear infinite; }
+        .row-2, .row-4 { animation: scrollRight 90s linear infinite; }
+        
+        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+        /* Контейнер */
+        .container {
+            max-width: 900px;
+            margin: 60px auto;
+            padding: 50px;
+            position: relative;
+            z-index: 2;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-bottom: 30px; padding: 10px 20px;
+            background: rgba(255,255,255,0.05); color: #fff;
+            text-decoration: none; border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1); font-weight: 600; font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .btn-back:hover { background: #fff; color: var(--dark); }
+
+        h1 { color: #fff; text-align: center; text-transform: uppercase; margin-bottom: 40px; font-weight: 900; font-size: 2rem;}
+        h2 { color: var(--accent); margin-top: 40px; font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;}
+        p, li { color: #ccc; font-size: 1rem; margin-bottom: 15px; text-align: justify; }
+
+        /* Футер (опціонально, щоб не висіло в повітрі) */
+        .doc-footer { text-align: center; margin-top: 50px; border-top: 1px solid var(--border-color); padding-top: 20px; color: var(--text-muted); font-size: 0.85rem;}
+
+        @media (max-width: 768px) {
+            .container { margin: 20px; padding: 30px 20px; }
+            h1 { font-size: 1.5rem; }
+            .bg-text-row { font-size: 8vw; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="index.html" class="btn-back">← На головну</a>
-        <h1>Політика конфіденційності</h1>
-        
-        <h2>1. Збір персональних даних</h2>
-        <p>Ми збираємо персональні дані (ім'я, номер телефону, електронна пошта або нікнейм у месенджерах) виключно за добровільною згодою користувача при заповненні форми зворотного зв'язку або при здійсненні оплати цифрових товарів.</p>
 
-        <h2>2. Використання даних</h2>
-        <p>Зібрані дані використовуються виключно для:<br>
-        - Надання доступу до придбаного контенту.<br>
-        - Зворотного зв'язку з користувачем щодо технічної підтримки.<br>
-        - Виконання зобов'язань перед Покупцем.</p>
-
-        <h2>3. Захист та передача даних</h2>
-        <p>Ми гарантуємо, що ваші дані не будуть передані третім особам, продані чи використані для спам-розсилок. Обробка даних здійснюється відповідно до Закону України «Про захист персональних даних». Для забезпечення працездатності форм використовується сторонній сервіс Formspree, який також дотримується міжнародних стандартів безпеки.</p>
-
-        <h2>4. Аналітика</h2>
-        <p>На сайті підключено сервіс Google Analytics, який збирає анонімізовані дані про відвідуваність сторінок для покращення роботи сайту. Ця інформація не дозволяє ідентифікувати конкретного користувача.</p>
-
-        <h2>5. Контакти</h2>
-        <p>З будь-яких питань щодо обробки ваших даних ви можете звернутися до нас:<br>Email: andreygerc11@gmail.com</p>
+<div class="animated-background">
+    <div class="bg-text-container">
+        <div class="bg-text-row row-1">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-2">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-3">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-4">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
     </div>
+</div>
+
+<div class="container">
+    <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
+    
+    <h1>Політика конфіденційності</h1>
+    
+    <h2>1. Збір персональних даних</h2>
+    <p>Ми збираємо персональні дані (ім'я, номер телефону, електронна пошта або нікнейм у месенджерах) виключно за добровільною згодою користувача при заповненні форми зворотного зв'язку або при здійсненні оплати цифрових товарів/підписки.</p>
+
+    <h2>2. Використання даних</h2>
+    <p>Зібрані дані використовуються виключно для:</p>
+    <ul>
+        <li>Надання доступу до придбаного контенту або функціоналу (Hertz Spectrum).</li>
+        <li>Зворотного зв'язку з користувачем щодо технічної підтримки.</li>
+        <li>Виконання зобов'язань перед Покупцем.</li>
+    </ul>
+
+    <h2>3. Захист та передача даних</h2>
+    <p>Ми гарантуємо, що ваші дані не будуть передані третім особам, продані чи використані для спам-розсилок. Обробка даних здійснюється відповідно до Закону України «Про захист персональних даних». Для забезпечення працездатності форм використовується сторонній сервіс Formspree, який також дотримується міжнародних стандартів безпеки.</p>
+
+    <h2>4. Аналітика та Сторонні сервіси</h2>
+    <p>На сайті підключено сервіс Google Analytics, який збирає анонімізовані дані про відвідуваність сторінок для покращення роботи сайту. Ця інформація не дозволяє ідентифікувати конкретного користувача.</p>
+    <p>Також на сайті використовується Google AdSense для показу реклами. AdSense може використовувати файли cookie для персоналізації оголошень.</p>
+
+    <h2>5. Зміни до політики</h2>
+    <p>Ми залишаємо за собою право оновлювати цю Політику конфіденційності. Усі зміни публікуються на цій сторінці.</p>
+
+    <div class="doc-footer">
+        © 2026 Проєкт "Голос проти раку". Усі права захищені.
+    </div>
+</div>
+
 </body>
 </html>

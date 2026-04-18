@@ -1,46 +1,142 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DHLXH7C8QT"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DHLXH7C8QT');
+    </script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Публічна оферта | Музична Сповідь</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>Публічна оферта | Голос проти раку</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        body { font-family: 'Montserrat', sans-serif; background-color: #0a0a0b; color: #fff; line-height: 1.6; padding: 40px 20px; }
-        .container { max-width: 800px; margin: auto; background: #161618; padding: 40px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
-        h1 { color: #ff4d4d; text-align: center; text-transform: uppercase; margin-bottom: 30px; }
-        h2 { color: #ff4d4d; margin-top: 30px; font-size: 1.2rem; }
-        p, li { color: #ccc; font-size: 0.95rem; margin-bottom: 10px; }
-        .btn-back { display: inline-block; margin-bottom: 20px; color: #fff; text-decoration: none; border: 1px solid #ff4d4d; padding: 8px 20px; border-radius: 50px; }
-        .btn-back:hover { background: #ff4d4d; }
+        :root {
+            --accent: #ff4d4d;
+            --dark: #0a0a0b;
+            --glass: rgba(20, 20, 23, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f0f0;
+            --text-muted: #aaa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 50px;
+        }
+
+        /* === АНІМОВАНИЙ ФОН === */
+        .animated-background {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            overflow: hidden; pointer-events: none; background: radial-gradient(circle at center, #111 0%, #0a0a0b 100%);
+        }
+        .bg-text-container {
+            position: absolute; top: -20%; left: -10%; width: 120vw; height: 140vh;
+            display: flex; flex-direction: column; justify-content: space-evenly;
+            transform: rotate(-10deg);
+        }
+        .bg-text-row {
+            font-size: 3.5vw; font-weight: 900; white-space: nowrap;
+            color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.04);
+            text-transform: uppercase; letter-spacing: 5px;
+        }
+        .row-1, .row-3 { animation: scrollLeft 90s linear infinite; }
+        .row-2, .row-4 { animation: scrollRight 90s linear infinite; }
+        
+        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+        /* Контейнер */
+        .container {
+            max-width: 900px;
+            margin: 60px auto;
+            padding: 50px;
+            position: relative;
+            z-index: 2;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-bottom: 30px; padding: 10px 20px;
+            background: rgba(255,255,255,0.05); color: #fff;
+            text-decoration: none; border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1); font-weight: 600; font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .btn-back:hover { background: #fff; color: var(--dark); }
+
+        h1 { color: #fff; text-align: center; text-transform: uppercase; margin-bottom: 40px; font-weight: 900; font-size: 2rem;}
+        h2 { color: var(--accent); margin-top: 40px; font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;}
+        p, li { color: #ccc; font-size: 1rem; margin-bottom: 15px; text-align: justify; }
+
+        .doc-footer { text-align: center; margin-top: 50px; border-top: 1px solid var(--border-color); padding-top: 20px; color: var(--text-muted); font-size: 0.85rem;}
+
+        @media (max-width: 768px) {
+            .container { margin: 20px; padding: 30px 20px; }
+            h1 { font-size: 1.5rem; }
+            .bg-text-row { font-size: 8vw; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="index.html" class="btn-back">← На головну</a>
-        <h1>Публічна оферта (Договір купівлі-продажу)</h1>
-        
-        <h2>1. Загальні положення</h2>
-        <p>Цей документ є відкритою пропозицією (Офертою) Фізичної особи-підприємця Герц Андрія Костянтиновича (надалі — Продавець) укласти договір купівлі-продажу цифрового контенту (музичних творів) з будь-якою особою (надалі — Покупець) на викладених нижче умовах.</p>
 
-        <h2>2. Предмет договору</h2>
-        <p>Продавець надає Покупцеві невиключне право на завантаження та приватне прослуховування цифрового контенту (mp3-файлів), а Покупець зобов'язується оплатити цей контент. Авторські права на музичні твори залишаються за Продавцем. Покупцю забороняється комерційне використання, перепродаж або публічне розповсюдження завантажених файлів.</p>
-
-        <h2>3. Порядок оплати та отримання товару</h2>
-        <p>Оплата здійснюється через вбудований платіжний сервіс (Telegram-бот або прямий переказ). Після підтвердження оплати Покупець отримує посилання для завантаження файлу. Файл містить вшиті цифрові водяні знаки (ID3-теги та логотип) для підтвердження авторства.</p>
-
-        <h2>4. Політика повернення</h2>
-        <p>Відповідно до Закону України «Про захист прав споживачів», цифровий контент, що завантажується з інтернету, належить до переліку товарів, які не підлягають обміну та поверненню. Після отримання доступу до завантаження файлу кошти не повертаються.</p>
-
-        <h2>5. Реквізити Продавця</h2>
-        <p>
-            ФОП Герц Андрій Костянтинович<br>
-            РНОКПП: 3047713272<br>
-            IBAN: UA683220010000026009370080819 (Офіційний рахунок ФОП)<br>
-            Призначення платежу: Оплата за цифровий контент / Добровільна підтримка проєкту<br>
-            Email: andreygerc11@gmail.com
-        </p>
+<div class="animated-background">
+    <div class="bg-text-container">
+        <div class="bg-text-row row-1">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-2">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-3">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-4">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
     </div>
-</body>
+</div>
 
+<div class="container">
+    <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
+    
+    <h1>Публічна оферта</h1>
+    
+    <h2>1. Загальні положення</h2>
+    <p>Цей документ є офіційною пропозицією (публічною офертою) Продавця (ФОП Герц А. В.) з будь-якою фізичною особою (надалі — Покупець) укласти договір купівлі-продажу цифрового контенту та надання послуг на викладених нижче умовах.</p>
+
+    <h2>2. Предмет договору</h2>
+    <p>Продавець надає Покупцеві невиключне право на завантаження цифрового контенту (музичних треків) або надання доступу до функціоналу сервісу (Hertz Spectrum) на умовах підписки, а Покупець зобов'язується оплатити ці послуги/товари. Авторські права на всі твори на сайті залишаються за Продавцем.</p>
+
+    <h2>3. Порядок оплати та отримання послуг</h2>
+    <p>Оплата здійснюється через платіжні інструменти на сайті (Monobank) або прямим переказом. Після підтвердження оплати Покупець отримує доступ до завантаження файлу або активації функціоналу особистого кабінету. Усі цифрові товари захищені авторським правом і заборонені до перепродажу або публічного розповсюдження без згоди автора.</p>
+
+    <h2>4. Політика повернення</h2>
+    <p>Відповідно до Закону України «Про захист прав споживачів», цифровий контент, що завантажується з інтернету, належить до переліку товарів, які не підлягають обміну та поверненню після отримання доступу до них. Грошові кошти за активовані цифрові товари або використаний час підписки не повертаються.</p>
+
+    <h2>5. Реквізити Продавця</h2>
+    <p>
+        Проєкт "Голос проти раку"<br>
+        ФОП Герц Андрій Володимирович<br>
+        Email: andreygerc11@gmail.com
+    </p>
+
+    <div class="doc-footer">
+        © 2026 Андрій Герц. Слава Україні!
+    </div>
+</div>
+
+</body>
 </html>

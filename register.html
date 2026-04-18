@@ -4,85 +4,206 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Реєстрація | Hertz Spectrum</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <style>
-        body { font-family: 'Montserrat', sans-serif; background: #09090b; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .login-card { background: #141417; padding: 40px; border-radius: 20px; border: 1px solid rgba(255, 77, 77, 0.3); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn-back { display: block; margin-bottom: 20px; color: #888; text-decoration: none; font-size: 0.8rem; text-align: left; transition: 0.3s; }
-        .btn-back:hover { color: #fff; }
-        h2 { color: #ff4d4d; margin-top: 0; margin-bottom: 30px; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
-        input { width: 100%; padding: 15px; margin-bottom: 15px; background: #000; border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; font-family: inherit; box-sizing: border-box; outline: none; transition: 0.3s; }
-        input:focus { border-color: #ff4d4d; }
-        .btn-main { width: 100%; padding: 15px; background: #ff4d4d; color: #fff; border: none; border-radius: 50px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; margin-bottom: 20px; font-family: inherit; }
-        .btn-main:hover { background: #fff; color: #ff4d4d; }
-        .link-bottom { color: #888; text-decoration: underline; font-size: 0.85rem; transition: 0.3s; }
-        .link-bottom:hover { color: #fff; }
+        :root {
+            --accent: #ff4d4d;
+            --dark: #0a0a0b;
+            --glass: rgba(20, 20, 23, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #f0f0f0;
+            --text-muted: #aaa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--dark);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* === АНІМОВАНИЙ ФОН === */
+        .animated-background {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            overflow: hidden; pointer-events: none; background: radial-gradient(circle at center, #111 0%, #0a0a0b 100%);
+        }
+        .bg-text-container {
+            position: absolute; top: -20%; left: -10%; width: 120vw; height: 140vh;
+            display: flex; flex-direction: column; justify-content: space-evenly;
+            transform: rotate(-10deg);
+        }
+        .bg-text-row {
+            font-size: 3.5vw; font-weight: 900; white-space: nowrap;
+            color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.05);
+            text-transform: uppercase; letter-spacing: 5px;
+        }
+        .row-1, .row-3 { animation: scrollLeft 90s linear infinite; }
+        .row-2, .row-4 { animation: scrollRight 90s linear infinite; }
         
-        /* Лінії навколо слова АБО */
-        .divider { display: flex; align-items: center; text-align: center; margin: 25px 0; color: #555; font-size: 0.8rem; text-transform: uppercase; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #333; }
-        .divider:not(:empty)::before { margin-right: 10px; }
-        .divider:not(:empty)::after { margin-left: 10px; }
+        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+        /* Картка реєстрації */
+        .login-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            position: relative;
+            z-index: 10;
+        }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-bottom: 25px; color: var(--text-muted);
+            text-decoration: none; font-size: 0.85rem; font-weight: 600;
+            transition: 0.3s; width: 100%; justify-content: flex-start;
+        }
+        .btn-back:hover { color: #fff; }
+
+        .logo { font-weight: 900; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 30px; }
+        .logo span { color: var(--accent); }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
+        
+        input {
+            width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+            color: white; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.1); }
+
+        .btn-submit {
+            width: 100%; padding: 16px; background: var(--accent);
+            color: white; border: none; border-radius: 12px;
+            font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(255, 77, 77, 0.3);
+        }
+        .btn-submit:hover { background: #fff; color: var(--accent); transform: translateY(-2px); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .divider { margin: 25px 0; display: flex; align-items: center; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; }
+        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.1); }
+        .divider span { padding: 0 15px; }
+
+        #google-btn { display: flex; justify-content: center; }
+
+        .footer-text { margin-top: 25px; font-size: 0.85rem; color: var(--text-muted); }
+        .footer-text a { color: var(--accent); text-decoration: none; font-weight: 700; }
+        .footer-text a:hover { text-decoration: underline; }
+
+        @media (max-width: 480px) {
+            .login-card { padding: 30px 20px; margin: 20px; }
+            .bg-text-row { font-size: 8vw; }
+        }
     </style>
 </head>
 <body>
 
-<div class="login-card">
-    <a href="index.html" class="btn-back">← На головну</a>
-    <h2>РЕЄСТРАЦІЯ</h2>
-
-    <form id="registerForm">
-        <input type="email" id="email" placeholder="Ваш Email" required>
-        <input type="password" id="password" placeholder="Придумайте пароль" required>
-        <button type="submit" class="btn-main">СТВОРИТИ АКАУНТ</button>
-    </form>
-
-    <a href="login.html" class="link-bottom">Вже є акаунт? Увійти</a>
-
-    <div class="divider">АБО</div>
-
-    <div style="display: flex; justify-content: center;">
-        <div id="g_id_onload" 
-             data-client_id="724333690730-kjj7rl1tn72vq452flbdhb1ngq3q7dqd.apps.googleusercontent.com" 
-             data-context="signup" 
-             data-ux_mode="popup" 
-             data-callback="handleGoogleLogin" 
-             data-auto_prompt="false">
-        </div>
-        <div class="g_id_signin" 
-             data-type="standard" 
-             data-shape="pill" 
-             data-theme="filled_black" 
-             data-text="signup_with" 
-             data-size="large" 
-             data-logo_alignment="center">
-        </div>
+<div class="animated-background">
+    <div class="bg-text-container">
+        <div class="bg-text-row row-1">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-2">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-3">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
+        <div class="bg-text-row row-4">VOICE AGAINST CANCER • VOICE AGAINST CANCER • VOICE AGAINST CANCER</div>
     </div>
 </div>
 
+<div class="login-card">
+    <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
+    
+    <div class="logo">HERTZ <span>SPECTRUM</span></div>
+    
+    <form id="regForm">
+        <div class="input-group">
+            <label>Ваше ім'я</label>
+            <input type="text" id="regName" placeholder="Як вас звати?" required>
+        </div>
+        <div class="input-group">
+            <label>Електронна пошта</label>
+            <input type="email" id="regEmail" placeholder="example@mail.com" required>
+        </div>
+        <div class="input-group">
+            <label>Пароль</label>
+            <input type="password" id="regPass" placeholder="••••••••" required>
+        </div>
+        
+        <button type="submit" class="btn-submit" id="submitBtn">Створити акаунт</button>
+    </form>
+
+    <div class="divider"><span>або через</span></div>
+
+    <div id="google-btn">
+        <div id="g_id_onload"
+             data-client_id="849852233660-f38f1h25rbeunndk49k7k96r5d01jofm.apps.googleusercontent.com"
+             data-callback="handleGoogleLogin">
+        </div>
+        <div class="g_id_signin" data-type="standard"></div>
+    </div>
+
+    <p class="footer-text">Вже є акаунт? <a href="login.html">Увійти</a></p>
+</div>
+
 <script>
-    // Обробка звичайної реєстрації
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    const form = document.getElementById('regForm');
+    const btn = document.getElementById('submitBtn');
+
+    // Звичайна реєстрація
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const btn = e.target.querySelector('button');
-        btn.innerText = 'Зачекайте...'; btn.disabled = true;
+        btn.innerText = 'ОБРОБКА...';
+        btn.disabled = true;
+
+        const name = document.getElementById('regName').value;
+        const email = document.getElementById('regEmail').value;
+        const pass = document.getElementById('regPass').value;
+
         try {
             const res = await fetch('https://andreygerc11-music-site.onrender.com/api/register', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('password').value })
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, pass })
             });
             const data = await res.json();
+
             if (data.success) {
-                localStorage.setItem('hz_user', JSON.stringify({ email: document.getElementById('email').value, status: data.status }));
-                window.location.href = 'profile.html';
-            } else { alert(data.error); btn.innerText = 'СТВОРИТИ АКАУНТ'; btn.disabled = false; }
-        } catch (err) { alert('Помилка сервера. Спробуйте пізніше.'); btn.innerText = 'СТВОРИТИ АКАУНТ'; btn.disabled = false; }
+                alert('Акаунт успішно створено!');
+                window.location.href = 'login.html';
+            } else {
+                alert(data.error || 'Помилка реєстрації');
+                btn.innerText = 'СТВОРИТИ АКАУНТ';
+                btn.disabled = false;
+            }
+        } catch (err) {
+            alert('Помилка сервера. Спробуйте пізніше.');
+            btn.innerText = 'СТВОРИТИ АКАУНТ';
+            btn.disabled = false;
+        }
     });
 
-    // Розшифровка токена Google
+    // Обробка входу через Google
     function parseJwt(token) {
         var base64Url = token.split('.')[1];
         var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -92,21 +213,24 @@
         return JSON.parse(jsonPayload);
     }
 
-    // Обробка реєстрації через Google
     async function handleGoogleLogin(response) {
         const payload = parseJwt(response.credential);
         try {
             const res = await fetch('https://andreygerc11-music-site.onrender.com/api/social-auth', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: payload.email, name: payload.name })
             });
             const data = await res.json();
             if (data.success) {
-                localStorage.setItem('hz_user', JSON.stringify({ email: payload.email, status: data.status }));
-                window.location.href = 'profile.html';
-            } else { alert('Помилка: ' + data.error); }
-        } catch (err) { alert('Помилка зв\'язку з сервером.'); }
+                localStorage.setItem('hz_user', JSON.stringify({ email: payload.email, name: payload.name }));
+                window.location.href = 'generator.html';
+            }
+        } catch (err) {
+            console.error('Google Auth Error:', err);
+        }
     }
 </script>
+
 </body>
 </html>
