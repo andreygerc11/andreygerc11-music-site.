@@ -335,26 +335,20 @@ async function saveBlogToGitHub() {
 }
 
 const rssSources = [
-    // --- УКРАЇНСЬКІ ДЖЕРЕЛА ---
     "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
     "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk",
-    
-    // --- НАУКОВІ АМЕРИКАНСЬКІ ТА БРИТАНСЬКІ ДЖЕРЕЛА ---
     "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en",
     "https://news.google.com/rss/search?q=targeted+cancer+therapy&hl=en-US&gl=US&ceid=US:en",
     "https://medicalxpress.com/rss-feed/cancer-news/",
     "https://www.sciencedaily.com/rss/health_medicine/cancer.xml",
-    
-    // --- ВІДЕО-НОВИНИ (YouTube RSS) ---
     "https://www.youtube.com/feeds/videos.xml?channel_id=UC3S13n7_p_A7-HIt5f0-6Lg"
 ];
 
 async function fetchAndRewriteNews() {
     if (!GROQ_API_KEY) return;
     try {
-        console.log("Шукаю нові медичні статті по ВСІХ 7 джерелах...");
+        console.log("Шукаю нові медичні статті по ВСІХ джерелах...");
 
-        // Беремо ВСІ джерела (лише злегка перемішуємо їх порядок, щоб новини на сайті чергувалися цікавіше)
         const allSources = rssSources.sort(() => 0.5 - Math.random());
         let addedCount = 0;
 
@@ -368,17 +362,15 @@ async function fetchAndRewriteNews() {
 
                 const itemXml = itemMatch[1];
                 const titleMatch = itemXml.match(/<title>(.*?)<\/title>/);
-                const linkMatch = itemXml.match(/<link[^>]*href="([^"]+)"/) || itemXml.match(/<link>(.*?)<\/link>/);
                 const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\/pubDate>/) || itemXml.match(/<published>(.*?)<\/published>/);
 
-                if (titleMatch && linkMatch) {
+                if (titleMatch) {
                     let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-                    let sourceLink = linkMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
                     let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
                     const isDuplicate = aiBlogPosts.some(post => post.originalTitle === rawTitle);
                     if (isDuplicate) {
-                        console.log(`Новина "${rawTitle.substring(0,30)}..." вже є. Пропускаю.`);
+                        console.log(`Новина вже є. Пропускаю.`);
                         continue; 
                     }
 
@@ -387,13 +379,16 @@ async function fetchAndRewriteNews() {
 
                     const ytMatch = itemXml.match(/<yt:videoId>(.*?)<\/yt:videoId>/i);
                     if (ytMatch) {
+                        // Якщо це відео - залишаємо плеєр YouTube
                         foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
                     } else {
-                        const imgMatch = itemXml.match(/<(?:media:content|media:thumbnail|enclosure)[^>]+url="([^"]+)"/i) || itemXml.match(/<img[^>]+src="([^"]+)"/i);
-                        if (imgMatch) foundImageUrl = imgMatch[1];
+                        // === НОВА ГЕНЕРАЦІЯ HD КАРТИНОК ===
+                        // Твій сервер нічого не вантажить, він просто створює розумне посилання для браузера!
+                        const randomSeed = Math.floor(Math.random() * 1000000);
+                        foundImageUrl = `https://image.pollinations.ai/prompt/optimistic%20modern%20medical%20research%20laboratory%20abstract%20cinematic%20high%20quality%20photography?width=1200&height=800&nologo=true&seed=${randomSeed}`;
                     }
 
-                    console.log(`Відправляю Groq завдання на ВЕЛИКУ статтю: "${rawTitle}"...`);
+                    console.log(`Відправляю Groq завдання на статтю: "${rawTitle}"...`);
                     
                     const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                         model: "llama-3.1-8b-instant",
@@ -425,7 +420,7 @@ async function fetchAndRewriteNews() {
                         originalTitle: rawTitle,
                         title: shortTitle, 
                         content: rewrittenText,
-                        sourceUrl: sourceLink,
+                        // Забираємо sourceUrl, бо ми більше нікого не рекламуємо
                         imageUrl: foundImageUrl, 
                         videoUrl: foundVideoUrl  
                     };
@@ -433,8 +428,7 @@ async function fetchAndRewriteNews() {
                     aiBlogPosts.unshift(newPost);
                     addedCount++;
 
-                    // ПАУЗА 15 СЕКУНД: Надійний захист від блокування API
-                    console.log("ШІ відпочиває 15 секунд перед наступною статтею...");
+                    // Відпочинок 15 секунд
                     await new Promise(resolve => setTimeout(resolve, 15000));
                 }
             } catch (err) {
@@ -444,9 +438,7 @@ async function fetchAndRewriteNews() {
 
         if (addedCount > 0) {
             await saveBlogToGitHub();
-            console.log(`✅ Успіх! Додано та збережено ${addedCount} нових ВЕЛИКИХ статей (Опрацьовано всі 7 джерел)!`);
-        } else {
-            console.log("Нових унікальних статей у джерелах сьогодні не знайдено.");
+            console.log(`✅ Успіх! Додано та збережено ${addedCount} нових статей!`);
         }
 
     } catch (error) {
@@ -456,7 +448,6 @@ async function fetchAndRewriteNews() {
 
 syncBlogFromGitHub().then(() => {
     setTimeout(fetchAndRewriteNews, 15000); 
-    // ТАЙМЕР: 1 раз на добу
     setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000);
 });
 
