@@ -286,14 +286,13 @@ app.post('/api/generate-image', async (req, res) => {
     }
 });
 
-// === ШІ АВТО-БЛОГ З GITHUB АРХІВОМ ===
+// === ШІ АВТО-БЛОГ З МЕДІА (КАРТИНКИ/ВІДЕО) ===
 const BLOG_FILE_PATH = 'blog_posts.json';
 let aiBlogPosts = [];
 
-// Функція завантаження архіву з GitHub
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) {
-        console.log("⚠️ GitHub Token або Repo не налаштовані. Перевір змінні в Render!");
+        console.log("⚠️ GitHub Token або Repo не налаштовані.");
         return;
     }
     try {
@@ -303,24 +302,19 @@ async function syncBlogFromGitHub() {
         });
         const content = Buffer.from(res.data.content, 'base64').toString('utf8');
         aiBlogPosts = JSON.parse(content);
-        console.log(`✅ Архів успішно завантажено з GitHub: знайдено ${aiBlogPosts.length} статей.`);
+        console.log(`✅ Архів завантажено з GitHub: ${aiBlogPosts.length} статей.`);
     } catch (e) {
-        console.log("ℹ️ Архів на GitHub ще не створений або порожній. Він буде створений при першій новині.");
+        console.log("ℹ️ Архів на GitHub ще не створений або порожній.");
     }
 }
 
-// Функція збереження оновленого архіву назад на GitHub
 async function saveBlogToGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
         const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${BLOG_FILE_PATH}`;
         let sha = null;
-
-        // Отримуємо поточний SHA файлу
         try {
-            const currentFile = await axios.get(url, {
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-            });
+            const currentFile = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
             sha = currentFile.data.sha;
         } catch (e) {}
 
@@ -334,10 +328,9 @@ async function saveBlogToGitHub() {
         }, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
         });
-        
-        console.log("🚀 Архів успішно збережено на GitHub!");
+        console.log("🚀 Архів збережено на GitHub!");
     } catch (e) {
-        console.error("❌ Помилка синхронізації з GitHub:", e.response?.data || e.message);
+        console.error("❌ Помилка збереження на GitHub.");
     }
 }
 
@@ -374,7 +367,17 @@ async function fetchAndRewriteNews() {
                 return; 
             }
 
-            console.log("Знайдено нову статтю, відправляю Groq на переклад...");
+            // === НОВИЙ БЛОК: ШУКАЄМО КАРТИНКИ ТА ВІДЕО ===
+            let foundImageUrl = null;
+            let foundVideoUrl = null;
+
+            const imgMatch = itemXml.match(/<(?:media:content|media:thumbnail|enclosure)[^>]+url="([^"]+)"/i) || itemXml.match(/<img[^>]+src="([^"]+)"/i);
+            if (imgMatch) foundImageUrl = imgMatch[1];
+
+            const videoMatch = itemXml.match(/<iframe[^>]+src="([^"]+(?:youtube\.com|youtu\.be)\/[^"]+)"/i);
+            if (videoMatch) foundVideoUrl = videoMatch[1];
+
+            console.log("Відправляю Groq на переклад...");
             
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.1-8b-instant",
@@ -406,22 +409,20 @@ async function fetchAndRewriteNews() {
                 originalTitle: rawTitle,
                 title: "Медичні новини: " + shortTitle,
                 content: rewrittenText,
-                sourceUrl: sourceLink
+                sourceUrl: sourceLink,
+                imageUrl: foundImageUrl, // Зберігаємо лінк на фото
+                videoUrl: foundVideoUrl  // Зберігаємо лінк на відео
             };
 
             aiBlogPosts.unshift(newPost);
-            
-            // ЗБЕРІГАЄМО НА GITHUB
             await saveBlogToGitHub();
-
-            console.log("✅ ШІ успішно написав статтю та відправив на GitHub!");
+            console.log("✅ ШІ успішно написав статтю з медіа та відправив на GitHub!");
         }
     } catch (error) {
         console.error("Помилка генерації блогу:", error.message);
     }
 }
 
-// Запуск логіки: спочатку тягнемо архів з GitHub, потім запускаємо перевірку новин
 syncBlogFromGitHub().then(() => {
     setTimeout(fetchAndRewriteNews, 15000); 
     setInterval(fetchAndRewriteNews, 8 * 60 * 60 * 1000);
