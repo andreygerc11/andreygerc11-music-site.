@@ -746,12 +746,25 @@
             } else { primaryColorInput.disabled = true; secondaryColorInput.disabled = true; }
         });
 
+        // ==========================================
+        // ВИПРАВЛЕНО: ОБХІД РОЗТЯГУВАННЯ ФОНУ (Масштабування зі збереженням пропорцій)
+        // ==========================================
         function drawMediaCover(ctx, media, isVideo) {
-            const mw = isVideo ? media.videoWidth : media.width; const mh = isVideo ? media.videoHeight : media.height;
-            const cw = canvas.width; const ch = canvas.height; const mRatio = mw / mh; const cRatio = cw / ch; let renderW, renderH, renderX, renderY;
-            if (mRatio < cRatio) { renderW = cw; renderH = cw / mRatio; renderX = 0; renderY = (ch - renderH) / 2;
-            } else { renderW = ch * mRatio; renderH = ch; renderX = (cw - renderW) / 2; renderY = 0; }
-            ctx.drawImage(media, renderX - cw/2, renderY - ch/2, renderW, renderH);
+            const mw = isVideo ? media.videoWidth : media.width; 
+            const mh = isVideo ? media.videoHeight : media.height;
+            const cw = canvas.width; 
+            const ch = canvas.height; 
+            
+            // Вираховуємо коефіцієнт масштабування, щоб покрити весь canvas (Cover)
+            const scale = Math.max(cw / mw, ch / mh);
+            
+            // Вираховуємо нові розміри зображення
+            const renderW = mw * scale;
+            const renderH = mh * scale;
+            
+            // Центруємо зображення (оскільки ми використовуємо ctx.translate(centerX, centerY) перед викликом, 
+            // координати 0,0 - це центр canvas, тому малюємо від -renderW/2)
+            ctx.drawImage(media, -renderW / 2, -renderH / 2, renderW, renderH);
         }
 
         document.getElementById('bgUpload').addEventListener('change', function(e) {
@@ -1339,7 +1352,6 @@
             else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength); 
             else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
 
-            // ТУТ ВАШЕ ЛОГО І МАТЕМАТИКА ПУЛЬСАЦІЇ
             if (logoImage) {
                 // Додаємо пульсацію в залежності від басу
                 const logoPulse = 1 + (avgBass / 255) * 0.15;
@@ -1469,15 +1481,10 @@
             downloadVideoBtn.style.display = 'none'; 
             isGenerating = true; isCancelled = false; chunks = [];
 
-            // ==========================================
-            // ВИПРАВЛЕНИЙ БЛОК: ПРІОРИТЕТ WebM
-            // Це вирішує проблему з відсутністю звуку і перемоткою
-            // ==========================================
             let mimeType = '';
             let fileExt = 'webm';
             let useWebmFix = true;
 
-            // Пріоритет #1: WebM (Chrome, Edge, Firefox, Android)
             if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
                 mimeType = 'video/webm;codecs=vp9,opus';
             } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
@@ -1485,11 +1492,10 @@
             } else if (MediaRecorder.isTypeSupported('video/webm')) {
                 mimeType = 'video/webm';
             }
-            // Пріоритет #2: MP4 (ТІЛЬКИ ДЛЯ Safari / iOS, де WebM взагалі не працює)
             else if (MediaRecorder.isTypeSupported('video/mp4')) {
                 mimeType = 'video/mp4';
                 fileExt = 'mp4';
-                useWebmFix = false; // Для MP4 лікування не працює
+                useWebmFix = false; 
             }
 
             generateVideoBtn.style.display = 'none'; stopRenderBtn.style.display = 'block';
@@ -1516,7 +1522,7 @@
                 }
             };
 
-mediaRecorder.onstop = () => {
+            mediaRecorder.onstop = () => {
                 clearInterval(checkProgressInterval); timerWorker.postMessage('stop'); drawAnimationId = requestAnimationFrame(draw);
                 if (isCancelled) {
                     isGenerating = false; generateVideoBtn.style.display = 'flex'; stopRenderBtn.style.display = 'none';
@@ -1527,7 +1533,6 @@ mediaRecorder.onstop = () => {
                 }
 
                 const rawBlob = new Blob(chunks, { type: mimeType });
-                // Округлюємо час до цілого числа, щоб скрипт не зависав!
                 const durationMs = Math.floor(audioPlayer.duration * 1000); 
                 
                 generateStatus.innerText = 'Збереження файлу...';
@@ -1548,14 +1553,11 @@ mediaRecorder.onstop = () => {
                     if (backgroundVideo) backgroundVideo.pause();
                 };
 
-                // Безвідмовний блок лікування відео із запобіжником
                 if (useWebmFix && typeof ysFixWebmDuration !== 'undefined') { 
                     try {
                         ysFixWebmDuration(rawBlob, durationMs, function(fixedBlob) { 
                             finalizeAndDownload(fixedBlob); 
                         });
-                        
-                        // Запобіжник: якщо скрипт завис, через 3 секунди примусово видаємо кнопку!
                         setTimeout(() => {
                             if (isGenerating) {
                                 console.warn("Лікування тривалості зависло. Віддаємо сирий файл.");
