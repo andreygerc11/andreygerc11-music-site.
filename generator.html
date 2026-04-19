@@ -746,24 +746,18 @@
             } else { primaryColorInput.disabled = true; secondaryColorInput.disabled = true; }
         });
 
-        // ==========================================
-        // ВИПРАВЛЕНО: ОБХІД РОЗТЯГУВАННЯ ФОНУ (Масштабування зі збереженням пропорцій)
-        // ==========================================
+        // ЄДИНА І ПРАВИЛЬНА ФУНКЦІЯ drawMediaCover
         function drawMediaCover(ctx, media, isVideo) {
             const mw = isVideo ? media.videoWidth : media.width; 
             const mh = isVideo ? media.videoHeight : media.height;
             const cw = canvas.width; 
             const ch = canvas.height; 
             
-            // Вираховуємо коефіцієнт масштабування, щоб покрити весь canvas (Cover)
             const scale = Math.max(cw / mw, ch / mh);
             
-            // Вираховуємо нові розміри зображення
             const renderW = mw * scale;
             const renderH = mh * scale;
             
-            // Центруємо зображення (оскільки ми використовуємо ctx.translate(centerX, centerY) перед викликом, 
-            // координати 0,0 - це центр canvas, тому малюємо від -renderW/2)
             ctx.drawImage(media, -renderW / 2, -renderH / 2, renderW, renderH);
         }
 
@@ -1353,7 +1347,6 @@
             else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
 
             if (logoImage) {
-                // Додаємо пульсацію в залежності від басу
                 const logoPulse = 1 + (avgBass / 255) * 0.15;
                 const drawW = logoState.width * logoState.scale * logoPulse;
                 const drawH = logoState.height * logoState.scale * logoPulse;
