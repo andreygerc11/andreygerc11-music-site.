@@ -270,9 +270,21 @@ async function saveBlogToGitHub() {
 }
 
 const rssSources = [
+    // Українські запити (Google Новини)
     "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
+    "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk",
+    "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D0%BF%D1%80%D0%BE%D1%80%D0%B8%D0%B2&hl=uk&gl=UA&ceid=UA:uk", // Нове: прориви в лікуванні лейкемії
+    
+    // Англомовні світові запити (ШІ сам перекладе на українську)
     "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en",
-    "https://medicalxpress.com/rss-feed/cancer-news/"
+    "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en", // Нове: досягнення в лікуванні раку крові
+    
+    // Спеціалізовані медичні портали
+    "https://medicalxpress.com/rss-feed/cancer-news/",
+    "https://www.sciencedaily.com/rss/health_medicine/cancer.xml",
+    
+    // Твій або тематичний YouTube канал
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UC3S13n7_p_A7-HIt5f0-6Lg"
 ];
 
 async function fetchAndRewriteNews() {
