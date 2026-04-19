@@ -156,7 +156,6 @@ app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, customPrompt, format } = req.body;
         
-        // 1. Формуємо текст для перекладу
         let textToTranslate = "";
         if (customPrompt && lyrics) textToTranslate = `Сцена: ${customPrompt}. Настрій: ${lyrics.substring(0, 500)}`;
         else if (customPrompt) textToTranslate = `Сцена: ${customPrompt}`;
@@ -165,7 +164,6 @@ app.post('/api/generate-image', async (req, res) => {
 
         let basePrompt = "ultra realistic photography, 8k resolution";
 
-        // 2. Перекладаємо на ідеальну англійську + задаємо жорсткі рамки фотореалізму
         try {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.1-8b-instant",
@@ -188,9 +186,8 @@ app.post('/api/generate-image', async (req, res) => {
 
         const finalPrompt = `${basePrompt}, real photo, shot on DSLR, highly detailed, photorealistic, 8k resolution`;
 
-        // 3. Формати відео (Розміри)
         let imgWidth = 1080;
-        let imgHeight = 1920; // Default: vertical
+        let imgHeight = 1920; 
         
         if (format === 'horizontal') {
             imgWidth = 1920;
@@ -289,7 +286,6 @@ async function fetchAndRewriteNews() {
                     if (ytMatch) {
                         foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
                     } else {
-                        // 1. Швидко перекладаємо заголовок на АНГЛІЙСЬКУ для картинки
                         let englishTitle = rawTitle;
                         try {
                             const translateRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
@@ -300,17 +296,15 @@ async function fetchAndRewriteNews() {
                             englishTitle = translateRes.data.choices[0].message.content.trim();
                         } catch (e) {}
 
-                        // 2. Будуємо чистий АНГЛІЙСЬКИЙ промпт + RandomHash
                         const seed = Math.floor(Math.random() * 10000000);
-                        const prompt = encodeURIComponent(`Ultra realistic photography, award winning medical documentary photo, highly detailed, real life: ${englishTitle}. Hospital or modern laboratory setting, soft natural lighting, 8k resolution, shot on DSLR. RandomHash: ${seed}`);
+                        const prompt = encodeURIComponent(`Award winning documentary photography, unedited, hyperrealistic, highly detailed, real life: ${englishTitle}. Hospital or modern laboratory setting, soft natural lighting, 8k resolution, shot on DSLR. RandomHash: ${seed}`);
                         
                         foundImageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=800&nologo=true`;
                         
-                        try { await axios.get(foundImageUrl, { responseType: 'arraybuffer', timeout: 25000 }); } 
+                        try { await axios.get(foundImageUrl, { responseType: 'arraybuffer', timeout: 300000 }); } 
                         catch(e) { foundImageUrl = hdMedicalImages[Math.floor(Math.random() * hdMedicalImages.length)]; }
                     }
 
-                    // 3. Пишемо саму статтю УКРАЇНСЬКОЮ
                     const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                         model: "llama-3.1-8b-instant",
                         messages: [{ 
