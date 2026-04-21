@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Режисер | Hertz Spectrum</title>
+    <title>Hertz Director | Студія Кліпів</title>
     
     <link rel="icon" type="image/png" href="favicon.png?v=2">
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
         :root {
             --bg-base: #09090b;      
             --bg-panel: #141417;     
-            --bg-card: rgba(20, 20, 23, 0.7);      
-            --bg-input: #000;     
+            --bg-card: rgba(20, 20, 23, 0.75);      
+            --bg-input: #000000;     
             --border-color: rgba(255, 255, 255, 0.08);
             --accent: #ff3c00;       
             --text-main: #f0f0f0;
-            --text-muted: #888;
+            --text-muted: #888888;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -32,223 +32,258 @@
             overflow-x: hidden;
         }
 
-        /* === АНІМОВАНИЙ ФОН === */
-        .animated-background {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
-            overflow: hidden; pointer-events: none; background: radial-gradient(circle at center, #111 0%, #0a0a0b 100%);
+        /* Анімований фон у стилі проекту */
+        body::before {
+            content: '';
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #1a1a1d 0%, #09090b 100%);
+            z-index: -1;
         }
 
         /* Шапка */
         .top-bar {
-            min-height: 60px; background: rgba(20, 20, 23, 0.85); backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; z-index: 50; position: sticky; top: 0;
+            height: 65px; background: rgba(20, 20, 23, 0.8); backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-color); display: flex; align-items: center; 
+            justify-content: space-between; padding: 0 25px; z-index: 100; position: sticky; top: 0;
         }
-        .logo { font-family: 'Dancing Script', cursive; font-size: 1.8rem; color: #fff; text-decoration: none; line-height: 1; letter-spacing: 1px; }
-        .logo span { color: var(--accent); font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1rem; text-transform: uppercase; margin-left: 5px; letter-spacing: 0;}
-        .back-link { color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.3s; text-transform: uppercase;}
+        .logo { font-size: 1.2rem; font-weight: 900; text-transform: uppercase; color: #fff; text-decoration: none; letter-spacing: 1px; }
+        .logo span { color: var(--accent); }
+        
+        .back-link { color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: 0.3s; text-transform: uppercase;}
         .back-link:hover { color: #fff; }
-        .btn-export { background: linear-gradient(45deg, var(--accent), #ff6a00); color: #fff; border: none; padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; font-weight: 900; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-        .btn-export:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 60, 0, 0.4); }
 
-        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; width: 100%; flex: 1; display: flex; flex-direction: column; gap: 30px; }
-
-        /* Панель підготовки */
-        .setup-panel {
-            background: var(--bg-card); backdrop-filter: blur(15px); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .btn-main {
+            background: linear-gradient(45deg, var(--accent), #ff6a00); color: #fff; border: none; padding: 10px 25px; border-radius: 50px;
+            font-size: 0.8rem; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;
         }
-        .setup-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
-        .setup-header h2 { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 5px; }
-        .setup-header p { font-size: 0.9rem; color: var(--text-muted); }
-        
-        .textarea-wrapper { position: relative; margin-bottom: 15px; }
-        textarea { width: 100%; height: 150px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; color: #fff; padding: 15px; font-family: inherit; font-size: 0.9rem; resize: vertical; outline: none; transition: 0.3s; }
-        textarea:focus { border-color: var(--accent); }
-        
-        .btn-ai-split { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 12px 25px; border-radius: 50px; font-weight: 800; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; font-size: 0.85rem;}
-        .btn-ai-split:hover { background: var(--accent); color: #fff; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 60, 0, 0.4); }
+        .btn-main:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        /* Сітка Сцен (Storyboard) */
-        .storyboard-header { font-size: 1.5rem; font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; display: none; align-items: center; gap: 10px;}
-        .storyboard-header i { color: var(--accent); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; width: 100%; }
 
-        .storyboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; display: none; }
+        /* Панель вводу */
+        .input-section {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px;
+            margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); backdrop-filter: blur(10px);
+        }
+        .input-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .input-header h2 { font-size: 1.5rem; font-weight: 900; text-transform: uppercase; }
+        .input-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; }
+
+        textarea { 
+            width: 100%; height: 160px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px;
+            color: #fff; padding: 20px; font-family: 'Montserrat', sans-serif; font-size: 0.95rem; resize: vertical; outline: none; transition: 0.3s;
+            margin-bottom: 20px; border-left: 4px solid var(--accent);
+        }
+        textarea:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255, 60, 0, 0.1); }
+
+        /* Повідомлення про завантаження */
+        #loadingState { display: none; text-align: center; padding: 20px; color: var(--accent); }
+        .spinner { animation: rotate 2s linear infinite; font-size: 2rem; margin-bottom: 10px; }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+        /* Storyboard Grid */
+        .storyboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; margin-top: 20px; }
 
         .scene-card {
-            background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; position: relative;
+            background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden;
+            display: flex; flex-direction: column; transition: 0.4s; position: relative;
         }
-        .scene-card:hover { border-color: rgba(255, 60, 0, 0.3); transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .scene-card:hover { border-color: var(--accent); transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
 
-        .scene-header { padding: 15px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2); }
-        .scene-time { display: inline-block; background: var(--accent); color: #fff; font-size: 0.7rem; font-weight: 900; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px; letter-spacing: 1px;}
-        .scene-lyrics { font-size: 0.95rem; font-weight: 700; color: #fff; line-height: 1.4; display: block; font-style: italic;}
+        .scene-header { padding: 15px; background: rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 5px; }
+        .scene-time { font-size: 0.7rem; font-weight: 900; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        .scene-lyrics { font-size: 0.9rem; font-weight: 700; color: #fff; line-height: 1.4; font-style: italic; }
 
         .scene-preview {
-            height: 180px; background: #000; display: flex; align-items: center; justify-content: center; position: relative; border-bottom: 1px solid var(--border-color);
+            height: 180px; background: #000; position: relative; display: flex; align-items: center; justify-content: center;
+            overflow: hidden; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
         }
-        .scene-preview img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: 0.3s; }
+        .scene-preview img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: 0.3s; }
         .scene-card:hover .scene-preview img { opacity: 1; }
-        .placeholder-icon { font-size: 3rem; color: #333; }
+        .preview-placeholder { font-size: 3rem; color: #222; }
 
         .btn-generate-scene {
-            position: absolute; background: rgba(20,20,23,0.9); border: 1px solid var(--accent); color: #fff; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.3s; backdrop-filter: blur(5px);
+            position: absolute; bottom: 15px; background: rgba(0,0,0,0.8); border: 1px solid var(--accent); color: #fff;
+            padding: 8px 15px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.3s;
+            backdrop-filter: blur(5px); text-transform: uppercase;
         }
         .btn-generate-scene:hover { background: var(--accent); }
 
-        .scene-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
-        .prompt-label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
-        .scene-prompt { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: #ccc; padding: 10px; font-size: 0.8rem; resize: none; min-height: 80px; outline: none; margin-bottom: 15px; flex-grow: 1;}
-        .scene-prompt:focus { border-color: #666; }
+        .scene-body { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .prompt-label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .scene-prompt { 
+            width: 100%; height: 90px; background: #000; border: 1px solid var(--border-color); border-radius: 8px;
+            color: #bbb; padding: 10px; font-size: 0.8rem; resize: none; outline: none;
+        }
+        .scene-prompt:focus { border-color: #555; color: #fff; }
 
-        .scene-tools { display: flex; gap: 10px; }
-        .tool-btn { flex: 1; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .tool-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .scene-footer { display: flex; gap: 10px; }
+        .btn-tool { 
+            flex: 1; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); 
+            padding: 8px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .btn-tool:hover { background: rgba(255,255,255,0.05); color: #fff; border-color: #fff; }
 
-        .loading-overlay { display: none; text-align: center; padding: 40px; color: var(--accent); font-weight: bold; }
-
+        /* Адаптація */
         @media (max-width: 768px) {
+            .input-header { flex-direction: column; align-items: flex-start; }
             .storyboard-grid { grid-template-columns: 1fr; }
-            .top-bar { flex-wrap: nowrap; }
-            .logo { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
 
-<div class="animated-background"></div>
+    <header class="top-bar">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Повернутись</a>
+            <a href="#" class="logo">HERTZ <span>DIRECTOR</span></a>
+        </div>
+        <button class="btn-main" id="finalCompileBtn" disabled>
+            <i class="fas fa-film"></i> Зібрати кліп
+        </button>
+    </header>
 
-<header class="top-bar">
-    <div style="display: flex; align-items: center; gap: 20px;">
-        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Назад</a>
-        <a href="#" class="logo">Golos <span>Director</span></a>
-    </div>
-    <button class="btn-export" id="compileBtn" disabled><i class="fas fa-film"></i> Зібрати кліп</button>
-</header>
-
-<div class="container">
-    
-    <div class="setup-panel">
-        <div class="setup-header">
-            <div>
-                <h2>Сценарій Кліпу</h2>
-                <p>Вставте текст пісні з таймкодами (або без), щоб ШІ розбив його на сцени та підготував промпти.</p>
+    <main class="container">
+        
+        <section class="input-section">
+            <div class="input-header">
+                <div>
+                    <h2>Створити сценарій</h2>
+                    <p>ШІ проаналізує ваш текст і запропонує візуальні образи для кожної сцени.</p>
+                </div>
+                <button class="btn-main" id="aiSplitBtn">
+                    <i class="fas fa-robot"></i> СтворитиStoryboard
+                </button>
             </div>
-            <button class="btn-ai-split" id="aiSplitBtn"><i class="fas fa-robot"></i> Розбити на сцени</button>
-        </div>
-        <div class="textarea-wrapper">
-            <textarea id="lyricsSource" placeholder="[00:00.00] Я йду крізь бурю в темряві...&#10;[00:05.50] І не здамся без бою..."></textarea>
-        </div>
-        <div class="loading-overlay" id="loadingState">
-            <i class="fas fa-spinner fa-spin fa-2x"></i>
-            <p style="margin-top: 10px;">ШІ аналізує текст та створює режисерське бачення...</p>
-        </div>
-    </div>
-
-    <h2 class="storyboard-header" id="sbTitle"><i class="fas fa-layer-group"></i> Розкадрування (Storyboard)</h2>
-    
-    <div class="storyboard-grid" id="storyboardContainer">
-        </div>
-
-</div>
-
-<script>
-    // Імітація відповіді від бекенда (Groq API)
-    const mockAiResponse = [
-        {
-            id: 1,
-            time: "00:00 - 00:05",
-            lyrics: "Я йду крізь бурю в темряві",
-            prompt: "Cinematic wide shot, a lonely soldier walking through a heavy dark rainstorm, neon cyberpunk lighting, 8k resolution, highly detailed.",
-            image: null
-        },
-        {
-            id: 2,
-            time: "00:05 - 00:12",
-            lyrics: "І не здамся без бою",
-            prompt: "Close up portrait of a soldier looking determined, glowing red embers in the background, dramatic lighting, cinematic photography.",
-            image: null
-        },
-        {
-            id: 3,
-            time: "00:12 - 00:20",
-            lyrics: "Мій голос розірве тишу",
-            prompt: "Abstract visualization of sound waves shattering glass, slow motion, dark background with vibrant red neon lights, 3d render.",
-            image: null
-        }
-    ];
-
-    const aiSplitBtn = document.getElementById('aiSplitBtn');
-    const loadingState = document.getElementById('loadingState');
-    const storyboardContainer = document.getElementById('storyboardContainer');
-    const sbTitle = document.getElementById('sbTitle');
-    const compileBtn = document.getElementById('compileBtn');
-
-    aiSplitBtn.addEventListener('click', () => {
-        const text = document.getElementById('lyricsSource').value.trim();
-        if(!text) { alert("Будь ласка, вставте текст пісні."); return; }
-
-        // Показуємо завантаження
-        aiSplitBtn.disabled = true;
-        document.getElementById('lyricsSource').style.display = 'none';
-        loadingState.style.display = 'block';
-
-        // Імітація запиту до сервера (2 секунди)
-        setTimeout(() => {
-            loadingState.style.display = 'none';
-            sbTitle.style.display = 'flex';
-            storyboardContainer.style.display = 'grid';
-            compileBtn.disabled = false;
             
-            renderStoryboard(mockAiResponse);
-        }, 2000);
-    });
-
-    function renderStoryboard(scenes) {
-        storyboardContainer.innerHTML = '';
-        
-        scenes.forEach(scene => {
-            const card = document.createElement('div');
-            card.className = 'scene-card';
+            <textarea id="lyricsInput" placeholder="Вставте текст пісні тут...&#10;Приклад:&#10;[00:00] Ніч накрила місто своїм крилом...&#10;[00:15] Я шукаю світло у пітьмі..."></textarea>
             
-            let previewContent = scene.image 
-                ? `<img src="${scene.image}" alt="Scene Preview">` 
-                : `<i class="fas fa-image placeholder-icon"></i><button class="btn-generate-scene" onclick="generateSceneImage(this, ${scene.id})"><i class="fas fa-magic"></i> Згенерувати</button>`;
+            <div id="loadingState">
+                <div class="spinner"><i class="fas fa-circle-notch"></i></div>
+                <p>ШІ розробляє режисерське бачення вашого кліпу...</p>
+            </div>
+        </section>
 
-            card.innerHTML = `
-                <div class="scene-header">
-                    <span class="scene-time">${scene.time}</span>
-                    <span class="scene-lyrics">"${scene.lyrics}"</span>
-                </div>
-                <div class="scene-preview" id="preview-${scene.id}">
-                    ${previewContent}
-                </div>
-                <div class="scene-body">
-                    <div class="prompt-label">Промпт для ШІ (Англійською)</div>
-                    <textarea class="scene-prompt" id="prompt-${scene.id}">${scene.prompt}</textarea>
-                    <div class="scene-tools">
-                        <button class="tool-btn" title="Завантажити своє фото/відео"><i class="fas fa-upload"></i> Своє</button>
-                        <button class="tool-btn" title="Налаштування переходу"><i class="fas fa-random"></i> Перехід</button>
-                    </div>
-                </div>
-            `;
-            storyboardContainer.appendChild(card);
+        <h2 id="gridTitle" style="display: none; margin-bottom: 20px; text-transform: uppercase; font-size: 1.2rem;">
+            <i class="fas fa-th-large" style="color: var(--accent); margin-right: 10px;"></i> Кадри вашої історії
+        </h2>
+
+        <div class="storyboard-grid" id="storyboardContainer">
+            </div>
+
+    </main>
+
+    <script>
+        const aiSplitBtn = document.getElementById('aiSplitBtn');
+        const lyricsInput = document.getElementById('lyricsInput');
+        const loadingState = document.getElementById('loadingState');
+        const storyboardContainer = document.getElementById('storyboardContainer');
+        const gridTitle = document.getElementById('gridTitle');
+        const finalCompileBtn = document.getElementById('finalCompileBtn');
+
+        // === 1. ВИКЛИК ШІ ДЛЯ РОЗБИВКИ НА СЦЕНИ ===
+        aiSplitBtn.addEventListener('click', async () => {
+            const text = lyricsInput.value.trim();
+            if (!text) { alert("Будь ласка, спочатку вставте текст пісні!"); return; }
+
+            // UI стан завантаження
+            aiSplitBtn.disabled = true;
+            lyricsInput.style.display = 'none';
+            loadingState.style.display = 'block';
+            storyboardContainer.innerHTML = '';
+
+            try {
+                const response = await fetch('https://andreygerc11-music-site.onrender.com/api/generate-storyboard', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lyrics: text })
+                });
+
+                const scenes = await response.json();
+
+                if (response.ok) {
+                    renderStoryboard(scenes);
+                    gridTitle.style.display = 'block';
+                    finalCompileBtn.disabled = false;
+                } else {
+                    alert("Помилка ШІ: " + (scenes.error || "Не вдалося створити сценарій."));
+                    resetUI();
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Помилка зв'язку з сервером.");
+                resetUI();
+            } finally {
+                loadingState.style.display = 'none';
+                if (storyboardContainer.innerHTML === '') lyricsInput.style.display = 'block';
+            }
         });
-    }
 
-    // Імітація генерації картинки для окремої сцени
-    function generateSceneImage(btnElement, sceneId) {
-        const previewContainer = document.getElementById(`preview-${sceneId}`);
-        const promptText = document.getElementById(`prompt-${sceneId}`).value;
-        
-        btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-        btnElement.style.pointerEvents = 'none';
+        function resetUI() {
+            aiSplitBtn.disabled = false;
+            lyricsInput.style.display = 'block';
+            gridTitle.style.display = 'none';
+        }
 
-        // Імітація запиту до API генерації картинок (наприклад DALL-E або Midjourney)
-        setTimeout(() => {
-            // Вставляємо тестову картинку замість іконки
-            previewContainer.innerHTML = `<img src="novunu.jpg" alt="Generated Scene">`;
-        }, 2500);
-    }
-</script>
+        // === 2. ВІДОБРАЖЕННЯ КАРТОК STORYBOARD ===
+        function renderStoryboard(scenes) {
+            storyboardContainer.innerHTML = '';
+            
+            scenes.forEach(scene => {
+                const card = document.createElement('div');
+                card.className = 'scene-card';
+                card.innerHTML = `
+                    <div class="scene-header">
+                        <span class="scene-time"><i class="far fa-clock"></i> ${scene.time}</span>
+                        <span class="scene-lyrics">"${scene.lyrics}"</span>
+                    </div>
+                    <div class="scene-preview" id="preview-${scene.id}">
+                        <i class="fas fa-film preview-placeholder"></i>
+                        <button class="btn-generate-scene" onclick="generateImageForScene(${scene.id})">
+                            <i class="fas fa-magic"></i> Згенерувати кадр
+                        </button>
+                    </div>
+                    <div class="scene-body">
+                        <div class="prompt-label">Опис для ШІ (Промпт)</div>
+                        <textarea class="scene-prompt" id="prompt-${scene.id}">${scene.prompt}</textarea>
+                        <div class="scene-footer">
+                            <button class="btn-tool" title="Завантажити свій файл"><i class="fas fa-upload"></i> Своє</button>
+                            <button class="btn-tool" title="Налаштування руху"><i class="fas fa-expand"></i> Zoom</button>
+                        </div>
+                    </div>
+                `;
+                storyboardContainer.appendChild(card);
+            });
+        }
+
+        // === 3. ФУНКЦІЯ ГЕНЕРАЦІЇ КАРТИНКИ ДЛЯ СЦЕНИ (Заглушка) ===
+        async function generateImageForScene(sceneId) {
+            const previewBox = document.getElementById(`preview-${sceneId}`);
+            const prompt = document.getElementById(`prompt-${sceneId}`).value;
+            
+            // Візуальний ефект завантаження на картці
+            previewBox.innerHTML = '<div class="spinner" style="color:white;"><i class="fas fa-circle-notch"></i></div><p style="position:absolute; bottom:10px; font-size:10px;">Малюю...</p>';
+            
+            // В майбутньому тут буде fetch до вашого /api/generate-image
+            // Зараз імітуємо успішну відповідь через 2 секунди
+            setTimeout(() => {
+                const mockUrl = "https://images.unsplash.com/photo-1514525253361-bee8a187499b?q=80&w=1000&auto=format&fit=crop";
+                previewBox.innerHTML = `
+                    <img src="${mockUrl}" alt="Scene Image">
+                    <button class="btn-generate-scene" onclick="generateImageForScene(${sceneId})">
+                        <i class="fas fa-redo"></i> Переробити
+                    </button>
+                `;
+            }, 2500);
+        }
+
+        // Подія для кнопки "Зібрати кліп"
+        finalCompileBtn.addEventListener('click', () => {
+            alert("Ця функція в розробці. Вона передасть усі кадри в головний генератор для фінального рендерингу!");
+        });
+    </script>
 
 </body>
 </html>
