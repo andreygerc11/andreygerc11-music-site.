@@ -142,11 +142,39 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     try {
         compressedPath = req.file.path + '_comp.mp3';
         await compressAudio(req.file.path, compressedPath);
-        const formData = new FormData(); formData.append('file', fs.createReadStream(compressedPath)); formData.append('model', 'whisper-large-v3'); formData.append('language', 'uk');
-        const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() } });
-        res.json({ lrc: response.data.text }); 
-    } catch (error) { res.status(500).json({ error: "Whisper Error" }); }
-    finally { 
+        
+        const formData = new FormData(); 
+        formData.append('file', fs.createReadStream(compressedPath)); 
+        formData.append('model', 'whisper-large-v3'); 
+        formData.append('language', 'uk');
+        
+        // ДОДАНО: Просимо ШІ віддати текст із таймкодами
+        formData.append('response_format', 'verbose_json');
+
+        const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, { 
+            headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() } 
+        });
+        
+        // ДОДАНО: Формуємо текст з квадратними дужками часу
+        let lrcText = "";
+        if (response.data.segments && response.data.segments.length > 0) {
+            response.data.segments.forEach(seg => {
+                let mins = Math.floor(seg.start / 60);
+                let secs = (seg.start % 60).toFixed(2);
+                let minStr = mins < 10 ? "0" + mins : mins;
+                let secStr = secs < 10 ? "0" + secs : secs;
+                lrcText += `[${minStr}:${secStr}] ${seg.text.trim()}\n`;
+            });
+        } else {
+            lrcText = response.data.text; 
+        }
+        
+        res.json({ lrc: lrcText }); 
+
+    } catch (error) { 
+        console.error("Whisper Error:", error.response ? error.response.data : error.message);
+        res.status(500).json({ error: "Whisper Error" }); 
+    } finally { 
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         if (compressedPath && fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
     }
@@ -228,7 +256,7 @@ app.post('/api/generate-storyboard', async (req, res) => {
 
     try {
         const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-            model: "llama3-70b-8192", 
+            model: "llama-3.1-8b-instant", // <--- ВИПРАВЛЕНО: Використовуємо перевірену модель
             messages: [{ role: "user", content: promptText }],
             temperature: 0.7,
             max_tokens: 2000
@@ -243,7 +271,7 @@ app.post('/api/generate-storyboard', async (req, res) => {
         
         let scenes = [];
         try {
-            // Очищаємо JSON від можливих маркдаун-тегів (наприклад, ```json ... ```)
+            // Очищаємо JSON від можливих маркдаун-тегів
             const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
             scenes = JSON.parse(cleanJson);
         } catch (parseError) {
@@ -254,11 +282,11 @@ app.post('/api/generate-storyboard', async (req, res) => {
         res.json(scenes);
 
     } catch (error) {
-        console.error("Помилка Groq API (Storyboard):", error.message);
+        // ВИПРАВЛЕНО: Тепер Render покаже точну причину відмови Groq
+        console.error("Помилка Groq API (Storyboard):", error.response ? error.response.data : error.message);
         res.status(500).json({ error: 'Помилка генерації сценарію на сервері' });
     }
 });
-
 
 // ==========================================
 // 4. АВТОМАТИЧНИЙ БЛОГ ТА НОВИНИ (ШІ)
