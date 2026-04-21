@@ -387,13 +387,10 @@ async function fetchAndRewriteNews() {
                             englishTitle = translateRes.data.choices[0].message.content.trim();
                         } catch (e) {}
 
-                        const seed = Math.floor(Math.random() * 10000000);
-                        const prompt = encodeURIComponent(`Ultra realistic photography, award winning medical documentary photo, highly detailed, real life: ${englishTitle}. Hospital or modern laboratory setting, soft natural lighting, 8k resolution, shot on DSLR. RandomHash: ${seed}`);
+const seed = Math.floor(Math.random() * 10000000);
+                        const prompt = encodeURIComponent(`Ultra realistic photography, award winning medical documentary photo, highly detailed, real life: ${englishTitle}. Hospital or modern laboratory setting, soft natural lighting, 8k resolution, shot on DSLR.`);
                         
-                        foundImageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=800&nologo=true`;
-                        
-                        try { await axios.get(foundImageUrl, { responseType: 'arraybuffer', timeout: 25000 }); } 
-                        catch(e) { foundImageUrl = hdMedicalImages[Math.floor(Math.random() * hdMedicalImages.length)]; }
+                        foundImageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=800&nologo=true&seed=${seed}&model=flux`;
                     }
 
                     // 3. Пишемо статтю УКРАЇНСЬКОЮ
