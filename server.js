@@ -133,7 +133,15 @@ app.post('/api/webhook', async (req, res) => {
 // ==========================================
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
-        ffmpeg(inputPath).audioChannels(1).audioFrequency(16000).audioBitrate('64k').audioFilters(['highpass=f=100', 'lowpass=f=5000', 'volume=2.0', 'acompressor=threshold=-20dB:ratio=4:makeup=5']).toFormat('mp3').on('end', () => resolve(outputPath)).on('error', reject).save(outputPath);
+        // Забрали агресивні фільтри, щоб не спотворювати голос для ШІ
+        ffmpeg(inputPath)
+            .audioChannels(1)
+            .audioFrequency(16000)
+            .audioBitrate('64k')
+            .toFormat('mp3')
+            .on('end', () => resolve(outputPath))
+            .on('error', reject)
+            .save(outputPath);
     });
 }
 
@@ -214,16 +222,23 @@ app.post('/api/generate-image', async (req, res) => {
 
         const finalPrompt = `${basePrompt}, real photo, shot on DSLR, highly detailed, photorealistic, 8k resolution`;
 
-        let imgWidth = 1080;
+let imgWidth = 1080;
         let imgHeight = 1920; 
         
-        if (format === 'horizontal') { imgWidth = 1920; imgHeight = 1080; } 
-        else if (format === 'square') { imgWidth = 1080; imgHeight = 1080; } 
-        else if (format === 'portrait') { imgWidth = 1080; imgHeight = 1350; } 
-        else if (format === 'cinema') { imgWidth = 2560; imgHeight = 1080; }
+        // Для cinema також генеруємо 16:9, а фронтенд сам обріже зайве БЕЗ розтягування
+        if (format === 'horizontal' || format === 'cinema') { 
+            imgWidth = 1920; imgHeight = 1080; 
+        } 
+        else if (format === 'square') { 
+            imgWidth = 1080; imgHeight = 1080; 
+        } 
+        else if (format === 'portrait') { 
+            imgWidth = 1080; imgHeight = 1350; 
+        } 
 
         const randomSeed = Math.floor(Math.random() * 10000000);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${imgWidth}&height=${imgHeight}&nologo=true&seed=${randomSeed}`;
+        // Додано &model=flux для уникнення спотворень і покращення якості
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${imgWidth}&height=${imgHeight}&nologo=true&seed=${randomSeed}&model=flux`;
         res.json({ imageUrl });
     } catch (error) { 
         console.error("Image Gen Error:", error.message);
