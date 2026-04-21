@@ -110,7 +110,7 @@ app.post('/api/pay-subscription', async (req, res) => {
         const { email } = req.body;
         if (!MONO_TOKEN) return res.json({ url: "https://send.monobank.ua/" });
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: 3900, ccy: 980, merchantPaymInfo: { destination: "Підписка Hertz Spectrum PRO", comment: email },
+            amount: 39999, ccy: 980, merchantPaymInfo: { destination: "Підписка Hertz Spectrum PRO", comment: email },
             redirectUrl: "https://andreygerc11.github.io/music_confession/success.html", webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: monoRes.data.pageUrl });
@@ -189,19 +189,10 @@ app.post('/api/generate-image', async (req, res) => {
         let imgWidth = 1080;
         let imgHeight = 1920; 
         
-        if (format === 'horizontal') {
-            imgWidth = 1920;
-            imgHeight = 1080;
-        } else if (format === 'square') {
-            imgWidth = 1080;
-            imgHeight = 1080;
-        } else if (format === 'portrait') {
-            imgWidth = 1080;
-            imgHeight = 1350;
-        } else if (format === 'cinema') {
-            imgWidth = 2560;
-            imgHeight = 1080;
-        }
+        if (format === 'horizontal') { imgWidth = 1920; imgHeight = 1080; } 
+        else if (format === 'square') { imgWidth = 1080; imgHeight = 1080; } 
+        else if (format === 'portrait') { imgWidth = 1080; imgHeight = 1350; } 
+        else if (format === 'cinema') { imgWidth = 2560; imgHeight = 1080; }
 
         const randomSeed = Math.floor(Math.random() * 10000000);
         const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${imgWidth}&height=${imgHeight}&nologo=true&seed=${randomSeed}`;
@@ -209,6 +200,62 @@ app.post('/api/generate-image', async (req, res) => {
     } catch (error) { 
         console.error("Image Gen Error:", error.message);
         res.status(500).send("Помилка генерації зображення"); 
+    }
+});
+
+// ==========================================
+// НОВИЙ МАРШРУТ: РОЗБИВКА ТЕКСТУ НА СЦЕНИ (Hertz Director)
+// ==========================================
+app.post('/api/generate-storyboard', async (req, res) => {
+    const { lyrics } = req.body;
+
+    if (!lyrics) {
+        return res.status(400).json({ error: 'Текст пісні не надано' });
+    }
+
+    const promptText = `
+    You are a professional music video director. Analyze these lyrics and break them down into visual scenes (4 to 8 scenes max). 
+    Translate the meaning to English to write highly detailed prompts for an AI Image Generator.
+    Return ONLY a raw JSON array of objects. Do not add any markdown formatting, backticks, or extra text.
+    Format MUST be exactly like this:
+    [
+      { "id": 1, "time": "00:00 - 00:10", "lyrics": "original ukrainian lyric line", "prompt": "Cinematic wide shot of..." }
+    ]
+    
+    Lyrics:
+    ${lyrics}
+    `;
+
+    try {
+        const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+            model: "llama3-70b-8192", 
+            messages: [{ role: "user", content: promptText }],
+            temperature: 0.7,
+            max_tokens: 2000
+        }, {
+            headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const content = groqRes.data.choices[0].message.content.trim();
+        
+        let scenes = [];
+        try {
+            // Очищаємо JSON від можливих маркдаун-тегів (наприклад, ```json ... ```)
+            const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
+            scenes = JSON.parse(cleanJson);
+        } catch (parseError) {
+            console.error("Помилка парсингу JSON від Groq:", content);
+            return res.status(500).json({ error: 'ШІ повернув неправильний формат даних.' });
+        }
+
+        res.json(scenes);
+
+    } catch (error) {
+        console.error("Помилка Groq API (Storyboard):", error.message);
+        res.status(500).json({ error: 'Помилка генерації сценарію на сервері' });
     }
 });
 
@@ -286,6 +333,7 @@ async function fetchAndRewriteNews() {
                     if (ytMatch) {
                         foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
                     } else {
+                        // 1. Переклад заголовку на АНГЛІЙСЬКУ для картинки
                         let englishTitle = rawTitle;
                         try {
                             const translateRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
@@ -297,14 +345,15 @@ async function fetchAndRewriteNews() {
                         } catch (e) {}
 
                         const seed = Math.floor(Math.random() * 10000000);
-                        const prompt = encodeURIComponent(`Award winning documentary photography, unedited, hyperrealistic, highly detailed, real life: ${englishTitle}. Hospital or modern laboratory setting, soft natural lighting, 8k resolution, shot on DSLR. RandomHash: ${seed}`);
+                        const prompt = encodeURIComponent(`Ultra realistic photography, award winning medical documentary photo, highly detailed, real life: ${englishTitle}. Hospital or modern laboratory setting, soft natural lighting, 8k resolution, shot on DSLR. RandomHash: ${seed}`);
                         
                         foundImageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=800&nologo=true`;
                         
-                        try { await axios.get(foundImageUrl, { responseType: 'arraybuffer', timeout: 300000 }); } 
+                        try { await axios.get(foundImageUrl, { responseType: 'arraybuffer', timeout: 25000 }); } 
                         catch(e) { foundImageUrl = hdMedicalImages[Math.floor(Math.random() * hdMedicalImages.length)]; }
                     }
 
+                    // 3. Пишемо статтю УКРАЇНСЬКОЮ
                     const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                         model: "llama-3.1-8b-instant",
                         messages: [{ 
