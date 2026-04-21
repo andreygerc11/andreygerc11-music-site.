@@ -376,22 +376,8 @@ async function fetchAndRewriteNews() {
                     if (ytMatch) {
                         foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
                     } else {
-                        // 1. Переклад заголовку на АНГЛІЙСЬКУ для картинки
-                        let englishTitle = rawTitle;
-                        try {
-                            const translateRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                                model: "llama-3.1-8b-instant",
-                                messages: [{ role: "system", content: "Translate the following medical news title to English. Output ONLY the English translation." }, { role: "user", content: rawTitle }],
-                                max_tokens: 50
-                            }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
-                            englishTitle = translateRes.data.choices[0].message.content.trim();
-                        } catch (e) {}
-
-// Створюємо "безпечний", красивий і чистий промпт (без людей і жахів)
-                        const seed = Math.floor(Math.random() * 10000000);
-                        const prompt = encodeURIComponent(`Pristine, bright, futuristic medical research laboratory, sterile clean environment, advanced technology, glowing soft blue and white lights, macro science elements, 8k resolution, highly detailed, photorealistic, safe. NO PEOPLE, NO BLOOD, NO PATIENTS. Concept: ${englishTitle}`);
-                        
-                        foundImageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=800&nologo=true&seed=${seed}&model=flux`;                    
+                        // Використовуємо універсальний фірмовий банер для всіх новин
+                        foundImageUrl = "baner_novunu.png";
                     }
 
                     // 3. Пишемо статтю УКРАЇНСЬКОЮ
