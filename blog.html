@@ -37,7 +37,7 @@
             overflow-x: hidden;
         }
 
-        /* === НОВИЙ АНІМОВАНИЙ ФОН === */
+        /* === АНІМОВАНИЙ ФОН === */
         .animated-background {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
             overflow: hidden; pointer-events: none; background: radial-gradient(circle at center, #111 0%, #0a0a0b 100%);
@@ -45,11 +45,11 @@
         .bg-text-container {
             position: absolute; top: -20%; left: -10%; width: 120vw; height: 140vh;
             display: flex; flex-direction: column; justify-content: space-evenly;
-            transform: rotate(-10deg); /* Кут нахилу */
+            transform: rotate(-10deg);
         }
         .bg-text-row {
             font-size: 3.5vw; font-weight: 900; white-space: nowrap;
-            color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.05); /* Ледь помітний контур */
+            color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.05);
             text-transform: uppercase; letter-spacing: 5px;
         }
         .row-1, .row-3 { animation: scrollLeft 90s linear infinite; }
@@ -74,65 +74,75 @@
         .blog-hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; text-transform: uppercase; margin-bottom: 20px; letter-spacing: -1px; }
         .blog-hero p { color: var(--text-muted); max-width: 800px; margin: 0 auto; font-size: 1.1rem; }
 
-        /* Контейнер для постів */
-        .blog-container { max-width: 1000px; margin: 0 auto 100px; padding: 0 5%; display: flex; flex-direction: column; gap: 60px; }
+        /* ЗМІНЕНО: Контейнер для постів тепер GRID (2 колонки) */
+        .blog-container { 
+            max-width: 1400px; 
+            margin: 0 auto 100px; 
+            padding: 0 5%; 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 40px; 
+            align-items: start;
+        }
 
-        /* КАРТКА ПОСТУ */
+        /* КАРТКА ПОСТУ (Вертикальна) */
         .post-card {
-            display: flex; background: var(--card-bg); border-radius: 24px; overflow: hidden;
+            display: flex; flex-direction: column; background: var(--card-bg); border-radius: 24px; overflow: hidden;
             border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            height: 100%;
         }
 
         .post-media-wrap {
-            width: 45%; min-width: 400px; position: relative; overflow: hidden;
-            background: #000; border-right: 1px solid rgba(255,255,255,0.05);
+            width: 100%; height: 300px; position: relative; overflow: hidden;
+            background: #000; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .post-media-wrap img, .post-media-wrap iframe { width: 100%; height: 100%; object-fit: cover; border: none; }
+        .post-media-wrap img, .post-media-wrap iframe { width: 100%; height: 100%; object-fit: cover; border: none; transition: 0.5s;}
+        .post-card:hover .post-media-wrap img { transform: scale(1.05); }
 
-        .post-content { padding: 40px; width: 55%; display: flex; flex-direction: column; justify-content: flex-start; }
+        .post-content { padding: 30px; display: flex; flex-direction: column; flex-grow: 1;}
 
         .post-date { font-size: 0.8rem; color: var(--accent); font-weight: 700; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; }
-        .post-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 20px; line-height: 1.3; color: #fff; }
+        .post-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; line-height: 1.3; color: #fff; }
         
         /* Блок з текстом (Акордеон) */
         .post-text-wrapper {
             position: relative;
-            max-height: 180px; /* Висота згорнутого тексту */
+            max-height: 150px; 
             overflow: hidden;
             transition: max-height 0.5s ease;
+            flex-grow: 1;
         }
         .post-text-wrapper.expanded {
-            max-height: 3000px; /* Достатньо місця для розгорнутої статті */
+            max-height: 3000px; 
         }
         .post-text-wrapper::after {
             content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 80px;
-            background: linear-gradient(to bottom, transparent, #17171a); /* Градієнт затухання */
+            background: linear-gradient(to bottom, transparent, #17171a); 
             transition: opacity 0.3s;
         }
         .post-text-wrapper.expanded::after { opacity: 0; pointer-events: none; }
 
         .post-excerpt { color: var(--text-muted); font-size: 1rem; line-height: 1.6; }
-        .post-excerpt b { color: #fff; } /* Підсвічуємо жирний текст */
+        .post-excerpt b { color: #fff; }
 
         /* Кнопка розгортання */
         .btn-expand {
-            margin-top: 20px; width: fit-content; padding: 12px 25px;
+            margin-top: 20px; width: fit-content; padding: 10px 20px;
             background: transparent; border: 1px solid var(--accent); border-radius: 50px;
-            color: #fff; font-weight: 700; font-size: 0.9rem; cursor: pointer;
-            transition: 0.3s; display: flex; align-items: center; gap: 10px;
+            color: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+            transition: 0.3s; display: flex; align-items: center; gap: 8px;
         }
         .btn-expand:hover { background: var(--accent); }
 
-        .loader-text { text-align: center; color: var(--text-muted); padding: 50px; font-size: 1.2rem; }
+        .loader-text { text-align: center; color: var(--text-muted); padding: 50px; font-size: 1.2rem; grid-column: 1 / -1;}
 
         footer { padding: 80px 5% 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 10;}
         .footer-logo { margin-bottom: 20px; display: inline-block; }
 
-        @media (max-width: 900px) {
-            .post-card { flex-direction: column; }
-            .post-media-wrap { width: 100%; min-width: 100%; height: 250px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
-            .post-content { width: 100%; padding: 30px; }
-            .post-title { font-size: 1.5rem; }
+        /* Адаптивність: на планшетах та телефонах 1 колонка */
+        @media (max-width: 1024px) {
+            .blog-container { grid-template-columns: 1fr; }
+            .post-media-wrap { height: 250px; }
             .bg-text-row { font-size: 8vw; }
         }
     </style>
@@ -173,7 +183,6 @@
 <script>
     AOS.init({ duration: 1000, once: true });
 
-    // Функція розгортання статті
     function toggleArticle(id, btn) {
         const wrapper = document.getElementById('wrapper-' + id);
         if (wrapper.classList.contains('expanded')) {
@@ -199,7 +208,6 @@
             }
 
             posts.forEach((post, index) => {
-                // Визначаємо медіа
                 let mediaHTML = '';
                 if (post.videoUrl) {
                     mediaHTML = `<div class="post-media-wrap"><iframe src="${post.videoUrl}" allowfullscreen></iframe></div>`;
@@ -207,7 +215,6 @@
                     mediaHTML = `<div class="post-media-wrap"><img src="${post.imageUrl}" alt="Медична ілюстрація" loading="lazy"></div>`;
                 }
 
-                // ФІКС ТЕКСТУ: Замінюємо **жирний текст** на теги <b>, а переноси рядків \n на <br>
                 let cleanText = post.content || "";
                 cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
                 cleanText = cleanText.replace(/\n/g, '<br><br>');
