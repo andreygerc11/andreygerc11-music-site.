@@ -175,7 +175,7 @@
 
     </main>
 
-    <script>
+   <script>
         const aiSplitBtn = document.getElementById('aiSplitBtn');
         const lyricsInput = document.getElementById('lyricsInput');
         const loadingState = document.getElementById('loadingState');
@@ -207,6 +207,9 @@
                     renderStoryboard(scenes);
                     gridTitle.style.display = 'block';
                     finalCompileBtn.disabled = false;
+                    
+                    // ДОДАНО: Автоматичний запуск черги малювання
+                    await generateImagesInQueue(scenes);
                 } else {
                     alert("Помилка ШІ: " + (scenes.error || "Не вдалося створити сценарій."));
                     resetUI();
@@ -240,10 +243,8 @@
                         <span class="scene-lyrics">"${scene.lyrics}"</span>
                     </div>
                     <div class="scene-preview" id="preview-${scene.id}">
-                        <i class="fas fa-film preview-placeholder"></i>
-                        <button class="btn-generate-scene" onclick="generateImageForScene(${scene.id})">
-                            <i class="fas fa-magic"></i> Згенерувати кадр
-                        </button>
+                        <i class="fas fa-film preview-placeholder" style="color: #333;"></i>
+                        <p style="position:absolute; bottom:15px; font-size:10px; color:#555; text-transform:uppercase; font-weight:bold;">Очікування черги...</p>
                     </div>
                     <div class="scene-body">
                         <div class="prompt-label">Опис для ШІ (Промпт)</div>
@@ -258,25 +259,51 @@
             });
         }
 
-        // === 3. ФУНКЦІЯ ГЕНЕРАЦІЇ КАРТИНКИ ДЛЯ СЦЕНИ (Заглушка) ===
-        async function generateImageForScene(sceneId) {
-            const previewBox = document.getElementById(`preview-${sceneId}`);
-            const prompt = document.getElementById(`prompt-${sceneId}`).value;
-            
-            // Візуальний ефект завантаження на картці
-            previewBox.innerHTML = '<div class="spinner" style="color:white;"><i class="fas fa-circle-notch"></i></div><p style="position:absolute; bottom:10px; font-size:10px;">Малюю...</p>';
-            
-            // В майбутньому тут буде fetch до вашого /api/generate-image
-            // Зараз імітуємо успішну відповідь через 2 секунди
-            setTimeout(() => {
-                const mockUrl = "https://images.unsplash.com/photo-1514525253361-bee8a187499b?q=80&w=1000&auto=format&fit=crop";
-                previewBox.innerHTML = `
-                    <img src="${mockUrl}" alt="Scene Image">
-                    <button class="btn-generate-scene" onclick="generateImageForScene(${sceneId})">
-                        <i class="fas fa-redo"></i> Переробити
-                    </button>
-                `;
-            }, 2500);
+        // === 3. ЧЕРГА ТА РЕАЛЬНА ГЕНЕРАЦІЯ КАРТИНОК ===
+        async function generateImagesInQueue(scenes) {
+            for (let i = 0; i < scenes.length; i++) {
+                // Чекаємо, поки намалюється поточна картинка, перш ніж переходити до наступної
+                await generateImageForScene(scenes[i].id);
+            }
+        }
+
+        function generateImageForScene(sceneId) {
+            return new Promise((resolve) => {
+                const previewBox = document.getElementById(`preview-${sceneId}`);
+                const promptArea = document.getElementById(`prompt-${sceneId}`);
+                if (!previewBox || !promptArea) { resolve(false); return; }
+
+                const prompt = promptArea.value.trim();
+                
+                // Ефект завантаження для поточної картки
+                previewBox.innerHTML = '<div class="spinner" style="color:var(--accent);"><i class="fas fa-circle-notch"></i></div><p style="position:absolute; bottom:10px; font-size:10px; color:white; font-weight:bold; text-transform:uppercase;">Малюю кадр...</p>';
+                
+                const seed = Math.floor(Math.random() * 10000000);
+                const finalPrompt = encodeURIComponent(prompt + ", ultra realistic photography, cinematic lighting, 8k resolution");
+                const imageUrl = `https://image.pollinations.ai/prompt/${finalPrompt}?width=1920&height=1080&nologo=true&seed=${seed}&model=flux`;
+                
+                const img = new Image();
+                img.onload = () => {
+                    previewBox.innerHTML = `
+                        <img src="${imageUrl}" alt="Scene Image">
+                        <button class="btn-generate-scene" onclick="generateImageForScene(${sceneId})">
+                            <i class="fas fa-redo"></i> Переробити
+                        </button>
+                    `;
+                    resolve(true); // Даємо сигнал пускати наступну картинку!
+                };
+                img.onerror = () => {
+                    previewBox.innerHTML = `
+                        <p style="color:#ff4d4d; font-size:12px; font-weight:bold;"><i class="fas fa-exclamation-triangle"></i> Помилка</p>
+                        <button class="btn-generate-scene" onclick="generateImageForScene(${sceneId})">
+                            <i class="fas fa-redo"></i> Спробувати ще
+                        </button>
+                    `;
+                    resolve(false); // Все одно пускаємо наступну, щоб не зупинити весь процес
+                };
+                
+                img.src = imageUrl;
+            });
         }
 
         // Подія для кнопки "Зібрати кліп"
