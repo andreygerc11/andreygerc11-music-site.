@@ -387,10 +387,11 @@ async function fetchAndRewriteNews() {
                             englishTitle = translateRes.data.choices[0].message.content.trim();
                         } catch (e) {}
 
-const seed = Math.floor(Math.random() * 10000000);
-                        const prompt = encodeURIComponent(`Ultra realistic photography, award winning medical documentary photo, highly detailed, real life: ${englishTitle}. Hospital or modern laboratory setting, soft natural lighting, 8k resolution, shot on DSLR.`);
+// Створюємо "безпечний", красивий і чистий промпт (без людей і жахів)
+                        const seed = Math.floor(Math.random() * 10000000);
+                        const prompt = encodeURIComponent(`Pristine, bright, futuristic medical research laboratory, sterile clean environment, advanced technology, glowing soft blue and white lights, macro science elements, 8k resolution, highly detailed, photorealistic, safe. NO PEOPLE, NO BLOOD, NO PATIENTS. Concept: ${englishTitle}`);
                         
-                        foundImageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=800&nologo=true&seed=${seed}&model=flux`;
+                        foundImageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=800&nologo=true&seed=${seed}&model=flux`;                    
                     }
 
                     // 3. Пишемо статтю УКРАЇНСЬКОЮ
