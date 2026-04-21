@@ -257,12 +257,14 @@ app.post('/api/generate-storyboard', async (req, res) => {
     }
 
     const promptText = `
-    You are a professional music video director. Analyze these lyrics and break them down into visual scenes (4 to 8 scenes max). 
-    Translate the meaning to English to write highly detailed prompts for an AI Image Generator.
-    Return ONLY a raw JSON array of objects. Do not add any markdown formatting, backticks, or extra text.
+    You are a professional music video director. 
+    CRITICAL INSTRUCTION: You MUST group the lyrics into a MAXIMUM of 6 scenes total for the entire song. 
+    DO NOT create a new scene for every single line. Group 4 to 8 lines together into one single scene block.
+    Translate the visual meaning to English to write highly detailed prompts for an AI Image Generator.
+    Return ONLY a valid JSON array of objects. No markdown formatting, no backticks, no extra text.
     Format MUST be exactly like this:
     [
-      { "id": 1, "time": "00:00 - 00:10", "lyrics": "original ukrainian lyric line", "prompt": "Cinematic wide shot of..." }
+      { "id": 1, "time": "00:00 - 00:30", "lyrics": "group of original ukrainian lyric lines combined here...", "prompt": "Cinematic wide shot of..." }
     ]
     
     Lyrics:
@@ -271,10 +273,10 @@ app.post('/api/generate-storyboard', async (req, res) => {
 
     try {
         const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-            model: "llama-3.1-8b-instant", // <--- ВИПРАВЛЕНО: Використовуємо перевірену модель
+            model: "llama-3.1-8b-instant",
             messages: [{ role: "user", content: promptText }],
             temperature: 0.7,
-            max_tokens: 2000
+            max_tokens: 4000 // Збільшили ліміт удвічі, щоб ШІ точно не обірвався
         }, {
             headers: {
                 'Authorization': `Bearer ${GROQ_API_KEY}`,
@@ -297,7 +299,6 @@ app.post('/api/generate-storyboard', async (req, res) => {
         res.json(scenes);
 
     } catch (error) {
-        // ВИПРАВЛЕНО: Тепер Render покаже точну причину відмови Groq
         console.error("Помилка Groq API (Storyboard):", error.response ? error.response.data : error.message);
         res.status(500).json({ error: 'Помилка генерації сценарію на сервері' });
     }
