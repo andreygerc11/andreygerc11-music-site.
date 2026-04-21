@@ -74,7 +74,7 @@
         .blog-hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; text-transform: uppercase; margin-bottom: 20px; letter-spacing: -1px; }
         .blog-hero p { color: var(--text-muted); max-width: 800px; margin: 0 auto; font-size: 1.1rem; }
 
-        /* ЗМІНЕНО: Контейнер для постів тепер GRID (2 колонки) */
+        /* Контейнер для постів тепер GRID (2 колонки) */
         .blog-container { 
             max-width: 1400px; 
             margin: 0 auto 100px; 
@@ -122,7 +122,8 @@
         }
         .post-text-wrapper.expanded::after { opacity: 0; pointer-events: none; }
 
-        .post-excerpt { color: var(--text-muted); font-size: 1rem; line-height: 1.6; }
+        /* ВИПРАВЛЕНО: зменшено інтервал між рядками */
+        .post-excerpt { color: var(--text-muted); font-size: 1rem; line-height: 1.4; margin-bottom: 10px; }
         .post-excerpt b { color: #fff; }
 
         /* Кнопка розгортання */
@@ -217,7 +218,9 @@
 
                 let cleanText = post.content || "";
                 cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                cleanText = cleanText.replace(/\n/g, '<br><br>');
+                
+                // ВИПРАВЛЕНО: Один <br> замість двох, щоб не було гігантських прогалин між абзацами
+                cleanText = cleanText.replace(/\n/g, '<br>');
 
                 const postHTML = `
                     <article class="post-card" data-aos="fade-up" data-aos-delay="${index * 50}">
