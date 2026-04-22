@@ -137,7 +137,7 @@
 
     <header class="top-bar">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <a href="javascript:void(0)" onclick="window.close()" class="back-link"><i class="fas fa-times"></i> Закрити вкладку</a>
+            <a href="generator.html" onclick="if(window.opener){window.close(); return false;} else {return true;}" class="back-link"><i class="fas fa-arrow-left"></i> Повернутись в Генератор</a>
             <a href="#" class="logo">HERTZ <span>DIRECTOR</span></a>
         </div>
         <button class="btn-main" id="finalCompileBtn" disabled>
