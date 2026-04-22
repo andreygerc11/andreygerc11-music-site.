@@ -221,7 +221,7 @@
     <header class="top-bar">
         <div class="top-left">
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> На головну</a>
-            <a href="#" class="logo">HERTZ <span>SPECTRUM</span></a>
+            <a href="#" class="logo">HERTZ <span>SPECTRUM 2.0</span></a>
         </div>
         
         <div class="top-center">
@@ -275,7 +275,7 @@
             <button id="sidebarSubscribeBtn" class="btn-premium" style="display: none;"><i class="fas fa-crown"></i> PRO Доступ</button>
             <a href="instruction.html" target="_blank" class="btn-instruction"><i class="fas fa-question-circle"></i> Інструкція</a>
             <a href="director.html" class="btn-export" style="background: linear-gradient(45deg, #8a2be2, #4a00e0); margin-right: 10px;">
-                <i class="fas fa-film"></i> Режисер (ШІ) тест
+                <i class="fas fa-film"></i> Режисер (ШІ)тест
             </a>
             
             <button id="stopRenderBtn" class="btn-stop"><i class="fas fa-times"></i> Скасувати</button>
@@ -960,10 +960,34 @@
             nextEl.innerText = (currentSyncIndex + 1 < rawLyrics.length) ? (rawLyrics[currentSyncIndex + 1] || "[ ПАУЗА ]") : "";
         }
 
-        window.addEventListener('keydown', (e) => {
+       window.addEventListener('keydown', (e) => {
             if (isSyncingLyrics && e.code === 'Space') {
-                e.preventDefault(); lyricsData.push({ time: audioPlayer.currentTime, text: rawLyrics[currentSyncIndex] }); currentSyncIndex++;
-                if (currentSyncIndex >= rawLyrics.length) { isSyncingLyrics = false; setTimeout(() => { syncStatus.style.display = 'none'; startSyncBtn.style.display = 'flex'; startSyncBtn.innerHTML = '<i class="fas fa-redo"></i> Оновити'; }, 1500); }
+                e.preventDefault(); 
+                
+                // Форматуємо час у класичний LRC [ММ:СС.хх]
+                let t = audioPlayer.currentTime;
+                let mins = Math.floor(t / 60);
+                let secs = Math.floor(t % 60);
+                let ms = Math.floor((t % 1) * 100);
+                let timeTag = `[${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}]`;
+                
+                let lineText = rawLyrics[currentSyncIndex];
+                lyricsData.push({ time: t, text: lineText }); 
+                
+                // Автоматично дописуємо таймкод у текстове поле (lyricsInput)
+                let lines = lyricsInput.value.split('\n');
+                lines[currentSyncIndex] = `${timeTag} ${lineText}`;
+                lyricsInput.value = lines.join('\n');
+                
+                currentSyncIndex++;
+                if (currentSyncIndex >= rawLyrics.length) { 
+                    isSyncingLyrics = false; 
+                    setTimeout(() => { 
+                        syncStatus.style.display = 'none'; 
+                        startSyncBtn.style.display = 'flex'; 
+                        startSyncBtn.innerHTML = '<i class="fas fa-redo"></i> Оновити текст'; 
+                    }, 1500); 
+                }
                 updateTeleprompter();
             }
         });
