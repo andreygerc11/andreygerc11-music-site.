@@ -7,6 +7,7 @@ const path = require('path');
 const FormData = require('form-data');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const TelegramBot = require('node-telegram-bot-api');
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
@@ -30,8 +31,9 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "ТВІЙ_ID_ЯКЩО_�
 const PREVIEW_FOLDER_ID = "1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S"; 
 const FULL_FOLDER_ID = "1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j";
 
-// === ГЛОБАЛЬНІ ЗМІННІ ===
+// === ГЛОБАЛЬНІ ЗМІННІ ТА КЕШ ===
 let aiBlogPosts = [];
+let globalMusicList = [];
 
 const hdMedicalImages = [
     "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=1200&auto=format&fit=crop", 
@@ -42,15 +44,98 @@ const hdMedicalImages = [
 ];
 
 // ==========================================
-// 1. ТЕЛЕГРАМ ТА GOOGLE SHEETS
+// 1. ТЕЛЕГРАМ БОТ ТА АДМІН-ФУНКЦІЇ
 // ==========================================
+const ADMIN_ID = 556627059;
+const CHANNEL_ID = process.env.CHANNEL_ID || "@golosprotyraku"; 
+const BOT_PRICE = 5000; // 50 грн
+
+let bot;
+if (BOT_TOKEN) {
+    bot = new TelegramBot(BOT_TOKEN, { polling: true });
+    console.log("✅ Telegram Bot успішно запущено.");
+
+    // Команда /start та діплінки
+    bot.onText(/\/start(.*)/, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const payload = match[1].trim();
+
+        if (payload.startsWith('buy_')) {
+            const trackId = payload.replace('buy_', '');
+            await sendBotInvoice(chatId, trackId);
+            return;
+        }
+
+        const opts = { reply_markup: { inline_keyboard: [[{ text: "🎵 Переглянути треки", callback_data: "show_menu" }]] } };
+        bot.sendMessage(chatId, `Вітаю! Це офіційний бот проєкту «Голос проти раку».\nТут можна підтримати автора та отримати повні версії пісень (50 грн).\n\nНатисніть кнопку нижче:`, opts);
+    });
+
+    // Обробка кнопок
+    bot.on('callback_query', async (query) => {
+        const chatId = query.message.chat.id;
+        const messageId = query.message.message_id;
+
+        if (query.data === 'show_menu') {
+            if (globalMusicList.length === 0) await fetchMusicFromDrive();
+            const keyboard = globalMusicList.map(t => [{ text: `${t.name} – 50 грн`, callback_data: `buy_${t.fullId}` }]);
+            bot.editMessageText("Оберіть пісню для завантаження:", { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: keyboard } });
+        }
+
+        if (query.data.startsWith('buy_')) {
+            const trackId = query.data.replace('buy_', '');
+            await sendBotInvoice(chatId, trackId, messageId);
+        }
+        bot.answerCallbackQuery(query.id);
+    });
+
+    // Формування посилання на оплату
+    async function sendBotInvoice(chatId, trackId, messageId = null) {
+        const track = globalMusicList.find(t => t.fullId === trackId);
+        if (!track) return bot.sendMessage(chatId, "❌ Трек не знайдено.");
+
+        try {
+            const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
+                amount: BOT_PRICE, ccy: 980,
+                merchantPaymInfo: { destination: `Трек: ${track.name}`, reference: `tg_${chatId}_${track.fullId}` },
+                webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
+            }, { headers: { 'X-Token': MONO_TOKEN } });
+
+            const text = `Ви обрали: <b>${track.name}</b>\n\n✅ Після оплати бот МИТТЄВО надішле вам аудіофайл прямо сюди.`;
+            const opts = { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "💳 Оплатити 50 грн", url: monoRes.data.pageUrl }]] } };
+
+            if (messageId) bot.editMessageText(text, { chat_id: chatId, message_id: messageId, ...opts });
+            else bot.sendMessage(chatId, text, opts);
+        } catch (e) { bot.sendMessage(chatId, "❌ Помилка сервісу оплати."); }
+    }
+
+    // Розсилка новин на канал
+    bot.onText(/\/send/, async (msg) => {
+        if (msg.from.id !== ADMIN_ID) return;
+        const text = msg.text.replace('/send', '').trim();
+        if (!text) return bot.sendMessage(msg.chat.id, "Введіть текст після команди /send");
+        
+        try {
+            await bot.sendMessage(CHANNEL_ID, text, { parse_mode: "HTML" });
+            bot.sendMessage(msg.chat.id, "✅ Опубліковано на каналі!");
+        } catch (e) { bot.sendMessage(msg.chat.id, `❌ Помилка публікації: ${e.message}`); }
+    });
+}
+
+// Технічні сповіщення для адміна (працює і з ботом, і через звичайний API)
 async function sendTelegramMessage(text) {
-    if (!BOT_TOKEN || !TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === "ТВІЙ_ID_ЯКЩО_НЕ_ДОДАВ_У_RENDER") return;
+    if (!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === "ТВІЙ_ID_ЯКЩО_НЕ_ДОДАВ_У_RENDER") return;
     try {
-        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' });
+        if (bot) {
+            await bot.sendMessage(TELEGRAM_CHAT_ID, text, { parse_mode: 'HTML' });
+        } else if (BOT_TOKEN) {
+            await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' });
+        }
     } catch (e) { console.error("Помилка Telegram:", e.message); }
 }
 
+// ==========================================
+// 2. GOOGLE SHEETS
+// ==========================================
 async function sendToGoogle(data) {
     if (!GOOGLE_SHEETS_URL) return { success: true };
     const response = await fetch(GOOGLE_SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), redirect: 'follow' });
@@ -69,20 +154,26 @@ app.get('/api/subscriptions', async (req, res) => {
 });
 
 // ==========================================
-// 2. МУЗИКА З GOOGLE DRIVE ТА ОПЛАТИ
+// 3. МУЗИКА З GOOGLE DRIVE ТА ОПЛАТИ
 // ==========================================
-app.get('/api/music', async (req, res) => {
+async function fetchMusicFromDrive() {
     try {
-        if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
+        if (!GOOGLE_API_KEY) return [];
         const prevRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${PREVIEW_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,createdTime)&key=${GOOGLE_API_KEY}`);
         const fullRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${FULL_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name)&key=${GOOGLE_API_KEY}`);
-        const musicList = prevRes.data.files.map(f => {
+        globalMusicList = prevRes.data.files.map(f => {
             const cleanName = f.name.replace(/\.[^/.]+$/, "").replace(" (Прев'ю)", "").trim();
             const fullFile = fullRes.data.files.find(full => full.name.replace(/\.[^/.]+$/, "").trim() === cleanName);
             return { name: cleanName, previewId: f.id, fullId: fullFile ? fullFile.id : null, date: f.createdTime };
         }).filter(m => m.fullId);
-        res.json(musicList);
-    } catch (error) { res.status(500).json({ error: "Не вдалося завантажити музику" }); }
+        return globalMusicList;
+    } catch (error) { console.error("Drive Fetch Error"); return globalMusicList; }
+}
+
+app.get('/api/music', async (req, res) => {
+    // Оновлюємо список і віддаємо
+    const list = await fetchMusicFromDrive();
+    res.json(list);
 });
 
 app.get('/api/stream/:fileId', async (req, res) => {
@@ -117,31 +208,55 @@ app.post('/api/pay-subscription', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Помилка оплати" }); }
 });
 
+// === ЄДИНИЙ WEBHOOK ДЛЯ САЙТУ ТА БОТА ===
 app.post('/api/webhook', async (req, res) => {
     try {
         const { invoiceId, status, reference } = req.body;
         if (status === 'success') {
             await sendToGoogle({ action: 'update_sub', invoiceId, status });
             await sendTelegramMessage(`🔥 <b>Нова оплата!</b>\nРеференс: ${reference}`);
+
+            // АВТОМАТИЧНА ВІДПРАВКА АУДІОФАЙЛУ (Якщо куплено через бота)
+            if (reference && reference.startsWith('tg_') && bot) {
+                const parts = reference.split('_');
+                const tgChatId = parts[1];
+                const tgTrackId = parts[2];
+                const track = globalMusicList.find(t => t.fullId === tgTrackId) || { name: "Ваш трек" };
+
+                try {
+                    await bot.sendMessage(tgChatId, `🎉 <b>Оплата успішна!</b>\nЗавантажую файл <b>${track.name}</b>... Зачекайте пару секунд ⏳`, { parse_mode: "HTML" });
+
+                    const fileStreamRes = await axios({ 
+                        method: 'get', 
+                        url: `https://www.googleapis.com/drive/v3/files/${tgTrackId}?alt=media&key=${GOOGLE_API_KEY}`, 
+                        responseType: 'stream' 
+                    });
+
+                    await bot.sendAudio(tgChatId, fileStreamRes.data, {
+                        caption: `💙 Дякую за підтримку!\nОсь ваш трек: <b>${track.name}</b>`,
+                        parse_mode: "HTML",
+                        title: track.name,
+                        performer: "Андрій Герц (Golos Proty Raku)"
+                    }, { filename: `${track.name}.mp3`, contentType: 'audio/mpeg' });
+
+                } catch (audioErr) {
+                    console.error("Помилка відправки файлу в ТГ:", audioErr.message);
+                    const fileUrl = `https://drive.google.com/uc?export=download&id=${tgTrackId}`;
+                    const opts = { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "⬇️ Скачати трек", url: fileUrl }]] } };
+                    await bot.sendMessage(tgChatId, `🎉 <b>Дякую за підтримку!</b>\nОсь ваше посилання на файл: <b>${track.name}</b>`, opts);
+                }
+            }
         }
         res.status(200).send("OK");
     } catch (e) { res.status(500).send("Error"); }
 });
 
 // ==========================================
-// 3. ГЕНЕРАТОР ВІДЕО ТА ОБКЛАДИНОК (Hertz Spectrum)
+// 4. ГЕНЕРАТОР ВІДЕО, ШІ-РЕЖИСЕР ТА БЛОГ
 // ==========================================
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
-        // Забрали агресивні фільтри, щоб не спотворювати голос для ШІ
-        ffmpeg(inputPath)
-            .audioChannels(1)
-            .audioFrequency(16000)
-            .audioBitrate('64k')
-            .toFormat('mp3')
-            .on('end', () => resolve(outputPath))
-            .on('error', reject)
-            .save(outputPath);
+        ffmpeg(inputPath).audioChannels(1).audioFrequency(16000).audioBitrate('64k').toFormat('mp3').on('end', () => resolve(outputPath)).on('error', reject).save(outputPath);
     });
 }
 
@@ -155,32 +270,22 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         formData.append('file', fs.createReadStream(compressedPath)); 
         formData.append('model', 'whisper-large-v3'); 
         formData.append('language', 'uk');
-        
-        // ДОДАНО: Просимо ШІ віддати текст із таймкодами
         formData.append('response_format', 'verbose_json');
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, { 
             headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() } 
         });
         
-        // ДОДАНО: Формуємо текст з квадратними дужками часу
         let lrcText = "";
         if (response.data.segments && response.data.segments.length > 0) {
             response.data.segments.forEach(seg => {
-                let mins = Math.floor(seg.start / 60);
-                let secs = (seg.start % 60).toFixed(2);
-                let minStr = mins < 10 ? "0" + mins : mins;
-                let secStr = secs < 10 ? "0" + secs : secs;
-                lrcText += `[${minStr}:${secStr}] ${seg.text.trim()}\n`;
+                let mins = Math.floor(seg.start / 60); let secs = (seg.start % 60).toFixed(2);
+                lrcText += `[${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}] ${seg.text.trim()}\n`;
             });
-        } else {
-            lrcText = response.data.text; 
-        }
+        } else { lrcText = response.data.text; }
         
         res.json({ lrc: lrcText }); 
-
     } catch (error) { 
-        console.error("Whisper Error:", error.response ? error.response.data : error.message);
         res.status(500).json({ error: "Whisper Error" }); 
     } finally { 
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
@@ -191,7 +296,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, customPrompt, format } = req.body;
-        
         let textToTranslate = "";
         if (customPrompt && lyrics) textToTranslate = `Сцена: ${customPrompt}. Настрій: ${lyrics.substring(0, 500)}`;
         else if (customPrompt) textToTranslate = `Сцена: ${customPrompt}`;
@@ -199,62 +303,28 @@ app.post('/api/generate-image', async (req, res) => {
         else textToTranslate = "Modern minimalistic music studio background";
 
         let basePrompt = "ultra realistic photography, 8k resolution";
-
         try {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.1-8b-instant",
-                messages: [
-                    { 
-                        role: "system", 
-                        content: "You are an expert prompt engineer. Translate the user's request into English and create a highly descriptive visual prompt (max 30 words) for an ULTRA REALISTIC, photorealistic image. No text, no logos, no cartoons, no digital art, no anime, no 3d render. Only real-life documentary style photography. Output ONLY the English prompt." 
-                    },
-                    { role: "user", content: String(textToTranslate) }
-                ],
-                temperature: 0.7,
-                max_tokens: 150
+                messages: [{ role: "system", content: "You are an expert prompt engineer. Translate the user's request into English and create a highly descriptive visual prompt (max 30 words) for an ULTRA REALISTIC, photorealistic image. No text, no logos, no cartoons. Output ONLY the English prompt." }, { role: "user", content: String(textToTranslate) }],
+                temperature: 0.7, max_tokens: 150
             }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
-            
             basePrompt = groqRes.data.choices[0].message.content.trim();
-        } catch (groqError) {
-            console.error("Groq Error Generator");
-            basePrompt = "ultra realistic documentary photography, cinematic lighting, 8k, photorealistic"; 
-        }
+        } catch (e) { basePrompt = "ultra realistic documentary photography, cinematic lighting, 8k, photorealistic"; }
 
         const finalPrompt = `${basePrompt}, real photo, shot on DSLR, highly detailed, photorealistic, 8k resolution`;
+        let w = 1080, h = 1920; 
+        if (format === 'horizontal' || format === 'cinema') { w = 1920; h = 1080; } 
+        else if (format === 'square') { w = 1080; h = 1080; } 
+        else if (format === 'portrait') { w = 1080; h = 1350; } 
 
-let imgWidth = 1080;
-        let imgHeight = 1920; 
-        
-        // Для cinema також генеруємо 16:9, а фронтенд сам обріже зайве БЕЗ розтягування
-        if (format === 'horizontal' || format === 'cinema') { 
-            imgWidth = 1920; imgHeight = 1080; 
-        } 
-        else if (format === 'square') { 
-            imgWidth = 1080; imgHeight = 1080; 
-        } 
-        else if (format === 'portrait') { 
-            imgWidth = 1080; imgHeight = 1350; 
-        } 
-
-        const randomSeed = Math.floor(Math.random() * 10000000);
-        // Додано &model=flux для уникнення спотворень і покращення якості
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${imgWidth}&height=${imgHeight}&nologo=true&seed=${randomSeed}&model=flux`;
-        res.json({ imageUrl });
-    } catch (error) { 
-        console.error("Image Gen Error:", error.message);
-        res.status(500).send("Помилка генерації зображення"); 
-    }
+        res.json({ imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${w}&height=${h}&nologo=true&seed=${Math.floor(Math.random() * 10000000)}&model=flux` });
+    } catch (error) { res.status(500).send("Помилка генерації зображення"); }
 });
 
-// ==========================================
-// НОВИЙ МАРШРУТ: РОЗБИВКА ТЕКСТУ НА СЦЕНИ (Hertz Director)
-// ==========================================
 app.post('/api/generate-storyboard', async (req, res) => {
     const { lyrics } = req.body;
-
-    if (!lyrics) {
-        return res.status(400).json({ error: 'Текст пісні не надано' });
-    }
+    if (!lyrics) return res.status(400).json({ error: 'Текст пісні не надано' });
 
     const promptText = `
     You are a professional music video director. 
@@ -264,75 +334,38 @@ app.post('/api/generate-storyboard', async (req, res) => {
     Return ONLY a valid JSON array of objects. No markdown formatting, no backticks, no extra text.
     Format MUST be exactly like this:
     [
-      { "id": 1, "time": "00:00 - 00:30", "lyrics": "group of original ukrainian lyric lines combined here...", "prompt": "Cinematic wide shot of..." }
+      { "id": 1, "time": "00:00 - 00:30", "lyrics": "group of original ukrainian lyric lines...", "prompt": "Cinematic wide shot of..." }
     ]
-    
-    Lyrics:
-    ${lyrics}
-    `;
+    Lyrics:\n${lyrics}`;
 
     try {
         const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
             model: "llama-3.1-8b-instant",
             messages: [{ role: "user", content: promptText }],
-            temperature: 0.7,
-            max_tokens: 4000 // Збільшили ліміт удвічі, щоб ШІ точно не обірвався
-        }, {
-            headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
-                'Content-Type': 'application/json'
-            }
-        });
+            temperature: 0.7, max_tokens: 4000
+        }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' } });
 
-        const content = groqRes.data.choices[0].message.content.trim();
-        
-        let scenes = [];
-        try {
-            // Очищаємо JSON від можливих маркдаун-тегів
-            const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
-            scenes = JSON.parse(cleanJson);
-        } catch (parseError) {
-            console.error("Помилка парсингу JSON від Groq:", content);
-            return res.status(500).json({ error: 'ШІ повернув неправильний формат даних.' });
-        }
-
-        res.json(scenes);
-
-    } catch (error) {
-        console.error("Помилка Groq API (Storyboard):", error.response ? error.response.data : error.message);
-        res.status(500).json({ error: 'Помилка генерації сценарію на сервері' });
-    }
+        const cleanJson = groqRes.data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
+        res.json(JSON.parse(cleanJson));
+    } catch (error) { res.status(500).json({ error: 'Помилка генерації сценарію' }); }
 });
 
-// ==========================================
-// 4. АВТОМАТИЧНИЙ БЛОГ ТА НОВИНИ (ШІ)
-// ==========================================
+// === АВТОМАТИЧНИЙ БЛОГ ТА НОВИНИ (ШІ) ===
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
-        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`;
-        const response = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-        const content = Buffer.from(response.data.content, 'base64').toString('utf8');
-        aiBlogPosts = JSON.parse(content);
-        console.log(`✅ Архів блогу завантажено: ${aiBlogPosts.length} статей.`);
-    } catch (error) { aiBlogPosts = []; }
+        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        aiBlogPosts = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
+    } catch (e) { aiBlogPosts = []; }
 }
 
 async function saveBlogToGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
         const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`;
-        let sha = null;
-        try {
-            const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-            sha = getRes.data.sha;
-        } catch (e) {}
-
+        let sha = null; try { const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } }); sha = getRes.data.sha; } catch (e) {}
         const contentEncoded = Buffer.from(JSON.stringify(aiBlogPosts, null, 2), 'utf8').toString('base64');
-        const data = { message: "Оновлення блогу", content: contentEncoded };
-        if (sha) data.sha = sha;
-
-        await axios.put(url, data, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        await axios.put(url, { message: "Оновлення блогу", content: contentEncoded, sha }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
     } catch (e) { console.error("Помилка GitHub:", e.message); }
 }
 
@@ -343,8 +376,7 @@ const rssSources = [
     "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en",
     "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en",
     "https://medicalxpress.com/rss-feed/cancer-news/",
-    "https://www.sciencedaily.com/rss/health_medicine/cancer.xml",
-    "https://www.youtube.com/feeds/videos.xml?channel_id=UC3S13n7_p_A7-HIt5f0-6Lg"
+    "https://www.sciencedaily.com/rss/health_medicine/cancer.xml"
 ];
 
 async function fetchAndRewriteNews() {
@@ -370,35 +402,19 @@ async function fetchAndRewriteNews() {
 
                     if (aiBlogPosts.some(p => p.originalTitle === rawTitle)) continue;
 
-                    let foundImageUrl = null;
                     let foundVideoUrl = null;
                     const ytMatch = itemXml.match(/<yt:videoId>(.*?)<\/yt:videoId>/i);
-                    
-                    if (ytMatch) {
-                        foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
-                    } else {
-                        // Використовуємо універсальний фірмовий банер для всіх новин
-                        foundImageUrl = "baner_novunu.png";
-                    }
+                    if (ytMatch) foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
 
-                    // 3. Пишемо статтю УКРАЇНСЬКОЮ
                     const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                         model: "llama-3.1-8b-instant",
-                        messages: [{ 
-                            role: "system", 
-                            content: "Ти — автор проєкту 'Голос проти раку'. Пиши розгорнуту статтю УКРАЇНСЬКОЮ (5-7 абзаців) з підзаголовками." 
-                        }, { role: "user", content: `Тема: ${rawTitle}` }],
+                        messages: [{ role: "system", content: "Ти — автор проєкту 'Голос проти раку'. Пиши розгорнуту статтю УКРАЇНСЬКОЮ (5-7 абзаців) з підзаголовками." }, { role: "user", content: `Тема: ${rawTitle}` }],
                         max_tokens: 2000
                     }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
                     aiBlogPosts.unshift({
-                        id: Date.now() + Math.floor(Math.random() * 1000),
-                        date: pubDate,
-                        originalTitle: rawTitle,
-                        title: rawTitle.split(" - ")[0],
-                        content: groqRes.data.choices[0].message.content.trim(),
-                        imageUrl: foundImageUrl,
-                        videoUrl: foundVideoUrl
+                        id: Date.now() + Math.floor(Math.random() * 1000), date: pubDate, originalTitle: rawTitle, title: rawTitle.split(" - ")[0],
+                        content: groqRes.data.choices[0].message.content.trim(), imageUrl: "baner_novunu.png", videoUrl: foundVideoUrl
                     });
                     addedCount++;
                     await new Promise(r => setTimeout(r, 10000));
@@ -415,7 +431,7 @@ app.get('/api/blog', (req, res) => res.json(aiBlogPosts));
 // 5. ЗАПУСК СЕРВЕРА
 // ==========================================
 const PORT = process.env.PORT || 10000;
-syncBlogFromGitHub().then(() => {
+Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive()]).then(() => {
     app.listen(PORT, () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
         setTimeout(fetchAndRewriteNews, 15000); 
