@@ -126,6 +126,8 @@
         .btn-youtube:hover { background: #fff; color: #ff0000; }
         .btn-tiktok { background: rgba(17, 17, 17, 0.8); border-color: #111111; }
         .btn-tiktok:hover { background: #fff; color: #111111; border-color: #fff; }
+        .btn-telegram { background: rgba(42, 171, 238, 0.8); border-color: #2AABEE; }
+        .btn-telegram:hover { background: #fff; color: #2AABEE; }
 
         /* Спільні стилі для секцій */
         section { padding: 80px 20px; max-width: 1200px; margin: 0 auto; position: relative;}
@@ -148,7 +150,6 @@
         /* === ВЕРТИКАЛЬНИЙ ПЛЕЄР З КНОПКАМИ СОЦМЕРЕЖ === */
         .ap-widget { width: 100%; max-width: 450px; margin: 0 auto; background: #050505; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
         
-        /* Сітка для 5 кнопок шерингу в шапці (як на скріні 1) */
         .ap-header { 
             display: grid; 
             grid-template-columns: repeat(5, 1fr); 
@@ -173,12 +174,7 @@
             text-decoration: none;
         }
         
-        .ap-share-btn:hover {
-            background: #222;
-            border-color: rgba(255,255,255,0.2);
-            transform: translateY(-2px);
-        }
-        
+        .ap-share-btn:hover { background: #222; border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
         .ap-share-btn i { font-size: 1.5rem; margin-bottom: 5px; }
         .ap-share-btn h4 { font-size: 0.7rem; margin: 0 0 2px 0; font-weight: 700; color: #fff;}
         .ap-share-btn p { font-size: 0.55rem; margin: 0; color: #888;}
@@ -194,23 +190,8 @@
         .ap-control-icon:hover { color: var(--accent); transform: scale(1.1); }
         #apPlayPauseBtn { font-size: 1.5rem; width: 30px; }
         
-        /* Кнопка підписки біля прогрес-бару */
-        .ap-subscribe-btn {
-            background: transparent;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
-        .ap-subscribe-btn:hover {
-            background: var(--accent);
-            color: #fff;
-        }
+        .ap-subscribe-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .ap-subscribe-btn:hover { background: var(--accent); color: #fff; }
 
         .ap-progress-container { flex-grow: 1; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; cursor: pointer; position: relative; }
         .ap-progress { height: 100%; background: var(--accent); width: 0%; border-radius: 2px; position: relative; transition: width 0.1s linear; }
@@ -231,7 +212,6 @@
         .ap-track-num { width: 30px; font-weight: 700; color: var(--accent); font-size: 0.9rem; text-align: left;}
         .ap-track-title { flex-grow: 1; font-size: 0.95rem; font-weight: 600; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 15px; text-align: left;}
         
-        /* Кнопка КУПИТИ біля назви треку */
         .ap-track-price { font-size: 0.8rem; font-weight: 700; color: #888; transition: 0.2s;}
         .ap-track:hover .ap-track-price { color: var(--accent); }
         
@@ -240,7 +220,7 @@
         .new-badge { display: inline-block; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; text-transform: uppercase; vertical-align: middle; margin-left: 8px; position: relative; top: -1px; animation: pulse-badge 2s infinite; }
         @keyframes pulse-badge { 0% { box-shadow: 0 0 0 rgba(255, 77, 77, 0.4); } 50% { box-shadow: 0 0 8px rgba(255, 77, 77, 0.8); } 100% { box-shadow: 0 0 0 rgba(255, 77, 77, 0); } }
 
-        /* Стилі Модального вікна */
+        /* Модальне вікно */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; }
         .modal-content { background: #161618; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid var(--accent); max-width: 400px; width: 90%; }
         .modal-content h3 { color: #fff; margin-bottom: 15px; font-size: 1.4rem; }
@@ -282,8 +262,72 @@
 
         @keyframes bounce { 0% { height: 15%; } 100% { height: 100%; } }
 
+        /* === КНОПКА ШІ-РЕЖИСЕРА (ФІОЛЕТОВА) === */
+        .director-promo-box {
+            background: linear-gradient(145deg, rgba(30, 10, 40, 0.6) 0%, rgba(15, 5, 20, 0.8) 100%);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border-radius: 20px; padding: 40px; text-align: center; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100%; transition: 0.4s ease; text-decoration: none; position: relative; overflow: hidden;
+        }
+        .director-promo-box:hover { border-color: rgba(138, 43, 226, 0.5); transform: translateY(-8px); }
+        .director-promo-box::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(138, 43, 226, 0.6), transparent);
+            opacity: 0; transition: 0.5s; pointer-events: none;
+        }
+        .director-promo-box:hover::before { opacity: 1; }
+
+        /* === Анімація ШІ-Режисера (Ядро/Камера) === */
+        .ai-core-animation {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ai-core {
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #ba55d3, 0 0 40px #8a2be2;
+            animation: ai-pulse 1.2s infinite ease-in-out alternate;
+        }
+        .ai-ring-1 {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid transparent;
+            border-top-color: #ba55d3;
+            border-bottom-color: #ba55d3;
+            border-radius: 50%;
+            animation: ai-spin 3s linear infinite;
+        }
+        .ai-ring-2 {
+            position: absolute;
+            width: 75%;
+            height: 75%;
+            border: 2px solid transparent;
+            border-left-color: rgba(255, 255, 255, 0.7);
+            border-right-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            animation: ai-spin-reverse 2s linear infinite;
+        }
+        @keyframes ai-pulse {
+            0% { transform: scale(0.8); box-shadow: 0 0 10px #ba55d3; }
+            100% { transform: scale(1.3); box-shadow: 0 0 25px #ba55d3, 0 0 50px #8a2be2; }
+        }
+        @keyframes ai-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes ai-spin-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+
         .tech-tags { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; justify-content: center;}
         .tag { background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.3); padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; color: #ffcccc; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;}
+        .tag-purple { background: rgba(138,43,226,0.1); border: 1px solid rgba(138,43,226,0.3); padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; color: #e0b0ff; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;}
 
         /* БЛОК СТАТЕЙ */
         .articles-section { margin-top: 60px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 40px; }
@@ -300,7 +344,7 @@
         .article-btn { color: var(--accent); font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; margin-top: auto; text-transform: uppercase; }
         .article-card:hover .article-btn { color: white; gap: 12px; }
 
-        /* === Сучасні, динамічні логотипи блогу з Glassmorphism та неоном === */
+        /* Динамічні логотипи блогу */
         .article-dynamic-logo {
             display: flex; gap: 6px; height: 40px; align-items: flex-end; margin-bottom: 20px;
             background: linear-gradient(145deg, rgba(20, 20, 23, 0.6) 0%, rgba(10, 10, 11, 0.8) 100%);
@@ -308,30 +352,10 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px; padding: 10px 15px; width: fit-content;
         }
-        
-        .article-mic-logo .bounce-bar {
-            width: 6px; background: var(--accent); border-radius: 5px;
-            animation: bounce 1.2s infinite ease-in-out alternate;
-            box-shadow: 0 0 10px rgba(255, 77, 77, 0.6);
-        }
-        
-        .article-cells-logo .bounce-cell {
-            width: 10px; height: 10px; background: rgba(255,77,77,0.3); border-radius: 50%;
-            border: 2px solid var(--accent);
-            animation: pulse-cell 2s infinite alternate;
-            box-shadow: 0 0 10px rgba(255, 77, 77, 0.6);
-        }
-        
-        .article-chem-logo .chem-atom {
-            width: 8px; height: 8px; background: var(--accent); border-radius: 50%;
-            animation: bounce-atom 1.5s infinite ease-in-out alternate;
-            box-shadow: 0 0 10px rgba(255, 77, 77, 0.6);
-        }
-        
-        .article-hands-logo .hands-mic {
-            font-size: 1.5rem; color: #fff;
-            animation: glow-mic 3s infinite alternate;
-        }
+        .article-mic-logo .bounce-bar { width: 6px; background: var(--accent); border-radius: 5px; animation: bounce 1.2s infinite ease-in-out alternate; box-shadow: 0 0 10px rgba(255, 77, 77, 0.6); }
+        .article-cells-logo .bounce-cell { width: 10px; height: 10px; background: rgba(255,77,77,0.3); border-radius: 50%; border: 2px solid var(--accent); animation: pulse-cell 2s infinite alternate; box-shadow: 0 0 10px rgba(255, 77, 77, 0.6); }
+        .article-chem-logo .chem-atom { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: bounce-atom 1.5s infinite ease-in-out alternate; box-shadow: 0 0 10px rgba(255, 77, 77, 0.6); }
+        .article-hands-logo .hands-mic { font-size: 1.5rem; color: #fff; animation: glow-mic 3s infinite alternate; }
 
         @keyframes pulse-cell { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.2); opacity: 1; } }
         @keyframes bounce-atom { 0% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
@@ -421,9 +445,10 @@
             <a href="#support" class="btn">Підтримати проєкт</a>
             <a href="#music" class="btn btn-outline">Слухати музику</a>
             <a href="generator.html" class="btn btn-outline"><i class="fas fa-video"></i> Hertz Spectrum</a>
-            <a href="https://www.tiktok.com/@golosprotyraku" target="_blank" class="btn btn-tiktok"><i class="fab fa-tiktok"></i> TikTok</a>
-            <a href="https://www.youtube.com/@golosprotyrakuppua" target="_blank" class="btn btn-youtube"><i class="fab fa-youtube"></i> YouTube</a>
+            <a href="https://t.me/golosprotyraku_bot" target="_blank" class="btn btn-telegram"><i class="fab fa-telegram"></i> Telegram Бот</a>
             <a href="https://chat.whatsapp.com/EQJv9AjMfOTBBjccFFlYnM" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+            <a href="https://www.youtube.com/@golosprotyrakuppua" target="_blank" class="btn btn-youtube"><i class="fab fa-youtube"></i> YouTube</a>
+            <a href="https://www.tiktok.com/@golosprotyraku" target="_blank" class="btn btn-tiktok"><i class="fab fa-tiktok"></i> TikTok</a>
         </div>
     </div>
 </header>
@@ -447,8 +472,13 @@
                 </div>
                 
                 <div class="info-box">
-                    <h4><i class="fas fa-laptop"></i> Стартовий пакет</h4>
-                    <p>Я створюю цей сайт сам, але мені потрібна ваша допомога, щоб працювати надалі. Купуючи пісню або оформлюючи підписку на генератор відео, ви напряму підтримуєте людей, які важко хворі.</p>
+                    <h4><i class="fas fa-laptop-code"></i> Творчість та розробка</h4>
+                    <p>Я поєдную в собі службу, написання музики та IT-розробку. Увесь цей портал, алгоритми та складний відеогенератор <b>Hertz Spectrum</b> я написав власноруч під час лікування. Створення пісень (включно з адаптацією української класики) та написання коду — це мій спосіб залишатися в строю, бути корисним і самостійно акумулювати кошти на боротьбу з хворобою.</p>
+                </div>
+                
+                <div class="info-box">
+                    <h4><i class="fas fa-hands-helping"></i> Ваша підтримка</h4>
+                    <p>Купуючи мою музику або оформлюючи підписку на генератор відео, ви напряму підтримуєте мене та мій проєкт. Це дає змогу оплачувати сервери, розвивати інструменти та продовжувати лікування.</p>
                 </div>
             </div>
             
@@ -529,14 +559,36 @@
         
         <div class="about-grid" style="align-items: center;">
             <div class="about-text" data-aos="fade-right">
-                <p>Я розробив цей інструмент, щоб кожен міг легко створювати круті музичні відео з пульсуючим логотипом, ефектами частинок та неоновими кривими.</p>
-                <div class="info-box">
-                    <h4><i class="fas fa-crown"></i> Підписка (Monobank)</h4>
-                    <p>Оформлюючи щомісячну підписку через Monobank, ви отримуєте повний преміум-доступ до всіх функцій генератора і водночас <strong>фінансово підтримуєте мій бій за життя</strong> та розвиток проєкту.</p>
+                
+                <div class="info-box" style="border-left-color: var(--accent); background: rgba(255, 77, 77, 0.05); margin-bottom: 15px; box-shadow: 0 10px 30px rgba(255, 77, 77, 0.1);">
+                    <h4 style="color: var(--accent); margin-top: 0;"><i class="fas fa-video"></i> Hertz Spectrum (Візуалізатор)</h4>
+                    <p style="margin-top: 5px;">Повноцінна онлайн-студія, розроблена для створення професійних музичних відео прямо в браузері.</p>
+                    <ul style="padding-left: 15px; margin-top: 8px; color: #bbb; font-size: 0.85rem;">
+                        <li><b style="color: #fff;">10 Стилів та 50 Ефектів:</b> Комбінуйте різні типи спектра з частинками — від пилу та нот до вогню і матриці.</li>
+                        <li><b style="color: #fff;">Розумне Караоке:</b> ШІ Whisper автоматично розпізнає ваш голос і синхронізує текст.</li>
+                        <li><b style="color: #fff;">Усі формати:</b> Готові пресети для TikTok (9:16), YouTube (16:9) та кіноформату (21:9).</li>
+                    </ul>
                 </div>
+
+                <div class="info-box" style="border-left-color: #8a2be2; background: rgba(138, 43, 226, 0.05); margin-bottom: 15px; box-shadow: 0 10px 30px rgba(138, 43, 226, 0.1);">
+                    <h4 style="color: #ba55d3; margin-top: 0;"><i class="fas fa-film"></i> Hertz Director (ШІ-Режисер)</h4>
+                    <p style="margin-top: 5px;">Ваш персональний кліпмейкер на базі нейромереж Llama та Flux. Ви просто додаєте текст пісні, а Режисер:</p>
+                    <ul style="padding-left: 15px; margin-top: 8px; color: #bbb; font-size: 0.85rem;">
+                        <li><b style="color: #fff;">Аналізує сенс:</b> ШІ розуміє настрій кожного куплету.</li>
+                        <li><b style="color: #fff;">Створює сценарій:</b> Автоматично розбиває пісню на сцени по таймкодах.</li>
+                        <li><b style="color: #fff;">Малює кадри:</b> Генерує унікальні 8K-зображення для кожної сцени.</li>
+                    </ul>
+                    <p style="margin-top: 8px; font-size: 0.85rem; color: #fff; font-weight: bold;">Ваш сюжетний кліп збирається сам!</p>
+                </div>
+
+                <div class="info-box">
+                    <h4><i class="fas fa-crown"></i> Підписка </h4>
+                    <p>Оформлюючи підписку, ви отримуєте повний доступ до 50+ ефектів та ШІ-Режисера, а також <strong>фінансово підтримуєте мій бій за життя</strong>.</p>
+                </div>
+
             </div>
             
-            <div class="about-img-wrap" data-aos="fade-left">
+            <div class="about-img-wrap" data-aos="fade-left" style="display: flex; flex-direction: column; gap: 20px;">
                 <a href="generator.html" class="generator-promo-box">
                     <div class="spectrum-animation">
                         <span></span><span></span><span></span><span></span><span></span>
@@ -547,6 +599,21 @@
                         <span class="tag">10+ Стилів</span>
                         <span class="tag">50+ Ефектів</span>
                         <span class="tag">HQ Експорт</span>
+                    </div>
+                </a>
+
+                <a href="director.html" class="director-promo-box">
+                    <div class="ai-core-animation">
+                        <div class="ai-ring-1"></div>
+                        <div class="ai-ring-2"></div>
+                        <div class="ai-core"></div>
+                    </div>
+                    <h3 style="color: #fff; margin-bottom: 5px; font-size: 1.8rem; text-shadow: 0 0 15px rgba(138, 43, 226, 0.6);">Hertz Director</h3>
+                    <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 10px;">ШІ-Режисер сюжетних кліпів</p>
+                    <div class="tech-tags">
+                        <span class="tag-purple">ШІ Сценарій</span>
+                        <span class="tag-purple">8K Кадри</span>
+                        <span class="tag-purple">Flux ШІ</span>
                     </div>
                 </a>
             </div>
