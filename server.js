@@ -75,17 +75,62 @@ if (BOT_TOKEN) {
         const chatId = query.message.chat.id;
         const messageId = query.message.message_id;
 
-        if (query.data === 'show_menu') {
+        // --- НОВА ЛОГІКА ЗІ СТОРІНКАМИ ---
+        if (query.data.startsWith('show_menu')) {
             if (globalMusicList.length === 0) await fetchMusicFromDrive();
-            const keyboard = globalMusicList.map(t => [{ text: `${t.name} – 50 грн`, callback_data: `buy_${t.fullId}` }]);
-            bot.editMessageText("Оберіть пісню для завантаження:", { chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: keyboard } });
+            
+            if (globalMusicList.length === 0) {
+                return bot.sendMessage(chatId, "Пісні ще завантажуються, спробуйте через хвилину.");
+            }
+
+            // Визначаємо поточну сторінку (за замовчуванням 0)
+            const parts = query.data.split('_');
+            let page = 0;
+            if (parts.length === 3) {
+                page = parseInt(parts[2]); // якщо прийшло show_menu_1, show_menu_2 і т.д.
+            }
+
+            const ITEMS_PER_PAGE = 10; // Кількість пісень на одній сторінці
+            const totalPages = Math.ceil(globalMusicList.length / ITEMS_PER_PAGE);
+            
+            // Вирізаємо потрібні 10 пісень для поточної сторінки
+            const currentList = globalMusicList.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+
+            // Генеруємо кнопки тільки для цих 10 пісень
+            const keyboard = currentList.map(t => [{ text: `🎵 ${t.name} – 50 грн`, callback_data: `buy_${t.fullId}` }]);
+
+            // Додаємо кнопки навігації (Вперед / Назад)
+            const navButtons = [];
+            if (page > 0) {
+                navButtons.push({ text: "⬅️ Назад", callback_data: `show_menu_${page - 1}` });
+            }
+            if (page < totalPages - 1) {
+                navButtons.push({ text: "Вперед ➡️", callback_data: `show_menu_${page + 1}` });
+            }
+            
+            if (navButtons.length > 0) {
+                keyboard.push(navButtons);
+            }
+
+            try {
+                await bot.editMessageText(`Оберіть пісню для завантаження (Сторінка ${page + 1} з ${totalPages}):`, { 
+                    chat_id: chatId, 
+                    message_id: messageId, 
+                    reply_markup: { inline_keyboard: keyboard } 
+                });
+            } catch (e) {
+                // Ігноруємо помилку, якщо користувач клікає на ту саму сторінку двічі
+            }
         }
 
         if (query.data.startsWith('buy_')) {
             const trackId = query.data.replace('buy_', '');
             await sendBotInvoice(chatId, trackId, messageId);
         }
-        bot.answerCallbackQuery(query.id);
+        
+        try {
+            bot.answerCallbackQuery(query.id);
+        } catch (e) {}
     });
 
     // Формування посилання на оплату
@@ -412,11 +457,27 @@ async function fetchAndRewriteNews() {
                         max_tokens: 2000
                     }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
+                    const cleanTitle = rawTitle.split(" - ")[0];
+                    const articleContent = groqRes.data.choices[0].message.content.trim();
+
                     aiBlogPosts.unshift({
-                        id: Date.now() + Math.floor(Math.random() * 1000), date: pubDate, originalTitle: rawTitle, title: rawTitle.split(" - ")[0],
-                        content: groqRes.data.choices[0].message.content.trim(), imageUrl: "baner_novunu.png", videoUrl: foundVideoUrl
+                        id: Date.now() + Math.floor(Math.random() * 1000), date: pubDate, originalTitle: rawTitle, title: cleanTitle,
+                        content: articleContent, imageUrl: "baner_novunu.png", videoUrl: foundVideoUrl
                     });
                     addedCount++;
+
+                    // === АВТОМАТИЧНА ПУБЛІКАЦІЯ В ТЕЛЕГРАМ КАНАЛ ===
+                    if (bot && CHANNEL_ID) {
+                        try {
+                            const tgText = `⚡️ <b>${cleanTitle}</b>\n\n${articleContent.substring(0, 300)}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
+                            await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
+                            console.log(`✅ Новину успішно відправлено в канал ${CHANNEL_ID}`);
+                        } catch (tgErr) {
+                            console.error("❌ Помилка публікації в канал:", tgErr.message);
+                        }
+                    }
+                    // =================================================
+
                     await new Promise(r => setTimeout(r, 10000));
                 }
             } catch (e) { }
