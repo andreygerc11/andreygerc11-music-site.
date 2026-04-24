@@ -48,26 +48,44 @@ const hdMedicalImages = [
 // ==========================================
 const ADMIN_ID = 5853625377;
 const CHANNEL_ID = process.env.CHANNEL_ID || "@golosprotyraku"; 
-const BOT_PRICE = 5000; // 50 грн
+const BOT_PRICE = 3736; // 37,36 грн
 
 let bot;
 if (BOT_TOKEN) {
     bot = new TelegramBot(BOT_TOKEN, { polling: true });
     console.log("✅ Telegram Bot успішно запущено.");
 
-    // Команда /start та діплінки
-    bot.onText(/\/start(.*)/, async (msg, match) => {
-        const chatId = msg.chat.id;
-        const payload = match[1].trim();
+    // === ГОЛОВНЕ МЕНЮ (для /start та /menu) ===
+    const getMainMenu = () => {
+        return {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "🎵 Каталог пісень (37,36 грн)", callback_data: "show_menu" }],
+                    [{ text: "ℹ️ Про проєкт та автора", callback_data: "about_project" }],
+                    [{ text: "🎬 Створити свій кліп (ШІ-Студія)", url: "https://golos-proty-raku.pp.ua/#generator" }],
+                    [{ text: "📰 Читати блог", url: "https://golos-proty-raku.pp.ua/#blog" }, { text: "🌐 Наш сайт", url: "https://golos-proty-raku.pp.ua" }],
+                    [{ text: "🤝 Підтримати проєкт (Офіційно)", callback_data: "support_project" }]
+                ]
+            }
+        };
+    };
 
-        if (payload.startsWith('buy_')) {
+    bot.onText(/\/(start|menu)(.*)/, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const command = match[1]; // 'start' або 'menu'
+        const payload = match[2] ? match[2].trim() : '';
+
+        if (command === 'start' && payload.startsWith('buy_')) {
             const trackId = payload.replace('buy_', '');
             await sendBotInvoice(chatId, trackId);
             return;
         }
 
-        const opts = { reply_markup: { inline_keyboard: [[{ text: "🎵 Переглянути треки", callback_data: "show_menu" }]] } };
-        bot.sendMessage(chatId, `Вітаю! Це офіційний бот проєкту «Голос проти раку».\nТут можна підтримати автора та отримати повні версії пісень (50 грн).\n\nНатисніть кнопку нижче:`, opts);
+        const welcomeText = command === 'start' 
+            ? `Вітаю! Це офіційний бот проєкту «Голос проти раку».\nТут ви можете підтримати автора, отримати повні версії пісень та дізнатися більше про проєкт.\n\nОберіть потрібний розділ:`
+            : `📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`;
+
+        bot.sendMessage(chatId, welcomeText, getMainMenu());
     });
 
     // Обробка кнопок
@@ -75,7 +93,34 @@ if (BOT_TOKEN) {
         const chatId = query.message.chat.id;
         const messageId = query.message.message_id;
 
-        // --- НОВА ЛОГІКА ЗІ СТОРІНКАМИ ---
+        // Обробка кнопки "Про проєкт"
+        if (query.data === 'about_project') {
+            const aboutText = `<b>Про проєкт «Голос проти раку»</b>\n\nМій бій триває — і в шпиталі, і в строю. Я, Андрій Герц, створив цей проєкт, щоб об'єднати музику та технології у боротьбі за життя.\n\nКожен придбаний тут трек або оформлена підписка — це ваш прямий офіційний внесок у мою боротьбу з хворобою. Дякую, що ви поруч! 🇺🇦`;
+            const opts = { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]] } };
+            bot.editMessageText(aboutText, { chat_id: chatId, message_id: messageId, ...opts }).catch(e => {});
+        }
+
+        // Обробка кнопки "Підтримати проєкт"
+        if (query.data === 'support_project') {
+            const supportText = `<b>🤝 Офіційна підтримка проєкту</b>\n\nОскільки я є військовослужбовцем та діючим ФОП 3-ї групи, усі платежі проходять абсолютно офіційно зі сплатою податків (еквайринг Монобанк).\n\nНайкращий спосіб підтримати мій бій за життя — це придбати пісню з каталогу або оформити підписку Hertz Spectrum PRO на сайті.`;
+            const opts = { 
+                parse_mode: 'HTML', 
+                reply_markup: { 
+                    inline_keyboard: [
+                        [{ text: "👑 Оформити підписку на сайті", url: "https://golos-proty-raku.pp.ua/#generator" }],
+                        [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
+                    ] 
+                } 
+            };
+            bot.editMessageText(supportText, { chat_id: chatId, message_id: messageId, ...opts }).catch(e => {});
+        }
+
+        // Повернення до головного меню
+        if (query.data === 'back_to_main') {
+            bot.editMessageText(`📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`, { chat_id: chatId, message_id: messageId, ...getMainMenu() }).catch(e => {});
+        }
+
+        // --- ЛОГІКА ЗІ СТОРІНКАМИ ДЛЯ МУЗИКИ ---
         if (query.data.startsWith('show_menu')) {
             if (globalMusicList.length === 0) await fetchMusicFromDrive();
             
@@ -83,44 +128,28 @@ if (BOT_TOKEN) {
                 return bot.sendMessage(chatId, "Пісні ще завантажуються, спробуйте через хвилину.");
             }
 
-            // Визначаємо поточну сторінку (за замовчуванням 0)
             const parts = query.data.split('_');
             let page = 0;
-            if (parts.length === 3) {
-                page = parseInt(parts[2]); // якщо прийшло show_menu_1, show_menu_2 і т.д.
-            }
+            if (parts.length === 3) page = parseInt(parts[2]); 
 
-            const ITEMS_PER_PAGE = 10; // Кількість пісень на одній сторінці
+            const ITEMS_PER_PAGE = 10; 
             const totalPages = Math.ceil(globalMusicList.length / ITEMS_PER_PAGE);
-            
-            // Вирізаємо потрібні 10 пісень для поточної сторінки
             const currentList = globalMusicList.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
 
-            // Генеруємо кнопки тільки для цих 10 пісень
-            const keyboard = currentList.map(t => [{ text: `🎵 ${t.name} – 50 грн`, callback_data: `buy_${t.fullId}` }]);
+            const keyboard = currentList.map(t => [{ text: `🎵 ${t.name} – 37,36 грн`, callback_data: `buy_${t.fullId}` }]);
 
-            // Додаємо кнопки навігації (Вперед / Назад)
             const navButtons = [];
-            if (page > 0) {
-                navButtons.push({ text: "⬅️ Назад", callback_data: `show_menu_${page - 1}` });
-            }
-            if (page < totalPages - 1) {
-                navButtons.push({ text: "Вперед ➡️", callback_data: `show_menu_${page + 1}` });
-            }
+            if (page > 0) navButtons.push({ text: "⬅️ Назад", callback_data: `show_menu_${page - 1}` });
+            if (page < totalPages - 1) navButtons.push({ text: "Вперед ➡️", callback_data: `show_menu_${page + 1}` });
             
-            if (navButtons.length > 0) {
-                keyboard.push(navButtons);
-            }
+            if (navButtons.length > 0) keyboard.push(navButtons);
+            keyboard.push([{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]); // Кнопка повернення
 
             try {
                 await bot.editMessageText(`Оберіть пісню для завантаження (Сторінка ${page + 1} з ${totalPages}):`, { 
-                    chat_id: chatId, 
-                    message_id: messageId, 
-                    reply_markup: { inline_keyboard: keyboard } 
+                    chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: keyboard } 
                 });
-            } catch (e) {
-                // Ігноруємо помилку, якщо користувач клікає на ту саму сторінку двічі
-            }
+            } catch (e) {}
         }
 
         if (query.data.startsWith('buy_')) {
@@ -128,9 +157,7 @@ if (BOT_TOKEN) {
             await sendBotInvoice(chatId, trackId, messageId);
         }
         
-        try {
-            bot.answerCallbackQuery(query.id);
-        } catch (e) {}
+        try { bot.answerCallbackQuery(query.id); } catch (e) {}
     });
 
     // Формування посилання на оплату
@@ -146,7 +173,15 @@ if (BOT_TOKEN) {
             }, { headers: { 'X-Token': MONO_TOKEN } });
 
             const text = `Ви обрали: <b>${track.name}</b>\n\n✅ Після оплати бот МИТТЄВО надішле вам аудіофайл прямо сюди.`;
-            const opts = { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "💳 Оплатити 50 грн", url: monoRes.data.pageUrl }]] } };
+            const opts = { 
+                parse_mode: "HTML", 
+                reply_markup: { 
+                    inline_keyboard: [
+                        [{ text: "💳 Оплатити 37,36 грн", url: monoRes.data.pageUrl }],
+                        [{ text: "⬅️ Назад до списку", callback_data: "show_menu" }]
+                    ] 
+                } 
+            };
 
             if (messageId) bot.editMessageText(text, { chat_id: chatId, message_id: messageId, ...opts });
             else bot.sendMessage(chatId, text, opts);
