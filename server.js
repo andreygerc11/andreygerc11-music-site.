@@ -25,7 +25,7 @@ const GITHUB_REPO = process.env.GITHUB_REPO;
 const BOT_TOKEN = process.env.BOT_TOKEN; 
 const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_URL;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "ТВІЙ_ID_ЯКЩО_НЕ_ДОДАВ_У_RENDER";
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "5853625377";
 
 // === ТВОЇ ID ПАПОК GOOGLE DRIVE ===
 const PREVIEW_FOLDER_ID = "1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S"; 
@@ -48,19 +48,20 @@ const hdMedicalImages = [
 // ==========================================
 const ADMIN_ID = 5853625377;
 const CHANNEL_ID = process.env.CHANNEL_ID || "@golosprotyraku"; 
-const BOT_PRICE = 3736; // 37,36 грн
+const BOT_PRICE = 3736; // 37.36 грн
 
 let bot;
 if (BOT_TOKEN) {
     bot = new TelegramBot(BOT_TOKEN, { polling: true });
     console.log("✅ Telegram Bot успішно запущено.");
 
-    // === ГОЛОВНЕ МЕНЮ (для /start та /menu) ===
+    // === ГОЛОВНЕ МЕНЮ ===
     const getMainMenu = () => {
         return {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "🎵 Каталог пісень (37,36 грн)", callback_data: "show_menu" }],
+                    [{ text: "🗣 Об'єднані голоси", callback_data: "united_voices" }],
                     [{ text: "ℹ️ Про проєкт та автора", callback_data: "about_project" }],
                     [{ text: "🎬 Створити свій кліп (ШІ-Студія)", url: "https://golos-proty-raku.pp.ua/#generator" }],
                     [{ text: "📰 Читати блог", url: "https://golos-proty-raku.pp.ua/#blog" }, { text: "🌐 Наш сайт", url: "https://golos-proty-raku.pp.ua" }],
@@ -72,7 +73,7 @@ if (BOT_TOKEN) {
 
     bot.onText(/\/(start|menu)(.*)/, async (msg, match) => {
         const chatId = msg.chat.id;
-        const command = match[1]; // 'start' або 'menu'
+        const command = match[1]; 
         const payload = match[2] ? match[2].trim() : '';
 
         if (command === 'start' && payload.startsWith('buy_')) {
@@ -82,7 +83,7 @@ if (BOT_TOKEN) {
         }
 
         const welcomeText = command === 'start' 
-            ? `Вітаю! Це офіційний бот проєкту «Голос проти раку».\nТут ви можете підтримати автора, отримати повні версії пісень та дізнатися більше про проєкт.\n\nОберіть потрібний розділ:`
+            ? `Вітаю! Це офіційний бот проєкту «Голос проти раку».\nТут ви можете підтримати автора, отримати повні версії пісень та знайти підтримку.\n\nОберіть потрібний розділ:`
             : `📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`;
 
         bot.sendMessage(chatId, welcomeText, getMainMenu());
@@ -93,40 +94,45 @@ if (BOT_TOKEN) {
         const chatId = query.message.chat.id;
         const messageId = query.message.message_id;
 
-        // Обробка кнопки "Про проєкт"
         if (query.data === 'about_project') {
-            const aboutText = `<b>Про проєкт «Голос проти раку»</b>\n\nМій бій триває — і в шпиталі, і в строю. Я, Андрій Герц, створив цей проєкт, щоб об'єднати музику та технології у боротьбі за життя.\n\nКожен придбаний тут трек або оформлена підписка — це ваш прямий офіційний внесок у мою боротьбу з хворобою. Дякую, що ви поруч! 🇺🇦`;
+            const aboutText = `<b>Про проєкт «Голос проти раку»</b>\n\nМій бій триває — і в шпиталі, і в строю. Я, Андрій Герц, створив цей проєкт, щоб об'єднати музику та технології у боротьбі за життя.\n\nЦе не лише моя особиста історія, а й шлях для допомоги кожному, хто зіткнувся з хворобою раку. Кожна ваша підтримка допомагає нам розвивати цю спільноту та боротися далі. Дякую, що ви поруч! 🇺🇦`;
             const opts = { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]] } };
             bot.editMessageText(aboutText, { chat_id: chatId, message_id: messageId, ...opts }).catch(e => {});
         }
 
-        // Обробка кнопки "Підтримати проєкт"
         if (query.data === 'support_project') {
-            const supportText = `<b>🤝 Офіційна підтримка проєкту</b>\n\nОскільки я є військовослужбовцем та діючим ФОП 3-ї групи, усі платежі проходять абсолютно офіційно зі сплатою податків (еквайринг Монобанк).\n\nНайкращий спосіб підтримати мій бій за життя — це придбати пісню з каталогу або оформити підписку Hertz Spectrum PRO на сайті.`;
+            const supportText = `<b>🤝 Офіційна підтримка проєкту</b>\n\nОскільки я є військовослужбовцем та діючим ФОП, усі платежі проходять абсолютно офіційно зі сплатою податків.\n\nНайкращий спосіб підтримати проєкт та нашу боротьбу — це придбати пісню з каталогу або оформити підписку Hertz Spectrum PRO на сайті.`;
+            const opts = { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "👑 Оформити підписку на сайті", url: "https://golos-proty-raku.pp.ua/#generator" }], [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]] } };
+            bot.editMessageText(supportText, { chat_id: chatId, message_id: messageId, ...opts }).catch(e => {});
+        }
+
+        if (query.data === 'united_voices') {
+            const voicesText = `<b>🗣 Об'єднані голоси</b>\n\nУ цій боротьбі ніхто не має залишатися сам. Цей розділ створений для того, щоб ми підтримували один одного.\n\nВи можете поділитися своєю історією незламності або приєднатися до нашого чату для спілкування.`;
             const opts = { 
                 parse_mode: 'HTML', 
                 reply_markup: { 
                     inline_keyboard: [
-                        [{ text: "👑 Оформити підписку на сайті", url: "https://golos-proty-raku.pp.ua/#generator" }],
+                        [{ text: "📝 Розповісти свою історію", callback_data: "write_story" }],
+                        [{ text: "💬 Чат незламних", url: "https://t.me/golos_pidtrymka" }],
                         [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
                     ] 
                 } 
             };
-            bot.editMessageText(supportText, { chat_id: chatId, message_id: messageId, ...opts }).catch(e => {});
+            bot.editMessageText(voicesText, { chat_id: chatId, message_id: messageId, ...opts }).catch(e => {});
         }
 
-        // Повернення до головного меню
+        if (query.data === 'write_story') {
+            const promptText = `Напишіть вашу історію прямо тут, у повідомленні. \n\nВи можете розповісти про свій шлях, поділитися порадою або просто словами підтримки. Я отримаю ваше повідомлення і ми разом вирішимо, як воно зможе допомогти іншим.`;
+            bot.sendMessage(chatId, promptText, { reply_markup: { force_reply: true } });
+        }
+
         if (query.data === 'back_to_main') {
             bot.editMessageText(`📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`, { chat_id: chatId, message_id: messageId, ...getMainMenu() }).catch(e => {});
         }
 
-        // --- ЛОГІКА ЗІ СТОРІНКАМИ ДЛЯ МУЗИКИ ---
         if (query.data.startsWith('show_menu')) {
             if (globalMusicList.length === 0) await fetchMusicFromDrive();
-            
-            if (globalMusicList.length === 0) {
-                return bot.sendMessage(chatId, "Пісні ще завантажуються, спробуйте через хвилину.");
-            }
+            if (globalMusicList.length === 0) return bot.sendMessage(chatId, "Пісні ще завантажуються, спробуйте через хвилину.");
 
             const parts = query.data.split('_');
             let page = 0;
@@ -143,7 +149,7 @@ if (BOT_TOKEN) {
             if (page < totalPages - 1) navButtons.push({ text: "Вперед ➡️", callback_data: `show_menu_${page + 1}` });
             
             if (navButtons.length > 0) keyboard.push(navButtons);
-            keyboard.push([{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]); // Кнопка повернення
+            keyboard.push([{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]); 
 
             try {
                 await bot.editMessageText(`Оберіть пісню для завантаження (Сторінка ${page + 1} з ${totalPages}):`, { 
@@ -158,6 +164,18 @@ if (BOT_TOKEN) {
         }
         
         try { bot.answerCallbackQuery(query.id); } catch (e) {}
+    });
+
+    // Обробка вхідних історій
+    bot.on('message', async (msg) => {
+        if (msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes("Напишіть вашу історію")) {
+            const userHistory = msg.text;
+            const userName = msg.from.first_name || "Користувач";
+            const userHandle = msg.from.username ? `@${msg.from.username}` : "Немає юзернейму";
+            
+            await bot.sendMessage(ADMIN_ID, `📩 <b>Нова історія для «Об'єднаних голосів»!</b>\nВід: ${userName} (${userHandle})\n\n${userHistory}`, { parse_mode: 'HTML' });
+            bot.sendMessage(msg.chat.id, "Дякую, що поділилися! Ваша історія отримана. Разом ми сильніші. 💙");
+        }
     });
 
     // Формування посилання на оплату
@@ -201,7 +219,7 @@ if (BOT_TOKEN) {
     });
 }
 
-// Технічні сповіщення для адміна (працює і з ботом, і через звичайний API)
+// Технічні сповіщення для адміна
 async function sendTelegramMessage(text) {
     if (!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === "ТВІЙ_ID_ЯКЩО_НЕ_ДОДАВ_У_RENDER") return;
     try {
@@ -251,7 +269,6 @@ async function fetchMusicFromDrive() {
 }
 
 app.get('/api/music', async (req, res) => {
-    // Оновлюємо список і віддаємо
     const list = await fetchMusicFromDrive();
     res.json(list);
 });
@@ -296,7 +313,6 @@ app.post('/api/webhook', async (req, res) => {
             await sendToGoogle({ action: 'update_sub', invoiceId, status });
             await sendTelegramMessage(`🔥 <b>Нова оплата!</b>\nРеференс: ${reference}`);
 
-            // АВТОМАТИЧНА ВІДПРАВКА АУДІОФАЙЛУ (Якщо куплено через бота)
             if (reference && reference.startsWith('tg_') && bot) {
                 const parts = reference.split('_');
                 const tgChatId = parts[1];
