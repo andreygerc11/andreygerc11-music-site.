@@ -46,7 +46,7 @@ const hdMedicalImages = [
 // ==========================================
 // 1. ТЕЛЕГРАМ БОТ ТА АДМІН-ФУНКЦІЇ
 // ==========================================
-const ADMIN_ID = 556627059;
+const ADMIN_ID = 5853625377;
 const CHANNEL_ID = process.env.CHANNEL_ID || "@golosprotyraku"; 
 const BOT_PRICE = 5000; // 50 грн
 
