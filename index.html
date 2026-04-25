@@ -49,7 +49,6 @@
             position: relative;
         }
 
-        /* === КЛАС ДЛЯ ПРОПИСНОГО ШРИФТУ === */
         .cursive-text {
             font-family: 'Dancing Script', cursive;
             text-transform: none !important;
@@ -115,19 +114,83 @@
         .hero h1 { font-size: clamp(3.5rem, 8vw, 5.5rem); line-height: 1.1; margin-bottom: 20px; color: #fff; text-shadow: 0 0 30px rgba(255, 77, 77, 0.5); }
         .hero p { font-size: 1.15rem; color: #ccc; margin-bottom: 40px; max-width: 700px; margin-left: auto; margin-right: auto; }
         
-        .btn-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
-        .btn { display: inline-block; padding: 15px 35px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 900; border-radius: 50px; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; transition: 0.3s ease; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); border: 2px solid var(--accent); backdrop-filter: blur(5px); }
-        .btn:hover { background: #fff; color: var(--accent); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(255, 77, 77, 0.5); }
-        .btn-outline { background: rgba(0,0,0,0.3); border: 2px solid #fff; box-shadow: none; }
-        .btn-outline:hover { background: #fff; color: var(--dark); }
-        .btn-whatsapp { background: rgba(37, 211, 102, 0.8); border-color: #25D366; }
-        .btn-whatsapp:hover { background: #fff; color: #25D366; }
-        .btn-youtube { background: rgba(255, 0, 0, 0.8); border-color: #ff0000; }
-        .btn-youtube:hover { background: #fff; color: #ff0000; }
-        .btn-tiktok { background: rgba(17, 17, 17, 0.8); border-color: #111111; }
-        .btn-tiktok:hover { background: #fff; color: #111111; border-color: #fff; }
-        .btn-telegram { background: rgba(42, 171, 238, 0.8); border-color: #2AABEE; }
-        .btn-telegram:hover { background: #fff; color: #2AABEE; }
+        /* === КНОПКИ ГЕРОЯ (ІДЕАЛЬНА ПЛАЗМА) === */
+        .btn-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; max-width: 1100px; margin: 0 auto; }
+        
+        .btn-plasma {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            background: rgba(255,255,255,0.02);
+            overflow: hidden;
+            border-radius: 50px;
+            z-index: 1;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-plasma .inner-bg {
+            position: absolute;
+            inset: 2px;
+            background: #0f0f11;
+            z-index: -1;
+            border-radius: 50px;
+            transition: background 0.3s ease;
+        }
+
+        .btn-plasma::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            aspect-ratio: 1;
+            transform: translate(-50%, -50%);
+            background: conic-gradient(transparent 0%, var(--glow-color) 20%, transparent 40%);
+            animation: spin 3s linear infinite;
+            z-index: -2;
+            filter: blur(8px);
+            opacity: 0.8;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .btn-plasma:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 25px var(--glow-shadow);
+        }
+
+        .btn-plasma:hover .inner-bg { background: var(--hover-bg); }
+
+        .btn-plasma:hover::before {
+            animation: spin 1.2s linear infinite;
+            opacity: 1;
+            background: conic-gradient(transparent 0%, var(--glow-color) 20%, #fff 25%, transparent 50%);
+        }
+
+        .btn-plasma i { font-size: 1.3rem; transition: transform 0.3s ease; }
+        .btn-plasma:hover i { transform: scale(1.2); }
+
+        /* Кольори для кнопок Плазми */
+        .btn-red { --glow-color: #ff4d4d; --hover-bg: rgba(255, 77, 77, 0.15); --glow-shadow: rgba(255, 77, 77, 0.4); }
+        .btn-white { --glow-color: #ffffff; --hover-bg: rgba(255, 255, 255, 0.1); --glow-shadow: rgba(255, 255, 255, 0.2); color: #ddd; }
+        .btn-blue { --glow-color: #2AABEE; --hover-bg: rgba(42, 171, 238, 0.15); --glow-shadow: rgba(42, 171, 238, 0.4); }
+        .btn-purple { --glow-color: #ba55d3; --hover-bg: rgba(186, 85, 211, 0.15); --glow-shadow: rgba(186, 85, 211, 0.4); }
+        .btn-green { --glow-color: #25D366; --hover-bg: rgba(37, 211, 102, 0.15); --glow-shadow: rgba(37, 211, 102, 0.3); }
+        .btn-youtube { --glow-color: #ff0000; --hover-bg: rgba(255, 0, 0, 0.15); --glow-shadow: rgba(255, 0, 0, 0.4); }
+        .btn-tiktok { --glow-color: #00f2fe; --hover-bg: rgba(0, 242, 254, 0.1); --glow-shadow: rgba(0, 242, 254, 0.3); }
+
 
         /* Спільні стилі для секцій */
         section { padding: 80px 20px; max-width: 1200px; margin: 0 auto; position: relative;}
@@ -142,6 +205,26 @@
         .info-box h4 { color: var(--accent); margin-bottom: 5px; font-size: 1.1rem; }
         .info-box p { font-size: 0.9rem; margin-bottom: 0; color: #bbb; text-align: left; }
         .quote { font-style: italic; color: #fff; padding: 15px 20px; border-left: 3px solid var(--accent); margin: 25px 0; background: rgba(255, 77, 77, 0.05); border-radius: 0 10px 10px 0; backdrop-filter: blur(5px);}
+
+        /* === ІСТОРІЯ СТВОРЕННЯ === */
+        .story-block {
+            background: linear-gradient(145deg, rgba(20, 20, 25, 0.8) 0%, rgba(10, 10, 12, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid var(--accent);
+            padding: 40px; border-radius: 20px;
+            margin-bottom: 60px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            position: relative; overflow: hidden;
+            display: flex; gap: 30px; align-items: center;
+        }
+        .story-block::after {
+            content: '</>'; position: absolute; right: 20px; bottom: -10px;
+            font-size: 10rem; font-weight: 900; color: rgba(255, 77, 77, 0.03);
+            font-family: monospace; pointer-events: none;
+        }
+        .story-content h3 { font-size: 1.8rem; color: #fff; margin-bottom: 15px; text-transform: uppercase;}
+        .story-content p { color: #ccc; margin-bottom: 15px; font-size: 1rem; line-height: 1.7; text-align: justify;}
+        .story-content strong { color: var(--accent); }
 
         /* Блок статистики */
         .statistics-block { margin-top: 50px; padding: 30px; background: rgba(20, 20, 23, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; border-left: 4px solid var(--accent); }
@@ -220,17 +303,62 @@
         .new-badge { display: inline-block; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; text-transform: uppercase; vertical-align: middle; margin-left: 8px; position: relative; top: -1px; animation: pulse-badge 2s infinite; }
         @keyframes pulse-badge { 0% { box-shadow: 0 0 0 rgba(255, 77, 77, 0.4); } 50% { box-shadow: 0 0 8px rgba(255, 77, 77, 0.8); } 100% { box-shadow: 0 0 0 rgba(255, 77, 77, 0); } }
 
-        /* Модальне вікно */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: #161618; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid var(--accent); max-width: 400px; width: 90%; }
-        .modal-content h3 { color: #fff; margin-bottom: 15px; font-size: 1.4rem; }
-        .modal-content p { color: #ccc; margin-bottom: 25px; line-height: 1.5; }
-        .modal-btn { display: inline-block; background: var(--accent); color: #fff; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1rem; transition: 0.3s; width: 100%; border: none; cursor: pointer; margin-bottom: 10px; }
-        .modal-btn:hover { background: #fff; color: var(--accent); }
-        .close-modal { display: block; color: #888; font-size: 0.9rem; cursor: pointer; text-decoration: underline; background: none; border: none; width: 100%; }
-        .close-modal:hover { color: #fff; }
+        /* ВЕЛИКІ КАРТКИ ТЕЛЕГРАМ ЕКОСИСТЕМИ */
+        .tg-eco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 40px; }
+        
+        .tg-card {
+            background: linear-gradient(145deg, rgba(20, 25, 35, 0.8) 0%, rgba(10, 15, 20, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(42, 171, 238, 0.2);
+            border-radius: 25px; padding: 40px 25px; text-align: center;
+            text-decoration: none; color: #fff; position: relative;
+            overflow: hidden; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .tg-card:hover {
+            transform: translateY(-10px);
+            border-color: #2AABEE;
+            box-shadow: 0 15px 40px rgba(42, 171, 238, 0.3);
+        }
 
-        /* === КНОПКА ГЕНЕРАТОРА === */
+        .tg-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(42,171,238,0.1) 0%, transparent 60%);
+            opacity: 0; transition: 0.6s; transform: scale(0.5); pointer-events: none;
+        }
+        .tg-card:hover::before { opacity: 1; transform: scale(1); animation: rotate-bg 8s linear infinite; }
+        @keyframes rotate-bg { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .tg-icon-wrap {
+            width: 90px; height: 90px; background: rgba(42, 171, 238, 0.1);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2.8rem; color: #2AABEE; margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(42, 171, 238, 0.2);
+            position: relative; z-index: 2; transition: 0.4s;
+        }
+        
+        .tg-card:nth-child(1):hover .tg-icon-wrap { animation: bot-float 2s ease-in-out infinite; background: #2AABEE; color: #fff; box-shadow: 0 0 30px #2AABEE; }
+        .tg-card:nth-child(2):hover .tg-icon-wrap { animation: pulse-broadcast 1.5s infinite; background: #2AABEE; color: #fff; box-shadow: 0 0 30px #2AABEE; }
+        .tg-card:nth-child(3):hover .tg-icon-wrap { animation: chat-shake 0.5s ease-in-out infinite alternate; background: #2AABEE; color: #fff; box-shadow: 0 0 30px #2AABEE; }
+
+        @keyframes bot-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes pulse-broadcast { 0% { transform: scale(1); box-shadow: 0 0 0 rgba(42,171,238,0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 20px rgba(42,171,238,0); } 100% { transform: scale(1); box-shadow: 0 0 0 rgba(42,171,238,0); } }
+        @keyframes chat-shake { 0% { transform: rotate(-10deg); } 100% { transform: rotate(10deg); } }
+
+        .tg-card h3 { font-size: 1.5rem; margin-bottom: 15px; z-index: 2; font-weight: 900; text-transform: uppercase; }
+        .tg-card p { font-size: 0.95rem; color: #aaa; z-index: 2; line-height: 1.6; flex-grow: 1;}
+        
+        .tg-btn-label { 
+            margin-top: 25px; background: rgba(255,255,255,0.05); padding: 12px 30px; 
+            border-radius: 50px; font-size: 0.9rem; font-weight: 900; text-transform: uppercase;
+            transition: 0.3s; z-index: 2; border: 1px solid rgba(255,255,255,0.1); width: 100%;
+        }
+        .tg-card:hover .tg-btn-label { background: #2AABEE; color: #fff; border-color: #2AABEE; }
+
+
+        /* === КНОПКА ГЕНЕРАТОРА (ШІ-Студія) === */
         .generator-promo-box {
             background: linear-gradient(145deg, rgba(30, 30, 35, 0.6) 0%, rgba(15, 15, 18, 0.8) 100%);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -262,7 +390,6 @@
 
         @keyframes bounce { 0% { height: 15%; } 100% { height: 100%; } }
 
-        /* === КНОПКА ШІ-РЕЖИСЕРА (ФІОЛЕТОВА) === */
         .director-promo-box {
             background: linear-gradient(145deg, rgba(30, 10, 40, 0.6) 0%, rgba(15, 5, 20, 0.8) 100%);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -280,48 +407,11 @@
         }
         .director-promo-box:hover::before { opacity: 1; }
 
-        /* === Анімація ШІ-Режисера (Ядро/Камера) === */
-        .ai-core-animation {
-            position: relative;
-            width: 60px;
-            height: 60px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .ai-core {
-            width: 16px;
-            height: 16px;
-            background: #fff;
-            border-radius: 50%;
-            box-shadow: 0 0 20px #ba55d3, 0 0 40px #8a2be2;
-            animation: ai-pulse 1.2s infinite ease-in-out alternate;
-        }
-        .ai-ring-1 {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 2px solid transparent;
-            border-top-color: #ba55d3;
-            border-bottom-color: #ba55d3;
-            border-radius: 50%;
-            animation: ai-spin 3s linear infinite;
-        }
-        .ai-ring-2 {
-            position: absolute;
-            width: 75%;
-            height: 75%;
-            border: 2px solid transparent;
-            border-left-color: rgba(255, 255, 255, 0.7);
-            border-right-color: rgba(255, 255, 255, 0.7);
-            border-radius: 50%;
-            animation: ai-spin-reverse 2s linear infinite;
-        }
-        @keyframes ai-pulse {
-            0% { transform: scale(0.8); box-shadow: 0 0 10px #ba55d3; }
-            100% { transform: scale(1.3); box-shadow: 0 0 25px #ba55d3, 0 0 50px #8a2be2; }
-        }
+        .ai-core-animation { position: relative; width: 60px; height: 60px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
+        .ai-core { width: 16px; height: 16px; background: #fff; border-radius: 50%; box-shadow: 0 0 20px #ba55d3, 0 0 40px #8a2be2; animation: ai-pulse 1.2s infinite ease-in-out alternate; }
+        .ai-ring-1 { position: absolute; width: 100%; height: 100%; border: 2px solid transparent; border-top-color: #ba55d3; border-bottom-color: #ba55d3; border-radius: 50%; animation: ai-spin 3s linear infinite; }
+        .ai-ring-2 { position: absolute; width: 75%; height: 75%; border: 2px solid transparent; border-left-color: rgba(255, 255, 255, 0.7); border-right-color: rgba(255, 255, 255, 0.7); border-radius: 50%; animation: ai-spin-reverse 2s linear infinite; }
+        @keyframes ai-pulse { 0% { transform: scale(0.8); box-shadow: 0 0 10px #ba55d3; } 100% { transform: scale(1.3); box-shadow: 0 0 25px #ba55d3, 0 0 50px #8a2be2; } }
         @keyframes ai-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes ai-spin-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
 
@@ -386,6 +476,16 @@
         .gdpr-checkbox input { width: auto; margin-top: 3px; }
         .gdpr-checkbox a { color: var(--accent); text-decoration: underline; }
 
+        /* Модальне вікно */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: #161618; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid var(--accent); max-width: 400px; width: 90%; }
+        .modal-content h3 { color: #fff; margin-bottom: 15px; font-size: 1.4rem; }
+        .modal-content p { color: #ccc; margin-bottom: 25px; line-height: 1.5; }
+        .modal-btn { display: inline-block; background: var(--accent); color: #fff; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1rem; transition: 0.3s; width: 100%; border: none; cursor: pointer; margin-bottom: 10px; }
+        .modal-btn:hover { background: #fff; color: var(--accent); }
+        .close-modal { display: block; color: #888; font-size: 0.9rem; cursor: pointer; text-decoration: underline; background: none; border: none; width: 100%; }
+        .close-modal:hover { color: #fff; }
+
         footer { text-align: center; padding: 40px 20px; background: rgba(10, 10, 11, 0.95); border-top: 1px solid rgba(255,255,255,0.05); }
         .footer-logo { text-decoration: none; display: block; margin-bottom: 10px;}
         footer p { color: #666; font-size: 0.8rem; }
@@ -393,14 +493,17 @@
         .footer-links a { color: var(--accent); text-decoration: none; font-size: 0.85rem; transition: 0.3s; }
         .footer-links a:hover { text-decoration: underline; color: #fff; }
 
-        @media (max-width: 1024px) { .articles-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 1024px) { .articles-grid { grid-template-columns: repeat(2, 1fr); } .tg-eco-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 768px) {
             .hero h1 { font-size: 3rem; }
             .about-grid { grid-template-columns: 1fr; }
             .nav-links { display: none; }
-            .btn-group { flex-direction: column; width: 100%; }
-            .btn-group .btn { width: 100%; }
+            .btn-group { flex-direction: column; width: 100%; align-items: stretch;}
+            .btn-plasma { justify-content: center; }
             .bg-text-row { font-size: 8vw; }
+            .story-block { flex-direction: column; text-align: center; }
+            .story-block::after { display: none; }
+            .tg-eco-grid { grid-template-columns: 1fr; } 
         }
         @media (max-width: 600px) { .articles-grid { grid-template-columns: 1fr; } }
     </style>
@@ -442,13 +545,33 @@
         <p>Мій бій триває — і в шпиталі, і в строю. Я не складаю зброю і залишаюся на службі до нашої Перемоги.</p>
         
         <div class="btn-group">
-            <a href="#support" class="btn">Підтримати проєкт</a>
-            <a href="#music" class="btn btn-outline">Слухати музику</a>
-            <a href="generator.html" class="btn btn-outline"><i class="fas fa-video"></i> Hertz Spectrum</a>
-            <a href="https://t.me/golosprotyraku_bot" target="_blank" class="btn btn-telegram"><i class="fab fa-telegram"></i> Telegram Бот</a>
-            <a href="https://chat.whatsapp.com/EQJv9AjMfOTBBjccFFlYnM" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-            <a href="https://www.youtube.com/@golosprotyrakuppua" target="_blank" class="btn btn-youtube"><i class="fab fa-youtube"></i> YouTube</a>
-            <a href="https://www.tiktok.com/@golosprotyraku" target="_blank" class="btn btn-tiktok"><i class="fab fa-tiktok"></i> TikTok</a>
+            <a href="#support" class="btn-plasma btn-red">
+                <div class="inner-bg"></div><i class="fas fa-heart"></i> Підтримати проєкт
+            </a>
+            <a href="#music" class="btn-plasma btn-white">
+                <div class="inner-bg"></div><i class="fas fa-music"></i> Слухати музику
+            </a>
+            <a href="https://t.me/golosprotyraku_bot" target="_blank" class="btn-plasma btn-blue">
+                <div class="inner-bg"></div><i class="fas fa-robot"></i> Telegram Бот
+            </a>
+            <a href="https://t.me/golosprotyraku" target="_blank" class="btn-plasma btn-blue">
+                <div class="inner-bg"></div><i class="fas fa-bullhorn"></i> Канал Новин
+            </a>
+            <a href="https://t.me/golos_pidtrymka" target="_blank" class="btn-plasma btn-blue">
+                <div class="inner-bg"></div><i class="fas fa-users"></i> Чат Незламних
+            </a>
+            <a href="generator.html" class="btn-plasma btn-purple">
+                <div class="inner-bg"></div><i class="fas fa-video"></i> ШІ-Студія
+            </a>
+            <a href="https://chat.whatsapp.com/EQJv9AjMfOTBBjccFFlYnM" target="_blank" class="btn-plasma btn-green">
+                <div class="inner-bg"></div><i class="fab fa-whatsapp"></i> WhatsApp
+            </a>
+            <a href="https://www.youtube.com/@golosprotyrakuppua" target="_blank" class="btn-plasma btn-youtube">
+                <div class="inner-bg"></div><i class="fab fa-youtube"></i> YouTube
+            </a>
+            <a href="https://www.tiktok.com/@golosprotyraku" target="_blank" class="btn-plasma btn-tiktok">
+                <div class="inner-bg"></div><i class="fab fa-tiktok"></i> TikTok
+            </a>
         </div>
     </div>
 </header>
@@ -457,6 +580,18 @@
     <section id="about">
         <h2 data-aos="fade-up">Мій бій за життя</h2>
         
+        <div class="story-block" data-aos="fade-up">
+            <div class="story-icon" style="font-size: 5rem; color: var(--accent); opacity: 0.8;">
+                <i class="fas fa-laptop-medical"></i>
+            </div>
+            <div class="story-content">
+                <h3>Код, написаний між крапельницями</h3>
+                <p>Багато хто запитує: хто стоїть за цією платформою? Відповідь проста — <strong>я сам</strong>. Цей проєкт не створювала велика IT-компанія чи продюсерський центр. Кожен рядок коду (Node.js сервер, бази даних, налаштування ШІ-генераторів) написаний мною: іноді в казармі, іноді — прямо під час процедур у шпиталі.</p>
+                <p>Для мене програмування та створення пісень — це спосіб зберегти ясність розуму і не здаватися. Це мій метод самостійно акумулювати кошти на лікування не через прохання про допомогу, а через <strong>створення реальної цінності</strong> для вас (музики та відео-інструментів).</p>
+                <p>Але тепер цей проєкт переріс мене. Він став інструментом підтримки та об'єднання для всіх, хто веде свій власний бій.</p>
+            </div>
+        </div>
+
         <div class="about-grid">
             <div class="about-text" data-aos="fade-right">
                 <p>Вітаю. Я — автор пісень і військовослужбовець, який зараз веде власну війну з раком крові. Мені пощастило більше, ніж багатьом: хворобу виявили випадково і на ранній стадії. Це дає мені реальний шанс не просто вистояти, а й допомогти іншим побороти цю хворобу.</p>
@@ -542,13 +677,39 @@
         </div>
     </section>
 
+    <section id="telegram-ecosystem">
+        <h2 data-aos="fade-up" style="color: #2AABEE;"><i class="fab fa-telegram"></i> Екосистема підтримки</h2>
+        <p class="section-desc" data-aos="fade-up">Ми створили повноцінну інфраструктуру в Telegram. Це не просто бот, це простір, де музика поєднується з реальними людськими історіями.</p>
+        
+        <div class="tg-eco-grid">
+            <a href="https://t.me/golosprotyraku_bot" target="_blank" class="tg-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="tg-icon-wrap"><i class="fas fa-robot"></i></div>
+                <h3>Офіційний Бот</h3>
+                <p>Ваш персональний помічник. Тут ви можете миттєво придбати повні версії пісень (бот надішле mp3 файл прямо в чат) та дізнатися більше про проєкт.</p>
+                <div class="tg-btn-label">Перейти в Бот</div>
+            </a>
+            <a href="https://t.me/golosprotyraku" target="_blank" class="tg-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="tg-icon-wrap"><i class="fas fa-bullhorn"></i></div>
+                <h3>Новинний Канал</h3>
+                <p>Інформаційний фронт. Наш ШІ щодня аналізує світові медичні бази даних і публікує свіжі статті про лікування раку, а також мої особисті новини.</p>
+                <div class="tg-btn-label">Читати Новини</div>
+            </a>
+            <a href="https://t.me/golos_pidtrymka" target="_blank" class="tg-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="tg-icon-wrap"><i class="fas fa-users"></i></div>
+                <h3>Чат Незламних</h3>
+                <p>Об'єднані голоси. Закрита спільнота для тих, хто бореться, і тих, хто підтримує. Обмін історіями, порадами та просто дружнє плече побратимів.</p>
+                <div class="tg-btn-label">Приєднатися</div>
+            </a>
+        </div>
+    </section>
+
     <section id="youtube">
         <h2 data-aos="fade-up"><i class="fab fa-youtube" style="color: #ff0000; margin-right: 10px;"></i> Мій YouTube канал</h2>
         <p class="section-desc" data-aos="fade-up">Слухайте мої пісні, дивіться відео та слідкуйте за блогом про мою боротьбу безпосередньо на YouTube. Ваша підписка, коментарі та вподобання — це також величезна підтримка проєкту!</p>
         
         <div style="text-align: center; margin-top: 30px;" data-aos="zoom-in">
-            <a href="https://www.youtube.com/@golosprotyrakuppua" target="_blank" class="btn btn-youtube" style="padding: 18px 40px; font-size: 1.1rem; border-radius: 50px;">
-                <i class="fab fa-youtube"></i> Підписатися на канал
+            <a href="https://www.youtube.com/@golosprotyrakuppua" target="_blank" class="btn-plasma btn-youtube" style="padding: 18px 40px; font-size: 1.1rem;">
+                <div class="inner-bg"></div><i class="fab fa-youtube"></i> Підписатися на канал
             </a>
         </div>
     </section>
