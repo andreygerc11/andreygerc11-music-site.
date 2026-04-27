@@ -306,9 +306,58 @@
             });
         }
 
-        // Подія для кнопки "Зібрати кліп"
+       // Подія для кнопки "Зібрати кліп"
         finalCompileBtn.addEventListener('click', () => {
-            alert("Ця функція в розробці. Вона передасть усі кадри в головний генератор для фінального рендерингу!");
+            // Перевіряємо, чи всі картинки згенерувалися
+            const images = document.querySelectorAll('.scene-preview img');
+            if (images.length === 0) {
+                alert("Спочатку дочекайтеся генерації кадрів!");
+                return;
+            }
+
+            finalCompileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Пакуємо сцени...';
+            finalCompileBtn.disabled = true;
+
+            // Збираємо сценарій
+            let directorScript = [];
+            
+            // Проходимось по всіх сценах, які є на екрані
+            const sceneCards = document.querySelectorAll('.scene-card');
+            sceneCards.forEach((card) => {
+                // Витягуємо час (наприклад "00:00 - 00:30")
+                const timeText = card.querySelector('.scene-time').innerText;
+                // Беремо тільки початок сцени "00:00"
+                const startTimeStr = timeText.split('-')[0].trim(); 
+                
+                // Переводимо "ХХ:ХХ" у секунди
+                const parts = startTimeStr.split(':');
+                let startSeconds = 0;
+                if (parts.length === 2) {
+                    startSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                }
+                
+                // Беремо URL згенерованої картинки
+                const imgElement = card.querySelector('.scene-preview img');
+                const imageUrl = imgElement ? imgElement.src : null;
+
+                if (imageUrl) {
+                    directorScript.push({
+                        time: startSeconds,
+                        url: imageUrl
+                    });
+                }
+            });
+
+            // Сортуємо по часу на всякий випадок
+            directorScript.sort((a, b) => a.time - b.time);
+
+            // Зберігаємо скрипт у локальне сховище браузера
+            localStorage.setItem('hertz_director_script', JSON.stringify(directorScript));
+
+            // Перенаправляємо в головний генератор з параметром режисера
+            setTimeout(() => {
+                window.location.href = 'generator.html?mode=director';
+            }, 1000);
         });
     </script>
 
