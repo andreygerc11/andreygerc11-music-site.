@@ -400,21 +400,23 @@ app.post('/api/generate-image', async (req, res) => {
 
         let basePrompt = "ultra realistic photography, 8k resolution";
         try {
+            // === ЗМІНЕНО: Новий промпт та потужніша модель для генерації ===
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                model: "llama-3.1-8b-instant",
-                messages: [{ role: "system", content: "You are an expert prompt engineer. Translate the user's request into English and create a highly descriptive visual prompt (max 30 words) for an ULTRA REALISTIC, photorealistic image. No text, no logos, no cartoons. Output ONLY the English prompt." }, { role: "user", content: String(textToTranslate) }],
-                temperature: 0.7, max_tokens: 150
+                model: "llama-3.3-70b-versatile",
+                messages: [{ role: "system", content: "You are a visionary music video director. Find the core emotional metaphor in the text. Create a highly descriptive English prompt (max 45 words) for a dark, cinematic AI image. Focus on lighting, atmosphere, and symbolism. Output ONLY the English prompt. NO text in image." }, { role: "user", content: String(textToTranslate) }],
+                temperature: 0.7, max_tokens: 200
             }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
             basePrompt = groqRes.data.choices[0].message.content.trim();
         } catch (e) { basePrompt = "ultra realistic documentary photography, cinematic lighting, 8k, photorealistic"; }
 
-        const finalPrompt = `${basePrompt}, real photo, shot on DSLR, highly detailed, photorealistic, 8k resolution`;
+        const finalPrompt = `${basePrompt}, real photo, highly detailed, dramatic cinematic lighting, photorealistic, 8k resolution`;
         let w = 1080, h = 1920; 
         if (format === 'horizontal' || format === 'cinema') { w = 1920; h = 1080; } 
         else if (format === 'square') { w = 1080; h = 1080; } 
         else if (format === 'portrait') { w = 1080; h = 1350; } 
 
-        res.json({ imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${w}&height=${h}&nologo=true&seed=${Math.floor(Math.random() * 10000000)}&model=flux` });
+        // === ЗМІНЕНО: Додано enhance=true для покращення якості генерації Pollinations ===
+        res.json({ imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${w}&height=${h}&nologo=true&enhance=true&seed=${Math.floor(Math.random() * 10000000)}&model=flux` });
     } catch (error) { res.status(500).send("Помилка генерації зображення"); }
 });
 
@@ -422,21 +424,25 @@ app.post('/api/generate-storyboard', async (req, res) => {
     const { lyrics } = req.body;
     if (!lyrics) return res.status(400).json({ error: 'Текст пісні не надано' });
 
+    // === ЗМІНЕНО: Новий покращений промпт для ШІ-Режисера ===
     const promptText = `
-    You are a professional music video director. 
+    You are a visionary, professional music video director. 
     CRITICAL INSTRUCTION: You MUST group the lyrics into a MAXIMUM of 6 scenes total for the entire song. 
     DO NOT create a new scene for every single line. Group 4 to 8 lines together into one single scene block.
-    Translate the visual meaning to English to write highly detailed prompts for an AI Image Generator.
+    
+    For the "prompt" field, DO NOT translate the lyrics literally. Instead, find the deep emotional metaphor (e.g. if lyrics say "burning bridges" or "foggy room", describe a dark, cinematic scene of a person looking at a distant fire or sitting in deep shadows). Describe the lighting, atmosphere, and main subjects in English for an AI Image Generator. Make it highly detailed and cinematic. NO words, no text, no UI in the image.
+    
     Return ONLY a valid JSON array of objects. No markdown formatting, no backticks, no extra text.
     Format MUST be exactly like this:
     [
-      { "id": 1, "time": "00:00 - 00:30", "lyrics": "group of original ukrainian lyric lines...", "prompt": "Cinematic wide shot of..." }
+      { "id": 1, "time": "00:00 - 00:30", "lyrics": "group of original ukrainian lyric lines...", "prompt": "Cinematic wide shot, dark moody lighting, a lonely soldier sitting..." }
     ]
     Lyrics:\n${lyrics}`;
 
     try {
+        // === ЗМІНЕНО: Використовуємо більш розумну модель ===
         const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-            model: "llama-3.1-8b-instant",
+            model: "llama-3.3-70b-versatile",
             messages: [{ role: "user", content: promptText }],
             temperature: 0.7, max_tokens: 4000
         }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' } });
@@ -502,8 +508,9 @@ async function fetchAndRewriteNews() {
                     const ytMatch = itemXml.match(/<yt:videoId>(.*?)<\/yt:videoId>/i);
                     if (ytMatch) foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
 
+                    // === ЗМІНЕНО: Використовуємо більш розумну модель для Блогу ===
                     const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                        model: "llama-3.1-8b-instant",
+                        model: "llama-3.3-70b-versatile",
                         messages: [{ role: "system", content: "Ти — автор проєкту 'Голос проти раку'. Пиши розгорнуту статтю УКРАЇНСЬКОЮ (5-7 абзаців) з підзаголовками." }, { role: "user", content: `Тема: ${rawTitle}` }],
                         max_tokens: 2000
                     }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });

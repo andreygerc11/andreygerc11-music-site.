@@ -27,8 +27,8 @@
             --text-muted: #888888;
             
             --top-height: auto;
-            --bottom-height: 65px; /* Зменшено висоту нижньої панелі */
-            --sidebar-width: 280px; /* Зменшено ширину бічних панелей */
+            --bottom-height: 65px; 
+            --sidebar-width: 280px; 
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -157,7 +157,6 @@
             max-width: 100%; max-height: 100%; 
             width: auto; height: auto;
             object-fit: contain; 
-            /* ЗМІНЕНО: Яскраве неонове підсвічування кольором акценту замість чорної тіні */
             box-shadow: 0 15px 60px rgba(255, 60, 0, 0.45); 
             border: 1px solid var(--border-color);
             background: #000; border-radius: 10px; 
@@ -275,7 +274,7 @@
             <button id="sidebarSubscribeBtn" class="btn-premium" style="display: none;"><i class="fas fa-crown"></i> PRO Доступ</button>
             <a href="instruction.html" target="_blank" class="btn-instruction"><i class="fas fa-question-circle"></i> Інструкція</a>
            <a href="director.html" target="_blank" class="btn-export" style="background: linear-gradient(45deg, #8a2be2, #4a00e0); margin-right: 10px; text-decoration: none;">
-                <i class="fas fa-film"></i> Режисер (ШІ)тест
+                <i class="fas fa-film"></i> Режисер (ШІ)
             </a>
             
             <button id="stopRenderBtn" class="btn-stop"><i class="fas fa-times"></i> Скасувати</button>
@@ -508,6 +507,77 @@
         let backgroundVideo = null;
         let outputFileName = "hertz_spectrum_video"; 
 
+        // === ІНТЕГРАЦІЯ З HERTZ DIRECTOR (ПЕРЕДАЧА НА ЛЬОТУ) ===
+        let isDirectorMode = false;
+        let directorScript = [];
+        let directorImages = [];
+        let currentDirectorSceneIndex = -1;
+
+        function activateDirectorMode(scriptJson) {
+            try {
+                directorScript = JSON.parse(scriptJson);
+                console.log("Сценарій завантажено:", directorScript);
+                isDirectorMode = true;
+                directorImages = [];
+                currentDirectorSceneIndex = -1;
+                
+                directorScript.forEach((scene, index) => {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.src = scene.url;
+                    directorImages[index] = img;
+                });
+
+                setTimeout(() => {
+                    alert("🎬 Режим ШІ-Режисера активовано!\nСценарій успішно завантажено. Фонові кадри змінюватимуться автоматично.");
+                }, 500);
+
+                if (directorScript.length > 0) {
+                    currentDirectorSceneIndex = 0;
+                    backgroundImage = directorImages[0];
+                    const bgBtn = document.getElementById('removeBgBtn');
+                    if(bgBtn) bgBtn.style.display = 'flex';
+                    if (typeof drawPreviewFrame === 'function') setTimeout(drawPreviewFrame, 1000); 
+                }
+            } catch(e) {
+                console.error("Помилка завантаження сценарію", e);
+            }
+        }
+
+        // Перевірка при завантаженні
+        if (new URLSearchParams(window.location.search).get('mode') === 'director') {
+            const savedScript = localStorage.getItem('hertz_director_script');
+            if (savedScript) activateDirectorMode(savedScript);
+        }
+
+        // Слухач "повітря"
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'hertz_director_script' && e.newValue) {
+                console.log("Отримано новий сценарій з іншої вкладки!");
+                activateDirectorMode(e.newValue);
+            }
+        });
+
+        function checkDirectorScene(currentTime) {
+            if (!isDirectorMode || directorScript.length === 0) return;
+            let newIndex = -1;
+            for (let i = directorScript.length - 1; i >= 0; i--) {
+                if (currentTime >= directorScript[i].time) {
+                    newIndex = i;
+                    break;
+                }
+            }
+            if (newIndex !== -1 && newIndex !== currentDirectorSceneIndex) {
+                currentDirectorSceneIndex = newIndex;
+                backgroundImage = directorImages[newIndex];
+                if (backgroundVideo) {
+                    backgroundVideo.pause();
+                    backgroundVideo = null;
+                }
+            }
+        }
+        // =========================================================
+
         let logoImage = null;
         let logoState = {
             x: 0, y: 0, 
@@ -521,17 +591,19 @@
             if (!audioCtx) drawPreviewFrame();
         });
 
+        const removeBgBtn = document.getElementById('removeBgBtn');
         const removeLogoBtn = document.getElementById('removeLogoBtn');
         document.getElementById('logoUpload').addEventListener('change', function(e) {
             if (e.target.files[0]) { 
                 const img = new Image(); 
                 img.onload = () => { 
                     logoImage = img; 
-                    logoState.width = img.width; 
-                    logoState.height = img.height;
+                    // Виправлено деформацію логотипу
+                    logoState.width = img.naturalWidth || img.width; 
+                    logoState.height = img.naturalHeight || img.height;
                     const maxLogoDimension = canvas.width * 0.3;
-                    if (Math.max(img.width, img.height) > maxLogoDimension) {
-                        const ratio = maxLogoDimension / Math.max(img.width, img.height);
+                    if (Math.max(logoState.width, logoState.height) > maxLogoDimension) {
+                        const ratio = maxLogoDimension / Math.max(logoState.width, logoState.height);
                         logoState.width *= ratio;
                         logoState.height *= ratio;
                     }
@@ -763,9 +835,10 @@
             } else { primaryColorInput.disabled = true; secondaryColorInput.disabled = true; }
         });
 
+        // ВИПРАВЛЕНО: Заборона деформації (розтягування) пропорцій зображення
         function drawMediaCover(ctx, media, isVideo) {
-            const mw = isVideo ? media.videoWidth : media.width; 
-            const mh = isVideo ? media.videoHeight : media.height;
+            const mw = isVideo ? media.videoWidth : (media.naturalWidth || media.width);
+            const mh = isVideo ? media.videoHeight : (media.naturalHeight || media.height);
             const cw = canvas.width; 
             const ch = canvas.height; 
             
@@ -777,24 +850,9 @@
             ctx.drawImage(media, -renderW / 2, -renderH / 2, renderW, renderH);
         }
 
-        // ЛОГІКА ВИДАЛЕННЯ ФОНУ
-        const removeBgBtn = document.getElementById('removeBgBtn');
-        function clearBackground() {
-            backgroundImage = null;
-            if (backgroundVideo) {
-                backgroundVideo.pause();
-                backgroundVideo.src = "";
-                backgroundVideo = null;
-            }
-            document.getElementById('bgUpload').value = '';
-            removeBgBtn.style.display = 'none';
-            if (!audioCtx) drawPreviewFrame();
-        }
-        removeBgBtn.addEventListener('click', clearBackground);
-
         document.getElementById('bgUpload').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return; 
-            clearBackground(); // Очищаємо перед новим завантаженням
+            clearBackground(); 
             if (file.type.startsWith('video/')) {
                 backgroundVideo = document.createElement('video'); backgroundVideo.src = URL.createObjectURL(file);
                 backgroundVideo.loop = true; backgroundVideo.muted = true; backgroundVideo.playsInline = true;
@@ -806,7 +864,6 @@
             }
         });
 
-        // ЛОГІКА СКАСУВАННЯ ШІ ГЕНЕРАЦІЇ
         const generateAiBgBtn = document.getElementById('generateAiBgBtn');
         const cancelAiBgBtn = document.getElementById('cancelAiBgBtn');
         let aiAbortController = null;
@@ -863,6 +920,8 @@
 
         function drawPreviewFrame() {
             if (!audioCtx) {
+                if (audioPlayer && isDirectorMode) checkDirectorScene(audioPlayer.currentTime);
+
                 ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height); const centerX = canvas.width / 2; const centerY = canvas.height / 2; ctx.save();
                 if (bgBlurSlider.value > 0) { ctx.filter = `blur(${bgBlurSlider.value}px)`; }
                 ctx.translate(centerX, centerY);
@@ -964,7 +1023,6 @@
             if (isSyncingLyrics && e.code === 'Space') {
                 e.preventDefault(); 
                 
-                // Форматуємо час у класичний LRC [ММ:СС.хх]
                 let t = audioPlayer.currentTime;
                 let mins = Math.floor(t / 60);
                 let secs = Math.floor(t % 60);
@@ -974,7 +1032,6 @@
                 let lineText = rawLyrics[currentSyncIndex];
                 lyricsData.push({ time: t, text: lineText }); 
                 
-                // Автоматично дописуємо таймкод у текстове поле (lyricsInput)
                 let lines = lyricsInput.value.split('\n');
                 lines[currentSyncIndex] = `${timeTag} ${lineText}`;
                 lyricsInput.value = lines.join('\n');
@@ -1302,6 +1359,7 @@
             ctx.restore();
         }
 
+        // ВИПРАВЛЕНО: Прибрано ноту з автододавання
         function drawTextOverlay(minDimension) {
             const titleText = songTitleInput.value.trim(); const authorText = authorInput.value.trim();
             if (titleText || authorText) {
@@ -1310,7 +1368,7 @@
                 let startY = (canvas.height * 0.18) + textOffsetY; let currentY = startY; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 15; let totalHeight = 0; let maxLineWidth = 0;
                 if (titleText) {
                     const titleSize = minDimension * 0.065; ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`; ctx.fillStyle = '#fff';
-                    let words = (`🎵 ${titleText}`).split(' '); let line = ''; let lineHeight = titleSize * 1.3;
+                    let words = titleText.split(' '); let line = ''; let lineHeight = titleSize * 1.3;
                     for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthTitle && n > 0) { ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); line = words[n] + ' '; currentY += lineHeight; totalHeight += lineHeight; } else { line = testLine; } }
                     ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); currentY += lineHeight; totalHeight += lineHeight;
                 }
@@ -1410,6 +1468,10 @@
             if (!isGenerating) { drawAnimationId = requestAnimationFrame(draw); }
             const bufferLength = analyser.frequencyBinCount; const dataArray = new Uint8Array(bufferLength); analyser.getByteFrequencyData(dataArray);
             let bassSum = 0; for(let i = 0; i < 15; i++) bassSum += dataArray[i]; let avgBass = bassSum / 15;
+
+            if (isDirectorMode && audioPlayer) {
+                checkDirectorScene(audioPlayer.currentTime);
+            }
 
             ctx.fillStyle = '#0a0a0b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             const centerX = canvas.width / 2; const centerY = canvas.height / 2; let bgScale = 1 + (avgBass / 255) * 0.08; 

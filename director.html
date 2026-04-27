@@ -154,7 +154,7 @@
                     <p>ШІ проаналізує ваш текст і запропонує візуальні образи для кожної сцени.</p>
                 </div>
                 <button class="btn-main" id="aiSplitBtn">
-                    <i class="fas fa-robot"></i> СтворитиStoryboard
+                    <i class="fas fa-robot"></i> Створити Storyboard
                 </button>
             </div>
             
@@ -171,7 +171,7 @@
         </h2>
 
         <div class="storyboard-grid" id="storyboardContainer">
-            </div>
+        </div>
 
     </main>
 
@@ -208,7 +208,7 @@
                     gridTitle.style.display = 'block';
                     finalCompileBtn.disabled = false;
                     
-                    // ДОДАНО: Автоматичний запуск черги малювання
+                    // Автоматичний запуск черги малювання
                     await generateImagesInQueue(scenes);
                 } else {
                     alert("Помилка ШІ: " + (scenes.error || "Не вдалося створити сценарій."));
@@ -262,7 +262,6 @@
         // === 3. ЧЕРГА ТА РЕАЛЬНА ГЕНЕРАЦІЯ КАРТИНОК ===
         async function generateImagesInQueue(scenes) {
             for (let i = 0; i < scenes.length; i++) {
-                // Чекаємо, поки намалюється поточна картинка, перш ніж переходити до наступної
                 await generateImageForScene(scenes[i].id);
             }
         }
@@ -275,7 +274,6 @@
 
                 const prompt = promptArea.value.trim();
                 
-                // Ефект завантаження для поточної картки
                 previewBox.innerHTML = '<div class="spinner" style="color:var(--accent);"><i class="fas fa-circle-notch"></i></div><p style="position:absolute; bottom:10px; font-size:10px; color:white; font-weight:bold; text-transform:uppercase;">Малюю кадр...</p>';
                 
                 const seed = Math.floor(Math.random() * 10000000);
@@ -290,7 +288,7 @@
                             <i class="fas fa-redo"></i> Переробити
                         </button>
                     `;
-                    resolve(true); // Даємо сигнал пускати наступну картинку!
+                    resolve(true); 
                 };
                 img.onerror = () => {
                     previewBox.innerHTML = `
@@ -299,65 +297,57 @@
                             <i class="fas fa-redo"></i> Спробувати ще
                         </button>
                     `;
-                    resolve(false); // Все одно пускаємо наступну, щоб не зупинити весь процес
+                    resolve(false); 
                 };
                 
                 img.src = imageUrl;
             });
         }
 
-       // Подія для кнопки "Зібрати кліп"
+       // === 4. ЗБІРКА СЦЕНАРІЮ ТА ПЕРЕХІД В SPECTRUM ===
         finalCompileBtn.addEventListener('click', () => {
-            // Перевіряємо, чи всі картинки згенерувалися
             const images = document.querySelectorAll('.scene-preview img');
             if (images.length === 0) {
-                alert("Спочатку дочекайтеся генерації кадрів!");
+                alert("Спочатку дочекайтеся генерації хоча б одного кадру!");
                 return;
             }
 
             finalCompileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Пакуємо сцени...';
             finalCompileBtn.disabled = true;
 
-            // Збираємо сценарій
             let directorScript = [];
             
-            // Проходимось по всіх сценах, які є на екрані
             const sceneCards = document.querySelectorAll('.scene-card');
             sceneCards.forEach((card) => {
-                // Витягуємо час (наприклад "00:00 - 00:30")
                 const timeText = card.querySelector('.scene-time').innerText;
-                // Беремо тільки початок сцени "00:00"
-                const startTimeStr = timeText.split('-')[0].trim(); 
+                const startTimeStr = timeText.replace(/[^0-9:\-]/g, '').split('-')[0].trim();
                 
-                // Переводимо "ХХ:ХХ" у секунди
                 const parts = startTimeStr.split(':');
                 let startSeconds = 0;
                 if (parts.length === 2) {
                     startSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
                 }
                 
-                // Беремо URL згенерованої картинки
                 const imgElement = card.querySelector('.scene-preview img');
-                const imageUrl = imgElement ? imgElement.src : null;
-
-                if (imageUrl) {
-                    directorScript.push({
-                        time: startSeconds,
-                        url: imageUrl
-                    });
+                if (imgElement && imgElement.src) {
+                    directorScript.push({ time: startSeconds, url: imgElement.src });
                 }
             });
 
-            // Сортуємо по часу на всякий випадок
             directorScript.sort((a, b) => a.time - b.time);
 
-            // Зберігаємо скрипт у локальне сховище браузера
+            // Зберігаємо сценарій (це МИТТЄВО побачить відкрита вкладка Генератора)
             localStorage.setItem('hertz_director_script', JSON.stringify(directorScript));
 
-            // Перенаправляємо в головний генератор з параметром режисера
             setTimeout(() => {
-                window.location.href = 'generator.html?mode=director';
-            }, 1000);
+                // Якщо Режисер був відкритий з Генератора - просто закриваємо цю вкладку
+                if (window.opener && !window.opener.closed) {
+                    window.close();
+                } else {
+                    // Якщо відкрили якось інакше - робимо редирект
+                    window.location.href = 'generator.html?mode=director';
+                }
+            }, 800);
         });
     </script>
 
