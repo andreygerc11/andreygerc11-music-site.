@@ -11,10 +11,10 @@
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Голос проти раку | Андрій Герц</title>
+    <title>Голос проти раку | Благодійний фонд Андрія Герца</title>
     
-    <meta property="og:title" content="Голос проти раку | Андрій Герц">
-    <meta property="og:description" content="Музична сповідь та боротьба за життя. Підтримайте проєкт.">
+    <meta property="og:title" content="Голос проти раку | Благодійна ініціатива">
+    <meta property="og:description" content="Благодійна музична платформа для підтримки онкохворих. Разом до перемоги над хворобою.">
     <meta property="og:image" content="https://golos-proty-raku.pp.ua/baner.png">
     <meta property="og:url" content="https://golos-proty-raku.pp.ua/">
     <meta property="og:type" content="website">
@@ -112,9 +112,9 @@
 
         .hero-content { max-width: 900px; width: 100%; }
         .hero h1 { font-size: clamp(3.5rem, 8vw, 5.5rem); line-height: 1.1; margin-bottom: 20px; color: #fff; text-shadow: 0 0 30px rgba(255, 77, 77, 0.5); }
-        .hero p { font-size: 1.15rem; color: #ccc; margin-bottom: 40px; max-width: 700px; margin-left: auto; margin-right: auto; }
+        .hero p { font-size: 1.15rem; color: #ccc; margin-bottom: 40px; max-width: 750px; margin-left: auto; margin-right: auto; }
         
-        /* === КНОПКИ ГЕРОЯ (ІДЕАЛЬНА ПЛАЗМА) === */
+        /* === КНОПКИ ГЕРОЯ === */
         .btn-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; max-width: 1100px; margin: 0 auto; }
         
         .btn-plasma {
@@ -191,13 +191,12 @@
         .btn-youtube { --glow-color: #ff0000; --hover-bg: rgba(255, 0, 0, 0.15); --glow-shadow: rgba(255, 0, 0, 0.4); }
         .btn-tiktok { --glow-color: #00f2fe; --hover-bg: rgba(0, 242, 254, 0.1); --glow-shadow: rgba(0, 242, 254, 0.3); }
 
-
         /* Спільні стилі для секцій */
         section { padding: 80px 20px; max-width: 1200px; margin: 0 auto; position: relative;}
         h2 { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; text-align: center; margin-bottom: 15px; color: #fff; }
         .section-desc { text-align: center; color: #aaa; max-width: 700px; margin: 0 auto 50px auto; font-size: 1rem;}
 
-        /* Про проєкт */
+        /* Про проєкт - Базова сітка */
         .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;}
         .about-text p { margin-bottom: 15px; color: #ccc; text-align: justify; }
         
@@ -206,31 +205,65 @@
         .info-box p { font-size: 0.9rem; margin-bottom: 0; color: #bbb; text-align: left; }
         .quote { font-style: italic; color: #fff; padding: 15px 20px; border-left: 3px solid var(--accent); margin: 25px 0; background: rgba(255, 77, 77, 0.05); border-radius: 0 10px 10px 0; backdrop-filter: blur(5px);}
 
-        /* === ІСТОРІЯ СТВОРЕННЯ === */
-        .story-block {
-            background: linear-gradient(145deg, rgba(20, 20, 25, 0.8) 0%, rgba(10, 10, 12, 0.9) 100%);
-            backdrop-filter: blur(10px);
-            border-left: 4px solid var(--accent);
-            padding: 40px; border-radius: 20px;
+        /* === ПРЕМІАЛЬНИЙ АНІМОВАНИЙ БЛОК ІСТОРІЇ === */
+        .premium-story-card {
+            position: relative;
+            padding: 3px; 
+            background: linear-gradient(90deg, var(--accent), #ff8e53, #ba55d3, var(--accent));
+            background-size: 400% 400%;
+            animation: gradient-border 8s ease infinite;
+            border-radius: 25px;
             margin-bottom: 60px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-            position: relative; overflow: hidden;
-            display: flex; gap: 30px; align-items: center;
+            box-shadow: 0 15px 50px rgba(255, 77, 77, 0.15);
         }
-        .story-block::after {
-            content: '</>'; position: absolute; right: 20px; bottom: -10px;
-            font-size: 10rem; font-weight: 900; color: rgba(255, 77, 77, 0.03);
-            font-family: monospace; pointer-events: none;
+
+        @keyframes gradient-border {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-        .story-content h3 { font-size: 1.8rem; color: #fff; margin-bottom: 15px; text-transform: uppercase;}
-        .story-content p { color: #ccc; margin-bottom: 15px; font-size: 1rem; line-height: 1.7; text-align: justify;}
-        .story-content strong { color: var(--accent); }
+
+        .premium-story-inner {
+            background: rgba(10, 10, 12, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 22px;
+            padding: 40px;
+            display: flex;
+            gap: 35px;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ефект світіння всередині */
+        .premium-story-inner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 77, 77, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .story-icon-animated {
+            font-size: 5rem;
+            color: var(--accent);
+            filter: drop-shadow(0 0 20px rgba(255, 77, 77, 0.4));
+            animation: icon-float 3s ease-in-out infinite;
+        }
+
+        @keyframes icon-float {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
 
         /* Блок статистики */
         .statistics-block { margin-top: 50px; padding: 30px; background: rgba(20, 20, 23, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; border-left: 4px solid var(--accent); }
         .statistics-block p { font-size: 1rem; color: #bbb; text-align: justify; margin-bottom: 0; line-height: 1.8; }
 
-        /* === ВЕРТИКАЛЬНИЙ ПЛЕЄР З КНОПКАМИ СОЦМЕРЕЖ === */
+        /* === ВЕРТИКАЛЬНИЙ ПЛЕЄР === */
         .ap-widget { width: 100%; max-width: 450px; margin: 0 auto; background: #050505; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
         
         .ap-header { 
@@ -501,8 +534,11 @@
             .btn-group { flex-direction: column; width: 100%; align-items: stretch;}
             .btn-plasma { justify-content: center; }
             .bg-text-row { font-size: 8vw; }
-            .story-block { flex-direction: column; text-align: center; }
-            .story-block::after { display: none; }
+            
+            /* Мобільні фікси для нового преміум-блоку */
+            .premium-story-inner { flex-direction: column; text-align: center; padding: 25px; }
+            .story-icon-animated { font-size: 4rem; margin-bottom: -10px; }
+            
             .tg-eco-grid { grid-template-columns: 1fr; } 
         }
         @media (max-width: 600px) { .articles-grid { grid-template-columns: 1fr; } }
@@ -523,7 +559,7 @@
     <div class="nav-container">
         <a href="#" class="logo cursive-text">Golos <span>Proty Raku</span></a>
         <ul class="nav-links">
-            <li><a href="#about">Про проєкт</a></li>
+            <li><a href="#about">Про фонд</a></li>
             <li><a href="#music">Музика</a></li>
             <li><a href="#youtube">YouTube</a></li>
             <li><a href="generator.html">Hertz Spectrum</a></li>
@@ -542,11 +578,11 @@
     
     <div class="hero-content" data-aos="fade-up">
         <h1 class="cursive-text">Golos Proty Raku</h1>
-        <p>Мій бій триває — і в шпиталі, і в строю. Я не складаю зброю і залишаюся на службі до нашої Перемоги.</p>
+        <p>Мій особистий бій триває, але ця сторінка — вже давно не лише про мене. Разом із родиною ми перетворюємо творчість на благодійний фонд. Усі зібрані кошти йдуть на підтримку тих, хто просто зараз бореться з раком.</p>
         
         <div class="btn-group">
             <a href="#support" class="btn-plasma btn-red">
-                <div class="inner-bg"></div><i class="fas fa-heart"></i> Підтримати проєкт
+                <div class="inner-bg"></div><i class="fas fa-heart"></i> Підтримати фонд
             </a>
             <a href="#music" class="btn-plasma btn-white">
                 <div class="inner-bg"></div><i class="fas fa-music"></i> Слухати музику
@@ -578,42 +614,62 @@
 
 <main>
     <section id="about">
-        <h2 data-aos="fade-up">Мій бій за життя</h2>
+        <h2 data-aos="fade-up">Від особистої сповіді до благодійного фонду</h2>
         
-        <div class="story-block" data-aos="fade-up">
-            <div class="story-icon" style="font-size: 5rem; color: var(--accent); opacity: 0.8;">
-                <i class="fas fa-laptop-medical"></i>
-            </div>
-            <div class="story-content">
-                <h3>Код, написаний між крапельницями</h3>
-                <p>Багато хто запитує: хто стоїть за цією платформою? Відповідь проста — <strong>я сам</strong>. Цей проєкт не створювала велика IT-компанія чи продюсерський центр. Кожен рядок коду (Node.js сервер, бази даних, налаштування ШІ-генераторів) написаний мною: іноді в казармі, іноді — прямо під час процедур у шпиталі.</p>
-                <p>Для мене програмування та створення пісень — це спосіб зберегти ясність розуму і не здаватися. Це мій метод самостійно акумулювати кошти на лікування не через прохання про допомогу, а через <strong>створення реальної цінності</strong> для вас (музики та відео-інструментів).</p>
-                <p>Але тепер цей проєкт переріс мене. Він став інструментом підтримки та об'єднання для всіх, хто веде свій власний бій.</p>
+        <div class="premium-story-card" data-aos="zoom-in-up" data-aos-duration="1200">
+            <div class="premium-story-inner">
+                <div class="story-icon-animated">
+                    <i class="fas fa-laptop-medical"></i>
+                </div>
+                <div class="story-content">
+                    <h3 style="font-size: 1.8rem; color: #fff; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">
+                        Код, написаний між крапельницями
+                    </h3>
+                    
+                    <p style="margin-bottom: 15px; color: #eee; line-height: 1.7;">
+                        <strong>Багато хто запитує: хто стоїть за цією платформою? Відповідь проста — я сам.</strong> 
+                        Цей проєкт не створювала велика IT-компанія чи продюсерський центр. Коли я дізнався про свій діагноз, програмування та створення пісень стали для мене способом зберегти ясність розуму. Кожен рядок коду (Node.js сервер, бази даних, налаштування ШІ-генераторів) написаний мною власноруч: іноді в казармі, іноді — прямо під час тяжких процедур у шпиталі.
+                    </p>
+                    
+                    <p style="margin-bottom: 15px; color: #ddd; line-height: 1.7; border-left: 3px solid var(--accent); padding-left: 15px; background: rgba(255,255,255,0.02);">
+                        Але згодом я зрозумів головне: <strong>я не один у цій біді</strong>. Боротьба за життя та допомога іншим — це те, чим живе вся наша сім'я. 
+                        Моя дружина — лікар-реабілітолог, яка зараз працює у військовому шпиталі. Вона не лише проводить важкі фізичні процедури, а й стає для поранених справжньою психологічною опорою — додає їм віри у власні сили, допомагає не здаватися і знову ставати на ноги, коли здається, що надії вже немає. Разом зі своєю командою реабілітологів вони роблять усе можливе й неможливе, щоб рятувати та відновлювати наших хлопців і дівчат після поранень.
+                    </p>
+                    
+                    <p style="margin-bottom: 20px; color: #eee; line-height: 1.7;">
+                        Бачачи цю щоденну боротьбу за життя, ми з дружиною та донькою вирішили перетворити мій проєкт на повноцінну благодійну ініціативу. Наша мета — створити потужний благодійний фонд. Це спосіб генерувати та акумулювати допомогу не через звичайні прохання, а через створення реальної цінності — музики та сучасних ШІ-інструментів.
+                    </p>
+                    
+                    <p style="font-weight: 700; color: #fff; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                        <i class="fas fa-hand-holding-heart" style="color: var(--accent); margin-right: 10px;"></i>
+                        <strong>Куди йдуть зібрані кошти?</strong> Кожна ваша підписка чи куплена пісня буквально рятує життя. Усі зібрані гроші йдуть не лише на мій особистий процес лікування та оплату серверів (щоб проєкт жив і працював далі). Ця платформа системно допомагає іншим онкохворим: ми направляємо кошти на закупівлю життєво необхідних ліків, фінансуємо фахову психологічну підтримку та робимо все можливе, щоб не дати людям залишитися сам на сам із бідою.
+                    </p>
+                </div>
             </div>
         </div>
 
         <div class="about-grid">
             <div class="about-text" data-aos="fade-right">
-                <p>Вітаю. Я — автор пісень і військовослужбовець, який зараз веде власну війну з раком крові. Мені пощастило більше, ніж багатьом: хворобу виявили випадково і на ранній стадії. Це дає мені реальний шанс не просто вистояти, а й допомогти іншим побороти цю хворобу.</p>
-                <p><strong>Я не збираюся залишати армію.</strong> Попри діагноз, я продовжую службу і буду залишатися в строю до нашої Перемоги. Але я бачу іншу сторону цієї біди.</p>
+                <p>Вітаю. Я — Андрій Герц, військовослужбовець, який зараз веде власну війну з раком крові. Цей проєкт задумувався як моя особиста сповідь, але швидко став <strong>спільною благодійною ініціативою</strong> для тих, хто потребує допомоги.</p>
+                <p><strong>Я не збираюся залишати армію.</strong> Попри діагноз, я продовжую службу і залишатимуся в строю до нашої Перемоги. Але мій фронт тепер ще й тут — у підтримці тих, кому забракло сил або коштів на лікування.</p>
                 
                 <div class="quote">
-                    "Будь-яка ваша підтримка — це мій шанс не просто вистояти, а й допомогти іншим з цією хворобою."
+                    "Ваша підтримка — це не просто внесок у платформу. Це реальні ліки, психологічна допомога та шанс на життя для багатьох онкохворих."
                 </div>
 
                 <div class="info-box">
-                    <h4><i class="fas fa-heart-broken"></i> Забуті герої</h4>
-                    <p>Багато побратимів після списання за станом здоров'я залишаються сам на сам із хворобою, без жодної підтримки.</p>
+                    <h4><i class="fas fa-heart-broken"></i> Підтримка тих, кому найважче</h4>
+                    <p>Багато побратимів після списання за станом здоров'я залишаються сам на сам із хворобою, без жодної підтримки. Наш фонд має на меті допомагати їм у цій боротьбі: від консультацій до ліків.</p>
                 </div>
                 
                 <div class="info-box">
-                    <h4><i class="fas fa-laptop-code"></i> Творчість та розробка</h4>
-                    <p>Я поєдную в собі службу, написання музики та IT-розробку. Увесь цей портал, алгоритми та складний відеогенератор <b>Hertz Spectrum</b> я написав власноруч під час лікування. Створення пісень (включно з адаптацією української класики) та написання коду — це мій спосіб залишатися в строю, бути корисним і самостійно акумулювати кошти на боротьбу з хворобою.</p>
+                    <h4><i class="fas fa-laptop-code"></i> Творчість, що рятує</h4>
+                    <p>Я поєдную службу, написання музики та IT-розробку. Увесь цей портал та генератор <b>Hertz Spectrum</b> я розробив власноруч. Це мій спосіб акумулювати ресурси для <b>благодійного збору</b>.</p>
                 </div>
                 
                 <div class="info-box">
-                    <h4><i class="fas fa-hands-helping"></i> Ваша підтримка</h4>
-                    <p>Купуючи мою музику або оформлюючи підписку на генератор відео, ви напряму підтримуєте мене та мій проєкт. Це дає змогу оплачувати сервери, розвивати інструменти та продовжувати лікування.</p>
+                    <h4><i class="fas fa-hands-helping"></i> Благодійність через творчість</h4>
+                    <p>Купуючи мою музику або оформлюючи підписку, ви робите <strong>прямий благодійний внесок</strong>. Кошти йдуть на медикаменти хворим, оплату онкопсихологів, підтримку списаних військових, моє одужання та оплату серверів.</p>
                 </div>
             </div>
             
@@ -673,7 +729,7 @@
         </div>
 
         <div class="statistics-block" data-aos="fade-up">
-            <p>Ця недуга належить до числа найважчих і найнебезпечніших у світі. Більше неї людських життів забирають нині тільки серцево-судинні захворювання. У нашій країні мінімум 1 мільйон онкохворих. За даними Національного інституту раку, щорічно в Україні занедужує майже 170 тисяч осіб. Щодня виникає 450 випадків захворювання. Ризик занедужати мають кожен четвертий чоловік і кожна п’ята жінка.</p>
+            <p>Ця недуга належить до числа найважчих і найнебезпечніших у світі. Більше неї людських життів забирають нині тільки серцево-судинні захворювання. У нашій країні мінімум 1 мільйон онкохворих. За даними Національного інституту раку, щорічно в Україні занедужує майже 170 тисяч осіб. Щодня виникає 450 випадків захворювання. Ризик занедужати мають кожен четвертий чоловік і кожна п’ята жінка. І саме тому наша підтримка настільки важлива.</p>
         </div>
     </section>
 
@@ -743,8 +799,8 @@
                 </div>
 
                 <div class="info-box">
-                    <h4><i class="fas fa-crown"></i> Підписка </h4>
-                    <p>Оформлюючи підписку, ви отримуєте повний доступ до 50+ ефектів та ШІ-Режисера, а також <strong>фінансово підтримуєте мій бій за життя</strong>.</p>
+                    <h4><i class="fas fa-crown"></i> Благодійна Підписка </h4>
+                    <p>Оформлюючи підписку, ви отримуєте повний доступ до 50+ ефектів та ШІ-Режисера, а також <strong>робите важливий благодійний внесок у підтримку онкохворих</strong>.</p>
                 </div>
 
             </div>
