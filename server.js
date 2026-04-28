@@ -429,17 +429,19 @@ app.post('/api/generate-storyboard', async (req, res) => {
     const { lyrics } = req.body;
     if (!lyrics) return res.status(400).json({ error: 'Текст пісні не надано' });
 
+    // === ЗМІНЕНО: Більше сцен, менші шматки тексту для динаміки кліпу ===
     const promptText = `
     You are a visionary, professional music video director. 
     CRITICAL INSTRUCTION: Break the lyrics down into MANY dynamic scenes. 
     Group ONLY 2 to 4 lines together into one single scene block. A typical song should have between 10 to 20 scenes to keep the video visually engaging. DO NOT merge entire verses into a single scene.
     
-    For the "prompt" field, DO NOT translate the lyrics literally. Instead, find the deep emotional metaphor (e.g. if lyrics say "burning bridges" or "foggy room", describe a dark, cinematic scene of a person looking at a distant fire or sitting in deep shadows). Describe the lighting, atmosphere, and main subjects in English for an AI Image Generator. Make it highly detailed, cinematic. NO words, no text, no UI in the image.
+    For the "prompt" field, DO NOT translate the lyrics literally. Instead, find the deep emotional metaphor. Describe the lighting, atmosphere, and main subjects in English for an AI Image Generator. 
+    IMPORTANT: The description MUST be for a STRICTLY PHOTOREALISTIC, LIVE-ACTION cinematic movie scene. NEVER describe cartoons, illustrations, 3D renders, anime, or paintings. Describe real humans, real cameras, and real environments. NO words, no text, no UI in the image.
     
     Return ONLY a valid JSON array of objects. No markdown formatting, no backticks, no extra text.
     Format MUST be exactly like this:
     [
-      { "id": 1, "time": "00:00 - 00:10", "lyrics": "2-3 original ukrainian lyric lines...", "prompt": "Cinematic wide shot, dark moody lighting..." }
+      { "id": 1, "time": "00:00 - 00:10", "lyrics": "2-3 original ukrainian lyric lines...", "prompt": "Photorealistic live-action wide shot, cinematic lighting, real human..." }
     ]
     Lyrics:\n${lyrics}`;
 

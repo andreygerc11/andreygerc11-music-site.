@@ -277,11 +277,10 @@
                 previewBox.innerHTML = '<div class="spinner" style="color:var(--accent);"><i class="fas fa-circle-notch"></i></div><p style="position:absolute; bottom:10px; font-size:10px; color:white; font-weight:bold; text-transform:uppercase;">Малюю кадр...</p>';
                 
                 const seed = Math.floor(Math.random() * 10000000);
-                // Додаємо професійні фото-терміни для максимальної реалістичності
-const finalPrompt = encodeURIComponent(prompt + ", masterpiece, raw photo, highly detailed, photorealistic, dramatic cinematic lighting, 8k resolution, shot on 35mm lens");
-
-// Додаємо enhance=true для покращення якості ШІ
-const imageUrl = `https://image.pollinations.ai/prompt/${finalPrompt}?width=1920&height=1080&nologo=true&enhance=true&seed=${seed}&model=flux`;
+                
+                // Жорсткий промпт на реалізм (плюс заборона на малюнки) і вимкнення "згладжування"
+                const finalPrompt = encodeURIComponent(prompt + ", ultra photorealistic, live-action movie still, raw photography, 8k resolution, highly detailed skin and textures, shot on 35mm lens, natural lighting, NOT illustration, NOT 3d render, NOT cartoon");
+                const imageUrl = `https://image.pollinations.ai/prompt/${finalPrompt}?width=1920&height=1080&nologo=true&seed=${seed}&model=flux`;
                 
                 const img = new Image();
                 img.onload = () => {
