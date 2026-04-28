@@ -389,11 +389,46 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
+// === ВІДНОВЛЕНИЙ БЛОК ГЕНЕРАЦІЇ ФОНУ ===
+app.post('/api/generate-image', async (req, res) => {
+    try {
+        const { lyrics, customPrompt, format } = req.body;
+        let textToTranslate = "";
+        
+        if (customPrompt && lyrics) textToTranslate = `Сцена: ${customPrompt}. Настрій: ${lyrics.substring(0, 500)}`;
+        else if (customPrompt) textToTranslate = `Сцена: ${customPrompt}`;
+        else if (lyrics) textToTranslate = `Настрій: ${lyrics.substring(0, 600)}`;
+        else textToTranslate = "Modern minimalistic music studio background";
+
+        let basePrompt = "ultra realistic photography, 8k resolution";
+        try {
+            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                model: "llama-3.3-70b-versatile",
+                messages: [
+                    { role: "system", content: "You are a visionary music video director. Find the core emotional metaphor in the text. Create a highly descriptive English prompt (max 45 words) for a dark, cinematic AI image. Focus on lighting, atmosphere, and symbolism. Output ONLY the English prompt. NO text in image." },
+                    { role: "user", content: String(textToTranslate) }
+                ],
+                temperature: 0.7, max_tokens: 200
+            }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' } });
+            basePrompt = groqRes.data.choices[0].message.content.trim();
+        } catch (e) { basePrompt = "ultra realistic documentary photography, cinematic lighting, 8k, photorealistic"; }
+
+        const finalPrompt = `${basePrompt}, masterpiece, raw photo, highly detailed, dramatic cinematic lighting, photorealistic, 8k resolution`;
+        
+        let w = 1080, h = 1920;
+        if (format === 'horizontal' || format === 'cinema') { w = 1920; h = 1080; }
+        else if (format === 'square') { w = 1080; h = 1080; }
+        else if (format === 'portrait') { w = 1080; h = 1350; }
+
+        res.json({ imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${w}&height=${h}&nologo=true&enhance=true&seed=${Math.floor(Math.random() * 10000000)}&model=flux` });
+    } catch (error) { res.status(500).json({ error: "Помилка генерації зображення" }); }
+});
+// =======================================
+
 app.post('/api/generate-storyboard', async (req, res) => {
     const { lyrics } = req.body;
     if (!lyrics) return res.status(400).json({ error: 'Текст пісні не надано' });
 
-    // === ЗМІНЕНО: Більше сцен, менші шматки тексту для динаміки кліпу ===
     const promptText = `
     You are a visionary, professional music video director. 
     CRITICAL INSTRUCTION: Break the lyrics down into MANY dynamic scenes. 
@@ -409,7 +444,6 @@ app.post('/api/generate-storyboard', async (req, res) => {
     Lyrics:\n${lyrics}`;
 
     try {
-        // === ЗМІНЕНО: Використовуємо більш розумну модель ===
         const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
             model: "llama-3.3-70b-versatile",
             messages: [{ role: "user", content: promptText }],
@@ -477,7 +511,6 @@ async function fetchAndRewriteNews() {
                     const ytMatch = itemXml.match(/<yt:videoId>(.*?)<\/yt:videoId>/i);
                     if (ytMatch) foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
 
-                    // === ЗМІНЕНО: Використовуємо більш розумну модель для Блогу ===
                     const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                         model: "llama-3.3-70b-versatile",
                         messages: [{ role: "system", content: "Ти — автор проєкту 'Голос проти раку'. Пиши розгорнуту статтю УКРАЇНСЬКОЮ (5-7 абзаців) з підзаголовками." }, { role: "user", content: `Тема: ${rawTitle}` }],
@@ -493,7 +526,6 @@ async function fetchAndRewriteNews() {
                     });
                     addedCount++;
 
-                    // === АВТОМАТИЧНА ПУБЛІКАЦІЯ В ТЕЛЕГРАМ КАНАЛ ===
                     if (bot && CHANNEL_ID) {
                         try {
                             const tgText = `⚡️ <b>${cleanTitle}</b>\n\n${articleContent.substring(0, 300)}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
@@ -503,7 +535,6 @@ async function fetchAndRewriteNews() {
                             console.error("❌ Помилка публікації в канал:", tgErr.message);
                         }
                     }
-                    // =================================================
 
                     await new Promise(r => setTimeout(r, 10000));
                 }
