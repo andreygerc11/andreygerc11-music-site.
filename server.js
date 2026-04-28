@@ -389,53 +389,22 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
-app.post('/api/generate-image', async (req, res) => {
-    try {
-        const { lyrics, customPrompt, format } = req.body;
-        let textToTranslate = "";
-        if (customPrompt && lyrics) textToTranslate = `Сцена: ${customPrompt}. Настрій: ${lyrics.substring(0, 500)}`;
-        else if (customPrompt) textToTranslate = `Сцена: ${customPrompt}`;
-        else if (lyrics) textToTranslate = `Настрій: ${lyrics.substring(0, 600)}`;
-        else textToTranslate = "Modern minimalistic music studio background";
-
-        let basePrompt = "ultra realistic photography, 8k resolution";
-        try {
-            // === ЗМІНЕНО: Новий промпт та потужніша модель для генерації ===
-            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                model: "llama-3.3-70b-versatile",
-                messages: [{ role: "system", content: "You are a visionary music video director. Find the core emotional metaphor in the text. Create a highly descriptive English prompt (max 45 words) for a dark, cinematic AI image. Focus on lighting, atmosphere, and symbolism. Output ONLY the English prompt. NO text in image." }, { role: "user", content: String(textToTranslate) }],
-                temperature: 0.7, max_tokens: 200
-            }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
-            basePrompt = groqRes.data.choices[0].message.content.trim();
-        } catch (e) { basePrompt = "ultra realistic documentary photography, cinematic lighting, 8k, photorealistic"; }
-
-        const finalPrompt = `${basePrompt}, real photo, highly detailed, dramatic cinematic lighting, photorealistic, 8k resolution`;
-        let w = 1080, h = 1920; 
-        if (format === 'horizontal' || format === 'cinema') { w = 1920; h = 1080; } 
-        else if (format === 'square') { w = 1080; h = 1080; } 
-        else if (format === 'portrait') { w = 1080; h = 1350; } 
-
-        // === ЗМІНЕНО: Додано enhance=true для покращення якості генерації Pollinations ===
-        res.json({ imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${w}&height=${h}&nologo=true&enhance=true&seed=${Math.floor(Math.random() * 10000000)}&model=flux` });
-    } catch (error) { res.status(500).send("Помилка генерації зображення"); }
-});
-
 app.post('/api/generate-storyboard', async (req, res) => {
     const { lyrics } = req.body;
     if (!lyrics) return res.status(400).json({ error: 'Текст пісні не надано' });
 
-    // === ЗМІНЕНО: Новий покращений промпт для ШІ-Режисера ===
+    // === ЗМІНЕНО: Більше сцен, менші шматки тексту для динаміки кліпу ===
     const promptText = `
     You are a visionary, professional music video director. 
-    CRITICAL INSTRUCTION: You MUST group the lyrics into a MAXIMUM of 6 scenes total for the entire song. 
-    DO NOT create a new scene for every single line. Group 4 to 8 lines together into one single scene block.
+    CRITICAL INSTRUCTION: Break the lyrics down into MANY dynamic scenes. 
+    Group ONLY 2 to 4 lines together into one single scene block. A typical song should have between 10 to 20 scenes to keep the video visually engaging. DO NOT merge entire verses into a single scene.
     
-    For the "prompt" field, DO NOT translate the lyrics literally. Instead, find the deep emotional metaphor (e.g. if lyrics say "burning bridges" or "foggy room", describe a dark, cinematic scene of a person looking at a distant fire or sitting in deep shadows). Describe the lighting, atmosphere, and main subjects in English for an AI Image Generator. Make it highly detailed and cinematic. NO words, no text, no UI in the image.
+    For the "prompt" field, DO NOT translate the lyrics literally. Instead, find the deep emotional metaphor (e.g. if lyrics say "burning bridges" or "foggy room", describe a dark, cinematic scene of a person looking at a distant fire or sitting in deep shadows). Describe the lighting, atmosphere, and main subjects in English for an AI Image Generator. Make it highly detailed, cinematic. NO words, no text, no UI in the image.
     
     Return ONLY a valid JSON array of objects. No markdown formatting, no backticks, no extra text.
     Format MUST be exactly like this:
     [
-      { "id": 1, "time": "00:00 - 00:30", "lyrics": "group of original ukrainian lyric lines...", "prompt": "Cinematic wide shot, dark moody lighting, a lonely soldier sitting..." }
+      { "id": 1, "time": "00:00 - 00:10", "lyrics": "2-3 original ukrainian lyric lines...", "prompt": "Cinematic wide shot, dark moody lighting..." }
     ]
     Lyrics:\n${lyrics}`;
 

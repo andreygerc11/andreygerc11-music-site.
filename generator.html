@@ -598,7 +598,6 @@
                 const img = new Image(); 
                 img.onload = () => { 
                     logoImage = img; 
-                    // Виправлено деформацію логотипу
                     logoState.width = img.naturalWidth || img.width; 
                     logoState.height = img.naturalHeight || img.height;
                     const maxLogoDimension = canvas.width * 0.3;
@@ -835,10 +834,13 @@
             } else { primaryColorInput.disabled = true; secondaryColorInput.disabled = true; }
         });
 
-        // ВИПРАВЛЕНО: Заборона деформації (розтягування) пропорцій зображення
+        // ВИПРАВЛЕНО: Захист від крешу Canvas, якщо картинка ще не завантажена
         function drawMediaCover(ctx, media, isVideo) {
             const mw = isVideo ? media.videoWidth : (media.naturalWidth || media.width);
             const mh = isVideo ? media.videoHeight : (media.naturalHeight || media.height);
+            
+            if (!mw || !mh) return; // Уникнення ділення на нуль і крашу
+
             const cw = canvas.width; 
             const ch = canvas.height; 
             
@@ -1359,7 +1361,6 @@
             ctx.restore();
         }
 
-        // ВИПРАВЛЕНО: Прибрано ноту з автододавання
         function drawTextOverlay(minDimension) {
             const titleText = songTitleInput.value.trim(); const authorText = authorInput.value.trim();
             if (titleText || authorText) {
