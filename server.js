@@ -499,34 +499,43 @@ async function saveBlogToGitHub() {
     }
 }
 
-// RSS для медичних новин
+// ==================== RSS ДЖЕРЕЛА ДЛЯ МЕДИЧНИХ НОВИН ====================
 const rssNewsSources = [
     "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
-    "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk",
+    "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D0%BF%D1%80%D0%BE%D1%80%D0%B8%D0%B2&hl=uk&gl=UA&ceid=UA:uk",
     "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en",
+    "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en",
     "https://medicalxpress.com/rss-feed/cancer-news/",
     "https://www.sciencedaily.com/rss/health_medicine/cancer.xml"
 ];
 
-// RSS + ключові слова для психологічної підтримки
-const psychologyTopics = [
-    "психологічна підтримка онкологія",
-    "психоонкологія",
-    "як не падати духом при раку",
-    "психологічна допомога онкохворим",
-    "прийняти діагноз рак",
-    "психологічна підтримка при онкології",
-    "онкопсихолог",
-    "психологія раку"
+// ==================== ДЖЕРЕЛА ДЛЯ ПСИХОЛОГІЧНОЇ ПІДТРИМКИ ====================
+const psychologySources = [
+    // Реальні українські сайти
+    "https://upoa.info/",                                      // Українська психоонкологічна асоціація
+    "https://vartozhyty.com.ua/",                              // #ВАРТО ЖИТИ — психологічна допомога
+    "https://unci.org.ua/psyhologichna-pidtrymka",             // Національний інститут раку
+    "https://www.clinic-target.com/uk/psyhologichna-pidtrymka-pacziyentiv-z-onkologiyeyu/",
+    
+    // Теми для генерації
+    "психологічна підтримка онкологія Україна",
+    "як не падати духом при діагнозі рак",
+    "психоонколог допомога",
+    "прийняти діагноз рак як жити далі",
+    "психологічна підтримка для онкохворих",
+    "емоційна підтримка родичів онкопацієнтів",
+    "страх рецидиву при раку",
+    "мотивація під час хіміотерапії",
+    "як впоратися з тривогою після діагнозу рак"
 ];
 
 async function fetchAndRewriteNews() {
     if (!GROQ_API_KEY) return;
-    console.log("🔄 Початок автоматичного оновлення блогу...");
+    console.log("🔄 Початок автоматичного оновлення блогу (новини + психологія)...");
 
     let addedCount = 0;
 
-    // 1. Медичні новини (category: "news")
+    // 1. МЕДИЧНІ НОВИНИ
     for (const rssUrl of rssNewsSources) {
         try {
             const response = await axios.get(rssUrl, { timeout: 12000 });
@@ -567,51 +576,64 @@ async function fetchAndRewriteNews() {
             });
 
             addedCount++;
-            console.log(`✅ Додано новину: ${rawTitle.substring(0, 60)}...`);
+            console.log(`📰 Додано новину: ${rawTitle.substring(0, 60)}...`);
 
             await new Promise(r => setTimeout(r, 7000));
 
-        } catch (e) { /* silent */ }
+        } catch (e) {}
     }
 
-    // 2. Психологічна підтримка (автоматично)
-    for (const topic of psychologyTopics) {
+    // 2. ПСИХОЛОГІЧНА ПІДТРИМКА
+    for (const source of psychologySources) {
         try {
+            let topic = source;
+            if (source.startsWith('http')) {
+                topic = "психологічна підтримка онкологія";
+            }
+
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.3-70b-versatile",
                 messages: [{ 
                     role: "system", 
-                    content: "Ти — автор проєкту 'Голос проти раку' (Андрій Герц). Пиши щиру, емоційну, мотивуючу статтю УКРАЇНСЬКОЮ мовою про психологічну підтримку при онкології. Використовуй особистий стиль: теплий, людяний, з елементами власного досвіду, надією та практичними порадами. 6-8 абзаців з підзаголовками." 
+                    content: "Ти — Андрій Герц, автор проєкту «Голос проти раку». Пиши щиру, емоційну, мотивуючу статтю УКРАЇНСЬКОЮ від першої особи. Використовуй теплий людяний стиль, елементи особистого досвіду, практичні поради та сильну надію. 6–8 абзаців з підзаголовками." 
                 }, { 
                     role: "user", 
-                    content: `Напиши глибоку статтю на тему: ${topic}. Зроби її корисною для людей, які зіткнулися з раком або підтримують близьких.` 
+                    content: `Напиши глибоку статтю про психологічну підтримку при онкології на основі теми: ${topic}` 
                 }],
-                max_tokens: 2400,
-                temperature: 0.8
+                max_tokens: 2500,
+                temperature: 0.78
             }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
             const articleContent = groqRes.data.choices[0].message.content.trim();
             const title = `Психологічна підтримка: ${topic.charAt(0).toUpperCase() + topic.slice(1)}`;
 
-            // Перевіряємо на дублікат
-            if (aiBlogPosts.some(p => p.title.includes(topic) || p.content.includes(topic))) continue;
+            if (aiBlogPosts.some(p => p.title.includes(topic))) continue;
 
             aiBlogPosts.unshift({
                 id: Date.now() + Math.floor(Math.random() * 10000),
                 date: new Date().toLocaleDateString('uk-UA'),
-                category: "psychology",           // ← Головне!
-                originalTitle: title,
+                category: "psychology",
+                originalTitle: topic,
                 title: title,
                 content: articleContent,
-                imageUrl: "article_support.png"   // можна змінити на інше зображення
+                imageUrl: "article_support.png"
             });
 
             addedCount++;
-            console.log(`🫂 Додано психологічну статтю: ${topic}`);
+            console.log(`🫂 Додано психологічну статтю: ${title}`);
 
-            await new Promise(r => setTimeout(r, 9000));
+            // Публікація в Telegram
+            if (bot && CHANNEL_ID) {
+                const shortText = articleContent.substring(0, 280).replace(/\n/g, ' ');
+                const tgText = `🫂 <b>${title}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
+                await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' }).catch(() => {});
+            }
 
-        } catch (e) { console.log("Помилка генерації псих. статті:", e.message); }
+            await new Promise(r => setTimeout(r, 9500));
+
+        } catch (e) {
+            console.log(`Помилка генерації психологічної статті для: ${source}`);
+        }
     }
 
     if (addedCount > 0) {
@@ -619,10 +641,9 @@ async function fetchAndRewriteNews() {
     }
 }
 
-// Ендпоінт блогу з фільтрацією
+// Ендпоінт для блогу
 app.get('/api/blog', (req, res) => {
     const { category } = req.query;
-    
     let posts = aiBlogPosts;
 
     if (category && category !== 'all') {
@@ -637,10 +658,11 @@ app.get('/api/blog', (req, res) => {
 // 5. ЗАПУСК СЕРВЕРА
 // ==========================================
 const PORT = process.env.PORT || 10000;
+
 Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive()]).then(() => {
     app.listen(PORT, () => {
-        console.log(`🚀 Сервер запущено на порту ${PORT}`);
-        setTimeout(fetchAndRewriteNews, 20000);           // перший запуск
-        setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000); // раз на добу
+        console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
+        setTimeout(fetchAndRewriteNews, 30000); 
+        setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000);
     });
 });
