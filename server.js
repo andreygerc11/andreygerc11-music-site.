@@ -458,7 +458,7 @@ app.post('/api/generate-storyboard', async (req, res) => {
 });
 
 // ==========================================
-// 4. АВТОМАТИЧНИЙ БЛОГ (Новини + Психологічна підтримка)
+// 4. АВТОМАТИЧНИЙ БЛОГ (Новини + Реальна Психологічна підтримка)
 // ==========================================
 
 async function syncBlogFromGitHub() {
@@ -496,7 +496,7 @@ async function saveBlogToGitHub() {
     }
 }
 
-// ==================== 1. МЕДИЧНІ НОВИНИ ====================
+// ==================== 1. МЕДИЧНІ НОВИНИ (RSS) ====================
 const rssNewsSources = [
     "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
     "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk",
@@ -505,30 +505,23 @@ const rssNewsSources = [
     "https://www.sciencedaily.com/rss/health_medicine/cancer.xml"
 ];
 
-// ==================== 2. ПСИХОЛОГІЧНА ПІДТРИМКА ====================
-const psychologySources = [
-    // Українські
+// ==================== 2. РЕАЛЬНІ ДЖЕРЕЛА ДЛЯ ПСИХОЛОГІЧНОЇ ПІДТРИМКИ ====================
+const psychologyRealSources = [
     "https://upoa.info/",
     "https://vartozhyty.com.ua/",
     "https://unci.org.ua/psyhologichna-pidtrymka",
     "https://www.clinic-target.com/uk/psyhologichna-pidtrymka-pacziyentiv-z-onkologiyeyu/",
-    // Світові
-    "https://apos-society.org/",
-    "https://www.cancercare.org/",
+    "https://mozhna.space/onko-psy",
+    "https://apos-society.org/people-affected-by-cancer/resources-for-people-affected-by-cancer/",
+    "https://www.cancercare.org/services",
     "https://www.cancersupportcommunity.org/",
-    "https://www.ipos-society.org/",
-    "https://www.cancer.org/cancer/supportive-care/",
-    // Теми для генерації
-    "психологічна підтримка онкологія",
-    "як не падати духом при раку",
-    "психоонколог поради",
-    "прийняти діагноз рак",
-    "емоційна підтримка онкохворим"
+    "https://www.ipos-society.org/patients/resources",
+    "https://www.cancer.org/cancer/supportive-care/therapy-counseling-and-support-resources.html"
 ];
 
 async function fetchAndRewriteNews() {
     if (!GROQ_API_KEY) return;
-    console.log("🔄 Оновлення блогу: новини + психологічна підтримка...");
+    console.log("🔄 Оновлення блогу: медичні новини + реальна психологічна підтримка...");
 
     let addedCount = 0;
 
@@ -545,18 +538,13 @@ async function fetchAndRewriteNews() {
             if (!titleMatch) continue;
 
             let rawTitle = titleMatch[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim();
-
-            // === ПОКРАЩЕНА ПЕРЕВІРКА НА ДУБЛІКАТИ ===
-            if (aiBlogPosts.some(p => 
-                p.originalTitle === rawTitle || 
-                p.title.toLowerCase().includes(rawTitle.toLowerCase().substring(0, 40))
-            )) continue;
+            if (aiBlogPosts.some(p => p.originalTitle === rawTitle)) continue;
 
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.3-70b-versatile",
                 messages: [{ 
                     role: "system", 
-                    content: "Ти — автор проєкту 'Голос проти раку'. Перепиши статтю українською своїми словами, зроби її корисною і мотивуючою. Не вигадуй факти." 
+                    content: "Ти — автор проєкту 'Голос проти раку'. Перепиши статтю українською своїми словами, зроби її корисною, зрозумілою і мотивуючою. Не вигадуй факти." 
                 }, { 
                     role: "user", 
                     content: `Перепиши статтю на тему: ${rawTitle}` 
@@ -583,33 +571,31 @@ async function fetchAndRewriteNews() {
         } catch (e) {}
     }
 
-    // 2. Психологічна підтримка
-    for (const source of psychologySources) {
+    // 2. Психологічна підтримка — тільки реальні джерела
+    for (const source of psychologyRealSources) {
         try {
+            // Тут можна додати парсинг сторінки, але поки що використовуємо тему + джерело
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.3-70b-versatile",
                 messages: [{ 
                     role: "system", 
-                    content: "Ти — автор проєкту 'Голос проти раку'. Перепиши інформацію з джерела своїми словами українською мовою. Зроби текст оригінальним, корисним, емпатичним. Не вигадуй історії від першої особи. 6-8 абзаців з підзаголовками." 
+                    content: "Ти — автор проєкту 'Голос проти раку'. Знайди корисну інформацію з психоонкології з вказаного джерела і перепиши її українською своїми словами. Зроби текст оригінальним, емпатичним і практичним. Не вигадуй історії від першої особи. 6-8 абзаців з підзаголовками." 
                 }, { 
                     role: "user", 
-                    content: `Перепиши та адаптуй інформацію про психологічну підтримку онкохворих з теми/джерела: ${source}. Зроби статтю корисною для пацієнтів і родичів.` 
+                    content: `Перепиши корисну інформацію про психологічну підтримку онкохворих з джерела: ${source}. Зроби статтю оригінальною і корисною.` 
                 }],
-                max_tokens: 2500,
+                max_tokens: 2400,
                 temperature: 0.7
             }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
             const articleContent = groqRes.data.choices[0].message.content.trim();
-            const title = source.includes("http") ? "Психологічна підтримка при онкології" : `Психологічна підтримка: ${source}`;
+            const title = "Психологічна підтримка при онкології";
 
-            // === ПОКРАЩЕНА ПЕРЕВІРКА НА ДУБЛІКАТИ ===
-            const isDuplicate = aiBlogPosts.some(p => 
+            // Посилена перевірка на дублікат
+            if (aiBlogPosts.some(p => 
                 p.category === "psychology" && 
-                (p.originalTitle.includes(source) || 
-                 p.content.substring(0, 150) === articleContent.substring(0, 150))
-            );
-
-            if (isDuplicate) continue;
+                (p.content.substring(0, 120) === articleContent.substring(0, 120))
+            )) continue;
 
             aiBlogPosts.unshift({
                 id: Date.now() + Math.floor(Math.random() * 10000),
@@ -618,29 +604,30 @@ async function fetchAndRewriteNews() {
                 originalTitle: source,
                 title: title,
                 content: articleContent,
-                imageUrl: "article_support.png"
+                imageUrl: "article_support.png",
+                sourceUrl: source
             });
 
             addedCount++;
-            console.log(`🫂 Додано психологічну статтю: ${title}`);
+            console.log(`🫂 Додано психологічну статтю з джерела: ${source}`);
 
             if (bot && CHANNEL_ID) {
                 const shortText = articleContent.substring(0, 280).replace(/\n/g, ' ');
-                const tgText = `🫂 <b>${title}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю</a>`;
+                const tgText = `🫂 <b>Психологічна підтримка при онкології</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю</a>`;
                 await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' }).catch(() => {});
             }
 
-            await new Promise(r => setTimeout(r, 9500));
+            await new Promise(r => setTimeout(r, 10000));
 
         } catch (e) {
-            console.log(`Помилка при обробці психологічного джерела: ${source}`);
+            console.log(`Помилка обробки психологічного джерела: ${source}`);
         }
     }
 
     if (addedCount > 0) await saveBlogToGitHub();
 }
 
-// Ендпоінт блогу
+// Ендпоінт
 app.get('/api/blog', (req, res) => {
     const { category } = req.query;
     let posts = aiBlogPosts;
