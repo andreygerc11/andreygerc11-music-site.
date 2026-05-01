@@ -457,96 +457,181 @@ app.post('/api/generate-storyboard', async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'Помилка генерації сценарію' }); }
 });
 
-// === АВТОМАТИЧНИЙ БЛОГ ТА НОВИНИ (ШІ) ===
+// ==========================================
+// 4. АВТОМАТИЧНИЙ БЛОГ (Новини + Психологічна підтримка)
+// ==========================================
+
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
-        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`, { 
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` } 
+        });
         aiBlogPosts = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
-    } catch (e) { aiBlogPosts = []; }
+        console.log(`📚 Завантажено ${aiBlogPosts.length} постів з GitHub`);
+    } catch (e) { 
+        console.log("Блог ще не створено або порожній");
+        aiBlogPosts = []; 
+    }
 }
 
 async function saveBlogToGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
         const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`;
-        let sha = null; try { const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } }); sha = getRes.data.sha; } catch (e) {}
+        let sha = null;
+        try { 
+            const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } }); 
+            sha = getRes.data.sha; 
+        } catch (e) {}
+
         const contentEncoded = Buffer.from(JSON.stringify(aiBlogPosts, null, 2), 'utf8').toString('base64');
-        await axios.put(url, { message: "Оновлення блогу", content: contentEncoded, sha }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-    } catch (e) { console.error("Помилка GitHub:", e.message); }
+        
+        await axios.put(url, { 
+            message: `Автооновлення блогу (${new Date().toLocaleDateString('uk-UA')})`, 
+            content: contentEncoded, 
+            sha 
+        }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        
+        console.log(`✅ Блог успішно збережено (${aiBlogPosts.length} постів)`);
+    } catch (e) { 
+        console.error("❌ Помилка збереження на GitHub:", e.message); 
+    }
 }
 
-const rssSources = [
+// RSS для медичних новин
+const rssNewsSources = [
     "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
-    "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk",
-    "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D0%BF%D1%80%D0%BE%D1%80%D0%B8%D0%B2&hl=uk&gl=UA&ceid=UA:uk",
+    "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk",
     "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en",
-    "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en",
     "https://medicalxpress.com/rss-feed/cancer-news/",
     "https://www.sciencedaily.com/rss/health_medicine/cancer.xml"
 ];
 
+// RSS + ключові слова для психологічної підтримки
+const psychologyTopics = [
+    "психологічна підтримка онкологія",
+    "психоонкологія",
+    "як не падати духом при раку",
+    "психологічна допомога онкохворим",
+    "прийняти діагноз рак",
+    "психологічна підтримка при онкології",
+    "онкопсихолог",
+    "психологія раку"
+];
+
 async function fetchAndRewriteNews() {
     if (!GROQ_API_KEY) return;
-    try {
-        const allSources = rssSources.sort(() => 0.5 - Math.random());
-        let addedCount = 0;
+    console.log("🔄 Початок автоматичного оновлення блогу...");
 
-        for (const rssUrl of allSources) {
-            try {
-                const response = await axios.get(rssUrl, { timeout: 10000 }); 
-                const xml = response.data;
-                const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
-                if (!itemMatch) continue;
+    let addedCount = 0;
 
-                const itemXml = itemMatch[1];
-                const titleMatch = itemXml.match(/<title>(.*?)<\/title>/);
-                const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\/pubDate>/) || itemXml.match(/<published>(.*?)<\/published>/);
+    // 1. Медичні новини (category: "news")
+    for (const rssUrl of rssNewsSources) {
+        try {
+            const response = await axios.get(rssUrl, { timeout: 12000 });
+            const xml = response.data;
+            const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
+            if (!itemMatch) continue;
 
-                if (titleMatch) {
-                    let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-                    let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
+            const itemXml = itemMatch[1];
+            const titleMatch = itemXml.match(/<title>(.*?)<\/title>/);
+            if (!titleMatch) continue;
 
-                    if (aiBlogPosts.some(p => p.originalTitle === rawTitle)) continue;
+            let rawTitle = titleMatch[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim();
+            if (aiBlogPosts.some(p => p.originalTitle === rawTitle)) continue;
 
-                    let foundVideoUrl = null;
-                    const ytMatch = itemXml.match(/<yt:videoId>(.*?)<\/yt:videoId>/i);
-                    if (ytMatch) foundVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                model: "llama-3.3-70b-versatile",
+                messages: [{ 
+                    role: "system", 
+                    content: "Ти — автор проєкту 'Голос проти раку'. Пиши розгорнуту, мотивуючу статтю УКРАЇНСЬКОЮ (5-7 абзаців) з підзаголовками. Стиль теплий, щирий, з надією." 
+                }, { 
+                    role: "user", 
+                    content: `Напиши статтю на тему: ${rawTitle}` 
+                }],
+                max_tokens: 2200,
+                temperature: 0.75
+            }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
-                    const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                        model: "llama-3.3-70b-versatile",
-                        messages: [{ role: "system", content: "Ти — автор проєкту 'Голос проти раку'. Пиши розгорнуту статтю УКРАЇНСЬКОЮ (5-7 абзаців) з підзаголовками." }, { role: "user", content: `Тема: ${rawTitle}` }],
-                        max_tokens: 2000
-                    }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
+            const articleContent = groqRes.data.choices[0].message.content.trim();
 
-                    const cleanTitle = rawTitle.split(" - ")[0];
-                    const articleContent = groqRes.data.choices[0].message.content.trim();
+            aiBlogPosts.unshift({
+                id: Date.now() + Math.floor(Math.random() * 10000),
+                date: new Date().toLocaleDateString('uk-UA'),
+                category: "news",
+                originalTitle: rawTitle,
+                title: rawTitle.split(" - ")[0] || rawTitle,
+                content: articleContent,
+                imageUrl: "baner_novunu.png"
+            });
 
-                    aiBlogPosts.unshift({
-                        id: Date.now() + Math.floor(Math.random() * 1000), date: pubDate, originalTitle: rawTitle, title: cleanTitle,
-                        content: articleContent, imageUrl: "baner_novunu.png", videoUrl: foundVideoUrl
-                    });
-                    addedCount++;
+            addedCount++;
+            console.log(`✅ Додано новину: ${rawTitle.substring(0, 60)}...`);
 
-                    if (bot && CHANNEL_ID) {
-                        try {
-                            const tgText = `⚡️ <b>${cleanTitle}</b>\n\n${articleContent.substring(0, 300)}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
-                            await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
-                            console.log(`✅ Новину успішно відправлено в канал ${CHANNEL_ID}`);
-                        } catch (tgErr) {
-                            console.error("❌ Помилка публікації в канал:", tgErr.message);
-                        }
-                    }
+            await new Promise(r => setTimeout(r, 7000));
 
-                    await new Promise(r => setTimeout(r, 10000));
-                }
-            } catch (e) { }
-        }
-        if (addedCount > 0) await saveBlogToGitHub();
-    } catch (e) { }
+        } catch (e) { /* silent */ }
+    }
+
+    // 2. Психологічна підтримка (автоматично)
+    for (const topic of psychologyTopics) {
+        try {
+            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                model: "llama-3.3-70b-versatile",
+                messages: [{ 
+                    role: "system", 
+                    content: "Ти — автор проєкту 'Голос проти раку' (Андрій Герц). Пиши щиру, емоційну, мотивуючу статтю УКРАЇНСЬКОЮ мовою про психологічну підтримку при онкології. Використовуй особистий стиль: теплий, людяний, з елементами власного досвіду, надією та практичними порадами. 6-8 абзаців з підзаголовками." 
+                }, { 
+                    role: "user", 
+                    content: `Напиши глибоку статтю на тему: ${topic}. Зроби її корисною для людей, які зіткнулися з раком або підтримують близьких.` 
+                }],
+                max_tokens: 2400,
+                temperature: 0.8
+            }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
+
+            const articleContent = groqRes.data.choices[0].message.content.trim();
+            const title = `Психологічна підтримка: ${topic.charAt(0).toUpperCase() + topic.slice(1)}`;
+
+            // Перевіряємо на дублікат
+            if (aiBlogPosts.some(p => p.title.includes(topic) || p.content.includes(topic))) continue;
+
+            aiBlogPosts.unshift({
+                id: Date.now() + Math.floor(Math.random() * 10000),
+                date: new Date().toLocaleDateString('uk-UA'),
+                category: "psychology",           // ← Головне!
+                originalTitle: title,
+                title: title,
+                content: articleContent,
+                imageUrl: "article_support.png"   // можна змінити на інше зображення
+            });
+
+            addedCount++;
+            console.log(`🫂 Додано психологічну статтю: ${topic}`);
+
+            await new Promise(r => setTimeout(r, 9000));
+
+        } catch (e) { console.log("Помилка генерації псих. статті:", e.message); }
+    }
+
+    if (addedCount > 0) {
+        await saveBlogToGitHub();
+    }
 }
 
-app.get('/api/blog', (req, res) => res.json(aiBlogPosts));
+// Ендпоінт блогу з фільтрацією
+app.get('/api/blog', (req, res) => {
+    const { category } = req.query;
+    
+    let posts = aiBlogPosts;
+
+    if (category && category !== 'all') {
+        posts = aiBlogPosts.filter(p => p.category === category);
+    }
+
+    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    res.json(posts);
+});
 
 // ==========================================
 // 5. ЗАПУСК СЕРВЕРА
@@ -554,8 +639,9 @@ app.get('/api/blog', (req, res) => res.json(aiBlogPosts));
 const PORT = process.env.PORT || 10000;
 Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive()]).then(() => {
     app.listen(PORT, () => {
-        console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
-        setTimeout(fetchAndRewriteNews, 15000); 
-        setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000);
+        console.log(`🚀 Сервер запущено на порту ${PORT}`);
+        setTimeout(fetchAndRewriteNews, 20000);           // перший запуск
+        setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000); // раз на добу
     });
+});
 });
