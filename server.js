@@ -644,4 +644,3 @@ Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive()]).then(() => {
         setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000); // раз на добу
     });
 });
-});
