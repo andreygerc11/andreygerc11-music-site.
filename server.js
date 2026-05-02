@@ -648,7 +648,29 @@ const PORT = process.env.PORT || 10000;
 Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive()]).then(() => {
     app.listen(PORT, () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
+
+        // Перша перевірка через 30 секунд після запуску
         setTimeout(fetchAndRewriteNews, 30000);
-        setInterval(fetchAndRewriteNews, 24 * 60 * 60 * 1000);
+
+        // Функція для перевірки в потрібний час
+        function scheduleChecks() {
+            const now = new Date();
+            const kyivTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Kiev" }));
+
+            const currentHour = kyivTime.getHours();
+            const currentMinutes = kyivTime.getMinutes();
+
+            // Перевірка о 08:00 та 20:00
+            if ((currentHour === 8 && currentMinutes < 5) || (currentHour === 20 && currentMinutes < 5)) {
+                console.log(`🕒 Запуск перевірки новин о ${currentHour}:00 (Київ)`);
+                fetchAndRewriteNews();
+            }
+        }
+
+        // Перевіряємо кожні 5 хвилин
+        setInterval(scheduleChecks, 5 * 60 * 1000);
+
+        // Також запускаємо відразу для тесту
+        console.log("⏰ Налаштовано перевірку новин щодня о 08:00 та 20:00 (Київський час)");
     });
 });
