@@ -375,7 +375,7 @@
                             <option value="linear_bars">Лінійна: Смуги знизу</option>
                             <option value="linear_curve">Лінійна: Плавна хвиля</option>
                             <option value="linear_symmetry">Лінійна: Симетрія</option>
-                            <!-- ОСЬ ТУТ ДОДАЄМО НОВІ РЯДКИ -->
+                            <!-- НОВІ СТИЛІ -->
                             <option value="circle_dots">Круг: Пульсуючі точки</option>
                             <option value="hexagon_bars">Гексагон: Неонові смуги</option>
                             <option value="wave_filled">Лінійна: Залита хвиля (Blob)</option>
@@ -838,12 +838,11 @@
             } else { primaryColorInput.disabled = true; secondaryColorInput.disabled = true; }
         });
 
-        // ВИПРАВЛЕНО: Захист від крешу Canvas, якщо картинка ще не завантажена
         function drawMediaCover(ctx, media, isVideo) {
             const mw = isVideo ? media.videoWidth : (media.naturalWidth || media.width);
             const mh = isVideo ? media.videoHeight : (media.naturalHeight || media.height);
             
-            if (!mw || !mh) return; // Уникнення ділення на нуль і крашу
+            if (!mw || !mh) return; 
 
             const cw = canvas.width; 
             const ch = canvas.height; 
@@ -855,6 +854,23 @@
             
             ctx.drawImage(media, -renderW / 2, -renderH / 2, renderW, renderH);
         }
+
+        function clearBackground() {
+            backgroundImage = null;
+            if (backgroundVideo) {
+                backgroundVideo.pause();
+                backgroundVideo.src = '';
+                backgroundVideo = null;
+            }
+        }
+
+        // ВАЖЛИВЕ ВИПРАВЛЕННЯ: Додано обробник кліку для кнопки видалення фону!
+        removeBgBtn.addEventListener('click', () => {
+            clearBackground();
+            document.getElementById('bgUpload').value = '';
+            removeBgBtn.style.display = 'none';
+            if (!audioCtx) drawPreviewFrame();
+        });
 
         document.getElementById('bgUpload').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return; 
@@ -871,105 +887,96 @@
         });
 
         // === ПОКРАЩЕНА AI ГЕНЕРАЦІЯ ОБКЛАДИНКИ ===
-const generateAiBgBtn = document.getElementById('generateAiBgBtn');
-const cancelAiBgBtn = document.getElementById('cancelAiBgBtn');
-const aiLoadingStatus = document.getElementById('aiLoadingStatus');
-let aiAbortController = null;
+        const generateAiBgBtn = document.getElementById('generateAiBgBtn');
+        const cancelAiBgBtn = document.getElementById('cancelAiBgBtn');
+        const aiLoadingStatus = document.getElementById('aiLoadingStatus');
+        let aiAbortController = null;
 
-function clearBackground() {
-    backgroundImage = null;
-    if (backgroundVideo) {
-        backgroundVideo.pause();
-        backgroundVideo.src = '';
-        backgroundVideo = null;
-    }
-}
+        generateAiBgBtn.addEventListener('click', async () => {
+            const lyrics = document.getElementById('lyricsInput').value.trim();
+            const songTitle = songTitleInput.value.trim();
+            const format = formatSelect.value;
+            const customPrompt = document.getElementById('customAiPrompt').value.trim();
 
-generateAiBgBtn.addEventListener('click', async () => {
-    const lyrics = document.getElementById('lyricsInput').value.trim();
-    const songTitle = songTitleInput.value.trim();
-    const format = formatSelect.value;
-    const customPrompt = document.getElementById('customAiPrompt').value.trim();
+            let finalPrompt = customPrompt || "";
+            if (!finalPrompt) {
+                finalPrompt = lyrics ? 
+                    `Cinematic music video background for song: ${songTitle || "Untitled"}, emotional, atmospheric, high quality, cinematic lighting` :
+                    "abstract cinematic music visualizer background, dark aesthetic, neon accents, professional";
+            }
 
-    // Кращий промпт
-    let finalPrompt = customPrompt || "";
-    if (!finalPrompt) {
-        finalPrompt = lyrics ? 
-            `Cinematic music video background for song: ${songTitle || "Untitled"}, emotional, atmospheric, high quality, cinematic lighting` :
-            "abstract cinematic music visualizer background, dark aesthetic, neon accents, professional";
-    }
+            generateAiBgBtn.style.display = 'none';
+            cancelAiBgBtn.style.display = 'flex';
+            aiLoadingStatus.style.display = 'block';
+            aiLoadingStatus.innerHTML = 'Генерую якісну обкладинку... <i class="fas fa-spinner fa-spin"></i>';
 
-    generateAiBgBtn.style.display = 'none';
-    cancelAiBgBtn.style.display = 'flex';
-    aiLoadingStatus.style.display = 'block';
-    aiLoadingStatus.innerHTML = 'Генерую якісну обкладинку... <i class="fas fa-spinner fa-spin"></i>';
+            aiAbortController = new AbortController();
 
-    aiAbortController = new AbortController();
+            try {
+                const response = await fetch('https://andreygerc11-music-site.onrender.com/api/generate-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        lyrics: lyrics || songTitle || "music",
+                        format: format,
+                        customPrompt: finalPrompt
+                    }),
+                    signal: aiAbortController.signal
+                });
 
-    try {
-        const response = await fetch('https://andreygerc11-music-site.onrender.com/api/generate-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                lyrics: lyrics || songTitle || "music",
-                format: format,
-                customPrompt: finalPrompt
-            }),
-            signal: aiAbortController.signal
+                if (!response.ok) {
+                    throw new Error(`Сервер повернув ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.imageUrl) {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    
+                    img.onload = () => {
+                        clearBackground();
+                        backgroundImage = img;
+                        if (removeBgBtn) removeBgBtn.style.display = 'flex';
+                        drawPreviewFrame();
+                        resetAiBtn();
+                        console.log("✅ Обкладинка успішно згенерована та завантажена");
+                    };
+
+                    img.onerror = () => {
+                        alert("Зображення згенеровано, але не вдалося завантажити. Спробуй ще раз.");
+                        resetAiBtn();
+                    };
+
+                    img.src = data.imageUrl;
+                } else {
+                    alert("Сервер не повернув посилання на зображення.");
+                    resetAiBtn();
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    console.log("Генерацію скасовано");
+                } else {
+                    console.error(err);
+                    alert("Помилка генерації обкладинки.\nПеревірте, чи працює сервер.");
+                }
+                resetAiBtn();
+            }
         });
 
-        if (!response.ok) {
-            throw new Error(`Сервер повернув ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.imageUrl) {
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            
-            img.onload = () => {
-                clearBackground();
-                backgroundImage = img;
-                if (removeBgBtn) removeBgBtn.style.display = 'flex';
-                drawPreviewFrame();
-                resetAiBtn();
-                console.log("✅ Обкладинка успішно згенерована та завантажена");
-            };
-
-            img.onerror = () => {
-                alert("Зображення згенеровано, але не вдалося завантажити. Спробуй ще раз.");
-                resetAiBtn();
-            };
-
-            img.src = data.imageUrl;
-        } else {
-            alert("Сервер не повернув посилання на зображення.");
+        cancelAiBgBtn.addEventListener('click', () => {
+            if (aiAbortController) aiAbortController.abort();
             resetAiBtn();
+        });
+
+        function resetAiBtn() {
+            generateAiBgBtn.style.display = 'flex';
+            cancelAiBgBtn.style.display = 'none';
+            aiLoadingStatus.style.display = 'none';
+            aiAbortController = null;
         }
-    } catch (err) {
-        if (err.name === 'AbortError') {
-            console.log("Генерацію скасовано");
-        } else {
-            console.error(err);
-            alert("Помилка генерації обкладинки.\nПеревірте, чи працює сервер.");
-        }
-        resetAiBtn();
-    }
-});
 
-cancelAiBgBtn.addEventListener('click', () => {
-    if (aiAbortController) aiAbortController.abort();
-    resetAiBtn();
-});
-
-function resetAiBtn() {
-    generateAiBgBtn.style.display = 'flex';
-    cancelAiBgBtn.style.display = 'none';
-    aiLoadingStatus.style.display = 'none';
-    aiAbortController = null;
-}
-
+        // === ВИПРАВЛЕНА ФУНКЦІЯ ПРЕВ'Ю ===
         function drawPreviewFrame() {
             if (!audioCtx) {
                 if (audioPlayer && isDirectorMode) checkDirectorScene(audioPlayer.currentTime);
@@ -987,8 +994,19 @@ function resetAiBtn() {
                 
                 const dummyData = new Uint8Array(512); for(let i=0; i<512; i++) dummyData[i] = 100;
                 const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
+                
                 ctx.globalAlpha = 0.4;
-                if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); else if (style === 'circle_bars') drawCircleBars(dummyData, minDimension, 512, 50); else if (style === 'linear_bars') drawLinearBars(dummyData, minDimension, 512); else if (style === 'linear_curve') drawLinearCurve(dummyData, minDimension, 512); else if (style === 'linear_symmetry') drawLinearSymmetry(dummyData, minDimension, 512);
+                
+                // Виправлені виклики для прев'ю
+                if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); 
+                else if (style === 'circle_bars') drawCircleBars(dummyData, minDimension, 512, 50); 
+                else if (style === 'linear_bars') drawLinearBars(dummyData, minDimension, 512); 
+                else if (style === 'linear_curve') drawLinearCurve(dummyData, minDimension, 512); 
+                else if (style === 'linear_symmetry') drawLinearSymmetry(dummyData, minDimension, 512);
+                else if (style === 'circle_dots') drawCircleDots(dummyData, minDimension, 512, 50);
+                else if (style === 'hexagon_bars') drawHexagonBars(dummyData, minDimension, 512, 50);
+                else if (style === 'wave_filled') drawWaveFilled(dummyData, minDimension, 512);
+
                 ctx.globalAlpha = 1.0;
 
                 if (logoImage) {
@@ -1008,7 +1026,16 @@ function resetAiBtn() {
         audioUpload.addEventListener('change', function() {
             if (this.files[0]) {
                 let fullName = this.files[0].name; outputFileName = fullName.substring(0, fullName.lastIndexOf('.')) || fullName; songTitleInput.value = outputFileName;
-                audioPlayer.src = URL.createObjectURL(this.files[0]); audioPlayer.currentTime = 0; initVisualizer(); document.getElementById('exportVideoBtn').disabled = false; drawPreviewFrame();
+                audioPlayer.src = URL.createObjectURL(this.files[0]); audioPlayer.currentTime = 0; 
+                
+                // ВИПРАВЛЕННЯ: Скидаємо старі частинки та статус тексту при зміні треку
+                particles = []; 
+                isSyncingLyrics = false;
+                syncStatus.style.display = 'none';
+                startSyncBtn.style.display = 'flex';
+                startSyncBtn.innerHTML = '<i class="fas fa-play"></i> Застосувати текст';
+
+                initVisualizer(); document.getElementById('exportVideoBtn').disabled = false; drawPreviewFrame();
             }
         });
 
@@ -1515,6 +1542,7 @@ function resetAiBtn() {
             }
         }
 
+        // === ВИПРАВЛЕНА ФУНКЦІЯ РЕНДЕРУ (ДЛЯ АУДІО) ===
         function draw() {
             if (!isGenerating) { drawAnimationId = requestAnimationFrame(draw); }
             const bufferLength = analyser.frequencyBinCount; const dataArray = new Uint8Array(bufferLength); analyser.getByteFrequencyData(dataArray);
@@ -1544,16 +1572,15 @@ function resetAiBtn() {
             ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
             ctx.scale(spectrumState.scale, spectrumState.scale);
             
-            // ... існуючий код
-            if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); 
-            else if (style === 'circle_bars') drawCircleBars(dummyData, minDimension, 512, 50); 
-            else if (style === 'linear_bars') drawLinearBars(dummyData, minDimension, 512); 
-            else if (style === 'linear_curve') drawLinearCurve(dummyData, minDimension, 512); 
-            else if (style === 'linear_symmetry') drawLinearSymmetry(dummyData, minDimension, 512);
-            // ДОДАЙ ЦЕ:
-            else if (style === 'circle_dots') drawCircleDots(dataArray || dummyData, minDimension, bufferLength || 512, avgBass || 50);
-            else if (style === 'hexagon_bars') drawHexagonBars(dataArray || dummyData, minDimension, bufferLength || 512, avgBass || 50);
-            else if (style === 'wave_filled') drawWaveFilled(dataArray || dummyData, minDimension, bufferLength || 512);
+            // Виправлені виклики для відтворення звуку (без dummyData)
+            if (style === 'circle_sharp') drawCircleSharp(dataArray, minDimension, bufferLength, avgBass); 
+            else if (style === 'circle_bars') drawCircleBars(dataArray, minDimension, bufferLength, avgBass); 
+            else if (style === 'linear_bars') drawLinearBars(dataArray, minDimension, bufferLength); 
+            else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength); 
+            else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
+            else if (style === 'circle_dots') drawCircleDots(dataArray, minDimension, bufferLength, avgBass);
+            else if (style === 'hexagon_bars') drawHexagonBars(dataArray, minDimension, bufferLength, avgBass);
+            else if (style === 'wave_filled') drawWaveFilled(dataArray, minDimension, bufferLength);
 
             if (logoImage) {
                 const logoPulse = 1 + (avgBass / 255) * 0.15;
@@ -1640,21 +1667,22 @@ function resetAiBtn() {
             ctx.stroke();
         }
         
+        // === ВИПРАВЛЕНІ НОВІ СПЕКТРИ ===
+
         // 1. Пульсуючі точки по колу (Мінімалізм)
         function drawCircleDots(dataArray, minDimension, bufferLength, avgBass) {
-            const baseRadius = minDimension * 0.16 + (avgBass * 0.1);
+            const baseRadius = minDimension * 0.16 + (avgBass * 0.15); // Радіус як в старого кола
             const pointsCount = 70;
             const usefulDataLength = Math.floor(bufferLength * 0.65);
             
-            const glow = document.getElementById('glowSlider').value;
-            ctx.shadowBlur = 10 * glow;
+            ctx.shadowBlur = 10 * glowSlider.value;
             
             for (let i = 0; i < pointsCount; i++) {
                 let ratio = i / pointsCount;
                 let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength);
                 let val = Math.max(0, (dataArray[dataIndex] || 0) - 30);
                 
-                let barHeight = Math.pow(val / 255, 1.5) * minDimension * document.getElementById('sharpnessSlider').value * 0.2;
+                let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.2;
                 let angle = (i / pointsCount) * Math.PI * 2 - Math.PI / 2;
                 let dist = baseRadius + barHeight;
         
@@ -1668,6 +1696,7 @@ function resetAiBtn() {
                 ctx.shadowColor = ctx.fillStyle;
                 ctx.fill();
             }
+            ctx.shadowBlur = 0; // ВАЖЛИВО: щоб неон не псував текст
         }
         
         // 2. Неоновий Гексагон (Sci-Fi стиль)
@@ -1678,8 +1707,7 @@ function resetAiBtn() {
             const totalBars = sides * barsPerSide;
             const usefulDataLength = Math.floor(bufferLength * 0.6);
         
-            const glow = document.getElementById('glowSlider').value;
-            ctx.shadowBlur = 15 * glow;
+            ctx.shadowBlur = 15 * glowSlider.value;
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
         
@@ -1696,7 +1724,7 @@ function resetAiBtn() {
                     let ratio = i / barsPerSide;
                     let dataIndex = Math.floor((s * barsPerSide + i) / totalBars * usefulDataLength);
                     let val = Math.max(0, (dataArray[dataIndex] || 0) - 30);
-                    let barHeight = Math.pow(val / 255, 1.5) * minDimension * document.getElementById('sharpnessSlider').value * 0.25;
+                    let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.25;
         
                     let bx = x1 + (x2 - x1) * ratio;
                     let by = y1 + (y2 - y1) * ratio;
@@ -1713,35 +1741,33 @@ function resetAiBtn() {
                     ctx.stroke();
                 }
             }
+            ctx.shadowBlur = 0; // ВАЖЛИВО: скидання неону
         }
         
         // 3. Залита Хвиля знизу (Плавний Blob)
         function drawWaveFilled(dataArray, minDimension, bufferLength) {
             const usefulDataLength = Math.floor(bufferLength * 0.7);
-            const width = minDimension * 1.5;
+            const width = canvas.width; // Виправив розтягування на весь екран
             const startX = -width / 2;
             const step = width / (usefulDataLength - 1);
             
-            const glow = document.getElementById('glowSlider').value;
-            ctx.shadowBlur = 20 * glow;
+            ctx.shadowBlur = 20 * glowSlider.value;
             ctx.shadowColor = primaryColor;
         
             ctx.beginPath();
-            ctx.moveTo(startX, 0); // Починаємо з нижнього лівого краю
+            ctx.moveTo(startX, 0);
         
-            // Малюємо плавну криву
             for (let i = 0; i < usefulDataLength; i++) {
                 let val = Math.max(0, (dataArray[i] || 0) - 20);
-                let height = Math.pow(val / 255, 1.4) * minDimension * document.getElementById('sharpnessSlider').value * 0.4;
+                let height = Math.pow(val / 255, 1.4) * minDimension * sharpnessSlider.value * 0.4;
                 
                 let x = startX + i * step;
                 ctx.lineTo(x, -height);
             }
         
-            ctx.lineTo(startX + width, 0); // Права нижня точка
+            ctx.lineTo(startX + width, 0); 
             ctx.closePath();
         
-            // Створюємо градієнт заливки
             let grad = ctx.createLinearGradient(0, -minDimension * 0.4, 0, 0);
             grad.addColorStop(0, primaryColor);
             grad.addColorStop(1, 'rgba(0,0,0,0.1)');
@@ -1749,11 +1775,13 @@ function resetAiBtn() {
             ctx.fillStyle = grad;
             ctx.fill();
             
-            // Додаємо яскраву лінію по контуру хвилі
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 4;
             ctx.strokeStyle = secondaryColor;
             ctx.stroke();
+            
+            ctx.shadowBlur = 0; // ВАЖЛИВО
         }
+
         async function processSubscription(btnElement) {
             if (!currentUser) { alert("Будь ласка, спочатку увійдіть або зареєструйтесь."); window.location.href = "login.html"; return; }
             const originalText = btnElement.innerText; btnElement.innerText = 'Зачекайте...'; btnElement.disabled = true;
