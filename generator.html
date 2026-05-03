@@ -866,59 +866,105 @@
             }
         });
 
-        const generateAiBgBtn = document.getElementById('generateAiBgBtn');
-        const cancelAiBgBtn = document.getElementById('cancelAiBgBtn');
-        let aiAbortController = null;
+        // === ПОКРАЩЕНА AI ГЕНЕРАЦІЯ ОБКЛАДИНКИ ===
+const generateAiBgBtn = document.getElementById('generateAiBgBtn');
+const cancelAiBgBtn = document.getElementById('cancelAiBgBtn');
+const aiLoadingStatus = document.getElementById('aiLoadingStatus');
+let aiAbortController = null;
 
-        generateAiBgBtn.addEventListener('click', async () => {
-            const lyrics = document.getElementById('lyricsInput').value.trim(); const format = document.getElementById('formatSelect').value; const customPrompt = document.getElementById('customAiPrompt').value.trim();
-            const status = document.getElementById('aiLoadingStatus');
-            
-            generateAiBgBtn.style.display = 'none';
-            cancelAiBgBtn.style.display = 'flex';
-            status.style.display = 'block'; status.innerHTML = 'Малюю шедевр... <i class="fas fa-spinner fa-spin"></i>';
-            
-            aiAbortController = new AbortController();
+function clearBackground() {
+    backgroundImage = null;
+    if (backgroundVideo) {
+        backgroundVideo.pause();
+        backgroundVideo.src = '';
+        backgroundVideo = null;
+    }
+}
 
-            try {
-                const response = await fetch('https://andreygerc11-music-site.onrender.com/api/generate-image', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lyrics: lyrics, format: format, customPrompt: customPrompt }),
-                    signal: aiAbortController.signal
-                });
-                const data = await response.json();
-                if (response.ok && data.imageUrl) {
-                    const img = new Image(); img.crossOrigin = "Anonymous"; 
-                    img.onload = () => { 
-                        clearBackground();
-                        backgroundImage = img; 
-                        removeBgBtn.style.display = 'flex'; 
-                        drawPreviewFrame(); 
-                        resetAiBtn();
-                    };
-                    img.onerror = () => { alert("Не вдалося завантажити зображення. Спробуйте ще раз."); resetAiBtn(); }
-                    img.src = data.imageUrl;
-                } else { alert("Помилка: " + (data.error || "Сервер не зміг згенерувати зображення.")); resetAiBtn(); }
-            } catch (err) { 
-                if (err.name === 'AbortError') {
-                    console.log('Генерацію скасовано.');
-                } else {
-                    alert("Помилка зв'язку з сервером."); 
-                }
-                resetAiBtn(); 
-            }
+generateAiBgBtn.addEventListener('click', async () => {
+    const lyrics = document.getElementById('lyricsInput').value.trim();
+    const songTitle = songTitleInput.value.trim();
+    const format = formatSelect.value;
+    const customPrompt = document.getElementById('customAiPrompt').value.trim();
+
+    // Кращий промпт
+    let finalPrompt = customPrompt || "";
+    if (!finalPrompt) {
+        finalPrompt = lyrics ? 
+            `Cinematic music video background for song: ${songTitle || "Untitled"}, emotional, atmospheric, high quality, cinematic lighting` :
+            "abstract cinematic music visualizer background, dark aesthetic, neon accents, professional";
+    }
+
+    generateAiBgBtn.style.display = 'none';
+    cancelAiBgBtn.style.display = 'flex';
+    aiLoadingStatus.style.display = 'block';
+    aiLoadingStatus.innerHTML = 'Генерую якісну обкладинку... <i class="fas fa-spinner fa-spin"></i>';
+
+    aiAbortController = new AbortController();
+
+    try {
+        const response = await fetch('https://andreygerc11-music-site.onrender.com/api/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lyrics: lyrics || songTitle || "music",
+                format: format,
+                customPrompt: finalPrompt
+            }),
+            signal: aiAbortController.signal
         });
 
-        cancelAiBgBtn.addEventListener('click', () => {
-            if (aiAbortController) aiAbortController.abort();
-            resetAiBtn();
-        });
-
-        function resetAiBtn() {
-            generateAiBgBtn.style.display = 'flex';
-            cancelAiBgBtn.style.display = 'none';
-            document.getElementById('aiLoadingStatus').style.display = 'none';
-            aiAbortController = null;
+        if (!response.ok) {
+            throw new Error(`Сервер повернув ${response.status}`);
         }
+
+        const data = await response.json();
+
+        if (data.imageUrl) {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            
+            img.onload = () => {
+                clearBackground();
+                backgroundImage = img;
+                if (removeBgBtn) removeBgBtn.style.display = 'flex';
+                drawPreviewFrame();
+                resetAiBtn();
+                console.log("✅ Обкладинка успішно згенерована та завантажена");
+            };
+
+            img.onerror = () => {
+                alert("Зображення згенеровано, але не вдалося завантажити. Спробуй ще раз.");
+                resetAiBtn();
+            };
+
+            img.src = data.imageUrl;
+        } else {
+            alert("Сервер не повернув посилання на зображення.");
+            resetAiBtn();
+        }
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            console.log("Генерацію скасовано");
+        } else {
+            console.error(err);
+            alert("Помилка генерації обкладинки.\nПеревірте, чи працює сервер.");
+        }
+        resetAiBtn();
+    }
+});
+
+cancelAiBgBtn.addEventListener('click', () => {
+    if (aiAbortController) aiAbortController.abort();
+    resetAiBtn();
+});
+
+function resetAiBtn() {
+    generateAiBgBtn.style.display = 'flex';
+    cancelAiBgBtn.style.display = 'none';
+    aiLoadingStatus.style.display = 'none';
+    aiAbortController = null;
+}
 
         function drawPreviewFrame() {
             if (!audioCtx) {
