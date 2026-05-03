@@ -35,27 +35,18 @@ const FULL_FOLDER_ID = "1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j";
 let aiBlogPosts = [];
 let globalMusicList = [];
 
-const hdMedicalImages = [
-    "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=1200&auto=format&fit=crop", 
-    "https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=1200&auto=format&fit=crop", 
-    "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?q=80&w=1200&auto=format&fit=crop", 
-    "https://images.unsplash.com/photo-1576086213369-97a306d36557?q=80&w=1200&auto=format&fit=crop", 
-    "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?q=80&w=1200&auto=format&fit=crop"
-];
-
 // ==========================================
 // 1. ТЕЛЕГРАМ БОТ ТА АДМІН-ФУНКЦІЇ
 // ==========================================
 const ADMIN_ID = 5853625377;
 const CHANNEL_ID = process.env.CHANNEL_ID || "@golosprotyraku"; 
-const BOT_PRICE = 3736; // 37.36 грн
+const BOT_PRICE = 3736; 
 
 let bot;
 if (BOT_TOKEN) {
     bot = new TelegramBot(BOT_TOKEN, { polling: true });
     console.log("✅ Telegram Bot успішно запущено.");
 
-    // === ГОЛОВНЕ МЕНЮ ===
     const getMainMenu = () => {
         return {
             reply_markup: {
@@ -89,7 +80,6 @@ if (BOT_TOKEN) {
         bot.sendMessage(chatId, welcomeText, getMainMenu());
     });
 
-    // Обробка кнопок
     bot.on('callback_query', async (query) => {
         const chatId = query.message.chat.id;
         const messageId = query.message.message_id;
@@ -166,7 +156,6 @@ if (BOT_TOKEN) {
         try { bot.answerCallbackQuery(query.id); } catch (e) {}
     });
 
-    // Обробка вхідних історій
     bot.on('message', async (msg) => {
         if (msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes("Напишіть вашу історію")) {
             const userHistory = msg.text;
@@ -178,7 +167,6 @@ if (BOT_TOKEN) {
         }
     });
 
-    // Формування посилання на оплату
     async function sendBotInvoice(chatId, trackId, messageId = null) {
         const track = globalMusicList.find(t => t.fullId === trackId);
         if (!track) return bot.sendMessage(chatId, "❌ Трек не знайдено.");
@@ -206,7 +194,6 @@ if (BOT_TOKEN) {
         } catch (e) { bot.sendMessage(chatId, "❌ Помилка сервісу оплати."); }
     }
 
-    // Розсилка новин на канал
     bot.onText(/\/send/, async (msg) => {
         if (msg.from.id !== ADMIN_ID) return;
         const text = msg.text.replace('/send', '').trim();
@@ -219,7 +206,6 @@ if (BOT_TOKEN) {
     });
 }
 
-// Технічні сповіщення для адміна
 async function sendTelegramMessage(text) {
     if (!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === "ТВІЙ_ID_ЯКЩО_НЕ_ДОДАВ_У_RENDER") return;
     try {
@@ -348,7 +334,7 @@ app.post('/api/webhook', async (req, res) => {
 });
 
 // ==========================================
-// 4. ГЕНЕРАТОР ВІДЕО, ШІ-РЕЖИСЕР ТА БЛОГ
+// 4. ГЕНЕРАТОР ВІДЕО ТА ШІ-РЕЖИСЕР
 // ==========================================
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
@@ -389,7 +375,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     }
 });
 
-// === ВІДНОВЛЕНИЙ БЛОК ГЕНЕРАЦІЇ ФОНУ ===
 app.post('/api/generate-image', async (req, res) => {
     try {
         const { lyrics, customPrompt, format } = req.body;
@@ -423,13 +408,11 @@ app.post('/api/generate-image', async (req, res) => {
         res.json({ imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${w}&height=${h}&nologo=true&enhance=true&seed=${Math.floor(Math.random() * 10000000)}&model=flux` });
     } catch (error) { res.status(500).json({ error: "Помилка генерації зображення" }); }
 });
-// =======================================
 
 app.post('/api/generate-storyboard', async (req, res) => {
     const { lyrics } = req.body;
     if (!lyrics) return res.status(400).json({ error: 'Текст пісні не надано' });
 
-    // === ЗМІНЕНО: Більше сцен, менші шматки тексту для динаміки кліпу ===
     const promptText = `
     You are a visionary, professional music video director. 
     CRITICAL INSTRUCTION: Break the lyrics down into MANY dynamic scenes. 
@@ -458,7 +441,8 @@ app.post('/api/generate-storyboard', async (req, res) => {
 });
 
 // ==========================================
-// 4. АВТОМАТИЧНИЙ БЛОГ — НОВИНИ + ПСИХОЛОГІЯ (ЄДИНА ЛОГІКА)
+// 5. АВТОМАТИЧНИЙ БЛОГ (НОВИНИ + ПСИХОЛОГІЯ)
+// З СИСТЕМОЮ АНТИ-ДУБЛІКАТУ
 // ==========================================
 
 async function syncBlogFromGitHub() {
@@ -471,7 +455,7 @@ async function syncBlogFromGitHub() {
         console.log(`📚 Завантажено ${aiBlogPosts.length} постів з GitHub`);
     } catch (e) { 
         aiBlogPosts = []; 
-        console.log("Створено новий масив постів");
+        console.log("Створено новий масив постів (Файл ще не існує)");
     }
 }
 
@@ -493,129 +477,189 @@ async function saveBlogToGitHub() {
             sha 
         }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
         
-        console.log("✅ Блог збережено на GitHub");
+        console.log("✅ Блог успішно збережено на GitHub");
     } catch (e) { 
         console.error("Помилка збереження на GitHub:", e.message); 
     }
 }
 
-// === ВСІ ДЖЕРЕЛА (7 новин + психологія) ===
-const allBlogSources = [
-    // Новини (7 джерел)
-    { type: "news", url: "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en" },
-    { type: "news", url: "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en" },
-    { type: "news", url: "https://medicalxpress.com/rss-feed/cancer-news/" },
-    { type: "news", url: "https://www.sciencedaily.com/rss/health_medicine/cancer.xml" },
-    
-    // Психологічна підтримка
-    { type: "psychology", url: "https://upoa.info/" },
-    { type: "psychology", url: "https://vartozhyty.com.ua/" },
-    { type: "psychology", url: "https://unci.org.ua/psyhologichna-pidtrymka" },
-    { type: "psychology", url: "https://mozhna.space/onko-psy" },
-    { type: "psychology", url: "https://www.cancercare.org/services" },
-    { type: "psychology", url: "https://www.cancersupportcommunity.org/" },
-    { type: "psychology", url: "https://apos-society.org/people-affected-by-cancer/resources-for-people-affected-by-cancer/" }
+// Джерела для новин (RSS)
+const newsRssSources = [
+    "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk",
+    "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk",
+    "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D0%BF%D1%80%D0%BE%D1%80%D0%B8%D0%B2&hl=uk&gl=UA&ceid=UA:uk",
+    "https://medicalxpress.com/rss-feed/cancer-news/"
 ];
 
-async function fetchAndRewriteNews() {
-    if (!GROQ_API_KEY) {
-        console.log("❌ GROQ_API_KEY не налаштований");
-        return;
-    }
+// Банк тем для психологічної підтримки (щоб не повторюватись)
+const psychologyTopics = [
+    "Як прийняти діагноз: перші кроки після того, як ви дізналися про рак",
+    "Як правильно спілкуватися з близькою людиною, яка хворіє на онкологію",
+    "Де знайти внутрішні сили під час виснажливої хіміотерапії",
+    "Страх рецидиву: як жити повноцінно в стані ремісії",
+    "Як пояснити дітям про хворобу батьків",
+    "Важливість груп підтримки: чому не варто проходити цей шлях наодинці",
+    "Як впоратися з емоційним вигоранням, якщо ви доглядаєте за онкохворим",
+    "Техніки релаксації та дихання для зняття тривоги перед операцією",
+    "Як зберегти позитивне мислення, коли здається, що надії немає",
+    "Вплив творчості та арт-терапії на одужання онкопацієнтів",
+    "Як реагувати на нетактовні питання та поради від оточуючих",
+    "Повернення до роботи та соціуму після тривалого лікування",
+    "Як знайти сенс життя та нові цілі після боротьби з хворобою",
+    "Чому плакати та злитися — це нормально і як безпечно проживати емоції"
+];
 
-    console.log("🔄 Перевірка нових статей (новини + психологія)...");
+async function fetchAndRewriteBlog() {
+    if (!GROQ_API_KEY) { console.log("❌ GROQ_API_KEY не налаштований"); return; }
+    console.log("🔄 Запуск автоматичної генерації блогу (Новини + Психологія)...");
+    
     let addedCount = 0;
 
-    for (const source of allBlogSources) {
+    // --- ЧАСТИНА 1: ГЕНЕРАЦІЯ НОВИН (Максимум 2 за раз) ---
+    let newsAddedThisRun = 0;
+    const shuffledRss = newsRssSources.sort(() => 0.5 - Math.random());
+
+    for (const rssUrl of shuffledRss) {
+        if (newsAddedThisRun >= 2) break; // Обмеження
+
         try {
-            let rawTitle = source.type === "news" ? "Медична новина" : "Психологічна підтримка";
+            const response = await axios.get(rssUrl, { timeout: 10000 }); 
+            const xml = response.data;
+            
+            // Парсимо перший знайдений <item>
+            const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
+            if (!itemMatch) continue;
 
-            // === ЖОРСТКА ПЕРЕВІРКА НА ДУБЛІКАТИ ===
-            const isDuplicate = aiBlogPosts.some(p => 
-                p.sourceUrl === source.url || 
-                (p.originalTitle && p.originalTitle === source.url)
-            );
+            const itemXml = itemMatch[1];
+            const titleMatch = itemXml.match(/<title>(.*?)<\/title>/);
+            const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\/pubDate>/) || itemXml.match(/<published>(.*?)<\/published>/);
 
-            if (isDuplicate) {
-                console.log(`⏭ Пропущено (вже є): ${source.url}`);
-                continue;
+            if (titleMatch) {
+                let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
+                let cleanTitle = rawTitle.split(" - ")[0]; // Забираємо назву видання з кінця
+                
+                // === АНТИ-ДУБЛІКАТ ДЛЯ НОВИН ===
+                const isDuplicate = aiBlogPosts.some(p => p.originalTitle === rawTitle);
+                if (isDuplicate) {
+                    console.log(`⏭ Новину пропущено (вже є): ${cleanTitle}`);
+                    continue;
+                }
+
+                console.log(`✍️ Генерую новину: ${cleanTitle}`);
+                
+                let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
+
+                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        { role: "system", content: "Ти — журналіст проєкту 'Голос проти раку'. Напиши інформативну, якісну статтю УКРАЇНСЬКОЮ мовою (5-7 абзаців) з підзаголовками на основі наданої новини. Зроби текст зрозумілим для людей. Відразу пиши текст, без вступних слів." }, 
+                        { role: "user", content: `Тема новини: ${rawTitle}` }
+                    ],
+                    max_tokens: 2000
+                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
+
+                const articleContent = groqRes.data.choices[0].message.content.trim();
+
+                const post = {
+                    id: Date.now() + Math.floor(Math.random() * 1000), 
+                    date: pubDate, 
+                    category: "news",
+                    originalTitle: rawTitle, // Зберігаємо для перевірки дублікатів
+                    title: cleanTitle,
+                    content: articleContent, 
+                    imageUrl: "baner_novunu.png"
+                };
+
+                aiBlogPosts.unshift(post);
+                addedCount++;
+                newsAddedThisRun++;
+
+                // Відправка в ТГ
+                if (bot && CHANNEL_ID) {
+                    try {
+                        const shortText = articleContent.substring(0, 280).replace(/\n/g, ' ');
+                        const tgText = `📰 <b>${cleanTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
+                        await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
+                    } catch (tgErr) { console.error("Помилка ТГ:", tgErr.message); }
+                }
+
+                await new Promise(r => setTimeout(r, 6000)); // Затримка для API
             }
+        } catch (e) {
+            console.log("Помилка читання RSS");
+        }
+    }
 
-            // Запит до Groq
+    // --- ЧАСТИНА 2: ГЕНЕРАЦІЯ ПСИХОЛОГІЇ (1 за раз) ---
+    // === АНТИ-ДУБЛІКАТ ДЛЯ ПСИХОЛОГІЇ ===
+    // Знаходимо теми, про які ще НЕ писали
+    const availableTopics = psychologyTopics.filter(topic => 
+        !aiBlogPosts.some(p => p.originalTopic === topic)
+    );
+
+    if (availableTopics.length > 0) {
+        // Беремо випадкову доступну тему
+        const selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
+        console.log(`🫂 Генерую підтримку на тему: ${selectedTopic}`);
+
+        try {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.3-70b-versatile",
-                messages: [{ 
-                    role: "system", 
-                    content: "Ти — автор проєкту «Голос проти раку». Напиши корисну, емпатичну статтю українською мовою (6-8 абзаців) з підзаголовками. Уникай шаблонних фраз на кшталт 'Вступ у світ психоонкології'. Зроби текст оригінальним і практичним." 
-                }, { 
-                    role: "user", 
-                    content: `Напиши статтю на основі джерела: ${source.url}` 
-                }],
-                max_tokens: 2300,
-                temperature: 0.72
+                messages: [
+                    { role: "system", content: "Ти — емпатичний онкопсихолог проєкту 'Голос проти раку'. Напиши теплу, підтримуючу статтю УКРАЇНСЬКОЮ мовою (5-7 абзаців) з підзаголовками. Дай людям надію та конкретні практичні поради. Відразу пиши текст статті, без 'ось стаття'." }, 
+                    { role: "user", content: `Тема статті: ${selectedTopic}` }
+                ],
+                max_tokens: 2200,
+                temperature: 0.75
             }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
             const articleContent = groqRes.data.choices[0].message.content.trim();
 
             const post = {
-                id: Date.now() + Math.floor(Math.random() * 10000),
-                date: new Date().toLocaleDateString('uk-UA'),
-                category: source.type,
-                originalTitle: source.url,
-                title: source.type === "news" ? rawTitle : "Психологічна підтримка при онкології",
-                content: articleContent,
-                imageUrl: source.type === "news" ? "baner_novunu.png" : "article_support.png",
-                sourceUrl: source.url
+                id: Date.now() + Math.floor(Math.random() * 1000), 
+                date: new Date().toLocaleDateString('uk-UA'), 
+                category: "psychology",
+                originalTopic: selectedTopic, // Зберігаємо для перевірки дублікатів
+                title: selectedTopic,
+                content: articleContent, 
+                imageUrl: "article_support.png"
             };
 
             aiBlogPosts.unshift(post);
             addedCount++;
 
-            console.log(`✅ Додано [${source.type.toUpperCase()}]: ${post.title}`);
-
-            // Публікація в Telegram
+            // Відправка в ТГ
             if (bot && CHANNEL_ID) {
-                const shortText = articleContent.substring(0, 280).replace(/\n/g, ' ');
-                const emoji = source.type === "news" ? "📰" : "🫂";
-                const tgText = `${emoji} <b>${post.title}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю</a>`;
-                
-                await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' }).catch(() => {});
+                try {
+                    const shortText = articleContent.substring(0, 280).replace(/\n/g, ' ');
+                    const tgText = `🫂 <b>${selectedTopic}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
+                    await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
+                } catch (tgErr) {}
             }
 
-            await new Promise(r => setTimeout(r, 9000));
-
         } catch (e) {
-            console.log(`Помилка обробки джерела: ${source.url}`);
+            console.log("Помилка генерації психології");
         }
+    } else {
+        console.log("✅ Усі теми з психології вичерпано. Додайте нові в масив psychologyTopics!");
     }
 
+    // --- ЗБЕРЕЖЕННЯ ---
     if (addedCount > 0) {
         await saveBlogToGitHub();
-        console.log(`🎉 Успішно додано ${addedCount} нових статей`);
+        console.log(`🎉 Успішно згенеровано та збережено статей: ${addedCount}`);
     } else {
-        console.log("✅ Немає нових статей. Публікація пропущена.");
+        console.log("✅ Немає нових унікальних тем. Публікація пропущена.");
     }
 }
 
 // Ендпоінт для фронтенду
 app.get('/api/blog', (req, res) => {
-    const { category } = req.query;
-    let posts = aiBlogPosts;
-
-    if (category && category !== 'all') {
-        posts = aiBlogPosts.filter(p => p.category === category);
-    }
-
-    // Сортування за датою (новіші зверху)
-    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-    res.json(posts);
+    res.json(aiBlogPosts); // Фронтенд вже сам сортує і фільтрує
 });
 
 // ==========================================
-// 5. ЗАПУСК СЕРВЕРА
+// 6. ЗАПУСК СЕРВЕРА
 // ==========================================
 const PORT = process.env.PORT || 10000;
 
@@ -623,28 +667,25 @@ Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive()]).then(() => {
     app.listen(PORT, () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
 
-        // Перша перевірка через 30 секунд після запуску
-        setTimeout(fetchAndRewriteNews, 30000);
+        // Запуск перевірки при старті (через 30 сек)
+        setTimeout(fetchAndRewriteBlog, 30000);
 
-        // Функція для перевірки в потрібний час
+        // КРОН / Планувальник
         function scheduleChecks() {
             const now = new Date();
             const kyivTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Kiev" }));
-
             const currentHour = kyivTime.getHours();
             const currentMinutes = kyivTime.getMinutes();
 
-            // Перевірка о 08:00 та 20:00
+            // Перевірка щодня о 08:00 та 20:00 за Києвом (дається вікно 5 хв для спрацювання)
             if ((currentHour === 8 && currentMinutes < 5) || (currentHour === 20 && currentMinutes < 5)) {
-                console.log(`🕒 Запуск перевірки новин о ${currentHour}:00 (Київ)`);
-                fetchAndRewriteNews();
+                console.log(`🕒 Запуск генерації блогу о ${currentHour}:00 (Київ)`);
+                fetchAndRewriteBlog();
             }
         }
 
-        // Перевіряємо кожні 5 хвилин
+        // Перевіряємо час кожні 5 хвилин
         setInterval(scheduleChecks, 5 * 60 * 1000);
-
-        // Також запускаємо відразу для тесту
-        console.log("⏰ Налаштовано перевірку новин щодня о 08:00 та 20:00 (Київський час)");
+        console.log("⏰ Налаштовано перевірку щодня о 08:00 та 20:00 (Київський час)");
     });
 });
