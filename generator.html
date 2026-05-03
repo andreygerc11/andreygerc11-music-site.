@@ -370,11 +370,15 @@
                     <div class="control-group">
                         <label>Стиль ліній</label>
                         <select id="playerStyle">
-                            <option value="circle_sharp">Круг: Гострі кути</option>
+                            <option value="circle_sharp" selected>Круг: Гострі кути</option>
                             <option value="circle_bars">Круг: Смуги (Bars)</option>
                             <option value="linear_bars">Лінійна: Смуги знизу</option>
                             <option value="linear_curve">Лінійна: Плавна хвиля</option>
                             <option value="linear_symmetry">Лінійна: Симетрія</option>
+                            <!-- ОСЬ ТУТ ДОДАЄМО НОВІ РЯДКИ -->
+                            <option value="circle_dots">Круг: Пульсуючі точки</option>
+                            <option value="hexagon_bars">Гексагон: Неонові смуги</option>
+                            <option value="wave_filled">Лінійна: Залита хвиля (Blob)</option>
                         </select>
                     </div>
                     <div class="control-group" style="margin-top: 10px;">
@@ -1540,11 +1544,16 @@ function resetAiBtn() {
             ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
             ctx.scale(spectrumState.scale, spectrumState.scale);
             
-            if (style === 'circle_sharp') drawCircleSharp(dataArray, minDimension, bufferLength, avgBass); 
-            else if (style === 'circle_bars') drawCircleBars(dataArray, minDimension, bufferLength, avgBass); 
-            else if (style === 'linear_bars') drawLinearBars(dataArray, minDimension, bufferLength); 
-            else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength); 
-            else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
+            // ... існуючий код
+            if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); 
+            else if (style === 'circle_bars') drawCircleBars(dummyData, minDimension, 512, 50); 
+            else if (style === 'linear_bars') drawLinearBars(dummyData, minDimension, 512); 
+            else if (style === 'linear_curve') drawLinearCurve(dummyData, minDimension, 512); 
+            else if (style === 'linear_symmetry') drawLinearSymmetry(dummyData, minDimension, 512);
+            // ДОДАЙ ЦЕ:
+            else if (style === 'circle_dots') drawCircleDots(dataArray || dummyData, minDimension, bufferLength || 512, avgBass || 50);
+            else if (style === 'hexagon_bars') drawHexagonBars(dataArray || dummyData, minDimension, bufferLength || 512, avgBass || 50);
+            else if (style === 'wave_filled') drawWaveFilled(dataArray || dummyData, minDimension, bufferLength || 512);
 
             if (logoImage) {
                 const logoPulse = 1 + (avgBass / 255) * 0.15;
@@ -1630,7 +1639,121 @@ function resetAiBtn() {
             for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY + amplitude); }
             ctx.stroke();
         }
-
+        
+        // 1. Пульсуючі точки по колу (Мінімалізм)
+        function drawCircleDots(dataArray, minDimension, bufferLength, avgBass) {
+            const baseRadius = minDimension * 0.16 + (avgBass * 0.1);
+            const pointsCount = 70;
+            const usefulDataLength = Math.floor(bufferLength * 0.65);
+            
+            const glow = document.getElementById('glowSlider').value;
+            ctx.shadowBlur = 10 * glow;
+            
+            for (let i = 0; i < pointsCount; i++) {
+                let ratio = i / pointsCount;
+                let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength);
+                let val = Math.max(0, (dataArray[dataIndex] || 0) - 30);
+                
+                let barHeight = Math.pow(val / 255, 1.5) * minDimension * document.getElementById('sharpnessSlider').value * 0.2;
+                let angle = (i / pointsCount) * Math.PI * 2 - Math.PI / 2;
+                let dist = baseRadius + barHeight;
+        
+                let x = Math.cos(angle) * dist;
+                let y = Math.sin(angle) * dist;
+                let dotSize = 2 + (val / 255) * 8;
+        
+                ctx.beginPath();
+                ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+                ctx.fillStyle = i % 2 === 0 ? primaryColor : secondaryColor;
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.fill();
+            }
+        }
+        
+        // 2. Неоновий Гексагон (Sci-Fi стиль)
+        function drawHexagonBars(dataArray, minDimension, bufferLength, avgBass) {
+            const baseRadius = minDimension * 0.18 + (avgBass * 0.1);
+            const sides = 6;
+            const barsPerSide = 12;
+            const totalBars = sides * barsPerSide;
+            const usefulDataLength = Math.floor(bufferLength * 0.6);
+        
+            const glow = document.getElementById('glowSlider').value;
+            ctx.shadowBlur = 15 * glow;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+        
+            for (let s = 0; s < sides; s++) {
+                let angleStart = (s / sides) * Math.PI * 2 - Math.PI / 2;
+                let angleEnd = ((s + 1) / sides) * Math.PI * 2 - Math.PI / 2;
+        
+                let x1 = Math.cos(angleStart) * baseRadius;
+                let y1 = Math.sin(angleStart) * baseRadius;
+                let x2 = Math.cos(angleEnd) * baseRadius;
+                let y2 = Math.sin(angleEnd) * baseRadius;
+        
+                for (let i = 0; i < barsPerSide; i++) {
+                    let ratio = i / barsPerSide;
+                    let dataIndex = Math.floor((s * barsPerSide + i) / totalBars * usefulDataLength);
+                    let val = Math.max(0, (dataArray[dataIndex] || 0) - 30);
+                    let barHeight = Math.pow(val / 255, 1.5) * minDimension * document.getElementById('sharpnessSlider').value * 0.25;
+        
+                    let bx = x1 + (x2 - x1) * ratio;
+                    let by = y1 + (y2 - y1) * ratio;
+        
+                    let angleOut = Math.atan2(by, bx);
+                    let endX = bx + Math.cos(angleOut) * barHeight;
+                    let endY = by + Math.sin(angleOut) * barHeight;
+        
+                    ctx.beginPath();
+                    ctx.moveTo(bx, by);
+                    ctx.lineTo(endX, endY);
+                    ctx.strokeStyle = s % 2 === 0 ? primaryColor : secondaryColor;
+                    ctx.shadowColor = ctx.strokeStyle;
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // 3. Залита Хвиля знизу (Плавний Blob)
+        function drawWaveFilled(dataArray, minDimension, bufferLength) {
+            const usefulDataLength = Math.floor(bufferLength * 0.7);
+            const width = minDimension * 1.5;
+            const startX = -width / 2;
+            const step = width / (usefulDataLength - 1);
+            
+            const glow = document.getElementById('glowSlider').value;
+            ctx.shadowBlur = 20 * glow;
+            ctx.shadowColor = primaryColor;
+        
+            ctx.beginPath();
+            ctx.moveTo(startX, 0); // Починаємо з нижнього лівого краю
+        
+            // Малюємо плавну криву
+            for (let i = 0; i < usefulDataLength; i++) {
+                let val = Math.max(0, (dataArray[i] || 0) - 20);
+                let height = Math.pow(val / 255, 1.4) * minDimension * document.getElementById('sharpnessSlider').value * 0.4;
+                
+                let x = startX + i * step;
+                ctx.lineTo(x, -height);
+            }
+        
+            ctx.lineTo(startX + width, 0); // Права нижня точка
+            ctx.closePath();
+        
+            // Створюємо градієнт заливки
+            let grad = ctx.createLinearGradient(0, -minDimension * 0.4, 0, 0);
+            grad.addColorStop(0, primaryColor);
+            grad.addColorStop(1, 'rgba(0,0,0,0.1)');
+        
+            ctx.fillStyle = grad;
+            ctx.fill();
+            
+            // Додаємо яскраву лінію по контуру хвилі
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = secondaryColor;
+            ctx.stroke();
+        }
         async function processSubscription(btnElement) {
             if (!currentUser) { alert("Будь ласка, спочатку увійдіть або зареєструйтесь."); window.location.href = "login.html"; return; }
             const originalText = btnElement.innerText; btnElement.innerText = 'Зачекайте...'; btnElement.disabled = true;
