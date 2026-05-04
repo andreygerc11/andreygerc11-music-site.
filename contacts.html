@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DHLXH7C8QT"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DHLXH7C8QT');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контакти | Голос проти раку</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --accent: #ff4d4d;
+            --dark-bg: #0a0a0b;
+            --card-bg: rgba(20, 20, 23, 0.75);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f0f0f0;
+            --text-muted: #aaa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 60px auto;
+            padding: 0 20px;
+            flex: 1;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-weight: 900;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        h1 span { color: var(--accent); }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .contact-grid { grid-template-columns: 1fr; }
+        }
+
+        .contact-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-item {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .info-item i {
+            color: var(--accent);
+            margin-top: 5px;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .info-item p {
+            font-size: 1rem;
+        }
+
+        .info-item a {
+            color: var(--text);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 600;
+        }
+
+        .info-item a:hover {
+            color: var(--accent);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input, textarea {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            padding: 12px 15px;
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: #e64444;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 77, 77, 0.3);
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #24A1DE;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: opacity 0.3s;
+        }
+
+        .social-btn:hover {
+            opacity: 0.9;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border);
+            margin-top: 50px;
+        }
+
+        .logo {
+            text-decoration: none;
+            color: white;
+            font-weight: 900;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .logo span { color: var(--accent); }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 0.85rem;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-section">
+            <h1>Зв'яжіться <span>з нами</span></h1>
+            <p style="color: var(--text-muted);">Ми відкриті до співпраці, пропозицій та запитань.</p>
+        </div>
+
+        <div class="contact-grid">
+            <!-- Інформація -->
+            <div class="contact-card">
+                <h2><i class="fas fa-id-card"></i> Реквізити та медіа</h2>
+                
+                <div class="info-item">
+                    <i class="fas fa-briefcase"></i>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Суб'єкт</p>
+                        <p>ФОП Герц Андрій Костянтинович</p>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Локація</p>
+                        <p>м. Кропивницький, Україна</p>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">E-mail</p>
+                        <p><a href="mailto:andriyherts@gmail.com">andriyherts@gmail.com</a></p>
+                    </div>
+                </div>
+
+                <div style="margin-top: auto; padding-top: 20px;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Швидкий зв'язок у месенджері:</p>
+                    <a href="https://t.me/andreygerc11" target="_blank" class="social-btn">
+                        <i class="fab fa-telegram-plane"></i> Написати в Telegram
+                    </a>
+                </div>
+            </div>
+
+            <!-- Форма -->
+            <div class="contact-card">
+                <h2><i class="fas fa-envelope-open-text"></i> Напишіть нам</h2>
+                <form action="https://formspree.io/f/xvgzbgvq" method="POST">
+                    <input type="text" name="name" placeholder="Ваше ім'я" required>
+                    <input type="email" name="email" placeholder="Ваш Email" required>
+                    <textarea name="message" rows="6" placeholder="Ваше повідомлення..." required></textarea>
+                    <button type="submit">Надіслати повідомлення</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <a href="index.html" class="logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">© 2026 Андрій Герц. Разом до перемоги.</p>
+        <div class="footer-links">
+            <a href="index.html">Головна</a>
+            <a href="privacy_policy.html">Політика конфіденційності</a>
+            <a href="public_offer.html">Публічна оферта</a>
+            <a href="contacts.html">Контакти</a>
+        </div>
+    </footer>
+
+</body>
+</html>
