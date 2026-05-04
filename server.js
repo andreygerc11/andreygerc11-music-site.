@@ -530,7 +530,10 @@ async function fetchAndRewriteBlog() {
 
     // --- ЧАСТИНА 1: ГЕНЕРАЦІЯ НОВИН (Максимум 2 за раз) ---
     let newsAddedThisRun = 0;
-    const shuffledRss = newsRssSources.sort(() => 0.5 - Math.random());
+    
+    // ВИПРАВЛЕННЯ: Беремо тільки посилання (url) з правильного масиву новин
+    const newsUrls = allBlogSources.filter(src => src.type === "news").map(src => src.url);
+    const shuffledRss = newsUrls.sort(() => 0.5 - Math.random());
 
     for (const rssUrl of shuffledRss) {
         if (newsAddedThisRun >= 2) break; // Обмеження
@@ -590,7 +593,9 @@ async function fetchAndRewriteBlog() {
                 // Відправка в ТГ
                 if (bot && CHANNEL_ID) {
                     try {
-                        const shortText = articleContent.substring(0, 280).replace(/\n/g, ' ');
+                        // Очищаємо від зірочок markdown перед обрізкою, щоб не ламався HTML Телеграму
+                        const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
+                        const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
                         const tgText = `📰 <b>${cleanTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
                         await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
                     } catch (tgErr) { console.error("Помилка ТГ:", tgErr.message); }
@@ -644,7 +649,9 @@ async function fetchAndRewriteBlog() {
             // Відправка в ТГ
             if (bot && CHANNEL_ID) {
                 try {
-                    const shortText = articleContent.substring(0, 280).replace(/\n/g, ' ');
+                    // Очищаємо від зірочок markdown перед обрізкою, щоб не ламався HTML Телеграму
+                    const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
+                    const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
                     const tgText = `🫂 <b>${selectedTopic}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
                     await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
                 } catch (tgErr) {}
