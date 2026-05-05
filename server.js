@@ -568,7 +568,7 @@ async function fetchAndRewriteBlog() {
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        { role: "system", content: "Ти — журналіст проєкту 'Голос проти раку'. Напиши інформативну, якісну статтю УКРАЇНСЬКОЮ мовою (5-7 абзаців) з підзаголовками на основі наданої новини. Зроби текст зрозумілим для людей. Відразу пиши текст, без вступних слів." }, 
+                        { role: "system", content: "Ти — експертний оглядач проєкту 'Голос проти раку'. Твоє завдання не просто переказати новину, а створити глибокий аналітичний матеріал УКРАЇНСЬКОЮ мовою. Структура: 1) Короткий огляд події. 2) Чому це важливо для пацієнтів (додай власну оцінку як волонтер). 3) Надія на майбутнє. Пиши від першої особи множини ('ми вважаємо', 'наша команда'). Унікальність тексту має бути 100%. Відразу пиши текст з HTML-тегами <h2>, <b>. Без вступних слів." }, 
                         { role: "user", content: `Тема новини: ${rawTitle}` }
                     ],
                     max_tokens: 2000
@@ -593,7 +593,6 @@ async function fetchAndRewriteBlog() {
                 // Відправка в ТГ
                 if (bot && CHANNEL_ID) {
                     try {
-                        // Очищаємо від зірочок markdown перед обрізкою, щоб не ламався HTML Телеграму
                         const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
                         const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
                         const tgText = `📰 <b>${cleanTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
@@ -609,7 +608,6 @@ async function fetchAndRewriteBlog() {
     }
 
     // --- ЧАСТИНА 2: ГЕНЕРАЦІЯ ПСИХОЛОГІЇ (1 за раз) ---
-    // === АНТИ-ДУБЛІКАТ ДЛЯ ПСИХОЛОГІЇ ===
     // Знаходимо теми, про які ще НЕ писали
     const availableTopics = psychologyTopics.filter(topic => 
         !aiBlogPosts.some(p => p.originalTopic === topic)
@@ -624,7 +622,7 @@ async function fetchAndRewriteBlog() {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.3-70b-versatile",
                 messages: [
-                    { role: "system", content: "Ти — емпатичний онкопсихолог проєкту 'Голос проти раку'. Напиши теплу, підтримуючу статтю УКРАЇНСЬКОЮ мовою (5-7 абзаців) з підзаголовками. Дай людям надію та конкретні практичні поради. Відразу пиши текст статті, без 'ось стаття'." }, 
+                    { role: "system", content: "Ти — досвідчений волонтер та куратор проєкту 'Голос проти раку'. Напиши теплу, підтримуючу статтю УКРАЇНСЬКОЮ мовою (5-7 абзаців) з підзаголовками. Дай людям надію та практичні поради з відкритих джерел. Пиши від імені команди підтримки. ЗАКІНЧУЙ статтю обов'язковим абзацом: 'Важливо: Цей матеріал створено для психологічної підтримки та мотивації. Він не замінює повноцінну консультацію з лікарем або психотерапевтом'. Відразу пиши текст статті." }, 
                     { role: "user", content: `Тема статті: ${selectedTopic}` }
                 ],
                 max_tokens: 2200,
@@ -637,7 +635,7 @@ async function fetchAndRewriteBlog() {
                 id: Date.now() + Math.floor(Math.random() * 1000), 
                 date: new Date().toLocaleDateString('uk-UA'), 
                 category: "psychology",
-                originalTopic: selectedTopic, // Зберігаємо для перевірки дублікатів
+                originalTopic: selectedTopic, 
                 title: selectedTopic,
                 content: articleContent, 
                 imageUrl: "article_support.png"
@@ -649,7 +647,6 @@ async function fetchAndRewriteBlog() {
             // Відправка в ТГ
             if (bot && CHANNEL_ID) {
                 try {
-                    // Очищаємо від зірочок markdown перед обрізкою, щоб не ламався HTML Телеграму
                     const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
                     const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
                     const tgText = `🫂 <b>${selectedTopic}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
@@ -661,7 +658,7 @@ async function fetchAndRewriteBlog() {
             console.log("Помилка генерації психології");
         }
     } else {
-        console.log("✅ Усі теми з психології вичерпано. Додайте нові в масив psychologyTopics!");
+        console.log("✅ Усі теми з психології вичерпано.");
     }
 
     // --- ЗБЕРЕЖЕННЯ ---
