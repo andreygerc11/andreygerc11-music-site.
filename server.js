@@ -81,81 +81,106 @@ if (BOT_TOKEN) {
     });
 
     bot.on('callback_query', async (query) => {
+        // 1. ОДРАЗУ відповідаємо Telegram, щоб на кнопці не крутився годинник завантаження
+        try { await bot.answerCallbackQuery(query.id); } catch (e) {}
+
         const chatId = query.message.chat.id;
         const messageId = query.message.message_id;
 
-        if (query.data === 'about_project') {
-            const aboutText = `<b>Про проєкт «Голос проти раку»</b>\n\nМій бій триває — і в шпиталі, і в строю. Я, Андрій Герц, створив цей проєкт, щоб об'єднати музику та технології у боротьбі за життя.\n\nЦе не лише моя особиста історія, а й шлях для допомоги кожному, хто зіткнувся з хворобою раку. Кожна ваша підтримка допомагає нам розвивати цю спільноту та боротися далі. Дякую, що ви поруч! 🇺🇦`;
-            const opts = { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]] } };
-            bot.editMessageText(aboutText, { chat_id: chatId, message_id: messageId, ...opts }).catch(e => {});
-        }
+        // 2. Логуємо натискання, щоб бачити його в Render
+        console.log(`🔘 Натиснуто кнопку: ${query.data}`); 
 
-        if (query.data === 'support_project') {
-            const supportText = `<b>🤝 Офіційна підтримка проєкту</b>\n\nОскільки я є військовослужбовцем та діючим ФОП, усі платежі проходять абсолютно офіційно зі сплатою податків.\n\nНайкращий спосіб підтримати проєкт та нашу боротьбу — це придбати пісню з каталогу або оформити підписку Hertz Spectrum PRO на сайті.`;
-            const opts = { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "👑 Оформити підписку на сайті", url: "https://golos-proty-raku.pp.ua/#generator" }], [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]] } };
-            bot.editMessageText(supportText, { chat_id: chatId, message_id: messageId, ...opts }).catch(e => {});
-        }
+        try {
+            if (query.data === 'about_project') {
+                const aboutText = `<b>Про проєкт «Голос проти раку»</b>\n\nМій бій триває — і в шпиталі, і в строю. Я, Андрій Герц, створив цей проєкт, щоб об'єднати музику та технології у боротьбі за життя.\n\nЦе не лише моя особиста історія, а й шлях для допомоги кожному, хто зіткнувся з хворобою раку. Кожна ваша підтримка допомагає нам розвивати цю спільноту та боротися далі. Дякую, що ви поруч! 🇺🇦`;
+                await bot.editMessageText(aboutText, { 
+                    chat_id: chatId, 
+                    message_id: messageId, 
+                    parse_mode: 'HTML', 
+                    reply_markup: { inline_keyboard: [[{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]] } 
+                });
+            }
 
-        if (query.data === 'united_voices') {
-            const voicesText = `<b>🗣 Об'єднані голоси</b>\n\nУ цій боротьбі ніхто не має залишатися сам. Цей розділ створений для того, щоб ми підтримували один одного.\n\nВи можете поділитися своєю історією незламності або приєднатися до нашого чату для спілкування.`;
-            const opts = { 
-                parse_mode: 'HTML', 
-                reply_markup: { 
-                    inline_keyboard: [
+            if (query.data === 'support_project') {
+                const supportText = `<b>🤝 Офіційна підтримка проєкту</b>\n\nОскільки я є військовослужбовцем та діючим ФОП, усі платежі проходять абсолютно офіційно зі сплатою податків.\n\nНайкращий спосіб підтримати проєкт та нашу боротьбу — це придбати пісню з каталогу або оформити підписку Hertz Spectrum PRO на сайті.`;
+                await bot.editMessageText(supportText, { 
+                    chat_id: chatId, 
+                    message_id: messageId, 
+                    parse_mode: 'HTML', 
+                    reply_markup: { inline_keyboard: [
+                        [{ text: "👑 Оформити підписку на сайті", url: "https://golos-proty-raku.pp.ua/#generator" }], 
+                        [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
+                    ] } 
+                });
+            }
+
+            if (query.data === 'united_voices') {
+                const voicesText = `<b>🗣 Об'єднані голоси</b>\n\nУ цій боротьбі ніхто не має залишатися сам. Цей розділ створений для того, щоб ми підтримували один одного.\n\nВи можете поділитися своєю історією незламності або приєднатися до нашого чату для спілкування.`;
+                await bot.editMessageText(voicesText, { 
+                    chat_id: chatId, 
+                    message_id: messageId, 
+                    parse_mode: 'HTML', 
+                    reply_markup: { inline_keyboard: [
                         [{ text: "📝 Розповісти свою історію", callback_data: "write_story" }],
                         [{ text: "💬 Чат незламних", url: "https://t.me/golos_pidtrymka" }],
                         [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
-                    ] 
-                } 
-            };
-            bot.editMessageText(voicesText, { chat_id: chatId, message_id: messageId, ...opts }).catch(e => {});
-        }
-
-        if (query.data === 'write_story') {
-            const promptText = `Напишіть вашу історію прямо тут, у повідомленні. \n\nВи можете розповісти про свій шлях, поділитися порадою або просто словами підтримки. Я отримаю ваше повідомлення і ми разом вирішимо, як воно зможе допомогти іншим.`;
-            bot.sendMessage(chatId, promptText, { reply_markup: { force_reply: true } });
-        }
-
-        if (query.data === 'back_to_main') {
-            bot.editMessageText(`📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`, { chat_id: chatId, message_id: messageId, ...getMainMenu() }).catch(e => {});
-        }
-
-        if (query.data.startsWith('show_menu')) {
-            if (globalMusicList.length === 0) await fetchMusicFromDrive();
-            if (globalMusicList.length === 0) return bot.sendMessage(chatId, "Пісні ще завантажуються, спробуйте через хвилину.");
-
-            const parts = query.data.split('_');
-            let page = 0;
-            if (parts.length === 3) page = parseInt(parts[2]); 
-
-            const ITEMS_PER_PAGE = 10; 
-            const totalPages = Math.ceil(globalMusicList.length / ITEMS_PER_PAGE);
-            const currentList = globalMusicList.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
-
-            const keyboard = currentList.map(t => [{ text: `🎵 ${t.name} – 37,36 грн`, callback_data: `buy_${t.fullId}` }]);
-
-            const navButtons = [];
-            if (page > 0) navButtons.push({ text: "⬅️ Назад", callback_data: `show_menu_${page - 1}` });
-            if (page < totalPages - 1) navButtons.push({ text: "Вперед ➡️", callback_data: `show_menu_${page + 1}` });
-            
-            if (navButtons.length > 0) keyboard.push(navButtons);
-            keyboard.push([{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]); 
-
-            try {
-                await bot.editMessageText(`Оберіть пісню для завантаження (Сторінка ${page + 1} з ${totalPages}):`, { 
-                    chat_id: chatId, message_id: messageId, reply_markup: { inline_keyboard: keyboard } 
+                    ] } 
                 });
-            } catch (e) {}
-        }
+            }
 
-        if (query.data.startsWith('buy_')) {
-            const trackId = query.data.replace('buy_', '');
-            await sendBotInvoice(chatId, trackId, messageId);
+            if (query.data === 'write_story') {
+                const promptText = `Напишіть вашу історію прямо тут, у повідомленні. \n\nВи можете розповісти про свій шлях, поділитися порадою або просто словами підтримки. Я отримаю ваше повідомлення і ми разом вирішимо, як воно зможе допомогти іншим.`;
+                await bot.sendMessage(chatId, promptText, { reply_markup: { force_reply: true } });
+            }
+
+            if (query.data === 'back_to_main') {
+                await bot.editMessageText(`📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`, { 
+                    chat_id: chatId, 
+                    message_id: messageId, 
+                    ...getMainMenu() 
+                });
+            }
+
+            if (query.data.startsWith('show_menu')) {
+                if (globalMusicList.length === 0) await fetchMusicFromDrive();
+                if (globalMusicList.length === 0) {
+                    await bot.sendMessage(chatId, "⏳ Пісні ще завантажуються, спробуйте через хвилину.");
+                    return;
+                }
+
+                const parts = query.data.split('_');
+                let page = 0;
+                if (parts.length === 3) page = parseInt(parts[2]); 
+
+                const ITEMS_PER_PAGE = 10; 
+                const totalPages = Math.ceil(globalMusicList.length / ITEMS_PER_PAGE);
+                const currentList = globalMusicList.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+
+                const keyboard = currentList.map(t => [{ text: `🎵 ${t.name} – 37,36 грн`, callback_data: `buy_${t.fullId}` }]);
+
+                const navButtons = [];
+                if (page > 0) navButtons.push({ text: "⬅️ Назад", callback_data: `show_menu_${page - 1}` });
+                if (page < totalPages - 1) navButtons.push({ text: "Вперед ➡️", callback_data: `show_menu_${page + 1}` });
+                
+                if (navButtons.length > 0) keyboard.push(navButtons);
+                keyboard.push([{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]); 
+
+                await bot.editMessageText(`Оберіть пісню для завантаження (Сторінка ${page + 1} з ${totalPages}):`, { 
+                    chat_id: chatId, 
+                    message_id: messageId, 
+                    reply_markup: { inline_keyboard: keyboard } 
+                });
+            }
+
+            if (query.data.startsWith('buy_')) {
+                const trackId = query.data.replace('buy_', '');
+                await sendBotInvoice(chatId, trackId, messageId);
+            }
+
+        } catch (error) {
+            console.error(`❌ Помилка обробки кнопки ${query.data}:`, error.message);
         }
-        
-        try { bot.answerCallbackQuery(query.id); } catch (e) {}
     });
-
     bot.on('message', async (msg) => {
         if (msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes("Напишіть вашу історію")) {
             const userHistory = msg.text;
