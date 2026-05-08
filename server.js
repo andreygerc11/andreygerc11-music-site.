@@ -549,25 +549,23 @@ const psychologyTopics = [
 
 async function fetchAndRewriteBlog() {
     if (!GROQ_API_KEY) { console.log("❌ GROQ_API_KEY не налаштований"); return; }
-    console.log("🔄 Запуск автоматичної генерації блогу (Новини + Психологія)...");
+    console.log("🔄 Запуск автоматичної генерації блогу (5 новин + 3 психологія)...");
     
     let addedCount = 0;
 
-    // --- ЧАСТИНА 1: ГЕНЕРАЦІЯ НОВИН (Максимум 2 за раз) ---
+    // --- ЧАСТИНА 1: ГЕНЕРАЦІЯ НОВИН (Максимум 5 за раз) ---
     let newsAddedThisRun = 0;
     
-    // ВИПРАВЛЕННЯ: Беремо тільки посилання (url) з правильного масиву новин
     const newsUrls = allBlogSources.filter(src => src.type === "news").map(src => src.url);
     const shuffledRss = newsUrls.sort(() => 0.5 - Math.random());
 
     for (const rssUrl of shuffledRss) {
-        if (newsAddedThisRun >= 2) break; // Обмеження
+        if (newsAddedThisRun >= 5) break; // Обмеження 5 новин
 
         try {
             const response = await axios.get(rssUrl, { timeout: 10000 }); 
             const xml = response.data;
             
-            // Парсимо перший знайдений <item>
             const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
             if (!itemMatch) continue;
 
@@ -577,7 +575,7 @@ async function fetchAndRewriteBlog() {
 
             if (titleMatch) {
                 let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-                let cleanTitle = rawTitle.split(" - ")[0]; // Забираємо назву видання з кінця
+                let cleanTitle = rawTitle.split(" - ")[0]; 
                 
                 // === АНТИ-ДУБЛІКАТ ДЛЯ НОВИН ===
                 const isDuplicate = aiBlogPosts.some(p => p.originalTitle === rawTitle);
@@ -595,28 +593,26 @@ async function fetchAndRewriteBlog() {
                     messages: [
                         { 
                             role: "system", 
-                            content: "Ти — професійний український журналіст. Твоє завдання: перекласти англійську новину та написати аналітичну статтю. КАТЕГОРИЧНО ЗАБОРОНЕНО використовувати іноземні слова, латиницю або ієрогліфи. Тільки чиста українська мова. Використовуй цікаві підзаголовки <h2>. Першим рядком твоєї відповіді має бути ПЕРЕКЛАДЕНИЙ ТА ВІДКОРЕГОВАНИЙ ЗАГОЛОВОК (без тегів), а потім — сам текст статті з <h2> заголовками." 
+                            content: "Ти — професійний український журналіст. Твоє завдання: перекласти англійську новину та написати аналітичну статтю. КАТЕГОРИЧНО ЗАБОРОНЕНО використовувати іноземні слова, латиницю або ієрогліфи. Тільки чиста українська мова. Використовуй цікаві підзаголовки <h2>. Першим рядком твоєї відповіді має бути ПЕРЕКЛАДЕНИЙ ТА ВІДКОРЕГОВАНИЙ ЗАГОЛОВОК (без тегів), а потім (з нового рядка) — сам текст статті з <h2> заголовками. Пиши від імені команди 'Голос проти раку'." 
                         }, 
                         { role: "user", content: `Новина для аналізу: ${rawTitle}` }
                     ],
                     max_tokens: 2000,
-                    temperature: 0.3 // Низька температура прибирає ієрогліфи та марення
+                    temperature: 0.3 // Низька температура для точності та грамотності
                 }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
-                
-                // Після цього рядка в коді додайте логіку розділення заголовка і тексту:
+
+                // Розділяємо заголовок і текст
                 const fullResponse = groqRes.data.choices[0].message.content.trim();
                 const lines = fullResponse.split('\n');
-                const translatedTitle = lines[0]; // Перший рядок — це наш новий український заголовок
-                const articleBody = lines.slice(1).join('\n'); // Все інше — текст статті
-
-                const articleContent = groqRes.data.choices[0].message.content.trim();
+                const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); // Перший рядок - перекладений заголовок
+                const articleContent = lines.slice(1).join('\n').trim(); // Все інше - текст статті
 
                 const post = {
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     date: pubDate, 
                     category: "news",
-                    originalTitle: rawTitle, // Зберігаємо для перевірки дублікатів
-                    title: cleanTitle,
+                    originalTitle: rawTitle, 
+                    title: translatedTitle, // Зберігаємо український заголовок
                     content: articleContent, 
                     imageUrl: "baner_novunu.png"
                 };
@@ -625,12 +621,12 @@ async function fetchAndRewriteBlog() {
                 addedCount++;
                 newsAddedThisRun++;
 
-                // Відправка в ТГ
+                // Відправка в ТГ збережена!
                 if (bot && CHANNEL_ID) {
                     try {
                         const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
                         const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
-                        const tgText = `📰 <b>${cleanTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
+                        const tgText = `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
                         await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
                     } catch (tgErr) { console.error("Помилка ТГ:", tgErr.message); }
                 }
@@ -642,30 +638,35 @@ async function fetchAndRewriteBlog() {
         }
     }
 
-    // --- ЧАСТИНА 2: ГЕНЕРАЦІЯ ПСИХОЛОГІЇ (1 за раз) ---
-    // Знаходимо теми, про які ще НЕ писали
-    const availableTopics = psychologyTopics.filter(topic => 
-        !aiBlogPosts.some(p => p.originalTopic === topic)
-    );
+    // --- ЧАСТИНА 2: ГЕНЕРАЦІЯ ПСИХОЛОГІЇ (3 за раз) ---
+    let psychAddedThisRun = 0;
+    
+    // Робимо цикл на 10 спроб, щоб гарантовано знайти 3 вільні теми
+    for (let i = 0; i < 10; i++) { 
+        if (psychAddedThisRun >= 3) break;
 
-    if (availableTopics.length > 0) {
-        // Беремо випадкову доступну тему
+        // Шукаємо теми, яких ще немає в блозі
+        const availableTopics = psychologyTopics.filter(topic => 
+            !aiBlogPosts.some(p => p.originalTopic === topic)
+        );
+
+        if (availableTopics.length === 0) break; // Якщо всі теми вичерпано
+
         const selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
         console.log(`🫂 Генерую підтримку на тему: ${selectedTopic}`);
 
         try {
             const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.3-70b-versatile",
-               // ... новий код ...
                 messages: [
                     { 
                         role: "system", 
-                        content: "Ти — досвідчений волонтер проєкту 'Голос проти раку'. Пиши теплу статтю підтримки. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Категорично заборонено використовувати латиницю, іспанські, в'єтнамські слова чи китайські ієрогліфи. Пиши як жива людина, без шаблонів 'Вступ/Висновок'. Використовуй емоційні підзаголовки <h2>." 
+                        content: "Ти — досвідчений волонтер проєкту 'Голос проти раку'. Пиши теплу статтю підтримки. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Категорично заборонено використовувати латиницю, іспанські, в'єтнамські слова чи китайські ієрогліфи. Пиши як жива людина, без шаблонів 'Вступ/Висновок'. Використовуй емоційні підзаголовки <h2>. ЗАКІНЧУЙ статтю обов'язковим абзацом: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію з лікарем-онкологом або професійним психотерапевтом'." 
                     }, 
-                    { role: "user", content: `Тема: ${selectedTopic}` }
+                    { role: "user", content: `Тема статті: ${selectedTopic}` }
                 ],
                 max_tokens: 2200,
-                temperature: 0.3 // Ставимо 0.3, щоб ШІ не "фантазував" зайвими мовами
+                temperature: 0.3
             }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
             const articleContent = groqRes.data.choices[0].message.content.trim();
@@ -682,8 +683,9 @@ async function fetchAndRewriteBlog() {
 
             aiBlogPosts.unshift(post);
             addedCount++;
+            psychAddedThisRun++;
 
-            // Відправка в ТГ
+            // Відправка в ТГ збережена!
             if (bot && CHANNEL_ID) {
                 try {
                     const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
@@ -692,12 +694,12 @@ async function fetchAndRewriteBlog() {
                     await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
                 } catch (tgErr) {}
             }
+            
+            await new Promise(r => setTimeout(r, 6000)); // Затримка для API
 
         } catch (e) {
             console.log("Помилка генерації психології");
         }
-    } else {
-        console.log("✅ Усі теми з психології вичерпано.");
     }
 
     // --- ЗБЕРЕЖЕННЯ ---
@@ -705,10 +707,9 @@ async function fetchAndRewriteBlog() {
         await saveBlogToGitHub();
         console.log(`🎉 Успішно згенеровано та збережено статей: ${addedCount}`);
     } else {
-        console.log("✅ Немає нових унікальних тем. Публікація пропущена.");
+        console.log("✅ Немає нових унікальних тем або новин. Публікація пропущена.");
     }
 }
-
 // Ендпоінт для фронтенду
 app.get('/api/blog', (req, res) => {
     res.json(aiBlogPosts); // Фронтенд вже сам сортує і фільтрує
