@@ -28,7 +28,7 @@
             
             --top-height: auto;
             --bottom-height: 60px; 
-            --sidebar-width: 220px; /* ЗМЕНШЕНО ДЛЯ НОУТБУКІВ */
+            --sidebar-width: 220px; 
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -46,7 +46,6 @@
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-        /* Компактна шапка */
         .top-bar {
             min-height: 45px; height: auto; background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
             display: flex; align-items: center; justify-content: space-between; padding: 5px 15px; z-index: 50; flex-wrap: wrap; gap: 8px;
@@ -105,7 +104,6 @@
         .panel-header { padding: 6px 10px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); font-size: 0.65rem; font-weight: 900; text-transform: uppercase; color: #fff; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; position: sticky; top: 0; z-index: 10;}
         .panel-header i { color: var(--accent); }
         
-        /* Зменшені відступи для економії місця */
         .panel-content { padding: 6px; display: flex; flex-direction: column; gap: 6px; }
         .settings-block { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; }
         .block-title { font-size: 0.6rem; font-weight: 800; color: #ddd; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; text-transform: uppercase; }
@@ -315,7 +313,10 @@
                     <div class="block-title"><i class="fas fa-info-circle"></i> Інформація</div>
                     <div class="control-group">
                         <label>Назва пісні</label>
-                        <input type="text" id="songTitleInput" placeholder="Назва пісні">
+                        <div style="display: flex; gap: 5px;">
+                            <input type="text" id="songTitleInput" placeholder="Назва пісні" style="flex: 1;">
+                            <button id="aiTitleBtn" class="btn-outline btn-ai" style="flex: 0 0 28px; padding: 0;" title="Придумати назву (ШІ)">✨</button>
+                        </div>
                     </div>
                     <div class="control-group">
                         <label>Автор</label>
@@ -337,6 +338,9 @@
                     <div style="display: flex; gap: 4px; margin-bottom: 4px;">
                         <button id="magicLyricsBtn" class="btn-outline" style="flex:1; border-color: #8a2be2; color: #8a2be2; font-size:0.55rem; padding: 4px;">
                             ✨ Написати
+                        </button>
+                        <button id="fixLyricsBtn" class="btn-outline btn-ai" style="flex:1; font-size:0.55rem; padding: 4px;" title="Виправити помилки">
+                            🧹 Коректор
                         </button>
                         <button id="aiSyncBtn" class="btn-outline btn-whisper" style="flex:1; font-size:0.55rem; padding: 4px;">
                             <i class="fas fa-brain"></i> ШІ-Таймінг
@@ -555,16 +559,35 @@
         </div>
     </div>
 
-    <!-- GEMINI API SETUP -->
     <script>
-        // API Ключ Gemini API надається середовищем виконання
-        const apiKey = ""; 
+        const apiKey = ""; // Ключ безпечно лежить на бекенді Render
 
-        async function fetchGeminiWithRetry(payload, maxRetries = 5, isImage = false) {
-            const endpoint = isImage ? 
-                `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}` :
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        async function fetchGeminiWithRetry(payload, maxRetries = 5, isImage = false, isStoryboard = false) {
+            let user = null;
+            try { user = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
             
+            // Якщо є dev_token, імітуємо користувача для тестування (безліміт)
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('dev_token') === 'hz_auth_9942_xPq') {
+                user = { email: "admin@dev.com", status: "premium", clips_left: 999 };
+            }
+
+            if (!user || !user.email) {
+                alert("Будь ласка, увійдіть у свій Кабінет для використання ШІ!");
+                throw new Error("Not logged in");
+            }
+
+            // Звертаємося до вашого БЕКЕНДУ замість серверів Google напряму!
+            const endpoint = isImage ? 
+                'https://andreygerc11-music-site.onrender.com/api/gemini/image' :
+                'https://andreygerc11-music-site.onrender.com/api/gemini/text';
+            
+            const requestBody = {
+                email: user.email,
+                payload: payload,
+                isStoryboard: isStoryboard
+            };
+
             const delays = [1000, 2000, 4000, 8000, 16000];
 
             for (let i = 0; i <= maxRetries; i++) {
@@ -572,11 +595,21 @@
                     const response = await fetch(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify(requestBody)
                     });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return await response.json();
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        if (data.code === "NO_TOKENS") {
+                            document.getElementById('subscriptionModal').style.display = 'flex';
+                            throw new Error("Ліміт вичерпано");
+                        }
+                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                    }
+                    return data;
                 } catch (error) {
+                    if (error.message === "Ліміт вичерпано" || error.message === "Not logged in") throw error;
                     if (i === maxRetries) throw error;
                     await new Promise(res => setTimeout(res, delays[i]));
                 }
@@ -1081,6 +1114,52 @@
             aiAbortController = null;
         }
 
+        // ✨ ШІ-НАЗВА ПІСНІ
+        document.getElementById('aiTitleBtn').addEventListener('click', async () => {
+            const lyrics = document.getElementById('lyricsInput').value.trim();
+            if (!lyrics) return alert("Спочатку додайте текст пісні, щоб ШІ міг придумати назву!");
+            const btn = document.getElementById('aiTitleBtn');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            const payload = {
+                contents: [{ parts: [{ text: `Прочитай цей текст пісні і придумай для неї коротку, хітову назву (1-4 слова). Поверни ТІЛЬКИ назву, без лапок чи додаткового тексту.\n\nТекст:\n${lyrics}` }] }],
+                systemInstruction: { parts: [{ text: "Ти досвідчений музичний продюсер. Повертай лише готову назву." }] }
+            };
+
+            try {
+                const data = await fetchGeminiWithRetry(payload, 3, false, false);
+                const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (resultText) document.getElementById('songTitleInput').value = resultText.trim();
+            } catch (e) { console.error(e); } finally { btn.innerHTML = orig; btn.disabled = false; }
+        });
+
+        // 🧹 ШІ-КОРЕКТОР ТЕКСТУ
+        document.getElementById('fixLyricsBtn').addEventListener('click', async () => {
+            const lyrics = document.getElementById('lyricsInput').value.trim();
+            if (!lyrics) return alert("Немає тексту для виправлення!");
+            const btn = document.getElementById('fixLyricsBtn');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            const payload = {
+                contents: [{ parts: [{ text: `Виправ граматичні, орфографічні та пунктуаційні помилки у цьому тексті пісні, зберігши таймкоди (якщо є) та оригінальний ритм. Поверни лише виправлений текст.\n\n${lyrics}` }] }],
+                systemInstruction: { parts: [{ text: "Ти професійний редактор текстів. Нічого не додавай від себе, тільки виправляй помилки." }] }
+            };
+
+            try {
+                const data = await fetchGeminiWithRetry(payload, 3, false, false);
+                const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (resultText) {
+                    const cleanText = resultText.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
+                    document.getElementById('lyricsInput').value = cleanText;
+                    document.getElementById('dirLyricsInput').value = cleanText;
+                }
+            } catch (e) { console.error(e); } finally { btn.innerHTML = orig; btn.disabled = false; }
+        });
+
         // === ВИПРАВЛЕНА ФУНКЦІЯ ПРЕВ'Ю З ПЛАВНИМИ ПЕРЕХОДАМИ (CROSSFADE) ===
         function drawPreviewFrame() {
             if (!audioCtx) {
@@ -1090,6 +1169,7 @@
                 if (bgBlurSlider.value > 0) { ctx.filter = `blur(${bgBlurSlider.value}px)`; }
                 ctx.translate(centerX, centerY);
                 
+                // ВІДМАЛЬОВКА ФОНУ З ПЛАВНИМ ПЕРЕХОДОМ
                 if (backgroundVideo && backgroundVideo.readyState >= 2) { 
                     drawMediaCover(ctx, backgroundVideo, true); 
                 } else if (backgroundImage) { 
@@ -1106,7 +1186,7 @@
                 }
                 
                 ctx.restore();
-                if (backgroundVideo || backgroundImage) { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+                if (backgroundVideo || backgroundImage) { ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
                 
                 ctx.save();
                 ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
@@ -1117,13 +1197,14 @@
                 
                 ctx.globalAlpha = 0.4;
                 
+                // === ВСІ ФУНКЦІЇ МАЛЮВАННЯ ТЕПЕР ІСНУЮТЬ ===
                 if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); 
                 else if (style === 'circle_bars') drawCircleBars(dummyData, minDimension, 512, 50); 
                 else if (style === 'linear_bars') drawLinearBars(dummyData, minDimension, 512); 
                 else if (style === 'linear_curve') drawLinearCurve(dummyData, minDimension, 512); 
                 else if (style === 'linear_symmetry') drawLinearSymmetry(dummyData, minDimension, 512);
                 else if (style === 'circle_dots') drawCircleDots(dummyData, minDimension, 512, 50);
-                else if (style === 'hexagon_bars') drawHexagonBars(dummyData, minDimension, 512, 50);
+                else if (style === 'hexagon_bars') drawHexagonBars(dummyData, minDimension, 512, 50); // FIX: Pass dummyData
                 else if (style === 'wave_filled') drawWaveFilled(dummyData, minDimension, 512);
 
                 ctx.globalAlpha = 1.0;
@@ -1142,7 +1223,6 @@
 
         playerStyleSelect.addEventListener('change', drawPreviewFrame); bgBlurSlider.addEventListener('input', drawPreviewFrame); songTitleInput.addEventListener('input', drawPreviewFrame); document.getElementById('lyricsInput').addEventListener('input', drawPreviewFrame); authorInput.addEventListener('input', drawPreviewFrame); particleSelect.addEventListener('change', () => particles = []); 
 
-        // АВТО-КОПІЮВАННЯ ТЕКСТУ ПРИ РУЧНОМУ ВВОДІ
         document.getElementById('lyricsInput').addEventListener('input', (e) => {
             document.getElementById('dirLyricsInput').value = e.target.value;
             drawPreviewFrame();
@@ -1186,13 +1266,13 @@
                     systemInstruction: { parts: [{ text: "You are an expert audio transcriber. Return exactly valid LRC format." }] }
                 };
 
-                const data = await fetchGeminiWithRetry(payload, 3, false);
+                const data = await fetchGeminiWithRetry(payload, 3, false, false);
                 const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 
                 if (resultText) { 
                     const cleanText = resultText.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
                     document.getElementById('lyricsInput').value = cleanText; 
-                    document.getElementById('dirLyricsInput').value = cleanText; // АВТО-КОПІЮВАННЯ В РЕЖИСЕР
+                    document.getElementById('dirLyricsInput').value = cleanText; 
                     alert("Gemini успішно розпізнав текст та скопіював його в ШІ-Режисер!"); 
                     drawPreviewFrame(); 
                 } else { 
@@ -1200,14 +1280,13 @@
                 }
             } catch (e) { 
                 console.error(e);
-                alert("Помилка зв'язку з Gemini API."); 
+                alert("Помилка зв'язку з сервером."); 
             } finally {
                 btn.disabled = false; 
                 statusInfo.style.display = 'none';
             }
         });
 
-        // ШІ-АВТОР ТЕКСТУ (Синхронізація з Режисером)
         document.getElementById('magicLyricsBtn').addEventListener('click', async () => {
             const topic = prompt("✨ ШІ-Автор тексту\n\nПро що має бути ця пісня? (наприклад: про кохання в кіберпанк місті)");
             if (!topic) return;
@@ -1223,12 +1302,12 @@
             };
 
             try {
-                const data = await fetchGeminiWithRetry(payload);
+                const data = await fetchGeminiWithRetry(payload, 3, false, false);
                 const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (resultText) {
                     const cleanText = resultText.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
                     document.getElementById('lyricsInput').value = cleanText;
-                    document.getElementById('dirLyricsInput').value = cleanText; // АВТО-КОПІЮВАННЯ В РЕЖИСЕР
+                    document.getElementById('dirLyricsInput').value = cleanText; 
                     btn.innerHTML = '<i class="fas fa-check"></i> Текст готовий!';
                     if (typeof drawPreviewFrame === 'function') drawPreviewFrame();
                     setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 3000);
@@ -1301,7 +1380,7 @@
                 let lines = lyricsInput.value.split('\n');
                 lines[currentSyncIndex] = `${timeTag} ${lineText}`;
                 lyricsInput.value = lines.join('\n');
-                document.getElementById('dirLyricsInput').value = lines.join('\n'); // АВТО-КОПІЮВАННЯ
+                document.getElementById('dirLyricsInput').value = lines.join('\n'); 
                 
                 currentSyncIndex++;
                 if (currentSyncIndex >= rawLyrics.length) { 
@@ -1324,393 +1403,95 @@
             }
         }
 
-        function createParticle(typeOption) {
-            const typesList = ['bubble', 'snow', 'rain', 'heart', 'star', 'firefly', 'dust', 'note', 'lightning', 'spark', 'confetti', 'triangle', 'diamond', 'cross', 'meteor', 'fire', 'smoke', 'matrix', 'leaf'];
-            let t = typeOption === 'mixed' ? typesList[Math.floor(Math.random() * typesList.length)] : typeOption;
-            
-            const minDim = Math.min(canvas.width, canvas.height);
-            let p = {
-                x: Math.random() * canvas.width, y: Math.random() * canvas.height, startX: Math.random() * canvas.width,
-                size: Math.max(0.5, Math.random() * (minDim * 0.015) + (minDim * 0.005)), 
-                vx: 0, vy: 0, gravity: 0, friction: 1, life: 1, maxLife: 100, length: 0,
-                type: t, opacity: Math.random() * 0.5 + 0.2, angle: Math.random() * Math.PI * 2, spin: 0,
-                color: 'white', char: '', wobbleSpeed: Math.random() * 0.05, wobbleAmp: Math.random() * 50, path: []
+        // === МАГІЧНИЙ АВТО-СТИЛЬ ===
+        document.getElementById('magicStyleBtn').addEventListener('click', async () => {
+            const title = document.getElementById('songTitleInput').value || 'Енергійна музика';
+            const lyrics = document.getElementById('lyricsInput').value.substring(0, 500); 
+
+            const btn = document.getElementById('magicStyleBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Аналізую вібрації...';
+            btn.disabled = true;
+
+            const payload = {
+                contents: [{ parts: [{ text: `Назва пісні: "${title}". Текст: "${lyrics}". Підбери ідеальні кольори та візуальні ефекти, які найкраще передають настрій цієї пісні.` }] }],
+                systemInstruction: { parts: [{ text: "Ти експерт з візуалізації музики та дизайну (VJ). Проаналізуй настрій пісні і поверни ідеальні налаштування ВИКЛЮЧНО у форматі JSON." }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            primaryColor: { type: "STRING", description: "HEX колір (наприклад #ff3c00)" },
+                            secondaryColor: { type: "STRING", description: "HEX колір (наприклад #ffffff)" },
+                            particleType: { type: "STRING", enum: ['none', 'bubble', 'snow', 'rain', 'heart', 'star', 'firefly', 'dust', 'note', 'lightning', 'spark', 'confetti', 'triangle', 'diamond', 'cross', 'meteor', 'fire', 'smoke', 'matrix', 'leaf'], description: "Тип частинок, що пасує до пісні" },
+                            playerStyle: { type: "STRING", enum: ['circle_sharp', 'circle_bars', 'linear_bars', 'linear_curve', 'linear_symmetry', 'circle_dots', 'hexagon_bars', 'wave_filled'], description: "Стиль аудіоспектру" },
+                            glowSlider: { type: "NUMBER", description: "Рівень неону від 0.1 до 2.5" }
+                        },
+                        required: ["primaryColor", "secondaryColor", "particleType", "playerStyle", "glowSlider"]
+                    }
+                }
             };
 
-            switch(t) {
-                case 'spark': 
-                    p.x = canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.6; p.y = canvas.height + 10;
-                    p.vx = (Math.random() - 0.5) * 20; p.vy = -(Math.random() * 20 + 15); 
-                    p.gravity = 0.5; p.friction = 0.94; p.size = Math.max(1.5, Math.random() * 4 + 1.5);
-                    p.color = Math.random() > 0.5 ? '#ffaa00' : '#ff4400'; p.life = Math.random() * 40 + 40; p.maxLife = p.life;
-                    break;
-                case 'meteor': 
-                    p.x = canvas.width + Math.random() * 500; p.y = -Math.random() * 300 - 100; 
-                    p.vx = -(Math.random() * 20 + 30); p.vy = Math.random() * 20 + 30;    
-                    p.size = Math.max(2, Math.random() * 3 + 2); p.length = Math.max(100, Math.random() * 300 + 150); 
-                    break;
-                case 'rain': 
-                    p.x = Math.random() * canvas.width * 1.2; p.y = -Math.random() * canvas.height;
-                    p.vy = Math.random() * 25 + 35; p.vx = -4; 
-                    p.length = Math.max(40, Math.random() * 80 + 40); 
-                    p.opacity = Math.max(0.3, Math.random() * 0.5 + 0.2); 
-                    p.wobbleAmp = 0; 
-                    break;
-                case 'fire': 
-                    p.x = canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.3; p.y = canvas.height + 20;
-                    p.vx = (Math.random() - 0.5) * 3; p.vy = -(Math.random() * 6 + 4);
-                    p.size = Math.max(10, Math.random() * 30 + 15); p.maxLife = Math.random() * 60 + 60; p.life = p.maxLife;
-                    break;
-                case 'smoke': 
-                    p.x = canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 1.2; p.y = canvas.height + 50;
-                    p.vy = -(Math.random() * 2 + 1); p.vx = (Math.random() - 0.5) * 1.5; 
-                    p.size = Math.max(20, Math.random() * 30 + 20); p.maxLife = 250; p.life = p.maxLife; p.opacity = 0.3;
-                    break;
-                case 'lightning':
-                    p.x = Math.random() * canvas.width; p.y = 0; p.life = 15; p.maxLife = 15; p.path.push({x: p.x, y: p.y});
-                    let currX = p.x; let currY = p.y;
-                    while (currY < canvas.height) {
-                        currX += (Math.random() - 0.5) * (canvas.width * 0.15); currY += Math.random() * (canvas.height * 0.1) + 20;    
-                        p.path.push({x: currX, y: currY});
-                        if (Math.random() < 0.3) {
-                            let branchX = currX; let branchY = currY;
-                            for (let b = 0; b < 3; b++) { branchX += (Math.random() - 0.5) * 80; branchY += Math.random() * 80; p.path.push({x: branchX, y: branchY, isBranch: true}); }
-                        }
-                    }
-                    break;
-                case 'bubble': p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.wobbleSpeed = 0.03; break;
-                case 'snow': p.vy = Math.random() * 2 + 1; p.y = -50; p.wobbleSpeed = 0.02; p.wobbleAmp = 30; p.opacity = Math.random() * 0.5 + 0.5; break;
-                case 'heart': p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = '#ff3c00'; p.wobbleSpeed = 0.04; break;
-                case 'star': p.vx = (Math.random() - 0.5) * 0.2; p.vy = (Math.random() - 0.5) * 0.2; p.color = '#fffacd'; break;
-                case 'firefly': p.vx = (Math.random() - 0.5) * 2; p.vy = (Math.random() - 0.5) * 2; p.color = '#adff2f'; p.size *= 0.8; break;
-                case 'dust': p.vx = (Math.random() - 0.5); p.vy = (Math.random() - 0.5); p.size *= 0.5; p.opacity = 0.2; break;
-                case 'note': p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.char = Math.random() > 0.5 ? '🎵' : '🎶'; break;
-                case 'confetti': p.vy = Math.random() * 3 + 2; p.y = -50; p.spin = Math.random() * 0.2; const colors = ['#ff0000','#00ff00','#0000ff','#ffff00','#00ffff','#ff00ff']; p.color = colors[Math.floor(Math.random()*colors.length)]; break;
-                case 'triangle': p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.spin = (Math.random() - 0.5) * 0.1; const tcols = ['#ff4d4d','#4d4dff','#4dff4d']; p.color = tcols[Math.floor(Math.random()*tcols.length)]; break;
-                case 'matrix': p.vy = Math.random() * 5 + 3; p.vx = 0; p.y = -50; p.color = '#00ff00'; p.char = String.fromCharCode(0x30A0 + Math.random() * 96); break;
-                case 'leaf': p.vy = Math.random() * 2 + 1; p.y = -50; p.wobbleSpeed = 0.02; p.wobbleAmp = 40; p.spin = Math.random() * 0.05; const leaves = ['🍂', '🍁', '🍃']; p.char = leaves[Math.floor(Math.random()*leaves.length)]; break;
-                default: p.vy = -(Math.random() * 2 + 1); p.y = canvas.height + 50; p.color = primaryColor; break;
-            }
-            return p;
-        }
-
-        // === ОПТИМІЗОВАНА ФУНКЦІЯ ЧАСТИНОК ===
-        function handleParticles(avgBass) {
-            const effect = particleSelect.value; if (effect === 'none') return;
-            const maxMap = { 'rain': 150, 'snow': 80, 'fire': 80, 'smoke': 40, 'matrix': 60, 'spark': 80, 'meteor': 10, 'lightning': 2 };
-            const maxParticles = maxMap[effect] || 40; 
-            
-            let spawnRate = 0.5;
-            if (['spark', 'fire'].includes(effect)) spawnRate = (avgBass / 255) * 6; 
-            if (effect === 'meteor') spawnRate = 0.03; 
-            if (effect === 'lightning') spawnRate = (avgBass > 220) ? 0.3 : 0.01; 
-            if (effect === 'smoke') spawnRate = 0.2;
-            if (effect === 'rain') spawnRate = 1.0; 
-            
-            let spawnsPerFrame = effect === 'rain' ? 3 : 1;
-            for (let s = 0; s < spawnsPerFrame; s++) {
-                if (particles.length < maxParticles && Math.random() < spawnRate) { particles.push(createParticle(effect)); }
-            }
-            
-            ctx.save();
-            
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                
-                p.vy += p.gravity;
-                p.vx *= p.friction;
-                p.vy *= p.friction;
-                
-                if (p.wobbleAmp > 0) {
-                    p.angle += p.wobbleSpeed;
-                    p.x = p.startX + Math.sin(p.angle) * p.wobbleAmp;
-                } else {
-                    p.x += p.vx;
-                }
-                p.y += p.vy;
-                p.angle += p.spin;
-
-                let pulse = (avgBass / 255) * 10; 
-                
-                if (p.type === 'lightning') {
-                    p.life--;
-                    if (p.life > 0) {
-                        ctx.globalCompositeOperation = 'lighter';
-                        ctx.fillStyle = `rgba(255, 255, 255, ${p.life / p.maxLife * 0.15})`;
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(200, 230, 255, ${p.life / p.maxLife})`;
-                        ctx.lineWidth = Math.max(0.1, Math.random() * 5 + 2);
-                        ctx.lineJoin = 'miter';
-                        
-                        let mainPath = p.path.filter(pt => !pt.isBranch);
-                        let branches = p.path.filter(pt => pt.isBranch);
-                        
-                        if (mainPath.length > 0) {
-                            ctx.moveTo(mainPath[0].x, mainPath[0].y);
-                            for (let j = 1; j < mainPath.length; j++) { ctx.lineTo(mainPath[j].x, mainPath[j].y); }
-                        }
-                        ctx.stroke();
-                        
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(200, 230, 255, ${(p.life / p.maxLife) * 0.5})`;
-                        ctx.lineWidth = 1.5;
-                        for (let j = 0; j < branches.length; j++) { ctx.lineTo(branches[j].x, branches[j].y); }
-                        ctx.stroke();
-                        ctx.globalCompositeOperation = 'source-over';
-                    }
-                } 
-                else if (p.type === 'spark') {
-                    p.life--;
-                    if (p.life > 0) {
-                        let speed = Math.max(0.1, Math.sqrt(p.vx * p.vx + p.vy * p.vy)); 
-                        let tailLength = speed * 1.5;
-                        let safeSize = Math.max(0.1, p.size * (p.life / p.maxLife)); 
-                        
-                        ctx.globalCompositeOperation = 'lighter';
-                        ctx.beginPath();
-                        ctx.lineCap = 'round';
-                        ctx.lineWidth = safeSize;
-                        ctx.strokeStyle = p.color;
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(p.x - (p.vx / speed) * tailLength, p.y - (p.vy / speed) * tailLength);
-                        ctx.stroke();
-                        
-                        ctx.beginPath();
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                        ctx.arc(p.x, p.y, safeSize * 0.5, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.globalCompositeOperation = 'source-over';
-                    }
-                } 
-                else if (p.type === 'meteor') {
-                    ctx.save();
-                    ctx.globalCompositeOperation = 'lighter';
-                    ctx.translate(p.x, p.y);
-                    let angle = Math.atan2(p.vy, p.vx); 
-                    ctx.rotate(angle);
+            try {
+                const data = await fetchGeminiWithRetry(payload, 3, false, false);
+                const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (resultText) {
+                    const config = JSON.parse(resultText);
                     
-                    let safeLength = Math.max(1, p.length);
-                    let mGrad = ctx.createLinearGradient(0, 0, -safeLength, 0);
-                    mGrad.addColorStop(0, 'rgba(255, 255, 255, 1)'); 
-                    mGrad.addColorStop(0.05, 'rgba(100, 200, 255, 0.8)'); 
-                    mGrad.addColorStop(0.3, 'rgba(50, 100, 255, 0.3)'); 
-                    mGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    document.getElementById('primaryColorInput').value = config.primaryColor;
+                    document.getElementById('secondaryColorInput').value = config.secondaryColor;
+                    document.getElementById('particleSelect').value = config.particleType;
+                    document.getElementById('playerStyle').value = config.playerStyle;
+                    document.getElementById('glowSlider').value = config.glowSlider;
                     
-                    ctx.strokeStyle = mGrad;
-                    ctx.lineCap = 'round';
-                    ctx.lineWidth = Math.max(0.1, p.size);
-                    ctx.beginPath();
-                    ctx.moveTo(0, 0);
-                    ctx.lineTo(-safeLength, 0);
-                    ctx.stroke();
+                    const autoColor = document.getElementById('autoColorCheckbox');
+                    autoColor.checked = false;
                     
-                    ctx.fillStyle = 'white';
-                    ctx.beginPath();
-                    ctx.arc(0, 0, Math.max(0.1, p.size * 1.5), 0, Math.PI * 2);
-                    ctx.fill();
+                    primaryColor = config.primaryColor;
+                    secondaryColor = config.secondaryColor;
+                    particles = []; 
                     
-                    ctx.restore();
-                } 
-                else if (p.type === 'rain') {
-                    ctx.strokeStyle = `rgba(200, 220, 255, ${Math.max(0, p.opacity)})`;
-                    ctx.lineWidth = 1.0; 
-                    ctx.beginPath();
-                    ctx.moveTo(p.x, p.y);
-                    let safeVy = Math.max(0.1, p.vy);
-                    ctx.lineTo(p.x - p.vx * (p.length/safeVy), p.y - p.length);
-                    ctx.stroke();
-                } 
-                else if (p.type === 'fire') {
-                    p.life -= 1;
-                    if (p.life > 0) {
-                        let ratio = Math.max(0, p.life / p.maxLife); 
-                        if (ratio > 0.4) {
-                            let fireRatio = Math.max(0, (ratio - 0.4) / 0.6); 
-                            p.size = Math.max(0.1, p.size * 0.96); 
-                            let r = 255; let g = Math.floor(255 * fireRatio); let b = Math.floor(100 * Math.pow(fireRatio, 2));
-                            
-                            ctx.globalCompositeOperation = 'lighter';
-                            ctx.fillStyle = `rgba(${r},${g},${b}, ${fireRatio * 0.8})`;
-                            ctx.beginPath();
-                            ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2);
-                            ctx.fill();
-                            ctx.globalCompositeOperation = 'source-over';
-                        } else {
-                            let smokeRatio = Math.max(0, ratio / 0.4); 
-                            p.size = Math.max(0.1, p.size * 1.04); 
-                            p.vx *= 0.95; p.vy *= 0.95; 
-                            
-                            ctx.fillStyle = `rgba(150, 150, 150, ${smokeRatio * 0.4})`;
-                            ctx.beginPath();
-                            ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                    }
-                } 
-                else if (p.type === 'smoke') {
-                    p.life--;
-                    if (p.life > 0) {
-                        p.size = Math.max(0.1, p.size * 1.015);
-                        p.opacity = Math.max(0, (p.life / p.maxLife) * 0.25);
-                        
-                        ctx.fillStyle = `rgba(180, 180, 180, ${p.opacity})`;
-                        ctx.beginPath(); 
-                        ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2); 
-                        ctx.fill();
-                    }
-                } 
-                else {
-                    if (['star','firefly','dust'].includes(p.type)) p.opacity += (Math.random() - 0.5) * 0.1;
-                    if (p.type === 'matrix' && Math.random() < 0.05) p.char = String.fromCharCode(0x30A0 + Math.random() * 96);
-                    p.opacity = Math.max(0, Math.min(1, p.opacity));
+                    if (typeof drawPreviewFrame === 'function') drawPreviewFrame();
                     
-                    ctx.save();
-                    if (['star', 'firefly'].includes(p.type)) ctx.globalCompositeOperation = 'lighter';
-                    ctx.globalAlpha = p.opacity;
-                    ctx.translate(p.x, p.y);
-                    ctx.rotate(p.angle);
-                    let s = Math.max(0.1, p.size + (['star','heart','bubble'].includes(p.type) ? pulse * 0.5 : 0));
-
-                    if (p.type === 'snow') {
-                        ctx.fillStyle = `rgba(255,255,255, ${p.opacity})`;
-                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
-                    } else if (p.type === 'bubble') {
-                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); 
-                        ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
-                        ctx.beginPath(); ctx.arc(-s*0.3, -s*0.3, s*0.2, 0, Math.PI*2); 
-                        ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill(); 
-                    } else if (p.type === 'confetti') {
-                        ctx.fillStyle = p.color;
-                        ctx.fillRect(-s/2, -s/2 * Math.cos(p.angle*5), s, Math.max(0.1, s * Math.abs(Math.cos(p.angle*5))));
-                    } else if (p.type === 'triangle') {
-                        ctx.fillStyle = p.color; 
-                        ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s * 0.866, s * 0.5); ctx.lineTo(-s * 0.866, s * 0.5); ctx.closePath(); ctx.fill();
-                    } else if (p.type === 'heart') {
-                        ctx.fillStyle = p.color; 
-                        let top = s * 0.3; 
-                        ctx.beginPath(); ctx.moveTo(0, top); ctx.bezierCurveTo(0, 0, -s, 0, -s, top); ctx.bezierCurveTo(-s, s * 0.8, 0, s, 0, s * 1.2); ctx.bezierCurveTo(0, s, s, s * 0.8, s, top); ctx.bezierCurveTo(s, 0, 0, 0, 0, top); ctx.fill(); 
-                    } else if (['note', 'matrix', 'leaf'].includes(p.type)) {
-                        ctx.fillStyle = p.color || 'white'; ctx.font = `${s * 2}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                        ctx.fillText(p.char, 0, 0); 
-                    } else {
-                        ctx.fillStyle = p.color || 'white';
-                        ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
-                    }
-                    ctx.restore();
+                    btn.innerHTML = '<i class="fas fa-magic"></i> Стиль застосовано!';
+                    setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 3000);
                 }
-
-                if (p.opacity <= 0.01 || p.life <= 0 || p.y < -100 || p.y > canvas.height + 100 || p.x < -200 || p.x > canvas.width + 200) {
-                    particles.splice(i, 1);
-                }
+            } catch (e) {
+                alert("Не вдалося підібрати стиль. Спробуйте ще раз.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
-            ctx.restore();
-        }
+        });
 
-        function drawTextOverlay(minDimension) {
-            const titleText = songTitleInput.value.trim(); const authorText = authorInput.value.trim();
-            if (titleText || authorText) {
-                ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
-                const padding = minDimension * 0.05; const maxWidthTitle = canvas.width - (padding * 2); const centerXText = (canvas.width / 2) + textOffsetX;
-                let startY = (canvas.height * 0.18) + textOffsetY; let currentY = startY; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 15; let totalHeight = 0; let maxLineWidth = 0;
-                if (titleText) {
-                    const titleSize = minDimension * 0.065; ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`; ctx.fillStyle = '#fff';
-                    let words = titleText.split(' '); let line = ''; let lineHeight = titleSize * 1.3;
-                    for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthTitle && n > 0) { ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); line = words[n] + ' '; currentY += lineHeight; totalHeight += lineHeight; } else { line = testLine; } }
-                    ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); currentY += lineHeight; totalHeight += lineHeight;
-                }
-                if (authorText) {
-                    const authorSize = minDimension * 0.04; ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`; ctx.fillStyle = '#bbb';
-                    let words = (`Відео: ${authorText}`).split(' '); let line = ''; let lineHeight = authorSize * 1.3;
-                    for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthTitle && n > 0) { ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); line = words[n] + ' '; currentY += lineHeight; totalHeight += lineHeight; } else { line = testLine; } }
-                    ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); totalHeight += lineHeight;
-                }
-                ctx.restore();
-                textBB = { x: centerXText - (maxLineWidth / 2) - 30, y: startY - (minDimension * 0.065 / 2) - 20, w: maxLineWidth + 60, h: totalHeight + 40 };
-            } else { textBB = { x: 0, y: 0, w: 0, h: 0 }; }
+        // === ПОКРАЩЕННЯ ПРОМПТУ ФОНУ ===
+        document.getElementById('enhancePromptBtn').addEventListener('click', async () => {
+            const promptInput = document.getElementById('customAiPrompt');
+            let basePrompt = promptInput.value.trim();
+            if (!basePrompt) basePrompt = document.getElementById('songTitleInput').value.trim() || 'epic abstract music background';
 
-            let activeText = ""; 
-            let currentTime = audioPlayer ? audioPlayer.currentTime : 0;
-            if (lyricsData.length > 0) { 
-                for (let i = 0; i < lyricsData.length; i++) { 
-                    if (currentTime >= lyricsData[i].time) { activeText = lyricsData[i].text; } 
-                } 
+            const btn = document.getElementById('enhancePromptBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            const payload = {
+                contents: [{ parts: [{ text: `Improve this simple prompt into a highly detailed, cinematic Midjourney-style image generation prompt: "${basePrompt}"` }] }],
+                systemInstruction: { parts: [{ text: "You are an expert prompt engineer for AI image generators. Reply ONLY with the enhanced prompt in English. Make it extremely visual, cinematic, and descriptive. No explanations, no quotes." }] }
+            };
+
+            try {
+                const data = await fetchGeminiWithRetry(payload, 3, false, false);
+                const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (resultText) {
+                    promptInput.value = resultText.trim();
+                }
+            } catch(e) {
+                console.error(e);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
-            
-            let isPlaceholder = false;
-            if (!isGenerating && activeText === "" && (document.getElementById('lyricsInput').value.trim() !== "" || lyricsData.length > 0)) { 
-                ctx.save(); 
-                ctx.globalAlpha = 0.5;
-                const fontSize = minDimension * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                const centerXText = (canvas.width / 2) + lyricsOffsetX;
-                const startY = (canvas.height * 0.85) + lyricsOffsetY;
-                
-                ctx.strokeStyle = '#000'; ctx.lineWidth = fontSize * 0.15; ctx.strokeText("🎵 Перетягніть текст сюди", centerXText, startY);
-                ctx.fillStyle = '#fff'; ctx.fillText("🎵 Перетягніть текст сюди", centerXText, startY);
-                
-                const maxLyricsWidth = ctx.measureText("🎵 Перетягніть текст сюди").width;
-                lyricsBB = { x: centerXText - (maxLyricsWidth / 2) - 30, y: startY - (fontSize / 2) - 20, w: maxLyricsWidth + 60, h: (fontSize * 1.3) + 40 };
-                ctx.restore();
-                return; 
-            }
-
-            if (isGenerating && isPlaceholder) {
-                activeText = "";
-            }
-
-            if (activeText !== "") {
-                ctx.save();
-                const fontSize = minDimension * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                const padding = minDimension * 0.05; const maxWidthLyrics = canvas.width - (padding * 2); const centerXText = (canvas.width / 2) + lyricsOffsetX;
-                let words = activeText.split(' '); let line = ''; let linesToDraw = [];
-                for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthLyrics && n > 0) { linesToDraw.push(line.trim()); line = words[n] + ' '; } else { line = testLine; } }
-                linesToDraw.push(line.trim());
-                const lineHeight = fontSize * 1.3; let startY = (canvas.height * 0.85) - (linesToDraw.length - 1) * lineHeight + lyricsOffsetY;
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 15; ctx.lineWidth = fontSize * 0.15; let maxLyricsWidth = 0;
-
-                for (let i = 0; i < linesToDraw.length; i++) {
-                    const currentLineY = startY + (i * lineHeight);
-                    ctx.strokeStyle = '#000'; ctx.strokeText(linesToDraw[i], centerXText, currentLineY);
-                    ctx.fillStyle = '#fff'; ctx.shadowColor = primaryColor; ctx.shadowBlur = 25; ctx.fillText(linesToDraw[i], centerXText, currentLineY);
-                    maxLyricsWidth = Math.max(maxLyricsWidth, ctx.measureText(linesToDraw[i]).width);
-                }
-                ctx.restore();
-                lyricsBB = { x: centerXText - (maxLyricsWidth / 2) - 30, y: startY - (fontSize / 2) - 20, w: maxLyricsWidth + 60, h: (linesToDraw.length * lineHeight) + 40 };
-            } else { lyricsBB = { x: 0, y: 0, w: 0, h: 0 }; }
-        }
-
-        function drawHoverIndicators(minDimension) {
-            if (!isGenerating) {
-                if (logoState.isHovering) {
-                    ctx.save(); 
-                    ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
-                    ctx.scale(spectrumState.scale, spectrumState.scale);
-                    const drawW = logoState.width * logoState.scale;
-                    const drawH = logoState.height * logoState.scale;
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3 / spectrumState.scale; ctx.setLineDash([10 / spectrumState.scale, 10 / spectrumState.scale]); 
-                    ctx.strokeRect(logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH); 
-                    ctx.restore();
-                }
-                if (isHoveringText && textBB.w > 0) {
-                    ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(textBB.x, textBB.y, textBB.w, textBB.h);
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Назва', textBB.x + textBB.w / 2, textBB.y - 15); ctx.restore();
-                }
-                if (isHoveringLyrics && lyricsBB.w > 0) {
-                    ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(lyricsBB.x, lyricsBB.y, lyricsBB.w, lyricsBB.h);
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Караоке', lyricsBB.x + lyricsBB.w / 2, lyricsBB.y - 15); ctx.restore();
-                }
-                if (spectrumState.isHovering && !logoState.isHovering) {
-                    const cx = canvas.width / 2 + spectrumState.offsetX;
-                    const cy = canvas.height / 2 + spectrumState.offsetY;
-                    const specHitSize = minDimension * 0.4 * spectrumState.scale;
-                    ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); 
-                    ctx.strokeRect(cx - specHitSize, cy - specHitSize, specHitSize * 2, specHitSize * 2); 
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Спектр', cx, cy - specHitSize - 15);
-                    ctx.restore();
-                }
-            }
-        }
+        });
 
         // === ВИПРАВЛЕНА ФУНКЦІЯ РЕНДЕРУ (ДЛЯ АУДІО) З CROSSFADE ===
         function draw() {
@@ -1791,6 +1572,7 @@
             }
         }
 
+        // === ВСІ ФУНКЦІЇ МАЛЮВАННЯ ===
         function drawCircleSharp(dataArray, minDimension, bufferLength, avgBass) {
             const centerX = 0; const centerY = 0; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
             const pointsCount = 60; const usefulDataLength = Math.floor(bufferLength * 0.65); let pointsRight = []; let pointsLeft = [];
@@ -2113,9 +1895,7 @@
             }, 500); 
         });
 
-        // ==========================================
-        // ЛОГІКА ІНТЕРФЕЙСУ ШІ-РЕЖИСЕРА
-        // ==========================================
+        // === ЛОГІКА ІНТЕРФЕЙСУ ШІ-РЕЖИСЕРА ===
         const modeToggleBtn = document.getElementById('modeToggleBtn');
         const sidebarLeft = document.querySelector('.sidebar-left');
         const sidebarRight = document.querySelector('.sidebar-right');
@@ -2162,7 +1942,6 @@
             dirStoryboardContainer.innerHTML = '';
             dirFinalCompileBtn.style.display = 'none';
 
-            // ОНОВЛЕНИЙ ПРОМПТ: Розбиваємо пісню на 20-30 сцен для максимальної динаміки
             const payload = {
                 contents: [{ parts: [{ text: `Analyze these lyrics and break them down into 20 to 30 dynamic video scenes. Create a new scene for EVERY SINGLE LINE or every 2 lines maximum to ensure the video has extremely fast, engaging, modern music video cuts. Return a JSON array.\n\nLyrics: "${text}"` }] }],
                 systemInstruction: { parts: [{ text: "You are a music video director. Return ONLY a valid JSON array. Each object must have 'id' (number), 'time' (string, e.g. '00:00.00' exactly matching the lyric timestamp), 'lyrics' (string), and 'prompt' (visual description for image generator)." }] },
@@ -2185,7 +1964,7 @@
             };
 
             try {
-                const data = await fetchGeminiWithRetry(payload);
+                const data = await fetchGeminiWithRetry(payload, 3, false, true); // isStoryboard = true
                 const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 
                 if (resultText) {
@@ -2199,7 +1978,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                alert("Помилка генерації сценарію через Gemini.");
+                alert(error.message === "Ліміт вичерпано" ? "Ваш ліміт вичерпано! Оформіть підписку." : "Помилка генерації сценарію через Gemini.");
                 resetDirUI();
             } finally {
                 dirLoadingState.style.display = 'none';
@@ -2260,7 +2039,7 @@
             };
 
             try {
-                const data = await fetchGeminiWithRetry(payload, 3, true);
+                const data = await fetchGeminiWithRetry(payload, 3, true, false);
                 if (data.predictions && data.predictions[0] && data.predictions[0].bytesBase64Encoded) {
                     const imageUrl = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
                     previewBox.innerHTML = `
