@@ -991,6 +991,15 @@
             }
         }
 
+        // Функція для перекладу кирилиці в латиницю для ШІ
+        function transliterateToLatin(text) {
+            const map = {
+                'А':'A', 'Б':'B', 'В':'V', 'Г':'H', 'Ґ':'G', 'Д':'D', 'Е':'E', 'Є':'Ye', 'Ж':'Zh', 'З':'Z', 'И':'Y', 'І':'I', 'Ї':'Yi', 'Й':'Y', 'К':'K', 'Л':'L', 'М':'M', 'Н':'N', 'О':'O', 'П':'P', 'Р':'R', 'С':'S', 'Т':'T', 'У':'U', 'Ф':'F', 'Х':'Kh', 'Ц':'Ts', 'Ч':'Ch', 'Ш':'Sh', 'Щ':'Shch', 'Ь':'', 'Ю':'Yu', 'Я':'Ya',
+                'а':'a', 'б':'b', 'в':'v', 'г':'h', 'ґ':'g', 'д':'d', 'е':'e', 'є':'ye', 'ж':'zh', 'з':'z', 'и':'y', 'і':'i', 'ї':'yi', 'й':'y', 'к':'k', 'л':'l', 'м':'m', 'н':'n', 'о':'o', 'п':'p', 'р':'r', 'с':'s', 'т':'t', 'у':'u', 'ф':'f', 'х':'kh', 'ц':'ts', 'ч':'ch', 'ш':'sh', 'щ':'shch', 'ь':'', 'ю':'yu', 'я':'ya'
+            };
+            return text.split('').map(c => map[c] || c).join('');
+        }
+
         // === FEATURE 3: AI BACKGROUND GENERATOR (IMAGEN) ===
         const generateAiBgBtn = document.getElementById('generateAiBgBtn');
         const aiLoadingStatus = document.getElementById('aiLoadingStatus');
@@ -999,7 +1008,8 @@
         generateAiBgBtn.addEventListener('click', async () => {
             if (!currentUser) { safeRedirect('login.html'); return; }
             
-            const promptStr = document.getElementById('customAiPrompt').value.trim() || songTitleInput.value.trim() || "abstract dark atmospheric music background";
+            const promptStr = document.getElementById('customAiPrompt').value.trim();
+            const songTitle = songTitleInput.value.trim();
             const authorText = authorInput.value.trim();
             const formatMap = { vertical: "9:16", horizontal: "16:9", square: "1:1", portrait: "3:4", cinema: "16:9" };
             const aspect = formatMap[document.getElementById('formatSelect').value] || "1:1";
@@ -1008,11 +1018,16 @@
             aiLoadingStatus.style.display = 'block';
 
             try {
-                let finalPrompt = promptStr + ", high quality, detailed, atmospheric, beautiful lighting, abstract or cinematic";
+                // Транслітеруємо для промпту
+                const engTitle = transliterateToLatin(songTitle);
+                const engAuthor = transliterateToLatin(authorText);
+
+                let basePrompt = promptStr || `abstract dark atmospheric music background for a song named "${engTitle || "Untitled"}"`;
+                let finalPrompt = basePrompt + ", high quality, detailed, atmospheric, beautiful lighting, cinematic";
                 
-                // ПОСИЛЕНИЙ ПРОМПТ ДЛЯ ІМЕНІ АВТОРА
-                if (authorText) {
-                    finalPrompt += `, featuring a large, bold, highly legible cinematic title exactly spelling "${authorText}". The text "${authorText}" must be perfectly spelled, centered, and prominent.`;
+                // Додаємо англійський текст автора
+                if (engAuthor) {
+                    finalPrompt += `, featuring a large, bold, highly legible cinematic title exactly spelling "${engAuthor}". The text "${engAuthor}" must be perfectly spelled in English letters, centered, and prominent.`;
                 }
 
                 const imgBase64 = await generateImagenImage(finalPrompt, aspect);
