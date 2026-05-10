@@ -303,6 +303,12 @@ app.post('/api/auth/user', async (req, res) => {
         await saveUsersToGitHub();
         console.log(`🎉 Зареєстровано нового користувача: ${email} (+1 безкоштовний кліп)`);
     }
+
+    if (email === 'admin@dev.com') {
+        user.status = 'premium';
+        user.clips_left = 999; 
+    }
+
     res.json(user);
 });
 
@@ -314,16 +320,23 @@ app.post('/api/gemini/text', async (req, res) => {
     if (!email) return res.status(400).json({ error: "Авторизація обов'язкова" });
 
     let user = usersDB.find(u => u.email === email);
-    if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
+    // Для адміна створимо віртуального користувача, якщо його випадково немає в базі
+    if (!user && email === 'admin@dev.com') {
+        user = { email: 'admin@dev.com', status: 'premium', clips_left: 999 };
+    } else if (!user) {
+        return res.status(403).json({ error: "Користувача не знайдено" });
+    }
 
-    // СПИСУЄМО ЛІМІТ ТІЛЬКИ ЗА КЛІП (РОЗКАДРОВКУ)
-    if (isStoryboard) {
+    // СПИСУЄМО ЛІМІТ ТІЛЬКИ ЗА КЛІП (РОЗКАДРОВКУ) — АДМІНА ПРОПУСКАЄМО
+    if (isStoryboard && email !== 'admin@dev.com') {
         if (user.clips_left <= 0) {
             return res.status(403).json({ error: "Ліміт вичерпано", code: "NO_TOKENS" });
         }
         user.clips_left -= 1;
         await saveUsersToGitHub();
         console.log(`🎬 Користувач ${email} генерує кліп. Залишок: ${user.clips_left}`);
+    } else if (isStoryboard && email === 'admin@dev.com') {
+        console.log(`👑 Адміністратор ${email} генерує кліп безкоштовно.`);
     }
 
     try {
@@ -335,8 +348,8 @@ app.post('/api/gemini/text', async (req, res) => {
         res.json(response.data);
     } catch (error) {
         console.error("Gemini Text API Error:", error?.response?.data || error.message);
-        // Якщо сталася помилка Гугла, повертаємо токен людині
-        if (isStoryboard) {
+        // Якщо сталася помилка Гугла, повертаємо токен людині (але не чіпаємо адміна)
+        if (isStoryboard && email !== 'admin@dev.com') {
             user.clips_left += 1;
             await saveUsersToGitHub();
         }
