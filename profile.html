@@ -93,45 +93,28 @@
         }
         .sub-info { display: flex; flex-direction: column; gap: 5px; }
         .sub-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;}
-        .sub-status { font-weight: 900; font-size: 1.4rem; color: #fff; letter-spacing: 0.5px;}
+        .sub-status { font-weight: 900; font-size: 2.5rem; color: #4CAF50; letter-spacing: 0.5px;}
         
         .btn-action {
-            background: var(--accent); color: #fff; border: none; padding: 14px 28px;
-            border-radius: 50px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; 
-            cursor: pointer; transition: 0.3s; letter-spacing: 0.5px;
+            background: linear-gradient(45deg, var(--accent), #ff6a00); color: #fff; border: none; padding: 16px 32px;
+            border-radius: 50px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; 
+            cursor: pointer; transition: 0.3s; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(255, 60, 0, 0.4);
         }
-        .btn-action:hover { box-shadow: 0 8px 25px rgba(255, 60, 0, 0.4); transform: translateY(-2px); }
+        .btn-action:hover { box-shadow: 0 8px 25px rgba(255, 60, 0, 0.6); transform: translateY(-2px); }
+        .btn-action:disabled { background: #333; color: #777; cursor: not-allowed; box-shadow: none; transform: none;}
 
-        /* КАРТКИ */
-        .cards-desc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
-        
-        .card-item {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 20px;
-            border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
-            transition: 0.3s;
+        .charity-info {
+            margin-top: 25px; font-size: 0.9rem; color: #ccc; line-height: 1.6; 
+            padding: 20px; background: rgba(255, 77, 77, 0.05); 
+            border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0;
         }
-        .card-item:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05);}
-        .card-info { display: flex; align-items: center; gap: 15px; }
-        .card-info i { font-size: 1.5rem; color: #ccc; }
-        .card-number { font-weight: 700; letter-spacing: 2px; color: #fff; font-size: 1.1rem;}
-        
-        .btn-remove-card { background: rgba(255,77,77,0.1); border: none; color: #ff4d4d; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 1rem; display: flex; align-items: center; justify-content: center;}
-        .btn-remove-card:hover { background: #ff4d4d; color: #fff; }
-        
-        .btn-add-card {
-            width: 100%; padding: 18px; background: transparent; border: 2px dashed rgba(255,255,255,0.2);
-            color: var(--text-muted); border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .btn-add-card:hover { border-color: var(--accent); color: var(--accent); background: rgba(255,60,0,0.05);}
 
-        /* БЕЗПЕКА */
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
-        .form-group input {
-            width: 100%; padding: 15px; background: var(--bg-input); border: 1px solid var(--border-color);
-            border-radius: 10px; color: #fff; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s;
+        .btn-outline {
+            display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; background: transparent; 
+            border: 1px solid var(--border-color); color: #fff; border-radius: 50px;
+            text-decoration: none; font-weight: 800; font-size: 0.85rem; transition: 0.3s; text-transform: uppercase;
         }
-        .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255, 60, 0, 0.15); }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
 
         @media (max-width: 850px) {
             .container { grid-template-columns: 1fr; margin: 20px auto;}
@@ -146,7 +129,7 @@
     <header class="top-bar">
         <a href="index.html" class="logo">HERTZ <span>SPECTRUM</span></a>
         <div style="display: flex; gap: 20px;">
-            <a href="music.html" class="btn-back"><i class="fas fa-music"></i> Музика</a>
+            <a href="index.html#music" class="btn-back"><i class="fas fa-music"></i> Музика</a>
             <a href="generator.html" class="btn-back"><i class="fas fa-video"></i> Генератор</a>
         </div>
     </header>
@@ -163,44 +146,26 @@
         <main class="settings-content">
             
             <div class="settings-card">
-                <h2><i class="fas fa-crown"></i> Статус підписки</h2>
+                <h2><i class="fas fa-wallet"></i> Баланс та Підписка</h2>
                 <div class="subscription-box">
                     <div class="sub-info">
-                        <div class="sub-label">Поточний план</div>
-                        <div id="subStatusText" class="sub-status">Базовий</div>
+                        <div class="sub-label">Доступно генерацій (токенів)</div>
+                        <div id="profileTokens" class="sub-status">... 🪙</div>
                     </div>
-                    <button id="upgradeBtn" class="btn-action" style="display: none;">Оновити до PRO</button>
+                    <button id="buyTokensBtn" class="btn-action"><i class="fas fa-unlock"></i> Придбати PRO (20 🪙)</button>
                 </div>
-            </div>
-
-            <div class="settings-card">
-                <h2><i class="fas fa-credit-card"></i> Платіжні картки</h2>
-                <p class="cards-desc">Прив'язані картки використовуються для швидкої оплати музичних треків та подовження підписки на генератор.</p>
                 
-                <div id="cardsList">
-                    <div class="card-item">
-                        <div class="card-info">
-                            <i class="fab fa-cc-mastercard"></i>
-                            <span class="card-number">**** **** **** 1234</span>
-                        </div>
-                        <button class="btn-remove-card" title="Видалити картку" onclick="alert('Ця функція наразі працює в тестовому режимі.')"><i class="fas fa-trash"></i></button>
-                    </div>
+                <div class="charity-info">
+                    <strong style="color: #fff;">Благодійна мета:</strong> Кожна ваша покупка пакету генерацій (349 ₴) — це безпосередній внесок у благодійний фонд <strong>«Голос проти раку»</strong>. Всі зібрані кошти допомагають військовим та цивільним у боротьбі з хворобою. Дякуємо, що ви поруч! 💛💙
                 </div>
-                <button class="btn-add-card" onclick="alert('Інтеграція з платіжним шлюзом у процесі розробки.')">+ Додати нову картку</button>
             </div>
 
             <div class="settings-card">
-                <h2><i class="fas fa-lock"></i> Безпека та Дані</h2>
-                <p class="cards-desc" style="font-size: 0.8rem; margin-bottom: 15px;">* Якщо ви авторизувалися через Google, зміна пароля тут не вплине на ваш обліковий запис Google.</p>
-                <div class="form-group">
-                    <label>Новий пароль</label>
-                    <input type="password" placeholder="Введіть новий пароль">
-                </div>
-                <div class="form-group">
-                    <label>Підтвердження пароля</label>
-                    <input type="password" placeholder="Повторіть новий пароль">
-                </div>
-                <button class="btn-action" style="width: 100%; border-radius: 10px;" onclick="alert('Дані успішно оновлено!')">Зберегти зміни</button>
+                <h2><i class="fas fa-headset"></i> Підтримка</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Виникли питання щодо списання токенів, платежу або потрібна допомога з ШІ-Режисером? Напишіть нам.</p>
+                <a href="https://t.me/andreygerc11" target="_blank" class="btn-outline">
+                    <i class="fab fa-telegram" style="color: #2AABEE; font-size: 1.2rem;"></i> Написати розробнику
+                </a>
             </div>
 
         </main>
@@ -211,41 +176,68 @@
         let currentUser = null;
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
 
-        // Якщо користувач не авторизований - повертаємо на сторінку входу
         if (!currentUser) {
             window.location.href = "login.html";
         } else {
-            // Заповнення даних профілю
             document.getElementById('userEmail').innerText = currentUser.email;
             document.getElementById('userInitial').innerText = currentUser.email.charAt(0).toUpperCase();
+            fetchUserData();
+        }
 
-            // Перевірка статусу підписки
-            if (currentUser.status === 'premium') {
-                document.getElementById('userRole').innerText = "Premium Користувач";
-                const subText = document.getElementById('subStatusText');
-                subText.innerText = "PRO ДОСТУП АКТИВНИЙ";
-                subText.style.color = "var(--accent)";
-            } else {
-                document.getElementById('upgradeBtn').style.display = 'block';
-                document.getElementById('upgradeBtn').onclick = () => window.location.href = "generator.html"; 
+        async function fetchUserData() {
+            try {
+                const res = await fetch('https://andreygerc11-music-site.onrender.com/api/auth/user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentUser.email })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data;
+                    localStorage.setItem('hz_user', JSON.stringify(currentUser));
+                    
+                    document.getElementById('profileTokens').innerText = `${currentUser.clips_left} 🪙`;
+                    document.getElementById('userRole').innerText = (currentUser.status === 'premium' || currentUser.email === 'admin@dev.com') ? "PRO Акаунт" : "Базовий Акаунт";
+                }
+            } catch (e) {
+                console.error("Помилка завантаження даних", e);
+                document.getElementById('profileTokens').innerText = "Помилка";
             }
         }
+
+        // Логіка покупки токенів
+        document.getElementById('buyTokensBtn').addEventListener('click', async function() {
+            const originalText = this.innerHTML; 
+            this.innerText = 'Обробка...'; 
+            this.disabled = true;
+            try {
+                const res = await fetch('https://andreygerc11-music-site.onrender.com/api/pay-subscription', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ email: currentUser.email }) 
+                });
+                const data = await res.json();
+                if (data.url) { 
+                    window.location.href = data.url; 
+                } else { 
+                    alert('Помилка платежу.'); 
+                    this.innerHTML = originalText; 
+                    this.disabled = false; 
+                }
+            } catch (err) { 
+                alert('Помилка сервера. Перевірте з\'єднання.'); 
+                this.innerHTML = originalText; 
+                this.disabled = false; 
+            }
+        });
 
         // Логіка виходу з інтеграцією скидання Google-сесії
         document.getElementById('logoutBtn').addEventListener('click', () => {
             if(confirm("Ви дійсно хочете вийти з акаунта?")) {
-                // Видаляємо дані з пам'яті сайту
                 localStorage.removeItem('hz_user');
-                
-                // Вимикаємо авто-логін Гугла (щоб він не пустив одразу назад)
-                try {
-                    google.accounts.id.disableAutoSelect();
-                } catch(e) {
-                    console.log("Google session error", e);
-                }
-                
-                // Перекидаємо на головну
-                window.location.href = "index.html"; 
+                try { google.accounts.id.disableAutoSelect(); } catch(e) {}
+                window.location.href = "login.html"; 
             }
         });
     </script>
