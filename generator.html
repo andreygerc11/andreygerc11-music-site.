@@ -915,6 +915,8 @@
             directorScript = [];
             directorImages = [];
             
+            const sceneCards = document.querySelectorAll('.scene-card'); // <--- ОСЬ ЦЕЙ РЯДОК БУВ ЗАГУБЛЕНИЙ
+            
             sceneCards.forEach((card) => {
                 const timeText = card.querySelector('.scene-time').innerText;
                 // ВАЖЛИВО: додано крапку в регулярний вираз, щоб мілісекунди не губилися!
