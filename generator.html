@@ -102,14 +102,13 @@
 
         .btn-profile { text-decoration: none; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 50px; display: inline-flex; align-items: center; gap: 5px; transition: 0.3s; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; cursor: pointer; background: transparent; outline: none; }
         .btn-profile:hover { background: #333; border-color: #fff; }
-        .btn-premium { background: rgba(255, 60, 0, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 6px 12px; border-radius: 50px; font-weight: 800; font-size: 0.65rem; text-transform: uppercase; cursor: pointer; transition: 0.3s;}
+        .btn-premium { background: rgba(255, 60, 0, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 6px 12px; border-radius: 50px; font-weight: 800; font-size: 0.65rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; text-decoration: none;}
         .btn-premium:hover { background: var(--accent); color: #fff; }
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; }
         .modal-content { background: var(--bg-panel); padding: 30px 25px; border-radius: 12px; text-align: center; border: 2px solid var(--accent); max-width: 400px; width: 90%; position: relative;}
         .modal-content h3 { color: #fff; margin-bottom: 10px; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; }
         .modal-content p { color: #aaa; margin-bottom: 20px; font-size: 0.85rem; line-height: 1.5; }
-        .modal-price { font-size: 2rem; color: var(--accent); font-weight: 900; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,77,77,0.4); }
         .close-modal-btn { position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: #555; cursor: pointer; font-size: 1.1rem; transition: 0.3s;}
         .close-modal-btn:hover { color: #fff;}
 
@@ -336,9 +335,9 @@
         </div>
 
         <div class="top-right">
-            <button id="authBtn" class="btn-profile" style="border-color: var(--accent);"><i class="fas fa-sign-in-alt"></i> Увійти</button>
-            <button id="userProfileBtn" class="btn-profile" style="display: none;"><i class="fas fa-user"></i> Кабінет</button>
-            <button id="sidebarSubscribeBtn" class="btn-premium" style="display: none;"><i class="fas fa-crown"></i> PRO Доступ</button>
+            <a href="javascript:void(0)" onclick="safeRedirect('login.html')" id="authBtn" class="btn-profile" style="border-color: var(--accent); text-decoration: none;"><i class="fas fa-sign-in-alt"></i> Увійти</a>
+            <a href="javascript:void(0)" onclick="safeRedirect('profile.html')" id="userProfileBtn" class="btn-profile" style="display: none; text-decoration: none;"><i class="fas fa-user"></i> Кабінет</a>
+            <a href="javascript:void(0)" onclick="safeRedirect('profile.html')" id="sidebarSubscribeBtn" class="btn-premium" style="display: none; text-decoration: none;"><i class="fas fa-crown"></i> PRO Доступ</a>
             <button id="stopRenderBtn" class="btn-stop"><i class="fas fa-times"></i> Скасувати</button>
             <button id="downloadVideoBtn" class="btn-download"><i class="fas fa-download"></i> Завантажити Відео</button>
             <button id="exportVideoBtn" class="btn-export" disabled><i class="fas fa-bolt"></i> Експорт Відео</button>
@@ -565,37 +564,27 @@
         </div>
     </footer>
 
-    <!-- Модалка підписки -->
+    <!-- Спрощена модалка підписки -->
     <div class="modal-overlay" id="subscriptionModal">
         <div class="modal-content">
             <button class="close-modal-btn" onclick="document.getElementById('subscriptionModal').style.display='none'"><i class="fas fa-times"></i></button>
-            <h3 id="modalTitle">PRO Доступ</h3>
-            <p id="modalDesc">Для створення ШІ-Сценаріїв та відмальовки кадрів потрібні токени. Також це відкриє експорт без лімітів!</p>
-            <div class="modal-price">349 ₴ <span style="font-size: 1rem; color: #888;">/ місяць</span></div>
-            <div style="font-size: 0.7rem; color: #666; margin-bottom: 25px; text-transform: uppercase;">Пакет PRO: 20 🪙 (1 відео-кліп = 1 🪙)</div>
-            <button id="modalSubscribeBtn" class="btn-outline btn-ai" style="width: 100%; justify-content: center; background: var(--accent); color: #fff;"><i class="fas fa-unlock"></i> Придбати пакет</button>
-        </div>
-    </div>
-
-    <!-- === МОДАЛКА ВХОДУ ТА РЕЄСТРАЦІЇ === -->
-    <div class="modal-overlay" id="loginModal">
-        <div class="modal-content">
-            <button class="close-modal-btn" onclick="document.getElementById('loginModal').style.display='none'"><i class="fas fa-times"></i></button>
-            <h3 id="authTitle">Вхід у кабінет</h3>
-            <p id="authDesc">Увійдіть, щоб зберігати кліпи та мати доступ до ШІ.</p>
-            
-            <input type="email" id="authEmail" placeholder="Ваш Email" style="margin-bottom: 10px;">
-            <input type="password" id="authPassword" placeholder="Пароль" style="margin-bottom: 15px;">
-            
-            <button id="authSubmitBtn" class="btn-export" style="width: 100%; justify-content: center; background: linear-gradient(45deg, #8a2be2, #4a00e0);">Увійти</button>
-            
-            <div style="margin-top: 15px; font-size: 0.75rem; color: #888; cursor: pointer;" id="toggleAuthMode">
-                Немає акаунту? <span style="color: var(--accent-purple); font-weight: bold;">Зареєструватися</span>
-            </div>
+            <h3 id="modalTitle">Потрібні токени 🪙</h3>
+            <p id="modalDesc">Для створення ШІ-Сценаріїв та відмальовки кадрів потрібні токени. Будь ласка, перейдіть в особистий кабінет для поповнення балансу.</p>
+            <a href="javascript:void(0)" onclick="safeRedirect('profile.html')" class="btn-outline btn-ai" style="width: 100%; justify-content: center; background: var(--accent); color: #fff; text-decoration: none; margin-top: 15px;"><i class="fas fa-wallet"></i> Перейти в Кабінет</a>
         </div>
     </div>
 
     <script>
+        // БЕЗПЕЧНИЙ РЕДИРЕКТ
+        function safeRedirect(url) {
+            if (!url || url.trim() === '') return;
+            try {
+                window.location.href = url;
+            } catch (e) {
+                console.warn("Редирект заблоковано в середовищі попереднього перегляду:", e.message);
+            }
+        }
+
         // === ЛОГІКА АВТОРИЗАЦІЇ ТА ТОКЕНІВ ===
         let currentUser = null; try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
         let isSubscribed = false;
@@ -650,99 +639,10 @@
         
         syncUserData();
 
-        // Логіка модалки Входу/Реєстрації
-        let isLoginMode = true; 
-        const loginModal = document.getElementById('loginModal'); 
-        const authTitle = document.getElementById('authTitle'); 
-        const authSubmitBtn = document.getElementById('authSubmitBtn'); 
-        const toggleAuthMode = document.getElementById('toggleAuthMode');
-        
-        if(authBtn) authBtn.addEventListener('click', (e) => { 
-            e.preventDefault(); 
-            loginModal.style.display = 'flex'; 
-        });
-        
-        toggleAuthMode.addEventListener('click', () => {
-            isLoginMode = !isLoginMode; 
-            authTitle.innerText = isLoginMode ? "Вхід у кабінет" : "Реєстрація"; 
-            authSubmitBtn.innerText = isLoginMode ? "Увійти" : "Зареєструватись";
-            toggleAuthMode.innerHTML = isLoginMode ? 'Немає акаунту? <span style="color: var(--accent-purple); font-weight: bold;">Зареєструватися</span>' : 'Вже є акаунт? <span style="color: var(--accent-purple); font-weight: bold;">Увійти</span>';
-        });
-
-        authSubmitBtn.addEventListener('click', async () => {
-            const email = document.getElementById('authEmail').value.trim(); 
-            const password = document.getElementById('authPassword').value.trim();
-            
-            if (!email || !password) return alert("Заповніть всі поля!");
-            
-            authSubmitBtn.disabled = true; 
-            authSubmitBtn.innerText = "Зачекайте...";
-            
-            try {
-                const endpoint = isLoginMode ? '/api/login' : '/api/register';
-                const res = await fetch(`https://andreygerc11-music-site.onrender.com${endpoint}`, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ email, password }) 
-                });
-                
-                const data = await res.json();
-                
-                if (res.ok && data.success !== false) { 
-                    currentUser = { email: email }; 
-                    localStorage.setItem('hz_user', JSON.stringify(currentUser)); 
-                    loginModal.style.display = 'none'; 
-                    syncUserData();
-                    alert(isLoginMode ? "Вхід успішний!" : "Успішно! Вам нараховано 1 🪙."); 
-                } else { 
-                    alert("Помилка: " + (data.error || "Невірні дані.")); 
-                }
-            } catch (e) { 
-                alert("Помилка з'єднання з сервером."); 
-            } finally { 
-                authSubmitBtn.disabled = false; 
-                authSubmitBtn.innerText = isLoginMode ? "Увійти" : "Зареєструватись"; 
-            }
-        });
-
-        // === ПІДПИСКА ===
-        async function processSubscription(btnElement) {
-            if (!currentUser) { 
-                loginModal.style.display = 'flex';
-                document.getElementById('subscriptionModal').style.display = 'none';
-                return; 
-            }
-            const originalText = btnElement.innerText; 
-            btnElement.innerText = 'Зачекайте...'; 
-            btnElement.disabled = true;
-            try {
-                const res = await fetch('https://andreygerc11-music-site.onrender.com/api/pay-subscription', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ email: currentUser.email }) 
-                });
-                const data = await res.json();
-                if (data.url) { 
-                    window.location.href = data.url; 
-                } else { 
-                    alert('Помилка платежу.'); 
-                    btnElement.innerText = originalText; 
-                    btnElement.disabled = false; 
-                }
-            } catch (err) { 
-                alert('Помилка сервера.'); 
-                btnElement.innerText = originalText; 
-                btnElement.disabled = false; 
-            }
-        }
-
-        document.getElementById('sidebarSubscribeBtn').addEventListener('click', () => { document.getElementById('subscriptionModal').style.display='flex'; });
-        document.getElementById('modalSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
-
         // === GEMINI API HELPERS (BACKEND PROXY) ===
         async function generateGeminiText(prompt, isJson = false) {
             if (!currentUser || !currentUser.email) {
-                loginModal.style.display = 'flex';
+                safeRedirect('login.html');
                 throw new Error("Для генерації потрібно увійти в акаунт!");
             }
 
@@ -855,7 +755,7 @@
 
         // === FEATURE 1: AI LYRICS GENERATOR (GEMINI) ===
         document.getElementById('aiGenerateLyricsBtn').addEventListener('click', async () => {
-            if (!currentUser) { loginModal.style.display = 'flex'; return; }
+            if (!currentUser) { safeRedirect('login.html'); return; }
             
             const theme = document.getElementById('aiLyricsPrompt').value.trim();
             if (!theme) return alert("Спочатку опишіть тему або настрій пісні у полі вище!");
@@ -890,9 +790,13 @@
         let directorScript = [];
         let directorImages = [];
         let currentDirectorSceneIndex = -1;
+        
+        // ЗМІННІ ДЛЯ ПЛАВНОГО ПЕРЕХОДУ
+        let nextBackgroundImage = null;
+        let transitionProgress = 1;
 
         aiSplitBtn.addEventListener('click', async () => {
-            if (!currentUser) { loginModal.style.display = 'flex'; return; }
+            if (!currentUser) { safeRedirect('login.html'); return; }
             
             const text = lyricsInput.value.trim();
             if (!text) { 
@@ -907,7 +811,8 @@
             dirLoadingState.style.display = 'block';
             finalCompileBtn.disabled = true;
 
-            const aiPrompt = `Act as a professional music video director. Break down the following song lyrics into a storyboard of 5 to 10 meaningful scenes. For each scene, extract the starting timestamp (if available, else invent one chronologically based on a typical song structure), the lyrics snippet, and write a highly detailed visual prompt IN ENGLISH for an AI image generator (like Imagen/Midjourney). The prompt MUST describe lighting, camera angle, mood, subject, and style. Make it photorealistic, cinematic, 8k resolution. Lyrics:\n\n${text}`;
+            // Збільшено кількість сцен для детальної розкадровки
+            const aiPrompt = `Act as a professional music video director. Break down the following song lyrics into a detailed storyboard of 15 to 25 scenes (create a new scene for almost every 2-4 lines). For each scene, extract the starting timestamp (if available, else invent one chronologically based on a typical song structure), the lyrics snippet, and write a highly detailed visual prompt IN ENGLISH for an AI image generator (like Imagen/Midjourney). The prompt MUST describe lighting, camera angle, mood, subject, and style. Make it photorealistic, cinematic, 8k resolution. Lyrics:\n\n${text}`;
 
             try {
                 const jsonText = await generateGeminiText(aiPrompt, true);
@@ -1001,6 +906,12 @@
                 return;
             }
 
+            // Зберігаємо поточну обкладинку, якщо вона є
+            let currentCoverSrc = null;
+            if (backgroundImage && !isDirectorMode) {
+                currentCoverSrc = backgroundImage.src;
+            }
+
             directorScript = [];
             directorImages = [];
             
@@ -1025,6 +936,11 @@
 
             directorScript.sort((a, b) => a.time - b.time);
 
+            // ЯКЩО Є ОБКЛАДИНКА - ВСТАВЛЯЄМО ЇЇ НА ПОЧАТОК КЛІПУ (00:00)
+            if (currentCoverSrc && (directorScript.length === 0 || directorScript[0].time > 0)) {
+                directorScript.unshift({ time: 0, url: currentCoverSrc });
+            }
+
             directorScript.forEach((scene, index) => {
                 const img = new Image();
                 img.crossOrigin = "Anonymous";
@@ -1034,6 +950,7 @@
 
             isDirectorMode = true;
             currentDirectorSceneIndex = 0;
+            transitionProgress = 1;
             
             clearBackground(); 
             removeBgBtn.style.display = 'flex';
@@ -1058,7 +975,15 @@
             }
             if (newIndex !== -1 && newIndex !== currentDirectorSceneIndex) {
                 currentDirectorSceneIndex = newIndex;
-                backgroundImage = directorImages[newIndex];
+                
+                if (!backgroundImage || transitionProgress < 1) {
+                    backgroundImage = directorImages[newIndex];
+                    transitionProgress = 1;
+                } else {
+                    nextBackgroundImage = directorImages[newIndex];
+                    transitionProgress = 0; // Активуємо ефект плавного переходу
+                }
+
                 if (backgroundVideo) {
                     backgroundVideo.pause();
                     backgroundVideo = null;
@@ -1072,7 +997,7 @@
         const downloadBgBtn = document.getElementById('downloadBgBtn');
         
         generateAiBgBtn.addEventListener('click', async () => {
-            if (!currentUser) { loginModal.style.display = 'flex'; return; }
+            if (!currentUser) { safeRedirect('login.html'); return; }
             
             const promptStr = document.getElementById('customAiPrompt').value.trim() || songTitleInput.value.trim() || "abstract dark atmospheric music background";
             const authorText = authorInput.value.trim();
@@ -1085,8 +1010,9 @@
             try {
                 let finalPrompt = promptStr + ", high quality, detailed, atmospheric, beautiful lighting, abstract or cinematic";
                 
+                // ПОСИЛЕНИЙ ПРОМПТ ДЛЯ ІМЕНІ АВТОРА
                 if (authorText) {
-                    finalPrompt += `, with stylish typography text exactly reading "${authorText}"`;
+                    finalPrompt += `, featuring a large, bold, highly legible cinematic title exactly spelling "${authorText}". The text "${authorText}" must be perfectly spelled, centered, and prominent.`;
                 }
 
                 const imgBase64 = await generateImagenImage(finalPrompt, aspect);
@@ -1123,7 +1049,7 @@
             }
         });
 
-        // === SPECTRUM GENERATOR LOGIC (УВЕСЬ ФУНКЦІОНАЛ З GENERATOR ОР.HTML) ===
+        // === SPECTRUM GENERATOR LOGIC ===
         const timerWorkerCode = `
             let interval = null;
             self.onmessage = function(e) {
@@ -1201,6 +1127,7 @@
         function clearBackground() {
             backgroundImage = null;
             isDirectorMode = false;
+            transitionProgress = 1;
             if (backgroundVideo) {
                 backgroundVideo.pause();
                 backgroundVideo.src = '';
@@ -1243,7 +1170,6 @@
         let primaryColor = primaryColorInput.value;
         let secondaryColor = secondaryColorInput.value;
 
-        // ВАЖЛИВО: ВОДЯНИЙ ЗНАК (ЯКЩО НЕМАЄ ПІДПИСКИ)
         const watermarkImg = new Image();
         watermarkImg.crossOrigin = "Anonymous"; 
         watermarkImg.src = "favicon.png?v=2"; 
@@ -1395,7 +1321,14 @@
                 ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height); const centerX = canvas.width / 2; const centerY = canvas.height / 2; ctx.save();
                 if (bgBlurSlider.value > 0) { ctx.filter = `blur(${bgBlurSlider.value}px)`; }
                 ctx.translate(centerX, centerY);
-                if (backgroundVideo && backgroundVideo.readyState >= 2) { drawMediaCover(ctx, backgroundVideo, true); } else if (backgroundImage) { drawMediaCover(ctx, backgroundImage, false); }
+                
+                // Рендер фону
+                if (backgroundVideo && backgroundVideo.readyState >= 2) { 
+                    drawMediaCover(ctx, backgroundVideo, true); 
+                } else if (backgroundImage) { 
+                    drawMediaCover(ctx, backgroundImage, false); 
+                }
+                
                 ctx.restore();
                 if (backgroundVideo || backgroundImage) { ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0,0,canvas.width,canvas.height); }
                 
@@ -1534,7 +1467,6 @@
             }
         }
 
-        // === ЧАСТИНКИ З GENERATOR ОР.HTML ===
         function createParticle(typeOption) {
             const typesList = ['bubble', 'snow', 'rain', 'heart', 'star', 'firefly', 'dust', 'note', 'lightning', 'spark', 'confetti', 'triangle', 'diamond', 'cross', 'meteor', 'fire', 'smoke', 'matrix', 'leaf'];
             let t = typeOption === 'mixed' ? typesList[Math.floor(Math.random() * typesList.length)] : typeOption;
@@ -1924,15 +1856,40 @@
 
             if (isDirectorMode && audioPlayer) { checkDirectorScene(audioPlayer.currentTime); }
 
+            // Логіка плавного переходу (Fade)
+            if (transitionProgress < 1) {
+                transitionProgress += 0.03; // Швидкість переходу
+                if (transitionProgress >= 1) {
+                    transitionProgress = 1;
+                    backgroundImage = nextBackgroundImage;
+                    nextBackgroundImage = null;
+                }
+            }
+
             ctx.fillStyle = '#0a0a0b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             const centerX = canvas.width / 2; const centerY = canvas.height / 2; let bgScale = 1 + (avgBass / 255) * 0.08; 
 
             ctx.save();
             if (bgBlurSlider.value > 0) { ctx.filter = `blur(${bgBlurSlider.value}px)`; }
             ctx.translate(centerX, centerY); ctx.scale(bgScale, bgScale);
-            if (backgroundVideo && backgroundVideo.readyState >= 2) { drawMediaCover(ctx, backgroundVideo, true); ctx.restore(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            } else if (backgroundImage) { drawMediaCover(ctx, backgroundImage, false); ctx.restore(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            } else { ctx.restore(); ctx.fillStyle = 'rgba(10, 10, 11, 1.0)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+            
+            if (backgroundVideo && backgroundVideo.readyState >= 2) { 
+                drawMediaCover(ctx, backgroundVideo, true); 
+                ctx.restore(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (transitionProgress < 1 && nextBackgroundImage && backgroundImage) {
+                // Плавна поява нового зображення поверх старого
+                ctx.globalAlpha = 1;
+                drawMediaCover(ctx, backgroundImage, false);
+                ctx.globalAlpha = transitionProgress;
+                drawMediaCover(ctx, nextBackgroundImage, false);
+                ctx.globalAlpha = 1.0;
+                ctx.restore(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (backgroundImage) { 
+                drawMediaCover(ctx, backgroundImage, false); 
+                ctx.restore(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else { 
+                ctx.restore(); ctx.fillStyle = 'rgba(10, 10, 11, 1.0)'; ctx.fillRect(0, 0, canvas.width, canvas.height); 
+            }
 
             handleParticles(avgBass);
             
