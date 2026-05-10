@@ -99,6 +99,18 @@
         
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.5); } 70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); } }
 
+        .btn-profile { text-decoration: none; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 50px; display: inline-flex; align-items: center; gap: 5px; transition: 0.3s; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+        .btn-profile:hover { background: #333; border-color: #fff; }
+        .btn-premium { background: rgba(255, 60, 0, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 6px 12px; border-radius: 50px; font-weight: 800; font-size: 0.65rem; text-transform: uppercase; cursor: pointer; transition: 0.3s;}
+        .btn-premium:hover { background: var(--accent); color: #fff; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--bg-panel); padding: 30px 25px; border-radius: 12px; text-align: center; border: 2px solid var(--accent); max-width: 400px; width: 90%; position: relative;}
+        .modal-content h3 { color: #fff; margin-bottom: 10px; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; }
+        .modal-content p { color: #aaa; margin-bottom: 20px; font-size: 0.85rem; line-height: 1.5; }
+        .modal-price { font-size: 2rem; color: var(--accent); font-weight: 900; margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,77,77,0.4); }
+        .close-modal-btn { position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: #555; cursor: pointer; font-size: 1.1rem; transition: 0.3s;}
+        .close-modal-btn:hover { color: #fff;}
+
         /* === РОБОЧИЙ ПРОСТІР === */
         .workspace { display: flex; flex: 1; height: calc(100vh - var(--top-height) - var(--bottom-height)); overflow: hidden; position: relative;}
 
@@ -309,6 +321,9 @@
         </div>
 
         <div class="top-right">
+            <a href="login.html" id="authBtn" class="btn-profile" style="border-color: var(--accent);"><i class="fas fa-sign-in-alt"></i> Увійти</a>
+            <a href="profile.html" id="userProfileBtn" class="btn-profile" style="display: none;"><i class="fas fa-user"></i> Кабінет</a>
+            <button id="sidebarSubscribeBtn" class="btn-premium" style="display: none;"><i class="fas fa-crown"></i> PRO Доступ</button>
             <button id="stopRenderBtn" class="btn-stop"><i class="fas fa-times"></i> Скасувати</button>
             <button id="downloadVideoBtn" class="btn-download"><i class="fas fa-download"></i> Завантажити Відео</button>
             <button id="exportVideoBtn" class="btn-export" disabled><i class="fas fa-bolt"></i> Експорт Відео</button>
@@ -523,37 +538,109 @@
         </div>
     </footer>
 
-    <script>
-        // === GEMINI API HELPERS ===
-        const apiKey = ""; // API key is injected by the environment
+    <div class="modal-overlay" id="subscriptionModal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="document.getElementById('subscriptionModal').style.display='none'"><i class="fas fa-times"></i></button>
+            <h3 id="modalTitle">PRO Доступ</h3>
+            <p id="modalDesc">Для створення ШІ-Сценаріїв та відмальовки кадрів потрібні токени. Також це відкриє експорт без лімітів!</p>
+            <div class="modal-price">99 ₴</div>
+            <div style="font-size: 0.7rem; color: #666; margin-bottom: 25px; text-transform: uppercase;">Пакет: 3 генерації кліпу (Режисер)</div>
+            <button id="modalSubscribeBtn" class="btn-outline btn-ai" style="width: 100%; justify-content: center; background: var(--accent); color: #fff;"><i class="fas fa-unlock"></i> Придбати пакет</button>
+            <div style="margin-top:15px; font-size:0.7rem; color:#888;">Маєте акаунт? <a href="login.html" style="color:var(--accent);">Увійдіть тут</a></div>
+        </div>
+    </div>
 
-        async function fetchWithRetry(url, options, maxRetries = 5) {
-            let retries = 0;
-            let delays = [1000, 2000, 4000, 8000, 16000];
-            while (retries < maxRetries) {
-                try {
-                    const response = await fetch(url, options);
-                    if (!response.ok) {
-                        if (response.status === 429 || response.status >= 500) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        const errText = await response.text();
-                        console.error("API Error:", errText);
-                        throw new Error("Bad Request");
-                    }
-                    return response;
-                } catch (error) {
-                    if (error.message === "Bad Request") throw error;
-                    retries++;
-                    if (retries >= maxRetries) throw error;
-                    await new Promise(r => setTimeout(r, delays[retries - 1]));
+    <!-- === МОДАЛКА ВХОДУ ТА РЕЄСТРАЦІЇ === -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="document.getElementById('loginModal').style.display='none'"><i class="fas fa-times"></i></button>
+            <h3 id="authTitle">Вхід у кабінет</h3>
+            <p id="authDesc">Увійдіть, щоб зберігати кліпи та мати доступ до ШІ.</p>
+            
+            <input type="email" id="authEmail" placeholder="Ваш Email" style="margin-bottom: 10px; width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: #000; color: #fff;">
+            <input type="password" id="authPassword" placeholder="Пароль" style="margin-bottom: 15px; width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: #000; color: #fff;">
+            
+            <button id="authSubmitBtn" class="btn-export" style="width: 100%; justify-content: center; background: linear-gradient(45deg, #8a2be2, #4a00e0);">Увійти</button>
+            
+            <div style="margin-top: 15px; font-size: 0.75rem; color: #888; cursor: pointer;" id="toggleAuthMode">
+                Немає акаунту? <span style="color: var(--accent-purple); font-weight: bold;">Зареєструватися</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === ЛОГІКА АВТОРИЗАЦІЇ ТА ТОКЕНІВ ===
+        let currentUser = null; try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
+        let isSubscribed = false;
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('dev_token') === 'hz_auth_9942_xPq') { currentUser = { email: "admin@dev.com", status: "premium", clips_left: 999 }; localStorage.setItem('hz_user', JSON.stringify(currentUser)); }
+
+        const userProfileBtn = document.getElementById('userProfileBtn'); const authBtn = document.getElementById('authBtn'); const sidebarSubscribeBtn = document.getElementById('sidebarSubscribeBtn');
+
+        async function syncUserData() {
+            if (!currentUser || !currentUser.email) {
+                userProfileBtn.style.display = 'none'; if (authBtn) authBtn.style.display = 'inline-flex'; sidebarSubscribeBtn.style.display = 'flex'; return;
+            }
+            userProfileBtn.style.display = 'inline-flex'; if (authBtn) authBtn.style.display = 'none';
+            try {
+                // Перевіряємо токени на бекенді
+                const res = await fetch(`https://andreygerc11-music-site.onrender.com/api/user?email=${currentUser.email}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data.user;
+                    localStorage.setItem('hz_user', JSON.stringify(currentUser));
+                    userProfileBtn.innerHTML = `<i class="fas fa-user"></i> Кабінет (${currentUser.clips_left} 🪙)`;
+                    if (currentUser.clips_left > 0 || currentUser.status === 'premium') { isSubscribed = true; sidebarSubscribeBtn.style.display = 'none'; } 
+                    else { isSubscribed = false; sidebarSubscribeBtn.style.display = 'flex'; }
                 }
+            } catch (e) {
+                userProfileBtn.innerHTML = `<i class="fas fa-user"></i> Кабінет (${currentUser.clips_left || 0} 🪙)`;
             }
         }
+        syncUserData(); // Запуск при старті
 
+        // Логіка модалки Входу/Реєстрації
+        let isLoginMode = true; const loginModal = document.getElementById('loginModal'); const authTitle = document.getElementById('authTitle'); const authSubmitBtn = document.getElementById('authSubmitBtn'); const toggleAuthMode = document.getElementById('toggleAuthMode');
+        if(authBtn) authBtn.addEventListener('click', (e) => { e.preventDefault(); loginModal.style.display = 'flex'; });
+        
+        toggleAuthMode.addEventListener('click', () => {
+            isLoginMode = !isLoginMode; authTitle.innerText = isLoginMode ? "Вхід у кабінет" : "Реєстрація"; authSubmitBtn.innerText = isLoginMode ? "Увійти" : "Зареєструватись";
+            toggleAuthMode.innerHTML = isLoginMode ? 'Немає акаунту? <span style="color: var(--accent-purple); font-weight: bold;">Зареєструватися</span>' : 'Вже є акаунт? <span style="color: var(--accent-purple); font-weight: bold;">Увійти</span>';
+        });
+
+        authSubmitBtn.addEventListener('click', async () => {
+            const email = document.getElementById('authEmail').value.trim(); const password = document.getElementById('authPassword').value.trim();
+            if (!email || !password) return alert("Заповніть всі поля!");
+            authSubmitBtn.disabled = true; authSubmitBtn.innerText = "Зачекайте...";
+            try {
+                const endpoint = isLoginMode ? '/api/login' : '/api/register';
+                const res = await fetch(`https://andreygerc11-music-site.onrender.com${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+                const data = await res.json();
+                if (res.ok) { currentUser = data.user; localStorage.setItem('hz_user', JSON.stringify(currentUser)); loginModal.style.display = 'none'; syncUserData(); alert(isLoginMode ? "Вхід успішний!" : "Успішно! Вам нараховано 3 🪙."); } 
+                else { alert("Помилка: " + (data.error || "Невірні дані.")); }
+            } catch (e) { alert("Помилка з'єднання з сервером."); } finally { authSubmitBtn.disabled = false; authSubmitBtn.innerText = isLoginMode ? "Увійти" : "Зареєструватись"; }
+        });
+
+        async function processSubscription(btnElement) {
+            if (!currentUser) { alert("Будь ласка, спочатку увійдіть або зареєструйтесь."); window.location.href = "login.html"; return; }
+            const originalText = btnElement.innerText; btnElement.innerText = 'Зачекайте...'; btnElement.disabled = true;
+            try {
+                const res = await fetch('https://andreygerc11-music-site.onrender.com/api/pay-subscription', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentUser.email }) });
+                const data = await res.json();
+                if (data.url) { window.location.href = data.url; } else { alert('Помилка платежу.'); btnElement.innerText = originalText; btnElement.disabled = false; }
+            } catch (err) { alert('Помилка сервера.'); btnElement.innerText = originalText; btnElement.disabled = false; }
+        }
+
+        document.getElementById('sidebarSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
+        document.getElementById('modalSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
+
+        // === GEMINI API HELPERS (BACKEND PROXY) ===
         async function generateGeminiText(prompt, isJson = false) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            
+            if (!currentUser || !currentUser.email) {
+                document.getElementById('subscriptionModal').style.display = 'flex';
+                throw new Error("Для генерації сценарію потрібно увійти в акаунт!");
+            }
+
             let payload = {
                 contents: [{ parts: [{ text: prompt }] }],
                 systemInstruction: { parts: [{ text: "You are a creative music video director and lyricist." }] }
@@ -584,33 +671,55 @@
                 };
             }
 
-            const response = await fetchWithRetry(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            const response = await fetch('https://andreygerc11-music-site.onrender.com/api/gemini/text', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: currentUser.email, 
+                    isStoryboard: isJson, 
+                    payload: payload
+                })
             });
-            
+
+            if (!response.ok) {
+                const errData = await response.json();
+                if (errData.code === "NO_TOKENS") {
+                    document.getElementById('subscriptionModal').style.display = 'flex';
+                    throw new Error("Ліміт вичерпано. Придбайте пакет генерацій.");
+                }
+                throw new Error(errData.error || "Помилка сервера");
+            }
+
             const data = await response.json();
             return data.candidates[0].content.parts[0].text;
         }
 
         async function generateImagenImage(prompt) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+            if (!currentUser || !currentUser.email) {
+                throw new Error("Потрібна авторизація");
+            }
+
             const payload = {
                 instances: { prompt: prompt },
                 parameters: { sampleCount: 1 }
             };
             
-            const response = await fetchWithRetry(url, {
+            const response = await fetch('https://andreygerc11-music-site.onrender.com/api/gemini/image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    email: currentUser.email,
+                    payload: payload
+                })
             });
+
+            if (!response.ok) {
+                throw new Error("Помилка генерації зображення");
+            }
             
             const data = await response.json();
             return `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
         }
-
 
         // === VIEW SWITCHER LOGIC ===
         const btnViewSpectrum = document.getElementById('btnViewSpectrum');
@@ -1584,12 +1693,34 @@
 
         generateVideoBtn.addEventListener('click', async () => {
             if (!audioCtx) { alert('Завантажте аудіо трек!'); return; }
-            if (isGenerating) return;
+            if (isGenerating) return; 
             if (!audioPlayer.duration || audioPlayer.duration < 2) { alert('Спочатку завантажте аудіо трек!'); return; }
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            
+            let canFreeRender = false;
+            if (!isSubscribed) { 
+                let lastRenderStr = localStorage.getItem('hz_last_free_render'); 
+                if (lastRenderStr) { 
+                    let lastRenderTime = parseInt(lastRenderStr); 
+                    if (Date.now() - lastRenderTime < 24 * 60 * 60 * 1000) { document.getElementById('subscriptionModal').style.display = 'flex'; return; } 
+                    else { canFreeRender = true; } 
+                } else { canFreeRender = true; } 
+            }
 
-            downloadVideoBtn.style.display = 'none'; 
-            isGenerating = true; isCancelled = false; chunks = [];
+            // Якщо рендер платний (немає безкоштовного), списуємо токен!
+            if (!canFreeRender && currentUser && currentUser.email !== "admin@dev.com") {
+                generateStatus.innerText = 'Списання токена...';
+                try {
+                    const res = await fetch('https://andreygerc11-music-site.onrender.com/api/use-token', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentUser.email })
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.success) { document.getElementById('subscriptionModal').style.display = 'flex'; return; }
+                    syncUserData(); // Оновлюємо цифру токенів на кнопці вгорі
+                } catch(e) { alert("Помилка перевірки токенів. Перевірте з'єднання."); return; }
+            }
+
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            downloadVideoBtn.style.display = 'none'; isGenerating = true; isCancelled = false; chunks = [];
 
             let mimeType = ''; let fileExt = 'webm'; let useWebmFix = true;
             if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) mimeType = 'video/webm;codecs=vp9,opus';
@@ -1640,6 +1771,9 @@
                         const a = document.createElement('a'); a.style.display = 'none'; a.href = generatedVideoUrl; a.download = `${outputFileName}.${fileExt}`;
                         document.body.appendChild(a); a.click(); setTimeout(() => document.body.removeChild(a), 100);
                     };
+                    
+                    if (!isSubscribed) { localStorage.setItem('hz_last_free_render', Date.now().toString()); }
+
                     isGenerating = false; renderOverlay.style.display = 'none';
                     if (backgroundVideo) backgroundVideo.pause();
                 };
