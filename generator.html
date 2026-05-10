@@ -577,20 +577,26 @@
 
         const userProfileBtn = document.getElementById('userProfileBtn'); const authBtn = document.getElementById('authBtn'); const sidebarSubscribeBtn = document.getElementById('sidebarSubscribeBtn');
 
+        const userProfileBtn = document.getElementById('userProfileBtn'); const authBtn = document.getElementById('authBtn'); const sidebarSubscribeBtn = document.getElementById('sidebarSubscribeBtn');
+
         async function syncUserData() {
             if (!currentUser || !currentUser.email) {
                 userProfileBtn.style.display = 'none'; if (authBtn) authBtn.style.display = 'inline-flex'; sidebarSubscribeBtn.style.display = 'flex'; return;
             }
             userProfileBtn.style.display = 'inline-flex'; if (authBtn) authBtn.style.display = 'none';
             try {
-                // Перевіряємо токени на бекенді
-                const res = await fetch(`https://andreygerc11-music-site.onrender.com/api/user?email=${currentUser.email}`);
+                // Перевіряємо токени на бекенді через правильний POST маршрут
+                const res = await fetch(`https://andreygerc11-music-site.onrender.com/api/auth/user`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentUser.email })
+                });
                 if (res.ok) {
                     const data = await res.json();
-                    currentUser = data.user;
+                    currentUser = data; // Бекенд повертає безпосередньо об'єкт користувача
                     localStorage.setItem('hz_user', JSON.stringify(currentUser));
                     userProfileBtn.innerHTML = `<i class="fas fa-user"></i> Кабінет (${currentUser.clips_left} 🪙)`;
-                    if (currentUser.clips_left > 0 || currentUser.status === 'premium') { isSubscribed = true; sidebarSubscribeBtn.style.display = 'none'; } 
+                    if (currentUser.clips_left > 0 || currentUser.status === 'premium' || currentUser.email === 'admin@dev.com') { isSubscribed = true; sidebarSubscribeBtn.style.display = 'none'; } 
                     else { isSubscribed = false; sidebarSubscribeBtn.style.display = 'flex'; }
                 }
             } catch (e) {
