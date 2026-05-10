@@ -915,7 +915,7 @@
             directorScript = [];
             directorImages = [];
             
-            const sceneCards = document.querySelectorAll('.scene-card'); // <--- ОСЬ ЦЕЙ РЯДОК БУВ ЗАГУБЛЕНИЙ
+            const sceneCards = document.querySelectorAll('.scene-card'); 
             
             sceneCards.forEach((card) => {
                 const timeText = card.querySelector('.scene-time').innerText;
@@ -925,7 +925,7 @@
                 const parts = startTimeStr.split(':');
                 let startSeconds = 0;
                 if (parts.length === 2) {
-                    startSeconds = parseInt(parts[0]) * 60 + parseFloat(parts[1]); // parseFloat для мілісекунд
+                    startSeconds = parseInt(parts[0]) * 60 + parseFloat(parts[1]); 
                 } else if (parts.length === 3) {
                      startSeconds = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseFloat(parts[2]);
                 }
@@ -950,11 +950,13 @@
                 directorImages[index] = img;
             });
 
+            // ✅ ВИПРАВЛЕННЯ: Спочатку очищаємо фон, а ПОТІМ вмикаємо Режисера!
+            clearBackground(); 
+
             isDirectorMode = true;
             currentDirectorSceneIndex = 0;
             transitionProgress = 1;
             
-            clearBackground(); 
             removeBgBtn.style.display = 'flex';
             document.getElementById('downloadBgBtn').style.display = 'none';
             
