@@ -172,16 +172,22 @@
     </div>
 
     <script>
+        // Додаємо безпечний редирект для уникнення помилок в прев'ю
+        function safeRedirect(url) {
+            try {
+                window.location.href = url;
+            } catch (e) {
+                console.warn("Редирект заблоковано в середовищі попереднього перегляду:", e.message);
+                if (url.startsWith('http')) window.open(url, '_blank');
+            }
+        }
+
         // Перевірка авторизації
         let currentUser = null;
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
 
         if (!currentUser) {
-            if (window.location.protocol !== 'about:') {
-                window.location.href = "login.html";
-            } else {
-                console.warn("Редирект на сторінку входу заблоковано в середовищі попереднього перегляду.");
-            }
+            safeRedirect("login.html");
         } else {
             document.getElementById('userEmail').innerText = currentUser.email;
             document.getElementById('userInitial').innerText = currentUser.email.charAt(0).toUpperCase();
@@ -222,9 +228,9 @@
                     body: JSON.stringify({ email: currentUser.email }) 
                 });
                 const data = await res.json();
-                // Захист від порожніх URL
+                // Захист від порожніх URL та безпечний перехід
                 if (data && data.url && data.url.trim() !== '') { 
-                    window.location.href = data.url; 
+                    safeRedirect(data.url);
                 } else { 
                     alert('Помилка платежу. Сервер не надав правильне посилання.'); 
                     this.innerHTML = originalText; 
@@ -242,11 +248,7 @@
             if(confirm("Ви дійсно хочете вийти з акаунта?")) {
                 localStorage.removeItem('hz_user');
                 try { google.accounts.id.disableAutoSelect(); } catch(e) {}
-                if (window.location.protocol !== 'about:') {
-                    window.location.href = "login.html"; 
-                } else {
-                    console.warn("Редирект на сторінку входу заблоковано в середовищі попереднього перегляду.");
-                }
+                safeRedirect("login.html");
             }
         });
     </script>
