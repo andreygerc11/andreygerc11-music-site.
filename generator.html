@@ -915,17 +915,17 @@
             directorScript = [];
             directorImages = [];
             
-            const sceneCards = document.querySelectorAll('.scene-card');
             sceneCards.forEach((card) => {
                 const timeText = card.querySelector('.scene-time').innerText;
-                const startTimeStr = timeText.replace(/[^0-9:\-]/g, '').split('-')[0].trim();
+                // ВАЖЛИВО: додано крапку в регулярний вираз, щоб мілісекунди не губилися!
+                const startTimeStr = timeText.replace(/[^0-9:\-.]/g, '').split('-')[0].trim();
                 
                 const parts = startTimeStr.split(':');
                 let startSeconds = 0;
                 if (parts.length === 2) {
-                    startSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                    startSeconds = parseInt(parts[0]) * 60 + parseFloat(parts[1]); // parseFloat для мілісекунд
                 } else if (parts.length === 3) {
-                     startSeconds = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+                     startSeconds = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseFloat(parts[2]);
                 }
                 
                 const imgElement = card.querySelector('.scene-preview img');
