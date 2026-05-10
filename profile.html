@@ -177,7 +177,11 @@
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
 
         if (!currentUser) {
-            window.location.href = "login.html";
+            if (window.location.protocol !== 'about:') {
+                window.location.href = "login.html";
+            } else {
+                console.warn("Редирект на сторінку входу заблоковано в середовищі попереднього перегляду.");
+            }
         } else {
             document.getElementById('userEmail').innerText = currentUser.email;
             document.getElementById('userInitial').innerText = currentUser.email.charAt(0).toUpperCase();
@@ -218,10 +222,11 @@
                     body: JSON.stringify({ email: currentUser.email }) 
                 });
                 const data = await res.json();
-                if (data.url) { 
+                // Захист від порожніх URL
+                if (data && data.url && data.url.trim() !== '') { 
                     window.location.href = data.url; 
                 } else { 
-                    alert('Помилка платежу.'); 
+                    alert('Помилка платежу. Сервер не надав правильне посилання.'); 
                     this.innerHTML = originalText; 
                     this.disabled = false; 
                 }
@@ -237,7 +242,11 @@
             if(confirm("Ви дійсно хочете вийти з акаунта?")) {
                 localStorage.removeItem('hz_user');
                 try { google.accounts.id.disableAutoSelect(); } catch(e) {}
-                window.location.href = "login.html"; 
+                if (window.location.protocol !== 'about:') {
+                    window.location.href = "login.html"; 
+                } else {
+                    console.warn("Редирект на сторінку входу заблоковано в середовищі попереднього перегляду.");
+                }
             }
         });
     </script>
