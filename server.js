@@ -18,8 +18,8 @@ app.use(express.json({ limit: '50mb' }));
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
 // === ЗМІННІ З RENDER ===
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Ключ для ШІ-Режисера (Додай в Render)
+const GROQ_API_KEY = process.env.GROQ_API_KEY; // Залишається для генерації Блогу
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Ключ для ШІ-Режисера та Слуху
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO; 
@@ -327,7 +327,6 @@ app.post('/api/gemini/text', async (req, res) => {
     }
 
     try {
-        // Заміни URL у server.js на цей:
         const response = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
             payload,
@@ -354,7 +353,6 @@ app.post('/api/gemini/image', async (req, res) => {
 
     let user = usersDB.find(u => u.email === email);
     if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
-    // Токен не списуємо, бо ми вже списали його за весь "Кліп" (Storyboard)
 
     try {
         const response = await axios.post(
@@ -431,15 +429,15 @@ app.post('/api/pay', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Помилка оплати" }); }
 });
 
-// ОНОВЛЕНИЙ ПЛАТІЖ: 99 грн за 3 Кліпи (Генерації)
+// ПЛАТІЖ: 349 грн за 20 Кліпів
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         const { email } = req.body;
         if (!MONO_TOKEN) return res.json({ url: "https://send.monobank.ua/" });
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: 9900, // 99 грн
+            amount: 34900, // 349 грн
             ccy: 980, 
-            merchantPaymInfo: { destination: "Пакет: 3 Генерації Кліпу (Hertz Director)", reference: email },
+            merchantPaymInfo: { destination: "Пакет PRO: 20 Генерацій Кліпу", reference: email },
             redirectUrl: "https://golos-proty-raku.pp.ua/success.html", 
             webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
         }, { headers: { 'X-Token': MONO_TOKEN } });
@@ -488,11 +486,11 @@ app.post('/api/webhook', async (req, res) => {
                 // ЛОГІКА ДЛЯ КУПІВЛІ ПАКЕТУ КЛІПІВ (ПО EMAIL)
                 let user = usersDB.find(u => u.email === reference);
                 if (!user) {
-                    user = { email: reference, status: "premium", clips_left: 3 };
+                    user = { email: reference, status: "premium", clips_left: 20 };
                     usersDB.push(user);
                 } else {
                     user.status = "premium";
-                    user.clips_left = (user.clips_left || 0) + 3; // +3 КЛІПИ!
+                    user.clips_left = (user.clips_left || 0) + 20; // +20 КЛІПІВ
                 }
                 await saveUsersToGitHub();
                 console.log(`💰 УСПІШНА ОПЛАТА ПАКЕТУ! Email: ${reference}. Баланс: ${user.clips_left}`);
@@ -503,44 +501,60 @@ app.post('/api/webhook', async (req, res) => {
 });
 
 // ==========================================
-// СТАРИЙ ГЕНЕРАТОР (Очікується видалення фронтендом, але залишаємо для безпеки)
+// 5. РОЗПІЗНАВАННЯ АУДІО ЧЕРЕЗ GEMINI 2.5 FLASH (Заміна Whisper)
 // ==========================================
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
-        ffmpeg(inputPath).audioChannels(1).audioFrequency(16000).audioBitrate('64k').toFormat('mp3').on('end', () => resolve(outputPath)).on('error', reject).save(outputPath);
+        ffmpeg(inputPath).audioChannels(1).audioFrequency(16000).audioBitrate('32k').toFormat('mp3').on('end', () => resolve(outputPath)).on('error', reject).save(outputPath);
     });
 }
+
 app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
     let compressedPath = null;
     try {
+        if (!GEMINI_API_KEY) return res.status(500).json({ error: "Немає GEMINI_API_KEY" });
+
         compressedPath = req.file.path + '_comp.mp3';
+        // Стискаємо аудіо, щоб воно легко пройшло через API
         await compressAudio(req.file.path, compressedPath);
-        const formData = new FormData(); 
-        formData.append('file', fs.createReadStream(compressedPath)); 
-        formData.append('model', 'whisper-large-v3'); 
-        formData.append('language', 'uk');
-        formData.append('response_format', 'verbose_json');
-        const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, { 
-            headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, ...formData.getHeaders() } 
-        });
-        let lrcText = "";
-        if (response.data.segments && response.data.segments.length > 0) {
-            response.data.segments.forEach(seg => {
-                let mins = Math.floor(seg.start / 60); let secs = (seg.start % 60).toFixed(2);
-                lrcText += `[${mins < 10 ? '0'+mins : mins}:${secs < 10 ? '0'+secs : secs}] ${seg.text.trim()}\n`;
-            });
-        } else { lrcText = response.data.text; }
+        
+        // Читаємо файл і перетворюємо у Base64
+        const fileBuffer = fs.readFileSync(compressedPath);
+        const base64Audio = fileBuffer.toString('base64');
+
+        const payload = {
+            contents: [{
+                parts: [
+                    { text: "Ти експерт з транскрибації пісень. Уважно прослухай цей трек. Розпізнай слова пісні українською мовою і поверни їх у форматі LRC з точними таймкодами [MM:SS.xx] для кожного рядка. Відстань між рядками приблизно 5-10 секунд. ВИВЕДИ ТІЛЬКИ ТЕКСТ У ФОРМАТІ LRC, без жодних інших слів чи коментарів." },
+                    { inlineData: { mimeType: "audio/mp3", data: base64Audio } }
+                ]
+            }]
+        };
+
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            payload,
+            { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        let lrcText = response.data.candidates[0].content.parts[0].text;
+        
+        // Очищення від маркдауну, якщо Gemini додав ```
+        lrcText = lrcText.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
+
         res.json({ lrc: lrcText }); 
     } catch (error) { 
-        res.status(500).json({ error: "Whisper Error" }); 
+        console.error("Gemini Audio Error:", error?.response?.data || error.message);
+        res.status(500).json({ error: "Помилка розпізнавання ШІ (Gemini)" }); 
     } finally { 
+        // Видалення тимчасових файлів
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         if (compressedPath && fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
     }
 });
 
 // ==========================================
-// 6. АВТОМАТИЧНИЙ БЛОГ (Llama)
+// 6. АВТОМАТИЧНИЙ БЛОГ (Llama через Groq)
 // ==========================================
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
@@ -581,21 +595,13 @@ async function saveBlogToGitHub() {
 }
 
 const allBlogSources = [
-    { type: "news", url: "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en" },
-    { type: "news", url: "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en" },
-    { type: "news", url: "https://medicalxpress.com/rss-feed/cancer-news/" },
-    { type: "news", url: "https://www.sciencedaily.com/rss/health_medicine/cancer.xml" },
-    
-    { type: "psychology", url: "https://upoa.info/" },
-    { type: "psychology", url: "https://vartozhyty.com.ua/" },
-    { type: "psychology", url: "https://unci.org.ua/psyhologichna-pidtrymka" },
-    { type: "psychology", url: "https://mozhna.space/onko-psy" },
-    { type: "psychology", url: "https://www.cancercare.org/services" },
-    { type: "psychology", url: "https://www.cancersupportcommunity.org/" },
-    { type: "psychology", url: "https://apos-society.org/people-affected-by-cancer/resources-for-people-affected-by-cancer/" }
+    { type: "news", url: "[https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en)" },
+    { type: "news", url: "[https://medicalxpress.com/rss-feed/cancer-news/](https://medicalxpress.com/rss-feed/cancer-news/)" },
+    { type: "news", url: "[https://www.sciencedaily.com/rss/health_medicine/cancer.xml](https://www.sciencedaily.com/rss/health_medicine/cancer.xml)" }
 ];
 
 const psychologyTopics = [
@@ -608,11 +614,7 @@ const psychologyTopics = [
     "Як впоратися з емоційним вигоранням, якщо ви доглядаєте за онкохворим",
     "Техніки релаксації та дихання для зняття тривоги перед операцією",
     "Як зберегти позитивне мислення, коли здається, що надії немає",
-    "Вплив творчості та арт-терапії на одужання онкопацієнтів",
-    "Як реагувати на нетактовні питання та поради від оточуючих",
-    "Повернення до роботи та соціуму після тривалого лікування",
-    "Як знайти сенс життя та нові цілі після боротьби з хворобою",
-    "Чому плакати та злитися — це нормально і як безпечно проживати емоції"
+    "Вплив творчості та арт-терапії на одужання онкопацієнтів"
 ];
 
 async function fetchAndRewriteBlog() {
@@ -653,7 +655,7 @@ async function fetchAndRewriteBlog() {
                 
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { 
@@ -691,14 +693,12 @@ async function fetchAndRewriteBlog() {
                         const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
                         const tgText = `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
                         await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
-                    } catch (tgErr) { console.error("Помилка ТГ:", tgErr.message); }
+                    } catch (tgErr) {}
                 }
 
                 await new Promise(r => setTimeout(r, 6000)); 
             }
-        } catch (e) {
-            console.log("Помилка читання RSS");
-        }
+        } catch (e) { }
     }
 
     let psychAddedThisRun = 0;
@@ -716,7 +716,7 @@ async function fetchAndRewriteBlog() {
         console.log(`🫂 Генерую підтримку на тему: ${selectedTopic}`);
 
         try {
-            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+            const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
                 model: "llama-3.3-70b-versatile",
                 messages: [
                     { 
@@ -756,9 +756,7 @@ async function fetchAndRewriteBlog() {
             
             await new Promise(r => setTimeout(r, 6000)); 
 
-        } catch (e) {
-            console.log("Помилка генерації психології");
-        }
+        } catch (e) {}
     }
 
     if (addedCount > 0) {
@@ -778,12 +776,10 @@ app.get('/api/blog', (req, res) => {
 // ==========================================
 const PORT = process.env.PORT || 10000;
 
-// ТЕПЕР ЗАВАНТАЖУЄМО 3 РЕЧІ: Блог, Користувачів та Пісні з Drive
 Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub()]).then(() => {
     app.listen(PORT, () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
 
-        // Запуск перевірки блогу при старті
         setTimeout(fetchAndRewriteBlog, 30000);
 
         function scheduleChecks() {
