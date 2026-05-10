@@ -236,10 +236,9 @@
         }
     </style>
 </head>
-
 <body>
 
-    <header class="top-bar">
+<header class="top-bar">
         <div class="top-left">
             <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> На головну</a>
             <a href="#" class="logo">HERTZ <span>SPECTRUM 2.0</span></a>
@@ -635,9 +634,7 @@
                     if(bgBtn) bgBtn.style.display = 'flex';
                     if (typeof drawPreviewFrame === 'function') setTimeout(drawPreviewFrame, 1000); 
                 }
-            } catch(e) {
-                console.error("Помилка завантаження сценарію", e);
-            }
+            } catch(e) { console.error("Помилка завантаження сценарію", e); }
         }
 
         if (new URLSearchParams(window.location.search).get('mode') === 'director') {
@@ -956,7 +953,7 @@
             }
         }
 
-        // === МАГІЧНИЙ АВТО-СТИЛЬ ===
+// === МАГІЧНИЙ АВТО-СТИЛЬ ===
         document.getElementById('magicStyleBtn').addEventListener('click', async () => {
             const title = document.getElementById('songTitleInput').value || 'Енергійна музика'; const lyrics = document.getElementById('lyricsInput').value.substring(0, 500); 
             const btn = document.getElementById('magicStyleBtn'); const originalText = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Аналізую вібрації...'; btn.disabled = true;
@@ -971,7 +968,8 @@
                 }
             } catch (e) { alert("Не вдалося підібрати стиль. Спробуйте ще раз."); btn.innerHTML = originalText; btn.disabled = false; }
         });
-// === ПОКРАЩЕННЯ ПРОМПТУ ФОНУ ===
+
+        // === ПОКРАЩЕННЯ ПРОМПТУ ФОНУ ===
         document.getElementById('enhancePromptBtn').addEventListener('click', async () => {
             const promptInput = document.getElementById('customAiPrompt'); let basePrompt = promptInput.value.trim(); if (!basePrompt) basePrompt = document.getElementById('songTitleInput').value.trim() || 'epic abstract music background';
             const btn = document.getElementById('enhancePromptBtn'); const originalText = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
@@ -981,57 +979,7 @@
             } catch(e) { console.error(e); } finally { btn.innerHTML = originalText; btn.disabled = false; }
         });
 
-        // === ВСІ ФУНКЦІЇ МАЛЮВАННЯ ===
-        function drawTextOverlay(minDimension) {
-            const titleText = songTitleInput.value.trim(); const authorText = authorInput.value.trim();
-            if (titleText || authorText) {
-                ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
-                const padding = minDimension * 0.05; const maxWidthTitle = canvas.width - (padding * 2); const centerXText = (canvas.width / 2) + textOffsetX;
-                let startY = (canvas.height * 0.18) + textOffsetY; let currentY = startY; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 15; let totalHeight = 0; let maxLineWidth = 0;
-                if (titleText) {
-                    const titleSize = minDimension * 0.065; ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`; ctx.fillStyle = '#fff';
-                    let words = titleText.split(' '); let line = ''; let lineHeight = titleSize * 1.3;
-                    for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthTitle && n > 0) { ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); line = words[n] + ' '; currentY += lineHeight; totalHeight += lineHeight; } else { line = testLine; } }
-                    ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); currentY += lineHeight; totalHeight += lineHeight;
-                }
-                if (authorText) {
-                    const authorSize = minDimension * 0.04; ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`; ctx.fillStyle = '#bbb';
-                    let words = (`Відео: ${authorText}`).split(' '); let line = ''; let lineHeight = authorSize * 1.3;
-                    for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthTitle && n > 0) { ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); line = words[n] + ' '; currentY += lineHeight; totalHeight += lineHeight; } else { line = testLine; } }
-                    ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); totalHeight += lineHeight;
-                }
-                ctx.restore(); textBB = { x: centerXText - (maxLineWidth / 2) - 30, y: startY - (minDimension * 0.065 / 2) - 20, w: maxLineWidth + 60, h: totalHeight + 40 };
-            } else { textBB = { x: 0, y: 0, w: 0, h: 0 }; }
-
-            let activeText = ""; let currentTime = audioPlayer ? audioPlayer.currentTime : 0;
-            if (lyricsData.length > 0) { for (let i = 0; i < lyricsData.length; i++) { if (currentTime >= lyricsData[i].time) { activeText = lyricsData[i].text; } } }
-            
-            if (!isGenerating && activeText === "" && (document.getElementById('lyricsInput').value.trim() !== "" || lyricsData.length > 0)) { 
-                ctx.save(); ctx.globalAlpha = 0.5; const fontSize = minDimension * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                const centerXText = (canvas.width / 2) + lyricsOffsetX; const startY = (canvas.height * 0.85) + lyricsOffsetY;
-                ctx.strokeStyle = '#000'; ctx.lineWidth = fontSize * 0.15; ctx.strokeText("🎵 Перетягніть текст сюди", centerXText, startY); ctx.fillStyle = '#fff'; ctx.fillText("🎵 Перетягніть текст сюди", centerXText, startY);
-                const maxLyricsWidth = ctx.measureText("🎵 Перетягніть текст сюди").width; lyricsBB = { x: centerXText - (maxLyricsWidth / 2) - 30, y: startY - (fontSize / 2) - 20, w: maxLyricsWidth + 60, h: (fontSize * 1.3) + 40 }; ctx.restore(); return; 
-            }
-
-            if (activeText !== "") {
-                ctx.save(); const fontSize = minDimension * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const padding = minDimension * 0.05; const maxWidthLyrics = canvas.width - (padding * 2); const centerXText = (canvas.width / 2) + lyricsOffsetX;
-                let words = activeText.split(' '); let line = ''; let linesToDraw = [];
-                for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthLyrics && n > 0) { linesToDraw.push(line.trim()); line = words[n] + ' '; } else { line = testLine; } }
-                linesToDraw.push(line.trim()); const lineHeight = fontSize * 1.3; let startY = (canvas.height * 0.85) - (linesToDraw.length - 1) * lineHeight + lyricsOffsetY; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 15; ctx.lineWidth = fontSize * 0.15; let maxLyricsWidth = 0;
-                for (let i = 0; i < linesToDraw.length; i++) { const currentLineY = startY + (i * lineHeight); ctx.strokeStyle = '#000'; ctx.strokeText(linesToDraw[i], centerXText, currentLineY); ctx.fillStyle = '#fff'; ctx.shadowColor = primaryColor; ctx.shadowBlur = 25; ctx.fillText(linesToDraw[i], centerXText, currentLineY); maxLyricsWidth = Math.max(maxLyricsWidth, ctx.measureText(linesToDraw[i]).width); }
-                ctx.restore(); lyricsBB = { x: centerXText - (maxLyricsWidth / 2) - 30, y: startY - (fontSize / 2) - 20, w: maxLyricsWidth + 60, h: (linesToDraw.length * lineHeight) + 40 };
-            } else { lyricsBB = { x: 0, y: 0, w: 0, h: 0 }; }
-        }
-
-        function drawHoverIndicators(minDimension) {
-            if (!isGenerating) {
-                if (logoState.isHovering) { ctx.save(); ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY); ctx.scale(spectrumState.scale, spectrumState.scale); const drawW = logoState.width * logoState.scale; const drawH = logoState.height * logoState.scale; ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3 / spectrumState.scale; ctx.setLineDash([10 / spectrumState.scale, 10 / spectrumState.scale]); ctx.strokeRect(logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH); ctx.restore(); }
-                if (isHoveringText && textBB.w > 0) { ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(textBB.x, textBB.y, textBB.w, textBB.h); ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Назва', textBB.x + textBB.w / 2, textBB.y - 15); ctx.restore(); }
-                if (isHoveringLyrics && lyricsBB.w > 0) { ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(lyricsBB.x, lyricsBB.y, lyricsBB.w, lyricsBB.h); ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Караоке', lyricsBB.x + lyricsBB.w / 2, lyricsBB.y - 15); ctx.restore(); }
-                if (spectrumState.isHovering && !logoState.isHovering) { const cx = canvas.width / 2 + spectrumState.offsetX; const cy = canvas.height / 2 + spectrumState.offsetY; const specHitSize = minDimension * 0.4 * spectrumState.scale; ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(cx - specHitSize, cy - specHitSize, specHitSize * 2, specHitSize * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Спектр', cx, cy - specHitSize - 15); ctx.restore(); }
-            }
-        }
-
+        // === ВСІ ФУНКЦІЇ МАЛЮВАННЯ ТА ЧАСТИНКИ ===
         function createParticle(typeOption) {
             const typesList = ['bubble', 'snow', 'rain', 'heart', 'star', 'firefly', 'dust', 'note', 'lightning', 'spark', 'confetti', 'triangle', 'diamond', 'cross', 'meteor', 'fire', 'smoke', 'matrix', 'leaf']; let t = typeOption === 'mixed' ? typesList[Math.floor(Math.random() * typesList.length)] : typeOption; const minDim = Math.min(canvas.width, canvas.height);
             let p = { x: Math.random() * canvas.width, y: Math.random() * canvas.height, startX: Math.random() * canvas.width, size: Math.max(0.5, Math.random() * (minDim * 0.015) + (minDim * 0.005)), vx: 0, vy: 0, gravity: 0, friction: 1, life: 1, maxLife: 100, length: 0, type: t, opacity: Math.random() * 0.5 + 0.2, angle: Math.random() * Math.PI * 2, spin: 0, color: 'white', char: '', wobbleSpeed: Math.random() * 0.05, wobbleAmp: Math.random() * 50, path: [] };
@@ -1082,7 +1030,6 @@
         function drawPreviewFrame() {
             if (!audioCtx) {
                 if (audioPlayer && isDirectorMode) checkDirectorScene(audioPlayer.currentTime);
-
                 ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height); const centerX = canvas.width / 2; const centerY = canvas.height / 2; ctx.save();
                 if (bgBlurSlider.value > 0) { ctx.filter = `blur(${bgBlurSlider.value}px)`; }
                 ctx.translate(centerX, centerY);
@@ -1100,23 +1047,13 @@
                 ctx.restore();
                 if (backgroundVideo || backgroundImage) { ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
                 
-                ctx.save();
-                ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY); ctx.scale(spectrumState.scale, spectrumState.scale);
+                ctx.save(); ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY); ctx.scale(spectrumState.scale, spectrumState.scale);
                 
                 const dummyData = new Uint8Array(512); for(let i=0; i<512; i++) dummyData[i] = 100;
                 const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
-                
                 ctx.globalAlpha = 0.4;
                 
-                if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); 
-                else if (style === 'circle_bars') drawCircleBars(dummyData, minDimension, 512, 50); 
-                else if (style === 'linear_bars') drawLinearBars(dummyData, minDimension, 512); 
-                else if (style === 'linear_curve') drawLinearCurve(dummyData, minDimension, 512); 
-                else if (style === 'linear_symmetry') drawLinearSymmetry(dummyData, minDimension, 512);
-                else if (style === 'circle_dots') drawCircleDots(dummyData, minDimension, 512, 50);
-                else if (style === 'hexagon_bars') drawHexagonBars(dummyData, minDimension, 512, 50);
-                else if (style === 'wave_filled') drawWaveFilled(dummyData, minDimension, 512);
-
+                if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); else if (style === 'circle_bars') drawCircleBars(dummyData, minDimension, 512, 50); else if (style === 'linear_bars') drawLinearBars(dummyData, minDimension, 512); else if (style === 'linear_curve') drawLinearCurve(dummyData, minDimension, 512); else if (style === 'linear_symmetry') drawLinearSymmetry(dummyData, minDimension, 512); else if (style === 'circle_dots') drawCircleDots(dummyData, minDimension, 512, 50); else if (style === 'hexagon_bars') drawHexagonBars(dummyData, minDimension, 512, 50); else if (style === 'wave_filled') drawWaveFilled(dummyData, minDimension, 512);
                 ctx.globalAlpha = 1.0;
 
                 if (logoImage) { const drawW = logoState.width * logoState.scale; const drawH = logoState.height * logoState.scale; ctx.drawImage(logoImage, logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH); }
@@ -1126,27 +1063,12 @@
 
         function draw() {
             if (!isGenerating) { drawAnimationId = requestAnimationFrame(draw); }
-            const bufferLength = analyser.frequencyBinCount; const dataArray = new Uint8Array(bufferLength); analyser.getByteFrequencyData(dataArray);
-            let bassSum = 0; for(let i = 0; i < 15; i++) bassSum += dataArray[i]; let avgBass = bassSum / 15;
-
+            const bufferLength = analyser.frequencyBinCount; const dataArray = new Uint8Array(bufferLength); analyser.getByteFrequencyData(dataArray); let bassSum = 0; for(let i = 0; i < 15; i++) bassSum += dataArray[i]; let avgBass = bassSum / 15;
             if (isDirectorMode && audioPlayer) { checkDirectorScene(audioPlayer.currentTime); }
+            ctx.fillStyle = '#0a0a0b'; ctx.fillRect(0, 0, canvas.width, canvas.height); const centerX = canvas.width / 2; const centerY = canvas.height / 2; let bgScale = 1 + (avgBass / 255) * 0.08; 
 
-            ctx.fillStyle = '#0a0a0b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const centerX = canvas.width / 2; const centerY = canvas.height / 2; let bgScale = 1 + (avgBass / 255) * 0.08; 
-
-            ctx.save();
-            if (bgBlurSlider.value > 0) { ctx.filter = `blur(${bgBlurSlider.value}px)`; }
-            ctx.translate(centerX, centerY); ctx.scale(bgScale, bgScale);
-            
-            if (backgroundVideo && backgroundVideo.readyState >= 2) { 
-                drawMediaCover(ctx, backgroundVideo, true); 
-            } else if (backgroundImage) { 
-                let t = audioPlayer ? audioPlayer.currentTime : 0;
-                if (prevBackgroundImage && bgTransitionStartTime >= 0 && (t - bgTransitionStartTime) < BG_TRANSITION_DURATION && (t - bgTransitionStartTime) >= 0) {
-                    let progress = (t - bgTransitionStartTime) / BG_TRANSITION_DURATION; drawMediaCover(ctx, prevBackgroundImage, false); ctx.globalAlpha = progress; drawMediaCover(ctx, backgroundImage, false); ctx.globalAlpha = 1.0;
-                } else { drawMediaCover(ctx, backgroundImage, false); }
-            }
-
+            ctx.save(); if (bgBlurSlider.value > 0) { ctx.filter = `blur(${bgBlurSlider.value}px)`; } ctx.translate(centerX, centerY); ctx.scale(bgScale, bgScale);
+            if (backgroundVideo && backgroundVideo.readyState >= 2) { drawMediaCover(ctx, backgroundVideo, true); } else if (backgroundImage) { let t = audioPlayer ? audioPlayer.currentTime : 0; if (prevBackgroundImage && bgTransitionStartTime >= 0 && (t - bgTransitionStartTime) < BG_TRANSITION_DURATION && (t - bgTransitionStartTime) >= 0) { let progress = (t - bgTransitionStartTime) / BG_TRANSITION_DURATION; drawMediaCover(ctx, prevBackgroundImage, false); ctx.globalAlpha = progress; drawMediaCover(ctx, backgroundImage, false); ctx.globalAlpha = 1.0; } else { drawMediaCover(ctx, backgroundImage, false); } }
             ctx.restore(); if (backgroundVideo || backgroundImage) { ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
             handleParticles(avgBass);
@@ -1155,84 +1077,49 @@
             const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
             ctx.save(); ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY); ctx.scale(spectrumState.scale, spectrumState.scale);
             
-            if (style === 'circle_sharp') drawCircleSharp(dataArray, minDimension, bufferLength, avgBass); 
-            else if (style === 'circle_bars') drawCircleBars(dataArray, minDimension, bufferLength, avgBass); 
-            else if (style === 'linear_bars') drawLinearBars(dataArray, minDimension, bufferLength); 
-            else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength); 
-            else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength);
-            else if (style === 'circle_dots') drawCircleDots(dataArray, minDimension, bufferLength, avgBass);
-            else if (style === 'hexagon_bars') drawHexagonBars(dataArray, minDimension, bufferLength, avgBass);
-            else if (style === 'wave_filled') drawWaveFilled(dataArray, minDimension, bufferLength);
+            if (style === 'circle_sharp') drawCircleSharp(dataArray, minDimension, bufferLength, avgBass); else if (style === 'circle_bars') drawCircleBars(dataArray, minDimension, bufferLength, avgBass); else if (style === 'linear_bars') drawLinearBars(dataArray, minDimension, bufferLength); else if (style === 'linear_curve') drawLinearCurve(dataArray, minDimension, bufferLength); else if (style === 'linear_symmetry') drawLinearSymmetry(dataArray, minDimension, bufferLength); else if (style === 'circle_dots') drawCircleDots(dataArray, minDimension, bufferLength, avgBass); else if (style === 'hexagon_bars') drawHexagonBars(dataArray, minDimension, bufferLength, avgBass); else if (style === 'wave_filled') drawWaveFilled(dataArray, minDimension, bufferLength);
 
             if (logoImage) { const logoPulse = 1 + (avgBass / 255) * 0.15; const drawW = logoState.width * logoState.scale * logoPulse; const drawH = logoState.height * logoState.scale * logoPulse; ctx.drawImage(logoImage, logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH); }
             ctx.restore(); drawTextOverlay(minDimension); drawHoverIndicators(minDimension);
 
-            if (!isSubscribed) {
-                ctx.save(); ctx.globalAlpha = 0.6; const wmText = "Hertz Spectrum"; const wmFontSize = minDimension * 0.025; ctx.font = `800 ${wmFontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-                const padding = minDimension * 0.05; const logoSize = wmFontSize * 1.5; const textX = canvas.width - padding; const wmStartY = padding + logoSize / 2;
-                ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 10; ctx.fillText(wmText, textX, wmStartY);
-                const textWidth = ctx.measureText(wmText).width; const logoX = textX - textWidth - logoSize - 10;
-                if (watermarkImg.complete && watermarkImg.naturalWidth > 0) { ctx.drawImage(watermarkImg, logoX, wmStartY - logoSize/2, logoSize, logoSize); }
-                ctx.restore();
+            if (!isSubscribed) { ctx.save(); ctx.globalAlpha = 0.6; const wmText = "Hertz Spectrum"; const wmFontSize = minDimension * 0.025; ctx.font = `800 ${wmFontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; const padding = minDimension * 0.05; const logoSize = wmFontSize * 1.5; const textX = canvas.width - padding; const wmStartY = padding + logoSize / 2; ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 10; ctx.fillText(wmText, textX, wmStartY); const textWidth = ctx.measureText(wmText).width; const logoX = textX - textWidth - logoSize - 10; if (watermarkImg.complete && watermarkImg.naturalWidth > 0) { ctx.drawImage(watermarkImg, logoX, wmStartY - logoSize/2, logoSize, logoSize); } ctx.restore(); }
+        }
+
+        function drawCircleSharp(dataArray, minDimension, bufferLength, avgBass) { const centerX = 0; const centerY = 0; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15); const pointsCount = 60; const usefulDataLength = Math.floor(bufferLength * 0.65); let pointsRight = []; let pointsLeft = []; for (let i = 0; i <= pointsCount; i++) { let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = dataArray[dataIndex] || 0; let cleanVal = Math.max(0, val - 35); let normalized = cleanVal / 220; let eqBoost = 1 + (ratio * 2.5); let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.15 * eqBoost; let dist = pulsatingLogoRadius + barHeight; let angleR = (Math.PI / 2) - ratio * Math.PI; pointsRight.push({x: centerX + Math.cos(angleR) * dist, y: centerY + Math.sin(angleR) * dist}); let angleL = (Math.PI / 2) + ratio * Math.PI; pointsLeft.push({x: centerX + Math.cos(angleL) * dist, y: centerY + Math.sin(angleL) * dist}); } ctx.beginPath(); ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.moveTo(pointsRight[0].x, pointsRight[0].y); for(let j = 1; j < pointsRight.length; j++) ctx.lineTo(pointsRight[j].x, pointsRight[j].y); for(let j = pointsLeft.length - 2; j >= 0; j--) ctx.lineTo(pointsLeft[j].x, pointsLeft[j].y); ctx.closePath(); let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor); ctx.strokeStyle = gradient; ctx.lineWidth = minDimension * 0.008; ctx.shadowBlur = (20 + (avgBass * 0.1)) * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0; }
+        function drawCircleBars(dataArray, minDimension, bufferLength, avgBass) { const centerX = 0; const centerY = 0; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15); const pointsCount = 70; const usefulDataLength = Math.floor(bufferLength * 0.65); let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor); ctx.strokeStyle = gradient; ctx.lineWidth = minDimension * 0.009; ctx.lineCap = 'round'; ctx.shadowBlur = 5 * glowSlider.value; ctx.shadowColor = primaryColor; for (let i = 0; i < pointsCount; i++) { let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = dataArray[dataIndex] || 0; let cleanVal = Math.max(0, val - 30); let normalized = cleanVal / 225; let boost = 1 + (ratio * 2.0); let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.2 * boost; if (barHeight < 2) barHeight = 2; let angleR = (Math.PI / 2) - ratio * Math.PI; ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5)); ctx.lineTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5 + barHeight)); ctx.stroke(); if (i !== 0 && i !== pointsCount - 1) { let angleL = (Math.PI / 2) + ratio * Math.PI; ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5)); ctx.lineTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5 + barHeight)); ctx.stroke(); } } ctx.shadowBlur = 0; }
+        function drawLinearBars(dataArray, minDimension, bufferLength) { const usefulLength = Math.floor(bufferLength * 0.7); const barWidth = canvas.width / usefulLength; const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor); ctx.fillStyle = gradient; ctx.shadowBlur = 10 * glowSlider.value; ctx.shadowColor = primaryColor; for (let i = 0; i < usefulLength; i++) { const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6 * sharpnessSlider.value; ctx.fillRect((i * barWidth) - canvas.width/2, canvas.height/2 - barHeightScaled, barWidth - 2, barHeightScaled); } ctx.shadowBlur = 0; }
+        function drawLinearCurve(dataArray, minDimension, bufferLength) { const usefulLength = Math.floor(bufferLength * 0.7); const sliceWidth = canvas.width / (usefulLength - 1); const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor); ctx.beginPath(); ctx.moveTo(-canvas.width/2, canvas.height/2); for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.5); const y = canvas.height/2 - (v * canvas.height * 0.5 * sharpnessSlider.value); const x = (i * sliceWidth) - canvas.width/2; ctx.lineTo(x, y); } ctx.lineTo(canvas.width/2, canvas.height/2); ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = gradient; ctx.lineJoin = 'round'; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0; }
+        function drawLinearSymmetry(dataArray, minDimension, bufferLength) { const usefulLength = Math.floor(bufferLength * 0.65); const sliceWidth = canvas.width / (usefulLength * 2); const centerY = 0; const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor); ctx.beginPath(); for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY - amplitude); else ctx.lineTo(x, centerY - amplitude); } for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY - amplitude); } ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = gradient; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0; ctx.beginPath(); for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY + amplitude); else ctx.lineTo(x, centerY + amplitude); } for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY + amplitude); } ctx.stroke(); }
+        function drawCircleDots(dataArray, minDimension, bufferLength, avgBass) { const baseRadius = minDimension * 0.16 + (avgBass * 0.15); const pointsCount = 70; const usefulDataLength = Math.floor(bufferLength * 0.65); ctx.shadowBlur = 10 * glowSlider.value; for (let i = 0; i < pointsCount; i++) { let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = Math.max(0, (dataArray[dataIndex] || 0) - 30); let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.2; let angle = (i / pointsCount) * Math.PI * 2 - Math.PI / 2; let dist = baseRadius + barHeight; let x = Math.cos(angle) * dist; let y = Math.sin(angle) * dist; let dotSize = 2 + (val / 255) * 8; ctx.beginPath(); ctx.arc(x, y, dotSize, 0, Math.PI * 2); ctx.fillStyle = i % 2 === 0 ? primaryColor : secondaryColor; ctx.shadowColor = ctx.fillStyle; ctx.fill(); } ctx.shadowBlur = 0; }
+        function drawHexagonBars(dataArray, minDimension, bufferLength, avgBass) { const baseRadius = minDimension * 0.18 + (avgBass * 0.1); const sides = 6; const barsPerSide = 12; const totalBars = sides * barsPerSide; const usefulDataLength = Math.floor(bufferLength * 0.6); ctx.shadowBlur = 15 * glowSlider.value; ctx.lineWidth = 3; ctx.lineCap = 'round'; for (let s = 0; s < sides; s++) { let angleStart = (s / sides) * Math.PI * 2 - Math.PI / 2; let angleEnd = ((s + 1) / sides) * Math.PI * 2 - Math.PI / 2; let x1 = Math.cos(angleStart) * baseRadius; let y1 = Math.sin(angleStart) * baseRadius; let x2 = Math.cos(angleEnd) * baseRadius; let y2 = Math.sin(angleEnd) * baseRadius; for (let i = 0; i < barsPerSide; i++) { let ratio = i / barsPerSide; let dataIndex = Math.floor((s * barsPerSide + i) / totalBars * usefulDataLength); let val = Math.max(0, (dataArray[dataIndex] || 0) - 30); let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.25; let bx = x1 + (x2 - x1) * ratio; let by = y1 + (y2 - y1) * ratio; let angleOut = Math.atan2(by, bx); let endX = bx + Math.cos(angleOut) * barHeight; let endY = by + Math.sin(angleOut) * barHeight; ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(endX, endY); ctx.strokeStyle = s % 2 === 0 ? primaryColor : secondaryColor; ctx.shadowColor = ctx.strokeStyle; ctx.stroke(); } } ctx.shadowBlur = 0; }
+        function drawWaveFilled(dataArray, minDimension, bufferLength) { const usefulDataLength = Math.floor(bufferLength * 0.7); const width = canvas.width; const startX = -width / 2; const step = width / (usefulDataLength - 1); ctx.shadowBlur = 20 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.beginPath(); ctx.moveTo(startX, 0); for (let i = 0; i < usefulDataLength; i++) { let val = Math.max(0, (dataArray[i] || 0) - 20); let height = Math.pow(val / 255, 1.4) * minDimension * sharpnessSlider.value * 0.4; let x = startX + i * step; ctx.lineTo(x, -height); } ctx.lineTo(startX + width, 0); ctx.closePath(); let grad = ctx.createLinearGradient(0, -minDimension * 0.4, 0, 0); grad.addColorStop(0, primaryColor); grad.addColorStop(1, 'rgba(0,0,0,0.1)'); ctx.fillStyle = grad; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = secondaryColor; ctx.stroke(); ctx.shadowBlur = 0; }
+
+        function drawTextOverlay(minDimension) {
+            const titleText = songTitleInput.value.trim(); const authorText = authorInput.value.trim();
+            if (titleText || authorText) {
+                ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+                const padding = minDimension * 0.05; const maxWidthTitle = canvas.width - (padding * 2); const centerXText = (canvas.width / 2) + textOffsetX;
+                let startY = (canvas.height * 0.18) + textOffsetY; let currentY = startY; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 15; let totalHeight = 0; let maxLineWidth = 0;
+                if (titleText) { const titleSize = minDimension * 0.065; ctx.font = `900 ${titleSize}px 'Montserrat', sans-serif`; ctx.fillStyle = '#fff'; let words = titleText.split(' '); let line = ''; let lineHeight = titleSize * 1.3; for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthTitle && n > 0) { ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); line = words[n] + ' '; currentY += lineHeight; totalHeight += lineHeight; } else { line = testLine; } } ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); currentY += lineHeight; totalHeight += lineHeight; }
+                if (authorText) { const authorSize = minDimension * 0.04; ctx.font = `600 ${authorSize}px 'Montserrat', sans-serif`; ctx.fillStyle = '#bbb'; let words = (`Відео: ${authorText}`).split(' '); let line = ''; let lineHeight = authorSize * 1.3; for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthTitle && n > 0) { ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); line = words[n] + ' '; currentY += lineHeight; totalHeight += lineHeight; } else { line = testLine; } } ctx.fillText(line.trim(), centerXText, currentY); maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line.trim()).width); totalHeight += lineHeight; }
+                ctx.restore(); textBB = { x: centerXText - (maxLineWidth / 2) - 30, y: startY - (minDimension * 0.065 / 2) - 20, w: maxLineWidth + 60, h: totalHeight + 40 };
+            } else { textBB = { x: 0, y: 0, w: 0, h: 0 }; }
+
+            let activeText = ""; let currentTime = audioPlayer ? audioPlayer.currentTime : 0;
+            if (lyricsData.length > 0) { for (let i = 0; i < lyricsData.length; i++) { if (currentTime >= lyricsData[i].time) { activeText = lyricsData[i].text; } } }
+            
+            if (!isGenerating && activeText === "" && (document.getElementById('lyricsInput').value.trim() !== "" || lyricsData.length > 0)) { ctx.save(); ctx.globalAlpha = 0.5; const fontSize = minDimension * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const centerXText = (canvas.width / 2) + lyricsOffsetX; const startY = (canvas.height * 0.85) + lyricsOffsetY; ctx.strokeStyle = '#000'; ctx.lineWidth = fontSize * 0.15; ctx.strokeText("🎵 Перетягніть текст сюди", centerXText, startY); ctx.fillStyle = '#fff'; ctx.fillText("🎵 Перетягніть текст сюди", centerXText, startY); const maxLyricsWidth = ctx.measureText("🎵 Перетягніть текст сюди").width; lyricsBB = { x: centerXText - (maxLyricsWidth / 2) - 30, y: startY - (fontSize / 2) - 20, w: maxLyricsWidth + 60, h: (fontSize * 1.3) + 40 }; ctx.restore(); return; }
+
+            if (activeText !== "") { ctx.save(); const fontSize = minDimension * 0.055; ctx.font = `900 ${fontSize}px 'Montserrat', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const padding = minDimension * 0.05; const maxWidthLyrics = canvas.width - (padding * 2); const centerXText = (canvas.width / 2) + lyricsOffsetX; let words = activeText.split(' '); let line = ''; let linesToDraw = []; for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; let metrics = ctx.measureText(testLine); if (metrics.width > maxWidthLyrics && n > 0) { linesToDraw.push(line.trim()); line = words[n] + ' '; } else { line = testLine; } } linesToDraw.push(line.trim()); const lineHeight = fontSize * 1.3; let startY = (canvas.height * 0.85) - (linesToDraw.length - 1) * lineHeight + lyricsOffsetY; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 15; ctx.lineWidth = fontSize * 0.15; let maxLyricsWidth = 0; for (let i = 0; i < linesToDraw.length; i++) { const currentLineY = startY + (i * lineHeight); ctx.strokeStyle = '#000'; ctx.strokeText(linesToDraw[i], centerXText, currentLineY); ctx.fillStyle = '#fff'; ctx.shadowColor = primaryColor; ctx.shadowBlur = 25; ctx.fillText(linesToDraw[i], centerXText, currentLineY); maxLyricsWidth = Math.max(maxLyricsWidth, ctx.measureText(linesToDraw[i]).width); } ctx.restore(); lyricsBB = { x: centerXText - (maxLyricsWidth / 2) - 30, y: startY - (fontSize / 2) - 20, w: maxLyricsWidth + 60, h: (linesToDraw.length * lineHeight) + 40 }; } else { lyricsBB = { x: 0, y: 0, w: 0, h: 0 }; }
+        }
+
+        function drawHoverIndicators(minDimension) {
+            if (!isGenerating) {
+                if (logoState.isHovering) { ctx.save(); ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY); ctx.scale(spectrumState.scale, spectrumState.scale); const drawW = logoState.width * logoState.scale; const drawH = logoState.height * logoState.scale; ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3 / spectrumState.scale; ctx.setLineDash([10 / spectrumState.scale, 10 / spectrumState.scale]); ctx.strokeRect(logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH); ctx.restore(); }
+                if (isHoveringText && textBB.w > 0) { ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(textBB.x, textBB.y, textBB.w, textBB.h); ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Назва', textBB.x + textBB.w / 2, textBB.y - 15); ctx.restore(); }
+                if (isHoveringLyrics && lyricsBB.w > 0) { ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(lyricsBB.x, lyricsBB.y, lyricsBB.w, lyricsBB.h); ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Караоке', lyricsBB.x + lyricsBB.w / 2, lyricsBB.y - 15); ctx.restore(); }
+                if (spectrumState.isHovering && !logoState.isHovering) { const cx = canvas.width / 2 + spectrumState.offsetX; const cy = canvas.height / 2 + spectrumState.offsetY; const specHitSize = minDimension * 0.4 * spectrumState.scale; ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(cx - specHitSize, cy - specHitSize, specHitSize * 2, specHitSize * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.font = '900 18px "Montserrat"'; ctx.textAlign = 'center'; ctx.fillText('Спектр', cx, cy - specHitSize - 15); ctx.restore(); }
             }
-        }
-
-        function drawCircleSharp(dataArray, minDimension, bufferLength, avgBass) {
-            const centerX = 0; const centerY = 0; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15); const pointsCount = 60; const usefulDataLength = Math.floor(bufferLength * 0.65); let pointsRight = []; let pointsLeft = [];
-            for (let i = 0; i <= pointsCount; i++) { let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = dataArray[dataIndex] || 0; let cleanVal = Math.max(0, val - 35); let normalized = cleanVal / 220; let eqBoost = 1 + (ratio * 2.5); let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.15 * eqBoost; let dist = pulsatingLogoRadius + barHeight; let angleR = (Math.PI / 2) - ratio * Math.PI; pointsRight.push({x: centerX + Math.cos(angleR) * dist, y: centerY + Math.sin(angleR) * dist}); let angleL = (Math.PI / 2) + ratio * Math.PI; pointsLeft.push({x: centerX + Math.cos(angleL) * dist, y: centerY + Math.sin(angleL) * dist}); }
-            ctx.beginPath(); ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.moveTo(pointsRight[0].x, pointsRight[0].y); for(let j = 1; j < pointsRight.length; j++) ctx.lineTo(pointsRight[j].x, pointsRight[j].y); for(let j = pointsLeft.length - 2; j >= 0; j--) ctx.lineTo(pointsLeft[j].x, pointsLeft[j].y); ctx.closePath(); 
-            let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            ctx.strokeStyle = gradient; ctx.lineWidth = minDimension * 0.008; ctx.shadowBlur = (20 + (avgBass * 0.1)) * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0; 
-        }
-
-        function drawCircleBars(dataArray, minDimension, bufferLength, avgBass) {
-            const centerX = 0; const centerY = 0; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15); const pointsCount = 70; const usefulDataLength = Math.floor(bufferLength * 0.65);
-            let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            ctx.strokeStyle = gradient; ctx.lineWidth = minDimension * 0.009; ctx.lineCap = 'round'; ctx.shadowBlur = 5 * glowSlider.value; ctx.shadowColor = primaryColor;
-            for (let i = 0; i < pointsCount; i++) {
-                let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = dataArray[dataIndex] || 0; let cleanVal = Math.max(0, val - 30); let normalized = cleanVal / 225; let boost = 1 + (ratio * 2.0);
-                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.2 * boost; if (barHeight < 2) barHeight = 2; let angleR = (Math.PI / 2) - ratio * Math.PI;
-                ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5)); ctx.lineTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5 + barHeight)); ctx.stroke();
-                if (i !== 0 && i !== pointsCount - 1) { let angleL = (Math.PI / 2) + ratio * Math.PI; ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5)); ctx.lineTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5 + barHeight)); ctx.stroke(); }
-            } ctx.shadowBlur = 0;
-        }
-
-        function drawLinearBars(dataArray, minDimension, bufferLength) {
-            const usefulLength = Math.floor(bufferLength * 0.7); const barWidth = canvas.width / usefulLength; const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            ctx.fillStyle = gradient; ctx.shadowBlur = 10 * glowSlider.value; ctx.shadowColor = primaryColor;
-            for (let i = 0; i < usefulLength; i++) { const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6 * sharpnessSlider.value; ctx.fillRect((i * barWidth) - canvas.width/2, canvas.height/2 - barHeightScaled, barWidth - 2, barHeightScaled); } ctx.shadowBlur = 0;
-        }
-
-        function drawLinearCurve(dataArray, minDimension, bufferLength) {
-            const usefulLength = Math.floor(bufferLength * 0.7); const sliceWidth = canvas.width / (usefulLength - 1); const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            ctx.beginPath(); ctx.moveTo(-canvas.width/2, canvas.height/2);
-            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.5); const y = canvas.height/2 - (v * canvas.height * 0.5 * sharpnessSlider.value); const x = (i * sliceWidth) - canvas.width/2; ctx.lineTo(x, y); }
-            ctx.lineTo(canvas.width/2, canvas.height/2); ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = gradient; ctx.lineJoin = 'round'; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0;
-        }
-
-        function drawLinearSymmetry(dataArray, minDimension, bufferLength) {
-            const usefulLength = Math.floor(bufferLength * 0.65); const sliceWidth = canvas.width / (usefulLength * 2); const centerY = 0; const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            ctx.beginPath(); for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY - amplitude); else ctx.lineTo(x, centerY - amplitude); } for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY - amplitude); } ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = gradient; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0;
-            ctx.beginPath(); for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY + amplitude); else ctx.lineTo(x, centerY + amplitude); } for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY + amplitude); } ctx.stroke();
-        }
-
-        function drawCircleDots(dataArray, minDimension, bufferLength, avgBass) {
-            const baseRadius = minDimension * 0.16 + (avgBass * 0.15); const pointsCount = 70; const usefulDataLength = Math.floor(bufferLength * 0.65); ctx.shadowBlur = 10 * glowSlider.value;
-            for (let i = 0; i < pointsCount; i++) { let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = Math.max(0, (dataArray[dataIndex] || 0) - 30); let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.2; let angle = (i / pointsCount) * Math.PI * 2 - Math.PI / 2; let dist = baseRadius + barHeight; let x = Math.cos(angle) * dist; let y = Math.sin(angle) * dist; let dotSize = 2 + (val / 255) * 8; ctx.beginPath(); ctx.arc(x, y, dotSize, 0, Math.PI * 2); ctx.fillStyle = i % 2 === 0 ? primaryColor : secondaryColor; ctx.shadowColor = ctx.fillStyle; ctx.fill(); } ctx.shadowBlur = 0; 
-        }
-
-        function drawHexagonBars(dataArray, minDimension, bufferLength, avgBass) {
-            const baseRadius = minDimension * 0.18 + (avgBass * 0.1); const sides = 6; const barsPerSide = 12; const totalBars = sides * barsPerSide; const usefulDataLength = Math.floor(bufferLength * 0.6); ctx.shadowBlur = 15 * glowSlider.value; ctx.lineWidth = 3; ctx.lineCap = 'round';
-            for (let s = 0; s < sides; s++) {
-                let angleStart = (s / sides) * Math.PI * 2 - Math.PI / 2; let angleEnd = ((s + 1) / sides) * Math.PI * 2 - Math.PI / 2; let x1 = Math.cos(angleStart) * baseRadius; let y1 = Math.sin(angleStart) * baseRadius; let x2 = Math.cos(angleEnd) * baseRadius; let y2 = Math.sin(angleEnd) * baseRadius;
-                for (let i = 0; i < barsPerSide; i++) { let ratio = i / barsPerSide; let dataIndex = Math.floor((s * barsPerSide + i) / totalBars * usefulDataLength); let val = Math.max(0, (dataArray[dataIndex] || 0) - 30); let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.25; let bx = x1 + (x2 - x1) * ratio; let by = y1 + (y2 - y1) * ratio; let angleOut = Math.atan2(by, bx); let endX = bx + Math.cos(angleOut) * barHeight; let endY = by + Math.sin(angleOut) * barHeight; ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(endX, endY); ctx.strokeStyle = s % 2 === 0 ? primaryColor : secondaryColor; ctx.shadowColor = ctx.strokeStyle; ctx.stroke(); }
-            } ctx.shadowBlur = 0; 
-        }
-
-        function drawWaveFilled(dataArray, minDimension, bufferLength) {
-            const usefulDataLength = Math.floor(bufferLength * 0.7); const width = canvas.width; const startX = -width / 2; const step = width / (usefulDataLength - 1); ctx.shadowBlur = 20 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.beginPath(); ctx.moveTo(startX, 0);
-            for (let i = 0; i < usefulDataLength; i++) { let val = Math.max(0, (dataArray[i] || 0) - 20); let height = Math.pow(val / 255, 1.4) * minDimension * sharpnessSlider.value * 0.4; let x = startX + i * step; ctx.lineTo(x, -height); } ctx.lineTo(startX + width, 0); ctx.closePath();
-            let grad = ctx.createLinearGradient(0, -minDimension * 0.4, 0, 0); grad.addColorStop(0, primaryColor); grad.addColorStop(1, 'rgba(0,0,0,0.1)'); ctx.fillStyle = grad; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = secondaryColor; ctx.stroke(); ctx.shadowBlur = 0; 
         }
 
         async function processSubscription(btnElement) {
@@ -1241,8 +1128,7 @@
             try { const res = await fetch('https://andreygerc11-music-site.onrender.com/api/pay-subscription', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentUser.email }) }); const data = await res.json(); if (data.url) { window.location.href = data.url; } else { alert('Помилка платежу.'); btnElement.innerText = originalText; btnElement.disabled = false; } } catch (err) { alert('Помилка сервера.'); btnElement.innerText = originalText; btnElement.disabled = false; }
         }
         
-        document.getElementById('sidebarSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
-        document.getElementById('modalSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
+        document.getElementById('sidebarSubscribeBtn').addEventListener('click', function() { processSubscription(this); }); document.getElementById('modalSubscribeBtn').addEventListener('click', function() { processSubscription(this); });
 
         const generateVideoBtn = document.getElementById('exportVideoBtn'); const stopRenderBtn = document.getElementById('stopRenderBtn'); const downloadVideoBtn = document.getElementById('downloadVideoBtn'); const generateProgress = document.getElementById('generateProgress'); const generateStatus = document.getElementById('generateStatus'); const renderOverlay = document.getElementById('renderOverlay');
 
@@ -1289,6 +1175,64 @@
             audioPlayer.currentTime = 0; if (speakerGain) { speakerGain.gain.value = isMutedDuringRender ? 0 : 1; }
             if (backgroundVideo) { backgroundVideo.currentTime = 0; backgroundVideo.play(); } particles = []; audioPlayer.play(); mediaRecorder.start(1000);
             const checkProgressInterval = setInterval(() => { if (isGenerating && !isCancelled) { const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100; generateProgress.value = percent; generateStatus.innerText = `${audioPlayer.currentTime.toFixed(1)}с / ${audioPlayer.duration.toFixed(1)}с`; } }, 500); 
+        });
+
+        // === ЛОГІКА ІНТЕРФЕЙСУ ШІ-РЕЖИСЕРА ===
+        const modeToggleBtn = document.getElementById('modeToggleBtn'); const sidebarLeft = document.querySelector('.sidebar-left'); const sidebarRight = document.querySelector('.sidebar-right'); const centerStage = document.getElementById('centerStage'); const directorStage = document.getElementById('directorStage'); let isDirectorUIVisible = false;
+
+        modeToggleBtn.addEventListener('click', () => {
+            isDirectorUIVisible = !isDirectorUIVisible;
+            if (isDirectorUIVisible) { sidebarLeft.style.display = 'none'; sidebarRight.style.display = 'none'; centerStage.style.display = 'none'; directorStage.style.display = 'block'; modeToggleBtn.innerHTML = '<i class="fas fa-wave-square"></i> Візуалізатор'; modeToggleBtn.style.background = 'linear-gradient(45deg, var(--accent), #ff6a00)'; } 
+            else { sidebarLeft.style.display = 'flex'; sidebarRight.style.display = 'flex'; centerStage.style.display = 'flex'; directorStage.style.display = 'none'; modeToggleBtn.innerHTML = '<i class="fas fa-film"></i> Режисер (ШІ)'; modeToggleBtn.style.background = 'linear-gradient(45deg, #8a2be2, #4a00e0)'; if (typeof setCanvasSize === 'function') setCanvasSize(); }
+        });
+
+        const dirAiSplitBtn = document.getElementById('dirAiSplitBtn'); const dirLyricsInput = document.getElementById('dirLyricsInput'); const dirLoadingState = document.getElementById('dirLoadingState'); const dirStoryboardContainer = document.getElementById('dirStoryboardContainer'); const dirGridTitle = document.getElementById('dirGridTitle'); const dirFinalCompileBtn = document.getElementById('dirFinalCompileBtn');
+
+        dirAiSplitBtn.addEventListener('click', async () => {
+            const text = dirLyricsInput.value.trim(); if (!text) { alert("Будь ласка, спочатку вставте текст пісні!"); return; }
+            dirAiSplitBtn.disabled = true; dirLyricsInput.style.display = 'none'; dirLoadingState.style.display = 'block'; dirLoadingState.innerHTML = '<div style="font-size: 2rem; margin-bottom: 10px;"><i class="fas fa-circle-notch fa-spin"></i></div><p>ШІ розробляє режисерське бачення вашого кліпу (Gemini)...</p>'; dirStoryboardContainer.innerHTML = ''; dirFinalCompileBtn.style.display = 'none';
+
+            const payload = { contents: [{ parts: [{ text: `Analyze these lyrics and break them down into 20 to 30 dynamic video scenes. Create a new scene for EVERY SINGLE LINE or every 2 lines maximum to ensure the video has extremely fast, engaging, modern music video cuts. Return a JSON array.\n\nLyrics: "${text}"` }] }], systemInstruction: { parts: [{ text: "You are a music video director. Return ONLY a valid JSON array. Each object must have 'id' (number), 'time' (string, e.g. '00:00.00' exactly matching the lyric timestamp), 'lyrics' (string), and 'prompt' (visual description for image generator)." }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "NUMBER" }, time: { type: "STRING" }, lyrics: { type: "STRING" }, prompt: { type: "STRING" } }, required: ["id", "time", "lyrics", "prompt"] } } } };
+
+            try {
+                const data = await fetchGeminiWithRetry(payload, 3, false, true); const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (resultText) { const scenes = JSON.parse(resultText); renderStoryboardDir(scenes); dirGridTitle.style.display = 'block'; dirFinalCompileBtn.style.display = 'flex'; await generateImagesInQueueDir(scenes); } else { throw new Error("Empty response"); }
+            } catch (error) { console.error(error); alert(error.message === "Ліміт вичерпано" ? "Ваш ліміт вичерпано! Оформіть підписку." : "Помилка генерації сценарію через Gemini."); resetDirUI(); } finally { dirLoadingState.style.display = 'none'; if (dirStoryboardContainer.innerHTML === '') dirLyricsInput.style.display = 'block'; }
+        });
+
+        function resetDirUI() { dirAiSplitBtn.disabled = false; dirLyricsInput.style.display = 'block'; dirGridTitle.style.display = 'none'; }
+
+        function renderStoryboardDir(scenes) {
+            dirStoryboardContainer.innerHTML = '';
+            scenes.forEach(scene => {
+                const card = document.createElement('div'); card.className = 'dir-scene-card';
+                card.innerHTML = `<div class="dir-scene-header"><span class="dir-scene-time"><i class="far fa-clock"></i> ${scene.time}</span><span class="dir-scene-lyrics">"${scene.lyrics}"</span></div><div class="dir-scene-preview" id="dir-preview-${scene.id}"><i class="fas fa-film dir-preview-placeholder" style="color: #333; font-size: 3rem;"></i><p style="position:absolute; bottom:15px; font-size:10px; color:#555; text-transform:uppercase; font-weight:bold;">Очікування черги...</p></div><div class="dir-scene-body"><div class="dir-prompt-label">Опис для ШІ (Промпт)</div><textarea class="dir-scene-prompt" id="dir-prompt-${scene.id}">${scene.prompt}</textarea></div>`;
+                dirStoryboardContainer.appendChild(card);
+            });
+        }
+
+        async function generateImagesInQueueDir(scenes) { for (let i = 0; i < scenes.length; i++) { await generateImageForSceneDir(scenes[i].id); } }
+
+        window.generateImageForSceneDir = async function(sceneId) {
+            const previewBox = document.getElementById(`dir-preview-${sceneId}`); const promptArea = document.getElementById(`dir-prompt-${sceneId}`); if (!previewBox || !promptArea) return false;
+            const prompt = promptArea.value.trim(); previewBox.innerHTML = '<div style="color: #8a2be2;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div><p style="position:absolute; bottom:10px; font-size:10px; color:white; font-weight:bold; text-transform:uppercase;">Малюю кадр (Imagen 4)...</p>';
+            const finalPrompt = prompt + ", ultra photorealistic, live-action movie still, cinematic, raw photography, 8k resolution, highly detailed skin and textures, shot on 35mm lens, natural lighting";
+            const payload = { instances: { prompt: finalPrompt }, parameters: { sampleCount: 1 } };
+            try {
+                const data = await fetchGeminiWithRetry(payload, 3, true, false);
+                if (data.predictions && data.predictions[0] && data.predictions[0].bytesBase64Encoded) { const imageUrl = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`; previewBox.innerHTML = `<img src="${imageUrl}" alt="Scene Image"><button class="dir-btn-generate-scene" onclick="generateImageForSceneDir(${sceneId})"><i class="fas fa-redo"></i> Переробити</button>`; return true; } else { throw new Error("No image data"); }
+            } catch (err) { previewBox.innerHTML = `<p style="color:#ff4d4d; font-size:12px; font-weight:bold;"><i class="fas fa-exclamation-triangle"></i> Помилка</p><button class="dir-btn-generate-scene" onclick="generateImageForSceneDir(${sceneId})"><i class="fas fa-redo"></i> Спробувати ще</button>`; return false; }
+        };
+
+        dirFinalCompileBtn.addEventListener('click', () => {
+            const images = document.querySelectorAll('.dir-scene-preview img'); if (images.length === 0) { alert("Спочатку дочекайтеся генерації хоча б одного кадру!"); return; }
+            let localDirectorScript = []; const sceneCards = document.querySelectorAll('.dir-scene-card');
+            sceneCards.forEach((card) => {
+                const timeText = card.querySelector('.dir-scene-time').innerText; const startTimeStr = timeText.replace(/[^0-9:\-]/g, '').split('-')[0].trim(); const parts = startTimeStr.split(':'); let startSeconds = 0;
+                if (parts.length === 2) { startSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]); }
+                const imgElement = card.querySelector('.dir-scene-preview img'); if (imgElement && imgElement.src) { localDirectorScript.push({ time: startSeconds, url: imgElement.src }); }
+            });
+            localDirectorScript.sort((a, b) => a.time - b.time); activateDirectorMode(JSON.stringify(localDirectorScript)); modeToggleBtn.click();
         });
     </script>
 </body>
