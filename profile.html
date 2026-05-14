@@ -152,7 +152,7 @@
                         <div class="sub-label">Доступно генерацій (токенів)</div>
                         <div id="profileTokens" class="sub-status">... 🪙</div>
                     </div>
-                    <button id="buyTokensBtn" class="btn-action"><i class="fas fa-unlock"></i> Придбати PRO (20 🪙)</button>
+                    <button id="buyTokensBtn" class="btn-action"><i class="fas fa-unlock"></i> Придбати PRO (10 🪙)</button>
                 </div>
                 
                 <div class="charity-info">
@@ -207,8 +207,9 @@
                     currentUser = data;
                     localStorage.setItem('hz_user', JSON.stringify(currentUser));
                     
-                    document.getElementById('profileTokens').innerText = `${currentUser.clips_left} 🪙`;
-                    document.getElementById('userRole').innerText = (currentUser.status === 'premium' || currentUser.email === 'admin@dev.com') ? "PRO Акаунт" : "Базовий Акаунт";
+                    // Суворо виводимо те, що дав сервер (data.clips_left), а не локальні дані
+                    document.getElementById('profileTokens').innerText = `${data.clips_left} 🪙`;
+                    document.getElementById('userRole').innerText = (data.status === 'premium' || data.email === 'admin@dev.com') ? "PRO Акаунт" : "Базовий Акаунт";
                 }
             } catch (e) {
                 console.error("Помилка завантаження даних", e);
