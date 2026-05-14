@@ -1,7 +1,12 @@
 [
   {
     "email": "admin@dev.com",
+    "status": "premium",
+    "clips_left": 999
+  },
+  {
+    "email": "andriyherts@gmail.com",
     "status": "free",
-    "clips_left": 0
+    "clips_left": 1
   }
 ]
