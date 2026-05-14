@@ -601,13 +601,13 @@
 
         async function syncUserData() {
             if (!currentUser || !currentUser.email) {
-                userProfileBtn.style.display = 'none'; 
+                if (userProfileBtn) userProfileBtn.style.display = 'none'; 
                 if (authBtn) authBtn.style.display = 'inline-flex'; 
-                sidebarSubscribeBtn.style.display = 'flex'; 
+                if (sidebarSubscribeBtn) sidebarSubscribeBtn.style.display = 'flex'; 
                 return;
             }
             
-            userProfileBtn.style.display = 'inline-flex'; 
+            if (userProfileBtn) userProfileBtn.style.display = 'inline-flex'; 
             if (authBtn) authBtn.style.display = 'none';
             
             try {
@@ -622,18 +622,22 @@
                     currentUser = data; 
                     localStorage.setItem('hz_user', JSON.stringify(currentUser));
                     
-                    userProfileBtn.innerHTML = `<i class="fas fa-user"></i> Кабінет (${currentUser.clips_left} 🪙)`;
+                    if (userProfileBtn) {
+                        userProfileBtn.innerHTML = `<i class="fas fa-user"></i> Кабінет (${currentUser.clips_left} 🪙)`;
+                    }
                     
                     if (currentUser.clips_left > 0 || currentUser.status === 'premium' || currentUser.email === 'admin@dev.com') { 
                         isSubscribed = true; 
-                        sidebarSubscribeBtn.style.display = 'none'; 
+                        if (sidebarSubscribeBtn) sidebarSubscribeBtn.style.display = 'none'; 
                     } else { 
                         isSubscribed = false; 
-                        sidebarSubscribeBtn.style.display = 'flex'; 
+                        if (sidebarSubscribeBtn) sidebarSubscribeBtn.style.display = 'flex'; 
                     }
                 }
             } catch (e) {
-                userProfileBtn.innerHTML = `<i class="fas fa-user"></i> Кабінет (${currentUser.clips_left || 0} 🪙)`;
+                if (userProfileBtn) {
+                    userProfileBtn.innerHTML = `<i class="fas fa-user"></i> Кабінет (${currentUser.clips_left || 0} 🪙)`;
+                }
             }
         }
         
