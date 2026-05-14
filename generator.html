@@ -827,7 +827,7 @@
                     renderStoryboard(scenes);
                     storyboardContainer.style.display = 'grid';
                     finalCompileBtn.disabled = false;
-                    await generateImagesInQueue(scenes);
+                    generateImagesInQueue(scenes);
                 } else {
                     throw new Error("Empty scenes array.");
                 }
@@ -2121,9 +2121,13 @@
             };
 
             mediaRecorder.onstop = () => {
-                clearInterval(checkProgressInterval); timerWorker.postMessage('stop'); drawAnimationId = requestAnimationFrame(draw);
+                clearInterval(checkProgressInterval); timerWorker.postMessage('stop'); 
+                // ВИДАЛЕНО РАННІЙ ЗАПУСК АНІМАЦІЇ, ЯКИЙ ВБИВАВ ІНТЕРФЕЙС
+
                 if (isCancelled) {
-                    isGenerating = false; generateVideoBtn.style.display = 'flex'; stopRenderBtn.style.display = 'none';
+                    isGenerating = false; 
+                    drawAnimationId = requestAnimationFrame(draw); // Правильний перезапуск!
+                    generateVideoBtn.style.display = 'flex'; stopRenderBtn.style.display = 'none';
                     renderOverlay.style.display = 'none';
                     if (backgroundVideo) backgroundVideo.pause();
                     audioPlayer.pause(); audioPlayer.currentTime = 0; 
@@ -2146,7 +2150,9 @@
                     
                     if (!isSubscribed) { localStorage.setItem('hz_last_free_render', Date.now().toString()); }
 
-                    isGenerating = false; renderOverlay.style.display = 'none';
+                    isGenerating = false; 
+                    drawAnimationId = requestAnimationFrame(draw); // Правильний перезапуск!
+                    renderOverlay.style.display = 'none';
                     if (backgroundVideo) backgroundVideo.pause();
                 };
 
