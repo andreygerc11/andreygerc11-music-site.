@@ -442,7 +442,7 @@ app.post('/api/pay', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Помилка оплати" }); }
 });
 
-// ПЛАТІЖ: 349 грн за 20 Кліпів
+// ПЛАТІЖ: 349 грн за 10 Кліпів
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         const { email } = req.body;
@@ -450,7 +450,7 @@ app.post('/api/pay-subscription', async (req, res) => {
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
             amount: 34900, // 349 грн
             ccy: 980, 
-            merchantPaymInfo: { destination: "Пакет PRO: 20 Генерацій Кліпу", reference: email },
+            merchantPaymInfo: { destination: "Пакет PRO: 10 Генерацій Кліпу", reference: email },
             redirectUrl: "https://golos-proty-raku.pp.ua/success.html", 
             webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
         }, { headers: { 'X-Token': MONO_TOKEN } });
@@ -499,11 +499,11 @@ app.post('/api/webhook', async (req, res) => {
                 // ЛОГІКА ДЛЯ КУПІВЛІ ПАКЕТУ КЛІПІВ (ПО EMAIL)
                 let user = usersDB.find(u => u.email === reference);
                 if (!user) {
-                    user = { email: reference, status: "premium", clips_left: 20 };
+                    user = { email: reference, status: "premium", clips_left: 10 };
                     usersDB.push(user);
                 } else {
                     user.status = "premium";
-                    user.clips_left = (user.clips_left || 0) + 20; // +20 КЛІПІВ
+                    user.clips_left = (user.clips_left || 0) + 10; // +10 КЛІПІВ
                 }
                 await saveUsersToGitHub();
                 console.log(`💰 УСПІШНА ОПЛАТА ПАКЕТУ! Email: ${reference}. Баланс: ${user.clips_left}`);
