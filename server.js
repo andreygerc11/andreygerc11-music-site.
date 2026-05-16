@@ -675,7 +675,7 @@ async function fetchAndRewriteBlog() {
                 
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { 
@@ -738,7 +738,7 @@ async function fetchAndRewriteBlog() {
         console.log(`🫂 Генерую підтримку на тему: ${selectedTopic}`);
 
         try {
-            const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                 model: "llama-3.3-70b-versatile",
                 messages: [
                     { 
