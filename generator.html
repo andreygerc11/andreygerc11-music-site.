@@ -1019,6 +1019,8 @@
             const promptStr = document.getElementById('customAiPrompt').value.trim();
             const songTitle = songTitleInput.value.trim();
             const authorText = authorInput.value.trim();
+            const lyricsText = document.getElementById('lyricsInput').value.trim(); // БЕРЕМО ТЕКСТ ПІСНІ
+            
             const formatMap = { vertical: "9:16", horizontal: "16:9", square: "1:1", portrait: "3:4", cinema: "16:9" };
             const aspect = formatMap[document.getElementById('formatSelect').value] || "1:1";
 
@@ -1026,16 +1028,33 @@
             aiLoadingStatus.style.display = 'block';
 
             try {
-                // Транслітеруємо для промпту
                 const engTitle = transliterateToLatin(songTitle);
                 const engAuthor = transliterateToLatin(authorText);
-
-                let basePrompt = promptStr || `abstract dark atmospheric music background for a song named "${engTitle || "Untitled"}"`;
-                let finalPrompt = basePrompt + ", high quality, detailed, atmospheric, beautiful lighting, cinematic";
                 
-                // Додаємо англійський текст автора
+                let basePrompt = promptStr;
+
+                // АНАЛІЗУЄМО ВІРШ ПІСНІ ЧЕРЕЗ GEMINI, ЯКЩО НЕМАЄ РУЧНОГО ПРОМПТУ
+                if (!basePrompt && lyricsText) {
+                    aiLoadingStatus.innerHTML = 'Читаю вірш пісні... <i class="fas fa-brain fa-spin"></i>';
+                    const aiPrompt = `Read the following song lyrics and write a short, highly descriptive visual prompt IN ENGLISH for an AI image generator (like Midjourney or Imagen) to create a background album cover. Focus on the core emotions, setting, weather, colors, and characters described in the poem. Do NOT add instructions for text or typography. Just the visual scene. Lyrics:\n\n${lyricsText.substring(0, 1000)}`;
+                    try {
+                        basePrompt = await generateGeminiText(aiPrompt, false);
+                    } catch(e) {
+                        console.error("Помилка аналізу тексту", e);
+                    }
+                }
+                
+                if (!basePrompt) {
+                    basePrompt = `abstract dark atmospheric music background for a song named "${engTitle || "Untitled"}"`;
+                }
+
+                aiLoadingStatus.innerHTML = 'Малюю обкладинку... <i class="fas fa-spinner fa-spin"></i>';
+
+                let finalPrompt = basePrompt + ", high quality, detailed, atmospheric, cinematic lighting, 8k resolution, dramatic masterpiece";
+                
+                // Додаємо ім'я автора, якщо воно є
                 if (engAuthor) {
-                    finalPrompt += `, featuring a large, bold, highly legible cinematic title exactly spelling "${engAuthor}". The text "${engAuthor}" must be perfectly spelled in English letters, centered, and prominent.`;
+                    finalPrompt += `, featuring a large, cinematic typography text exactly spelling "${engAuthor}". The text must be centered and prominent.`;
                 }
 
                 const imgBase64 = await generateImagenImage(finalPrompt, aspect);
@@ -1057,7 +1076,7 @@
                 console.error(err);
                 generateAiBgBtn.disabled = false;
                 aiLoadingStatus.style.display = 'none';
-                alert("Не вдалося згенерувати фон. Перевірте з'єднання або спробуйте інший запит.");
+                alert("Не вдалося згенерувати фон. Перевірте з'єднання або спробуйте ще раз.");
             }
         });
 
@@ -1562,8 +1581,10 @@
 
         function handleParticles(avgBass) {
             const effect = particleSelect.value; if (effect === 'none') return;
-            const maxMap = { 'rain': 600, 'snow': 150, 'fire': 150, 'smoke': 80, 'matrix': 100, 'spark': 120, 'meteor': 15, 'lightning': 2 };
-            const maxParticles = maxMap[effect] || 60; 
+            
+            // ЗМЕНШЕНО ЛІМІТИ ЧАСТИНОК ДЛЯ ОПТИМІЗАЦІЇ FPS
+            const maxMap = { 'rain': 250, 'snow': 80, 'fire': 80, 'smoke': 50, 'matrix': 80, 'spark': 80, 'meteor': 10, 'lightning': 2 };
+            const maxParticles = maxMap[effect] || 50; 
             
             let spawnRate = 0.5;
             if (['spark', 'fire'].includes(effect)) spawnRate = (avgBass / 255) * 6; 
@@ -1572,7 +1593,7 @@
             if (effect === 'smoke') spawnRate = 0.2;
             if (effect === 'rain') spawnRate = 1.0; 
             
-            let spawnsPerFrame = effect === 'rain' ? 4 : 1;
+            let spawnsPerFrame = effect === 'rain' ? 3 : 1;
             for (let s = 0; s < spawnsPerFrame; s++) {
                 if (particles.length < maxParticles && Math.random() < spawnRate) { particles.push(createParticle(effect)); }
             }
@@ -1597,6 +1618,7 @@
 
                 let pulse = (avgBass / 255) * 10; 
                 
+                // -- МАЛЮВАННЯ ЧАСТИНОК (ОПТИМІЗОВАНО: ВИДАЛЕНІ ВАЖКІ ГРАДІЄНТИ) --
                 if (p.type === 'lightning') {
                     p.life--;
                     if (p.life > 0) {
@@ -1653,17 +1675,11 @@
                     ctx.save();
                     ctx.globalCompositeOperation = 'lighter';
                     ctx.translate(p.x, p.y);
-                    let angle = Math.atan2(p.vy, p.vx); 
-                    ctx.rotate(angle);
+                    ctx.rotate(Math.atan2(p.vy, p.vx)); 
                     
                     let safeLength = Math.max(1, p.length);
-                    let mGrad = ctx.createLinearGradient(0, 0, -safeLength, 0);
-                    mGrad.addColorStop(0, 'rgba(255, 255, 255, 1)'); 
-                    mGrad.addColorStop(0.05, 'rgba(100, 200, 255, 0.8)'); 
-                    mGrad.addColorStop(0.3, 'rgba(50, 100, 255, 0.3)'); 
-                    mGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                    
-                    ctx.strokeStyle = mGrad;
+                    // Видалено важкий градієнт, замінено на лінію
+                    ctx.strokeStyle = `rgba(100, 200, 255, 0.5)`;
                     ctx.lineCap = 'round';
                     ctx.lineWidth = Math.max(0.1, p.size);
                     ctx.beginPath();
@@ -1699,12 +1715,9 @@
                             let g = Math.floor(255 * fireRatio);
                             let b = Math.floor(100 * Math.pow(fireRatio, 2));
                             
-                            let fGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size));
-                            fGrad.addColorStop(0, `rgba(${r},${g},${b}, ${fireRatio})`);
-                            fGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                            
+                            // Замість важкого радіального градієнта - просте коло з прозорістю
                             ctx.globalCompositeOperation = 'lighter';
-                            ctx.fillStyle = fGrad;
+                            ctx.fillStyle = `rgba(${r},${g},${b}, ${fireRatio * 0.7})`;
                             ctx.beginPath();
                             ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2);
                             ctx.fill();
@@ -1715,12 +1728,8 @@
                             p.vx *= 0.95; 
                             p.vy *= 0.95; 
                             
-                            let sGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size));
-                            sGrad.addColorStop(0, `rgba(150, 150, 150, ${smokeRatio * 0.4})`);
-                            sGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                            
                             ctx.globalCompositeOperation = 'source-over';
-                            ctx.fillStyle = sGrad;
+                            ctx.fillStyle = `rgba(100, 100, 100, ${smokeRatio * 0.2})`;
                             ctx.beginPath();
                             ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2);
                             ctx.fill();
@@ -1732,10 +1741,7 @@
                     if (p.life > 0) {
                         p.size = Math.max(0.1, p.size * 1.015);
                         p.opacity = Math.max(0, (p.life / p.maxLife) * 0.25);
-                        let grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(0.1, p.size));
-                        grad.addColorStop(0, `rgba(180, 180, 180, ${p.opacity})`);
-                        grad.addColorStop(1, 'rgba(0,0,0,0)');
-                        ctx.fillStyle = grad;
+                        ctx.fillStyle = `rgba(150, 150, 150, ${p.opacity * 0.5})`;
                         ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2); ctx.fill();
                     }
                 } 
@@ -1752,10 +1758,8 @@
                     let s = Math.max(0.1, p.size + (['star','heart','bubble'].includes(p.type) ? pulse * 0.5 : 0));
 
                     if (p.type === 'snow') {
-                        let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s);
-                        grad.addColorStop(0, 'rgba(255,255,255,1)');
-                        grad.addColorStop(1, 'rgba(255,255,255,0)');
-                        ctx.fillStyle = grad;
+                        // Прибрав важкий градієнт
+                        ctx.fillStyle = `rgba(255,255,255, ${p.opacity})`;
                         ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
                     } else if (p.type === 'bubble') {
                         ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); 
@@ -1769,14 +1773,13 @@
                         ctx.fillStyle = p.color; 
                         ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s * 0.866, s * 0.5); ctx.lineTo(-s * 0.866, s * 0.5); ctx.closePath(); ctx.fill();
                     } else if (p.type === 'heart') {
-                        ctx.fillStyle = p.color; ctx.shadowBlur = 15; ctx.shadowColor = p.color;
+                        ctx.fillStyle = p.color;
                         let top = s * 0.3; 
                         ctx.beginPath(); ctx.moveTo(0, top); ctx.bezierCurveTo(0, 0, -s, 0, -s, top); ctx.bezierCurveTo(-s, s * 0.8, 0, s, 0, s * 1.2); ctx.bezierCurveTo(0, s, s, s * 0.8, s, top); ctx.bezierCurveTo(s, 0, 0, 0, 0, top); ctx.fill(); 
-                        ctx.shadowBlur = 0;
                     } else if (['note', 'matrix', 'leaf'].includes(p.type)) {
                         ctx.fillStyle = p.color || 'white'; ctx.font = `${s * 2}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                        if(p.type === 'matrix') { ctx.shadowBlur = 10; ctx.shadowColor = '#00ff00'; }
-                        ctx.fillText(p.char, 0, 0); ctx.shadowBlur = 0;
+                        // Прибрав тіні (shadowBlur), щоб не гальмувало
+                        ctx.fillText(p.char, 0, 0); 
                     } else {
                         ctx.fillStyle = p.color || 'white';
                         ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.fill();
