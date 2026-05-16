@@ -816,7 +816,16 @@
             finalCompileBtn.disabled = true;
 
             // Збільшено кількість сцен для детальної розкадровки
-            const aiPrompt = `Act as a professional music video director. Break down the following song lyrics into a detailed storyboard of 15 to 25 scenes (create a new scene for almost every 2-4 lines). For each scene, extract the starting timestamp (if available, else invent one chronologically based on a typical song structure), the lyrics snippet, and write a highly detailed visual prompt IN ENGLISH for an AI image generator (like Imagen/Midjourney). The prompt MUST describe lighting, camera angle, mood, subject, and style. Make it photorealistic, cinematic, 8k resolution. Lyrics:\n\n${text}`;
+            // ПРОМПТ ДЛЯ ПРОФЕСІЙНОЇ КІНО-РОЗКАДРОВКИ
+            const aiPrompt = `Act as an award-winning music video director and cinematographer. Analyze the following song lyrics and break them down into a cinematic storyboard of 15 to 25 scenes. For each scene, extract the starting timestamp, the lyrics snippet, and write a highly descriptive visual prompt IN ENGLISH for a top-tier AI image generator. 
+            
+The visual prompt MUST read like a high-budget movie script shot description. You MUST specify:
+1) Camera Shot (e.g., Extreme Close-Up, Wide Angle, Tracking Shot, Dutch Angle).
+2) Lighting (e.g., moody cinematic lighting, neon glow, golden hour, harsh shadows, volumetric rays).
+3) Character Action & Emotion (what is happening in the frame).
+4) Setting/Environment details.
+
+Make it look like a still from a blockbuster movie or a premium music video. Focus on deep atmosphere, storytelling, and visual drama. Lyrics:\n\n${text}`;
 
             try {
                 const jsonText = await generateGeminiText(aiPrompt, true);
