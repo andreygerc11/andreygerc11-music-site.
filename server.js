@@ -784,7 +784,6 @@ async function fetchAndRewriteBlog() {
     }
 
     if (addedCount > 0) {
-    if (addedCount > 0) {
         await saveBlogToGitHub();
         console.log(`🎉 Успішно згенеровано та збережено статей: ${addedCount}`);
     } else {
