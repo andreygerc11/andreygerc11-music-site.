@@ -1958,14 +1958,16 @@
             }
         }
 
-        // === ФУНКЦІЇ МАЛЮВАННЯ СПЕКТРУ ===
+// === ФУНКЦІЇ МАЛЮВАННЯ СПЕКТРУ ===
         function drawCircleSharp(dataArray, minDimension, bufferLength, avgBass) {
-            const centerX = 0; const centerY = 0; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
+            const centerX = 0; const centerY = 0; 
+            const baseRadius = minDimension * 0.22; // Збільшено розмір за умовчуванням
+            const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
             const pointsCount = 60; const usefulDataLength = Math.floor(bufferLength * 0.65); let pointsRight = []; let pointsLeft = [];
             for (let i = 0; i <= pointsCount; i++) {
                 let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = dataArray[dataIndex] || 0;
                 let cleanVal = Math.max(0, val - 35); let normalized = cleanVal / 220; let eqBoost = 1 + (ratio * 2.5); 
-                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.15 * eqBoost; let dist = pulsatingLogoRadius + barHeight; 
+                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.2 * eqBoost; let dist = pulsatingLogoRadius + barHeight; 
                 let angleR = (Math.PI / 2) - ratio * Math.PI; pointsRight.push({x: centerX + Math.cos(angleR) * dist, y: centerY + Math.sin(angleR) * dist});
                 let angleL = (Math.PI / 2) + ratio * Math.PI; pointsLeft.push({x: centerX + Math.cos(angleL) * dist, y: centerY + Math.sin(angleL) * dist});
             }
@@ -1978,14 +1980,16 @@
         }
 
         function drawCircleBars(dataArray, minDimension, bufferLength, avgBass) {
-            const centerX = 0; const centerY = 0; const baseRadius = minDimension * 0.16; const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
+            const centerX = 0; const centerY = 0; 
+            const baseRadius = minDimension * 0.22; // Збільшено розмір
+            const pulsatingLogoRadius = baseRadius + (avgBass * 0.15);
             const pointsCount = 70; const usefulDataLength = Math.floor(bufferLength * 0.65);
             let gradient = ctx.createLinearGradient(centerX - baseRadius, centerY, centerX + baseRadius, centerY); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
             ctx.strokeStyle = gradient; ctx.lineWidth = minDimension * 0.009; ctx.lineCap = 'round'; ctx.shadowBlur = 5 * glowSlider.value; ctx.shadowColor = primaryColor;
             for (let i = 0; i < pointsCount; i++) {
                 let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength); let val = dataArray[dataIndex] || 0;
                 let cleanVal = Math.max(0, val - 30); let normalized = cleanVal / 225; let boost = 1 + (ratio * 2.0);
-                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.2 * boost; if (barHeight < 2) barHeight = 2; 
+                let barHeight = Math.pow(normalized, 1.5) * minDimension * sharpnessSlider.value * 0.25 * boost; if (barHeight < 2) barHeight = 2; 
                 let angleR = (Math.PI / 2) - ratio * Math.PI;
                 ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5)); ctx.lineTo(centerX + Math.cos(angleR) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleR) * (pulsatingLogoRadius + 5 + barHeight)); ctx.stroke();
                 if (i !== 0 && i !== pointsCount - 1) { let angleL = (Math.PI / 2) + ratio * Math.PI; ctx.beginPath(); ctx.moveTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5)); ctx.lineTo(centerX + Math.cos(angleL) * (pulsatingLogoRadius + 5 + barHeight), centerY + Math.sin(angleL) * (pulsatingLogoRadius + 5 + barHeight)); ctx.stroke(); }
@@ -1996,16 +2000,17 @@
             const usefulLength = Math.floor(bufferLength * 0.7); const barWidth = canvas.width / usefulLength;
             const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
             ctx.fillStyle = gradient; ctx.shadowBlur = 10 * glowSlider.value; ctx.shadowColor = primaryColor;
-            for (let i = 0; i < usefulLength; i++) { const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * canvas.height * 0.6 * sharpnessSlider.value; ctx.fillRect((i * barWidth) - canvas.width/2, canvas.height/2 - barHeightScaled, barWidth - 2, barHeightScaled); }
+            // ВИПРАВЛЕНО: Тепер малюється від центру (0), а не від низу, щоб ідеально перетягувалося мишкою
+            for (let i = 0; i < usefulLength; i++) { const barHeightScaled = Math.pow(dataArray[i] / 255, 1.5) * minDimension * 0.5 * sharpnessSlider.value; ctx.fillRect((i * barWidth) - canvas.width/2, 0 - barHeightScaled, barWidth - 2, barHeightScaled); }
             ctx.shadowBlur = 0;
         }
 
         function drawLinearCurve(dataArray, minDimension, bufferLength) {
             const usefulLength = Math.floor(bufferLength * 0.7); const sliceWidth = canvas.width / (usefulLength - 1);
             const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
-            ctx.beginPath(); ctx.moveTo(-canvas.width/2, canvas.height/2);
-            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.5); const y = canvas.height/2 - (v * canvas.height * 0.5 * sharpnessSlider.value); const x = (i * sliceWidth) - canvas.width/2; ctx.lineTo(x, y); }
-            ctx.lineTo(canvas.width/2, canvas.height/2); ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-canvas.width/2, 0); // ВИПРАВЛЕНО
+            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.5); const y = 0 - (v * minDimension * 0.5 * sharpnessSlider.value); const x = (i * sliceWidth) - canvas.width/2; ctx.lineTo(x, y); }
+            ctx.lineTo(canvas.width/2, 0); ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; ctx.fill();
             ctx.lineWidth = 8; ctx.strokeStyle = gradient; ctx.lineJoin = 'round'; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0;
         }
 
@@ -2013,23 +2018,23 @@
             const usefulLength = Math.floor(bufferLength * 0.65); const sliceWidth = canvas.width / (usefulLength * 2); const centerY = 0;
             const gradient = ctx.createLinearGradient(-canvas.width/2, 0, canvas.width/2, 0); gradient.addColorStop(0, primaryColor); gradient.addColorStop(0.5, 'white'); gradient.addColorStop(1, secondaryColor);
             ctx.beginPath();
-            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY - amplitude); else ctx.lineTo(x, centerY - amplitude); }
-            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY - amplitude); }
+            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * minDimension * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY - amplitude); else ctx.lineTo(x, centerY - amplitude); }
+            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * minDimension * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY - amplitude); }
             ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = gradient; ctx.shadowBlur = 15 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.stroke(); ctx.shadowBlur = 0;
             ctx.beginPath();
-            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY + amplitude); else ctx.lineTo(x, centerY + amplitude); }
-            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * canvas.height * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY + amplitude); }
+            for (let i = usefulLength - 1; i >= 0; i--) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * minDimension * 0.4 * sharpnessSlider.value; const x = ((usefulLength - 1 - i) * sliceWidth) - canvas.width/2; if (i === usefulLength - 1) ctx.moveTo(x, centerY + amplitude); else ctx.lineTo(x, centerY + amplitude); }
+            for (let i = 0; i < usefulLength; i++) { const v = Math.pow(dataArray[i] / 255, 1.8); const amplitude = v * minDimension * 0.4 * sharpnessSlider.value; const x = ((usefulLength + i) * sliceWidth) - canvas.width/2; ctx.lineTo(x, centerY + amplitude); }
             ctx.stroke();
         }
 
         function drawCircleDots(dataArray, minDimension, bufferLength, avgBass) {
-            const baseRadius = minDimension * 0.16 + (avgBass * 0.15); 
+            const baseRadius = minDimension * 0.22 + (avgBass * 0.15); // Збільшено
             const pointsCount = 70; const usefulDataLength = Math.floor(bufferLength * 0.65);
             ctx.shadowBlur = 10 * glowSlider.value;
             for (let i = 0; i < pointsCount; i++) {
                 let ratio = i / pointsCount; let dataIndex = Math.floor(Math.pow(ratio, 1.2) * usefulDataLength);
                 let val = Math.max(0, (dataArray[dataIndex] || 0) - 30);
-                let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.2;
+                let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.25;
                 let angle = (i / pointsCount) * Math.PI * 2 - Math.PI / 2; let dist = baseRadius + barHeight;
                 let x = Math.cos(angle) * dist; let y = Math.sin(angle) * dist; let dotSize = 2 + (val / 255) * 8;
                 ctx.beginPath(); ctx.arc(x, y, dotSize, 0, Math.PI * 2); ctx.fillStyle = i % 2 === 0 ? primaryColor : secondaryColor; ctx.shadowColor = ctx.fillStyle; ctx.fill();
@@ -2037,7 +2042,7 @@
         }
         
         function drawHexagonBars(dataArray, minDimension, bufferLength, avgBass) {
-            const baseRadius = minDimension * 0.18 + (avgBass * 0.1); const sides = 6; const barsPerSide = 12; const totalBars = sides * barsPerSide; const usefulDataLength = Math.floor(bufferLength * 0.6);
+            const baseRadius = minDimension * 0.24 + (avgBass * 0.1); const sides = 6; const barsPerSide = 12; const totalBars = sides * barsPerSide; const usefulDataLength = Math.floor(bufferLength * 0.6); // Збільшено
             ctx.shadowBlur = 15 * glowSlider.value; ctx.lineWidth = 3; ctx.lineCap = 'round';
             for (let s = 0; s < sides; s++) {
                 let angleStart = (s / sides) * Math.PI * 2 - Math.PI / 2; let angleEnd = ((s + 1) / sides) * Math.PI * 2 - Math.PI / 2;
@@ -2045,7 +2050,7 @@
                 let x2 = Math.cos(angleEnd) * baseRadius; let y2 = Math.sin(angleEnd) * baseRadius;
                 for (let i = 0; i < barsPerSide; i++) {
                     let ratio = i / barsPerSide; let dataIndex = Math.floor((s * barsPerSide + i) / totalBars * usefulDataLength);
-                    let val = Math.max(0, (dataArray[dataIndex] || 0) - 30); let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.25;
+                    let val = Math.max(0, (dataArray[dataIndex] || 0) - 30); let barHeight = Math.pow(val / 255, 1.5) * minDimension * sharpnessSlider.value * 0.3;
                     let bx = x1 + (x2 - x1) * ratio; let by = y1 + (y2 - y1) * ratio; let angleOut = Math.atan2(by, bx);
                     let endX = bx + Math.cos(angleOut) * barHeight; let endY = by + Math.sin(angleOut) * barHeight;
                     ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(endX, endY); ctx.strokeStyle = s % 2 === 0 ? primaryColor : secondaryColor; ctx.shadowColor = ctx.strokeStyle; ctx.stroke();
@@ -2055,9 +2060,9 @@
         
         function drawWaveFilled(dataArray, minDimension, bufferLength) {
             const usefulDataLength = Math.floor(bufferLength * 0.7); const width = canvas.width; const startX = -width / 2; const step = width / (usefulDataLength - 1);
-            ctx.shadowBlur = 20 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.beginPath(); ctx.moveTo(startX, 0);
+            ctx.shadowBlur = 20 * glowSlider.value; ctx.shadowColor = primaryColor; ctx.beginPath(); ctx.moveTo(startX, 0); // Центр
             for (let i = 0; i < usefulDataLength; i++) {
-                let val = Math.max(0, (dataArray[i] || 0) - 20); let height = Math.pow(val / 255, 1.4) * minDimension * sharpnessSlider.value * 0.4;
+                let val = Math.max(0, (dataArray[i] || 0) - 20); let height = Math.pow(val / 255, 1.4) * minDimension * sharpnessSlider.value * 0.45;
                 let x = startX + i * step; ctx.lineTo(x, -height);
             }
             ctx.lineTo(startX + width, 0); ctx.closePath();
