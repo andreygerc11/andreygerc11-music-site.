@@ -718,7 +718,9 @@ async function fetchAndRewriteBlog() {
 
                 await new Promise(r => setTimeout(r, 6000)); 
             }
-        } catch (e) { }
+        } catch (e) { 
+            console.error(`❌ Помилка генерації новини:`, e.response?.data || e.message); 
+        }
     }
 
     let psychAddedThisRun = 0;
@@ -776,9 +778,12 @@ async function fetchAndRewriteBlog() {
             
             await new Promise(r => setTimeout(r, 6000)); 
 
-        } catch (e) {}
+        } catch (e) {
+            console.error(`❌ Помилка генерації психології:`, e.response?.data || e.message);
+        }
     }
 
+    if (addedCount > 0) {
     if (addedCount > 0) {
         await saveBlogToGitHub();
         console.log(`🎉 Успішно згенеровано та збережено статей: ${addedCount}`);
