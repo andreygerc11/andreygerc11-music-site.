@@ -313,47 +313,40 @@ app.post('/api/auth/user', async (req, res) => {
 });
 
 // ПРОКСІ: GEMINI TEXT (Розкадровка, Текст Пісні)
-app.post('/api/gemini/text', async (req, res) => {
-    const { email, payload, isStoryboard } = req.body;
-
+app.post('/api/gemini/image', async (req, res) => {
+    const { email, payload } = req.body;
+    
     if (!GEMINI_API_KEY) return res.status(500).json({ error: "Немає GEMINI_API_KEY" });
     if (!email) return res.status(400).json({ error: "Авторизація обов'язкова" });
 
     let user = usersDB.find(u => u.email === email);
-    // Для адміна створимо віртуального користувача, якщо його випадково немає в базі
-    if (!user && email === 'admin@dev.com') {
-        user = { email: 'admin@dev.com', status: 'premium', clips_left: 999 };
-    } else if (!user) {
-        return res.status(403).json({ error: "Користувача не знайдено" });
-    }
-
-    // СПИСУЄМО ЛІМІТ ТІЛЬКИ ЗА КЛІП (РОЗКАДРОВКУ) — АДМІНА ПРОПУСКАЄМО
-    if (isStoryboard && email !== 'admin@dev.com') {
-        if (user.clips_left <= 0) {
-            return res.status(403).json({ error: "Ліміт вичерпано", code: "NO_TOKENS" });
-        }
-        user.clips_left -= 1;
-        await saveUsersToGitHub();
-        console.log(`🎬 Користувач ${email} генерує кліп. Залишок: ${user.clips_left}`);
-    } else if (isStoryboard && email === 'admin@dev.com') {
-        console.log(`👑 Адміністратор ${email} генерує кліп безкоштовно.`);
-    }
+    if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
 
     try {
+        // Універсальний парсинг промпту (підтримує старий і новий фронтенд)
+        const promptText = Array.isArray(payload.instances) ? payload.instances[0].prompt : payload.instances.prompt;
+        const aspect = payload.parameters?.aspectRatio || "1:1";
+        
+        // Формуємо запит за стандартом для Gemini 3.1
+        const geminiPayload = {
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: {
+                aspectRatio: aspect // Виправлено на camelCase, як вимагає API
+            }
+        };
+
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-            payload,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
+            geminiPayload,
             { headers: { 'Content-Type': 'application/json' } }
         );
-        res.json(response.data);
+        
+        const base64Image = response.data.candidates[0].content.parts[0].inlineData.data;
+        res.json({ predictions: [{ bytesBase64Encoded: base64Image }] });
+
     } catch (error) {
-        console.error("Gemini Text API Error:", error?.response?.data || error.message);
-        // Якщо сталася помилка Гугла, повертаємо токен людині (але не чіпаємо адміна)
-        if (isStoryboard && email !== 'admin@dev.com') {
-            user.clips_left += 1;
-            await saveUsersToGitHub();
-        }
-        res.status(500).json({ error: "Помилка генерації через ШІ" });
+        console.error("Gemini 3.1 Image Error Details:", error?.response?.data || error.message);
+        res.status(500).json({ error: "Помилка відмальовки кадру через ШІ" });
     }
 });
 
