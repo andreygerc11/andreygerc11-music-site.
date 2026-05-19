@@ -367,42 +367,39 @@ app.post('/api/gemini/image', async (req, res) => {
     let user = usersDB.find(u => u.email === email);
     if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
 
-    try {
-        // 1. Дістаємо текст промпту (підтримує як старий, так і новий формат генератора)
-        const promptText = Array.isArray(payload.instances) 
-            ? payload.instances[0].prompt 
-            : payload.instances.prompt;
+    const promptText = Array.isArray(payload.instances) ? payload.instances[0].prompt : payload.instances.prompt;
+    const aspect = payload.parameters?.aspectRatio || "1:1";
+    
+    const geminiPayload = {
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: { aspect_ratio: aspect } // <-- ТУТ ПРАВИЛЬНЕ ІМ'Я
+    };
+
+    let retries = 3; // Кількість спроб при помилці 503
+    while (retries > 0) {
+        try {
+            const response = await axios.post(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
+                geminiPayload,
+                { headers: { 'Content-Type': 'application/json' } }
+            );
             
-        // 2. ДІСТАЄМО ФОРМАТ З ФРОНТЕНДУ (те, що я забув додати минулого разу!)
-        const aspect = payload.parameters?.aspectRatio || "1:1";
-        
-        // 3. Формуємо запит за новим стандартом Gemini 3.1
-        const geminiPayload = {
-            contents: [{
-                parts: [{ text: promptText }]
-            }],
-            // Передаємо розмір в параметри генерації
-            generationConfig: {
-                aspectRatio: aspect
+            const base64Image = response.data.candidates[0].content.parts[0].inlineData.data;
+            return res.json({ predictions: [{ bytesBase64Encoded: base64Image }] });
+
+        } catch (error) {
+            const status = error.response?.status;
+            if (status === 503) {
+                retries--;
+                console.warn(`⚠️ Модель перевантажена (503). Залишилось спроб: ${retries}`);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // чекаємо 2 сек
+            } else {
+                console.error("Gemini Error:", error?.response?.data || error.message);
+                return res.status(500).json({ error: "Помилка відмальовки кадру" });
             }
-        };
-
-        const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
-            geminiPayload,
-            { headers: { 'Content-Type': 'application/json' } }
-        );
-        
-        // Gemini 3.1 повертає картинку в inlineData.data
-        const base64Image = response.data.candidates[0].content.parts[0].inlineData.data;
-        
-        // Загортаємо відповідь у старий формат, щоб фронтенд її зрозумів
-        res.json({ predictions: [{ bytesBase64Encoded: base64Image }] });
-
-    } catch (error) {
-        console.error("Gemini 3.1 Image Error:", error?.response?.data || error.message);
-        res.status(500).json({ error: "Помилка відмальовки кадру через ШІ" });
+        }
     }
+    res.status(503).json({ error: "ШІ перевантажений, спробуйте пізніше" });
 });
 
 // ==========================================
