@@ -357,7 +357,7 @@ app.post('/api/gemini/text', async (req, res) => {
     }
 });
 
-// ПРОКСІ: GEMINI IMAGE (Imagen 4 для кадрів)
+// ПРОКСІ: GEMINI IMAGE (Перехід на сучасну модель gemini-3.1-flash-image-preview)
 app.post('/api/gemini/image', async (req, res) => {
     const { email, payload } = req.body;
     
@@ -368,15 +368,31 @@ app.post('/api/gemini/image', async (req, res) => {
     if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
 
     try {
+        // Дістаємо текст промпту з формату старого Imagen
+        const promptText = payload.instances.prompt;
+        
+        // Формуємо запит за новим стандартом Gemini 3.1
+        const geminiPayload = {
+            contents: [{
+                parts: [{ text: promptText }]
+            }]
+        };
+
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${GEMINI_API_KEY}`,
-            payload,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
+            geminiPayload,
             { headers: { 'Content-Type': 'application/json' } }
         );
-        res.json(response.data);
+        
+        // Gemini 3.1 повертає картинку в inlineData.data
+        const base64Image = response.data.candidates[0].content.parts[0].inlineData.data;
+        
+        // Загортаємо відповідь у старий формат, щоб не ламати твій фронтенд (generator.html)
+        res.json({ predictions: [{ bytesBase64Encoded: base64Image }] });
+
     } catch (error) {
-        console.error("Imagen API Error:", error?.response?.data || error.message);
-        res.status(500).json({ error: "Помилка відмальовки кадру" });
+        console.error("Gemini 3.1 Image Error:", error?.response?.data || error.message);
+        res.status(500).json({ error: "Помилка відмальовки кадру через ШІ" });
     }
 });
 
