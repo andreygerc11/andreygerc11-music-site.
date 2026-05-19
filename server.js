@@ -369,7 +369,7 @@ app.post('/api/gemini/image', async (req, res) => {
 
     try {
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${GEMINI_API_KEY}`,
             payload,
             { headers: { 'Content-Type': 'application/json' } }
         );
