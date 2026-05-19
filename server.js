@@ -51,7 +51,14 @@ const BOT_PRICE = 3736;
 
 let bot;
 if (BOT_TOKEN) {
-    bot = new TelegramBot(BOT_TOKEN, { polling: true });
+    bot = new TelegramBot(BOT_TOKEN, { 
+        polling: { autoStart: true, params: { timeout: 10 } } 
+    });
+    bot.on('polling_error', (error) => {
+        if (error.code !== 'ETELEGRAM') {
+            console.log("Telegram Error:", error.message);
+        }
+    });
     console.log("✅ Telegram Bot успішно запущено.");
 
     const getMainMenu = () => {
@@ -313,8 +320,8 @@ app.post('/api/auth/user', async (req, res) => {
 });
 
 // ПРОКСІ: GEMINI TEXT (Розкадровка, Текст Пісні)
-app.post('/api/gemini/image', async (req, res) => {
-    const { email, payload } = req.body;
+app.post('/api/gemini/text', async (req, res) => {
+    const { email, payload, isStoryboard } = req.body;
     
     if (!GEMINI_API_KEY) return res.status(500).json({ error: "Немає GEMINI_API_KEY" });
     if (!email) return res.status(400).json({ error: "Авторизація обов'язкова" });
@@ -322,35 +329,35 @@ app.post('/api/gemini/image', async (req, res) => {
     let user = usersDB.find(u => u.email === email);
     if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
 
-    try {
-        // Універсальний парсинг промпту (підтримує старий і новий фронтенд)
-        const promptText = Array.isArray(payload.instances) ? payload.instances[0].prompt : payload.instances.prompt;
-        const aspect = payload.parameters?.aspectRatio || "1:1";
-        
-        // Формуємо запит за стандартом для Gemini 3.1
-        const geminiPayload = {
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: {
-                aspectRatio: aspect // Виправлено на camelCase, як вимагає API
-            }
-        };
+    // СПИСУЄМО ЛІМІТ ТІЛЬКИ ЗА КЛІП (РОЗКАДРОВКУ)
+    if (isStoryboard) {
+        if (user.clips_left <= 0) {
+            return res.status(403).json({ error: "Ліміт вичерпано", code: "NO_TOKENS" });
+        }
+        user.clips_left -= 1;
+        await saveUsersToGitHub();
+        console.log(`🎬 Користувач ${email} генерує кліп. Залишок: ${user.clips_left}`);
+    }
 
+    try {
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
-            geminiPayload,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            payload,
             { headers: { 'Content-Type': 'application/json' } }
         );
-        
-        const base64Image = response.data.candidates[0].content.parts[0].inlineData.data;
-        res.json({ predictions: [{ bytesBase64Encoded: base64Image }] });
-
+        res.json(response.data);
     } catch (error) {
-        console.error("Gemini 3.1 Image Error Details:", error?.response?.data || error.message);
-        res.status(500).json({ error: "Помилка відмальовки кадру через ШІ" });
+        console.error("Gemini Text API Error:", error?.response?.data || error.message);
+        // Якщо сталася помилка Гугла, повертаємо токен людині
+        if (isStoryboard) {
+            user.clips_left += 1;
+            await saveUsersToGitHub();
+        }
+        res.status(500).json({ error: "Помилка генерації через ШІ" });
     }
 });
 
-// ПРОКСІ: GEMINI IMAGE (З підтримкою всіх форматів 16:9, 9:16 тощо)
+// ПРОКСІ: GEMINI IMAGE (З підтримкою форматів)
 app.post('/api/gemini/image', async (req, res) => {
     const { email, payload } = req.body;
     
@@ -361,22 +368,16 @@ app.post('/api/gemini/image', async (req, res) => {
     if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
 
     const promptText = Array.isArray(payload.instances) ? payload.instances[0].prompt : payload.instances.prompt;
-    
-    // Отримуємо вибраний тобою формат із генератора (за замовчуванням квадрат 1:1)
     const aspect = payload.parameters?.aspectRatio || "1:1";
     
-    // ОСЬ ТУТ МАГІЯ: параметр формату має бути схований всередині imageConfig!
     const geminiPayload = {
         contents: [{ parts: [{ text: promptText }] }],
         generationConfig: {
-            responseModalities: ["IMAGE"], // Підказуємо ШІ, що чекаємо саме зображення
-            imageConfig: {
-                aspectRatio: aspect // Твій 16:9 або 9:16 передається сюди!
-            }
+            responseModalities: ["IMAGE"], 
+            imageConfig: { aspectRatio: aspect }
         }
     };
 
-    // Механізм авто-повтору на випадок, якщо сервери Google перевантажені (помилка 503)
     let retries = 3;
     while (retries > 0) {
         try {
@@ -396,14 +397,13 @@ app.post('/api/gemini/image', async (req, res) => {
                 console.warn(`⚠️ Модель перевантажена (503). Залишилось спроб: ${retries}`);
                 await new Promise(resolve => setTimeout(resolve, 2000));
             } else {
-                console.error("Gemini Error:", error?.response?.data || error.message);
+                console.error("Gemini Image Error:", error?.response?.data || error.message);
                 return res.status(500).json({ error: "Помилка відмальовки кадру" });
             }
         }
     }
     res.status(503).json({ error: "ШІ перевантажений, спробуйте пізніше" });
 });
-
 // ==========================================
 // 4. GOOGLE SHEETS
 // ==========================================
