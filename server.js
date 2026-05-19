@@ -368,14 +368,23 @@ app.post('/api/gemini/image', async (req, res) => {
     if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
 
     try {
-        // Дістаємо текст промпту з формату старого Imagen
-        const promptText = payload.instances.prompt;
+        // 1. Дістаємо текст промпту (підтримує як старий, так і новий формат генератора)
+        const promptText = Array.isArray(payload.instances) 
+            ? payload.instances[0].prompt 
+            : payload.instances.prompt;
+            
+        // 2. ДІСТАЄМО ФОРМАТ З ФРОНТЕНДУ (те, що я забув додати минулого разу!)
+        const aspect = payload.parameters?.aspectRatio || "1:1";
         
-        // Формуємо запит за новим стандартом Gemini 3.1
+        // 3. Формуємо запит за новим стандартом Gemini 3.1
         const geminiPayload = {
             contents: [{
                 parts: [{ text: promptText }]
-            }]
+            }],
+            // Передаємо розмір в параметри генерації
+            generationConfig: {
+                aspectRatio: aspect
+            }
         };
 
         const response = await axios.post(
@@ -387,7 +396,7 @@ app.post('/api/gemini/image', async (req, res) => {
         // Gemini 3.1 повертає картинку в inlineData.data
         const base64Image = response.data.candidates[0].content.parts[0].inlineData.data;
         
-        // Загортаємо відповідь у старий формат, щоб не ламати твій фронтенд (generator.html)
+        // Загортаємо відповідь у старий формат, щоб фронтенд її зрозумів
         res.json({ predictions: [{ bytesBase64Encoded: base64Image }] });
 
     } catch (error) {
