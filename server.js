@@ -350,7 +350,7 @@ app.post('/api/gemini/image', async (req, res) => {
     }
 });
 
-// ПРОКСІ: GEMINI IMAGE (Перехід на сучасну модель gemini-3.1-flash-image-preview)
+// ПРОКСІ: GEMINI IMAGE (З підтримкою всіх форматів 16:9, 9:16 тощо)
 app.post('/api/gemini/image', async (req, res) => {
     const { email, payload } = req.body;
     
@@ -361,14 +361,23 @@ app.post('/api/gemini/image', async (req, res) => {
     if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
 
     const promptText = Array.isArray(payload.instances) ? payload.instances[0].prompt : payload.instances.prompt;
+    
+    // Отримуємо вибраний тобою формат із генератора (за замовчуванням квадрат 1:1)
     const aspect = payload.parameters?.aspectRatio || "1:1";
     
+    // ОСЬ ТУТ МАГІЯ: параметр формату має бути схований всередині imageConfig!
     const geminiPayload = {
         contents: [{ parts: [{ text: promptText }] }],
-        generationConfig: { aspect_ratio: aspect } // <-- ТУТ ПРАВИЛЬНЕ ІМ'Я
+        generationConfig: {
+            responseModalities: ["IMAGE"], // Підказуємо ШІ, що чекаємо саме зображення
+            imageConfig: {
+                aspectRatio: aspect // Твій 16:9 або 9:16 передається сюди!
+            }
+        }
     };
 
-    let retries = 3; // Кількість спроб при помилці 503
+    // Механізм авто-повтору на випадок, якщо сервери Google перевантажені (помилка 503)
+    let retries = 3;
     while (retries > 0) {
         try {
             const response = await axios.post(
@@ -385,7 +394,7 @@ app.post('/api/gemini/image', async (req, res) => {
             if (status === 503) {
                 retries--;
                 console.warn(`⚠️ Модель перевантажена (503). Залишилось спроб: ${retries}`);
-                await new Promise(resolve => setTimeout(resolve, 2000)); // чекаємо 2 сек
+                await new Promise(resolve => setTimeout(resolve, 2000));
             } else {
                 console.error("Gemini Error:", error?.response?.data || error.message);
                 return res.status(500).json({ error: "Помилка відмальовки кадру" });
