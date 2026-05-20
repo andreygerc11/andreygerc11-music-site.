@@ -919,18 +919,20 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
                 return;
             }
 
-// Зберігаємо поточну обкладинку, якщо вона є
+            // Зберігаємо поточну обкладинку, якщо вона є
             let currentCoverSrc = null;
             if (backgroundImage && !isDirectorMode) {
                 currentCoverSrc = backgroundImage.src;
             }
 
             directorScript = [];
+            directorImages = [];
             
             const sceneCards = document.querySelectorAll('.scene-card'); 
             
             sceneCards.forEach((card) => {
                 const timeText = card.querySelector('.scene-time').innerText;
+                // ВАЖЛИВО: додано крапку в регулярний вираз, щоб мілісекунди не губилися!
                 const startTimeStr = timeText.replace(/[^0-9:\-.]/g, '').split('-')[0].trim();
                 
                 const parts = startTimeStr.split(':');
@@ -949,40 +951,17 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
 
             directorScript.sort((a, b) => a.time - b.time);
 
+            // ЯКЩО Є ОБКЛАДИНКА - ВСТАВЛЯЄМО ЇЇ НА ПОЧАТОК КЛІПУ (00:00)
             if (currentCoverSrc && (directorScript.length === 0 || directorScript[0].time > 0)) {
                 directorScript.unshift({ time: 0, url: currentCoverSrc });
             }
 
-            // === ПРО-ОПТИМІЗАЦІЯ: АПАРАТНЕ ДЕКОДУВАННЯ (GPU) ===
-            dirLoadingState.style.display = 'block';
-            dirLoadingState.innerHTML = '<div class="spinner"><i class="fas fa-microchip"></i></div><p style="font-weight: 800; font-size: 0.85rem;">Оптимізація текстур для відеокарти...</p>';
-            storyboardContainer.style.display = 'none';
-
-            directorImages = [];
-            try {
-                // Чекаємо повного завантаження всіх картинок у пам'ять GPU
-                directorImages = await Promise.all(directorScript.map(scene => {
-                    return new Promise((resolve) => {
-                        const img = new Image();
-                        img.crossOrigin = "Anonymous";
-                        img.onload = async () => {
-                            try {
-                                // Перетворюємо у Bitmap (готово для миттєвого рендеру)
-                                const bitmap = await createImageBitmap(img);
-                                resolve(bitmap);
-                            } catch(e) {
-                                resolve(img); // Фолбек, якщо браузер не підтримує
-                            }
-                        };
-                        img.src = scene.url;
-                    });
-                }));
-            } catch (err) {
-                console.error("Помилка підготовки кадрів:", err);
-            }
-
-            dirLoadingState.style.display = 'none';
-            storyboardContainer.style.display = 'grid';
+            directorScript.forEach((scene, index) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.src = scene.url;
+                directorImages[index] = img;
+            });
 
             // ✅ ВИПРАВЛЕННЯ: Спочатку очищаємо фон, а ПОТІМ вмикаємо Режисера!
             clearBackground(); 
@@ -1914,7 +1893,7 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
 
             // Логіка плавного переходу (Fade)
             if (transitionProgress < 1) {
-                transitionProgress += 0.015; // ПРО-Плавність
+                transitionProgress += 0.03; // Швидкість переходу
                 if (transitionProgress >= 1) {
                     transitionProgress = 1;
                     backgroundImage = nextBackgroundImage;
@@ -2132,23 +2111,11 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
             if (audioCtx.state === 'suspended') await audioCtx.resume();
             downloadVideoBtn.style.display = 'none'; isGenerating = true; isCancelled = false; chunks = [];
 
-            // === ПРО-ОПТИМІЗАЦІЯ КОДЕКІВ ===
-            // Ми віддаємо пріоритет H.264 (MP4), бо він апаратно прискорюється на всіх ПК.
-            // Якщо браузер не підтримує MP4, беремо VP8 (він легший для кросфейдів, ніж VP9).
             let mimeType = ''; let fileExt = 'webm'; let useWebmFix = true;
-            
-            if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) { 
-                mimeType = 'video/mp4;codecs=avc1'; fileExt = 'mp4'; useWebmFix = false; 
-            }
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-                mimeType = 'video/webm;codecs=vp8,opus';
-            }
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
-                mimeType = 'video/webm;codecs=vp9,opus';
-            }
-            else if (MediaRecorder.isTypeSupported('video/webm')) {
-                mimeType = 'video/webm';
-            }
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) mimeType = 'video/webm;codecs=vp9,opus';
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) mimeType = 'video/webm;codecs=vp8,opus';
+            else if (MediaRecorder.isTypeSupported('video/webm')) mimeType = 'video/webm';
+            else if (MediaRecorder.isTypeSupported('video/mp4')) { mimeType = 'video/mp4'; fileExt = 'mp4'; useWebmFix = false; }
 
             generateVideoBtn.style.display = 'none'; stopRenderBtn.style.display = 'block';
             renderOverlay.style.display = 'flex'; generateProgress.value = 0;
