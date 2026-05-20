@@ -956,14 +956,34 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
                 directorScript.unshift({ time: 0, url: currentCoverSrc });
             }
 
-            directorScript.forEach((scene, index) => {
-                const img = new Image();
-                img.crossOrigin = "Anonymous";
-                img.src = scene.url;
-                directorImages[index] = img;
-            });
-
-            // ✅ ВИПРАВЛЕННЯ: Спочатку очищаємо фон, а ПОТІМ вмикаємо Режисера!
+            dirLoadingState.style.display = 'block';
+            dirLoadingState.innerHTML = '<div class="spinner"><i class="fas fa-microchip"></i></div><p style="font-weight: 800; font-size: 0.85rem;">Оптимізація кадрів для плавності...</p>';
+            storyboardContainer.style.display = 'none';
+            
+            directorImages = [];
+            try {
+                directorImages = await Promise.all(directorScript.map(scene => {
+                    return new Promise((resolve) => {
+                        const img = new Image();
+                        img.crossOrigin = "Anonymous";
+                        img.onload = async () => {
+                            try {
+                                const bitmap = await createImageBitmap(img);
+                                resolve(bitmap);
+                            } catch(e) {
+                                resolve(img);
+                            }
+                        };
+                        img.src = scene.url;
+                    });
+                }));
+            } catch (err) {
+                console.error(err);
+            }
+            
+            dirLoadingState.style.display = 'none';
+            storyboardContainer.style.display = 'grid';
+            
             clearBackground(); 
 
             isDirectorMode = true;
@@ -1893,7 +1913,7 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
 
             // Логіка плавного переходу (Fade)
             if (transitionProgress < 1) {
-                transitionProgress += 0.03; // Швидкість переходу
+                transitionProgress += 0.05; // Швидкість переходу
                 if (transitionProgress >= 1) {
                     transitionProgress = 1;
                     backgroundImage = nextBackgroundImage;
@@ -2112,10 +2132,10 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
             downloadVideoBtn.style.display = 'none'; isGenerating = true; isCancelled = false; chunks = [];
 
             let mimeType = ''; let fileExt = 'webm'; let useWebmFix = true;
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) mimeType = 'video/webm;codecs=vp9,opus';
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) mimeType = 'video/webm;codecs=vp8,opus';
-            else if (MediaRecorder.isTypeSupported('video/webm')) mimeType = 'video/webm';
-            else if (MediaRecorder.isTypeSupported('video/mp4')) { mimeType = 'video/mp4'; fileExt = 'mp4'; useWebmFix = false; }
+            if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) { mimeType = 'video/mp4;codecs=avc1'; fileExt = 'mp4'; useWebmFix = false; }
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) { mimeType = 'video/webm;codecs=vp8,opus'; }
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) { mimeType = 'video/webm;codecs=vp9,opus'; }
+            else if (MediaRecorder.isTypeSupported('video/webm')) { mimeType = 'video/webm'; }
 
             generateVideoBtn.style.display = 'none'; stopRenderBtn.style.display = 'block';
             renderOverlay.style.display = 'flex'; generateProgress.value = 0;
