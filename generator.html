@@ -1269,9 +1269,10 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
             return { x: (cx - rect.left) * sX, y: (cy - rect.top) * sY };
         }
         function getLocalMousePos(p) {
+            // Логотип тепер завжди рахується від центру екрану, незалежно від спектру
             return {
-                x: (p.x - (canvas.width / 2 + spectrumState.offsetX)) / spectrumState.scale,
-                y: (p.y - (canvas.height / 2 + spectrumState.offsetY)) / spectrumState.scale
+                x: p.x - (canvas.width / 2),
+                y: p.y - (canvas.height / 2)
             };
         }
 
@@ -1296,10 +1297,25 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
                 isDraggingText = true; dragStartX = p.x; dragStartY = p.y; return;
             }
 
-            const cx = canvas.width / 2 + spectrumState.offsetX; const cy = canvas.height / 2 + spectrumState.offsetY;
+            const isLinear = playerStyleSelect.value.startsWith('linear') || playerStyleSelect.value === 'wave_filled';
+            const cx = canvas.width / 2 + spectrumState.offsetX; 
+            // Якщо спектр лінійний - його базова лінія в самому низу
+            const cy = (isLinear ? canvas.height : canvas.height / 2) + spectrumState.offsetY;
             const specHitSize = Math.min(canvas.width, canvas.height) * 0.4 * spectrumState.scale;
-            if (p.x >= cx - specHitSize && p.x <= cx + specHitSize && p.y >= cy - specHitSize && p.y <= cy + specHitSize) {
-                spectrumState.isDragging = true; spectrumState.dragStartX = p.x - spectrumState.offsetX; spectrumState.dragStartY = p.y - spectrumState.offsetY; return;
+            
+            let hitSpectrum = false;
+            if (isLinear) {
+                // Зона захвату для лінійних смуг - широкий прямокутник знизу
+                hitSpectrum = (p.x >= cx - canvas.width/2 && p.x <= cx + canvas.width/2 && p.y >= cy - specHitSize && p.y <= cy);
+            } else {
+                hitSpectrum = (p.x >= cx - specHitSize && p.x <= cx + specHitSize && p.y >= cy - specHitSize && p.y <= cy + specHitSize);
+            }
+
+            if (hitSpectrum && !logoState.isHovering) {
+                spectrumState.isDragging = true; 
+                spectrumState.dragStartX = p.x - spectrumState.offsetX; 
+                spectrumState.dragStartY = p.y - spectrumState.offsetY; 
+                return;
             }
         }
 
@@ -1334,9 +1350,20 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
                     const drawW = logoState.width * logoState.scale; const drawH = logoState.height * logoState.scale;
                     if (localP.x >= logoState.x - drawW/2 && localP.x <= logoState.x + drawW/2 && localP.y >= logoState.y - drawH/2 && localP.y <= logoState.y + drawH/2) logoState.isHovering = true;
                 }
-                const cx = canvas.width / 2 + spectrumState.offsetX; const cy = canvas.height / 2 + spectrumState.offsetY;
+                
+                const isLinear = playerStyleSelect.value.startsWith('linear') || playerStyleSelect.value === 'wave_filled';
+                const cx = canvas.width / 2 + spectrumState.offsetX; 
+                const cy = (isLinear ? canvas.height : canvas.height / 2) + spectrumState.offsetY;
                 const specHitSize = Math.min(canvas.width, canvas.height) * 0.4 * spectrumState.scale;
-                spectrumState.isHovering = (!logoState.isHovering && p.x >= cx - specHitSize && p.x <= cx + specHitSize && p.y >= cy - specHitSize && p.y <= cy + specHitSize);
+                
+                let hitSpectrum = false;
+                if (isLinear) {
+                    hitSpectrum = (p.x >= cx - canvas.width/2 && p.x <= cx + canvas.width/2 && p.y >= cy - specHitSize && p.y <= cy);
+                } else {
+                    hitSpectrum = (p.x >= cx - specHitSize && p.x <= cx + specHitSize && p.y >= cy - specHitSize && p.y <= cy + specHitSize);
+                }
+                
+                spectrumState.isHovering = (!logoState.isHovering && hitSpectrum);
                 canvas.style.cursor = (isHoveringText || isHoveringLyrics || logoState.isHovering || spectrumState.isHovering) ? 'grab' : 'crosshair';
                 if (!audioCtx) drawPreviewFrame();
             }
@@ -1410,6 +1437,16 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
                 
                 const dummyData = new Uint8Array(512); for(let i=0; i<512; i++) dummyData[i] = 100;
                 const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
+                const isLinear = style.startsWith('linear') || style === 'wave_filled';
+                
+                ctx.save();
+                const specCx = canvas.width / 2 + spectrumState.offsetX;
+                // Секретна зброя: якщо спектр лінійний, його низ = низ екрану!
+                const specCy = (isLinear ? canvas.height : canvas.height / 2) + spectrumState.offsetY;
+                ctx.translate(specCx, specCy);
+                ctx.scale(spectrumState.scale, spectrumState.scale);
+                
+                const dummyData = new Uint8Array(512); for(let i=0; i<512; i++) dummyData[i] = 100;
                 
                 ctx.globalAlpha = 0.4;
                 if (style === 'circle_sharp') drawCircleSharp(dummyData, minDimension, 512, 50); 
@@ -1421,12 +1458,15 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
                 else if (style === 'hexagon_bars') drawHexagonBars(dummyData, minDimension, 512, 50);
                 else if (style === 'wave_filled') drawWaveFilled(dummyData, minDimension, 512);
                 ctx.globalAlpha = 1.0;
+                ctx.restore();
 
                 if (logoImage) {
+                    ctx.save();
+                    ctx.translate(canvas.width / 2, canvas.height / 2); // Окреме позиціонування лого
                     const drawW = logoState.width * logoState.scale; const drawH = logoState.height * logoState.scale;
                     ctx.drawImage(logoImage, logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH);
+                    ctx.restore();
                 }
-                ctx.restore();
                 
                 drawTextOverlay(minDimension);
                 drawHoverIndicators(minDimension);
@@ -1887,9 +1927,10 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
         function drawHoverIndicators(minDimension) {
             if (!isGenerating) {
                 if (logoState.isHovering) {
-                    ctx.save(); ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY); ctx.scale(spectrumState.scale, spectrumState.scale);
+                    ctx.save(); 
+                    ctx.translate(canvas.width / 2, canvas.height / 2); // Логотип завжди по центру
                     const drawW = logoState.width * logoState.scale; const drawH = logoState.height * logoState.scale;
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3 / spectrumState.scale; ctx.setLineDash([10 / spectrumState.scale, 10 / spectrumState.scale]); 
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3 / logoState.scale; ctx.setLineDash([10 / logoState.scale, 10 / logoState.scale]); 
                     ctx.strokeRect(logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH); ctx.restore();
                 }
                 if (isHoveringText && textBB.w > 0) {
@@ -1899,8 +1940,17 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
                     ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(lyricsBB.x, lyricsBB.y, lyricsBB.w, lyricsBB.h); ctx.restore();
                 }
                 if (spectrumState.isHovering && !logoState.isHovering) {
-                    const cx = canvas.width / 2 + spectrumState.offsetX; const cy = canvas.height / 2 + spectrumState.offsetY; const specHitSize = minDimension * 0.4 * spectrumState.scale;
-                    ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.strokeRect(cx - specHitSize, cy - specHitSize, specHitSize * 2, specHitSize * 2); ctx.restore();
+                    const isLinear = playerStyleSelect.value.startsWith('linear') || playerStyleSelect.value === 'wave_filled';
+                    const cx = canvas.width / 2 + spectrumState.offsetX; 
+                    const cy = (isLinear ? canvas.height : canvas.height / 2) + spectrumState.offsetY; 
+                    const specHitSize = minDimension * 0.4 * spectrumState.scale;
+                    ctx.save(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); 
+                    if (isLinear) {
+                        ctx.strokeRect(cx - canvas.width/2, cy - specHitSize, canvas.width, specHitSize);
+                    } else {
+                        ctx.strokeRect(cx - specHitSize, cy - specHitSize, specHitSize * 2, specHitSize * 2); 
+                    }
+                    ctx.restore();
                 }
             }
         }
@@ -1952,9 +2002,12 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
             if (autoColorCheckbox.checked) { baseHue = (baseHue + 1.5) % 360; primaryColor = `hsl(${Math.floor(baseHue)}, 100%, 50%)`; secondaryColor = `hsl(${Math.floor((baseHue + 60) % 360)}, 100%, 50%)`; }
 
             const minDimension = Math.min(canvas.width, canvas.height); const style = playerStyleSelect.value;
+            const isLinear = style.startsWith('linear') || style === 'wave_filled';
             
             ctx.save();
-            ctx.translate(canvas.width / 2 + spectrumState.offsetX, canvas.height / 2 + spectrumState.offsetY);
+            const specCx = canvas.width / 2 + spectrumState.offsetX;
+            const specCy = (isLinear ? canvas.height : canvas.height / 2) + spectrumState.offsetY;
+            ctx.translate(specCx, specCy);
             ctx.scale(spectrumState.scale, spectrumState.scale);
             
             if (style === 'circle_sharp') drawCircleSharp(dataArray, minDimension, bufferLength, avgBass); 
@@ -1965,13 +2018,16 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
             else if (style === 'circle_dots') drawCircleDots(dataArray, minDimension, bufferLength, avgBass);
             else if (style === 'hexagon_bars') drawHexagonBars(dataArray, minDimension, bufferLength, avgBass);
             else if (style === 'wave_filled') drawWaveFilled(dataArray, minDimension, bufferLength);
+            ctx.restore();
 
             if (logoImage) {
+                ctx.save();
+                ctx.translate(canvas.width / 2, canvas.height / 2);
                 const logoPulse = 1 + (avgBass / 255) * 0.15;
                 const drawW = logoState.width * logoState.scale * logoPulse; const drawH = logoState.height * logoState.scale * logoPulse;
                 ctx.drawImage(logoImage, logoState.x - drawW/2, logoState.y - drawH/2, drawW, drawH);
+                ctx.restore();
             }
-            ctx.restore();
 
             drawTextOverlay(minDimension);
             drawHoverIndicators(minDimension);
