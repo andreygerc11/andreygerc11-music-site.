@@ -749,69 +749,94 @@ async function fetchAndRewriteBlog() {
 
     let psychAddedThisRun = 0;
     
-    for (let i = 0; i < 10; i++) { 
-        if (psychAddedThisRun >= 3) break;
+    // Фільтруємо джерела саме для психології з масиву allBlogSources
+    const psychUrls = allBlogSources.filter(src => src.type === "psychology").map(src => src.url);
+    const shuffledPsychRss = psychUrls.sort(() => 0.5 - Math.random());
 
-        const availableTopics = psychologyTopics.filter(topic => 
-            !aiBlogPosts.some(p => p.originalTopic === topic)
-        );
-
-        if (availableTopics.length === 0) break; 
-
-        const selectedTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
-        console.log(`🫂 Генерую підтримку на тему: ${selectedTopic}`);
+    for (const rssUrl of shuffledPsychRss) {
+        if (psychAddedThisRun >= 3) break; // Ліміт: 3 статті за запуск
 
         try {
-            const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                model: "llama-3.3-70b-versatile",
-                messages: [
-                    { 
-                        role: "system", 
-                        content: "Ти — досвідчений волонтер проєкту 'Голос проти раку'. Пиши теплу статтю підтримки. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Категорично заборонено використовувати латиницю, іспанські, в'єтнамські слова чи китайські ієрогліфи. Пиши як жива людина, без шаблонів 'Вступ/Висновок'. Використовуй емоційні підзаголовки <h2>. ЗАКІНЧУЙ статтю обов'язковим абзацом: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію з лікарем-онкологом або професійним психотерапевтом'." 
-                    }, 
-                    { role: "user", content: `Тема статті: ${selectedTopic}` }
-                ],
-                max_tokens: 2200,
-                temperature: 0.3
-            }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
-
-            const articleContent = groqRes.data.choices[0].message.content.trim();
-
-            const post = {
-                id: Date.now() + Math.floor(Math.random() * 1000), 
-                date: new Date().toLocaleDateString('uk-UA'), 
-                category: "psychology",
-                originalTopic: selectedTopic, 
-                title: selectedTopic,
-                content: articleContent, 
-                imageUrl: "article_support.png"
-            };
-
-            aiBlogPosts.unshift(post);
-            addedCount++;
-            psychAddedThisRun++;
-
-            if (bot && CHANNEL_ID) {
-                try {
-                    const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
-                    const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
-                    const tgText = `🫂 <b>${selectedTopic}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
-                    await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
-                } catch (tgErr) {}
-            }
+            const response = await axios.get(rssUrl, { timeout: 10000 });
+            const xml = response.data;
             
-            await new Promise(r => setTimeout(r, 6000)); 
+            // Шукаємо статті у потоці сайту
+            const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
+            if (!itemMatch) continue;
 
+            const itemXml = itemMatch[1];
+            const titleMatch = itemXml.match(/<title>(.*?)<\/title>/);
+            const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\/pubDate>/) || itemXml.match(/<published>(.*?)<\/published>/);
+
+            if (titleMatch) {
+                let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
+                let cleanTitle = rawTitle.split(" - ")[0]; 
+                
+                // Перевіряємо, чи ми вже не писали про це раніше
+                const isDuplicate = aiBlogPosts.some(p => p.originalTitle === rawTitle);
+                if (isDuplicate) {
+                    console.log(`Query пропущено (вже є в базі): ${cleanTitle}`);
+                    continue;
+                }
+
+                console.log(`🫂 Знайдено новий матеріал, генерую статтю підтримки: ${cleanTitle}`);
+                
+                let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
+
+                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        { 
+                            role: "system", 
+                            content: "Ти — досвідчений психолог та волонтер проєкту 'Голос проти раку'. Твоє завдання: адаптувати та переписати знайдену статтю про психологічну підтримку для онкохворих чи їхніх близьких. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Категорично заборонено використовувати латиницю. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК (без тегів та зірочок), а потім (з нового рядка) — сам текст статті. ЗАКІНЧУЙ статтю обов'язковим абзацом: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію з лікарем-онкологом або професійним психотерапевтом'." 
+                        }, 
+                        { role: "user", content: `Матеріал для адаптації: ${rawTitle}` }
+                    ],
+                    max_tokens: 2200,
+                    temperature: 0.3
+                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
+
+                const fullResponse = groqRes.data.choices[0].message.content.trim();
+                const lines = fullResponse.split('\n');
+                const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
+                const articleContent = lines.slice(1).join('\n').trim(); 
+
+                const post = {
+                    id: Date.now() + Math.floor(Math.random() * 1000), 
+                    date: pubDate, 
+                    category: "psychology",
+                    originalTitle: rawTitle, 
+                    title: translatedTitle || cleanTitle, 
+                    content: articleContent, 
+                    imageUrl: "article_support.png"
+                };
+
+                aiBlogPosts.unshift(post);
+                addedCount++;
+                psychAddedThisRun++;
+
+                if (bot && CHANNEL_ID) {
+                    try {
+                        const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
+                        const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
+                        const tgText = `🫂 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
+                        await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
+                    } catch (tgErr) {}
+                }
+
+                await new Promise(r => setTimeout(r, 6000)); // Пауза для захисту лімітів API
+            }
         } catch (e) {
-            console.error(`❌ Помилка генерації психології:`, e.response?.data || e.message);
+            console.error(`❌ Помилка зчитування статті психології з сайту:`, e.message);
         }
     }
 
+    // Збереження результатів, якщо хоч одна новина або стаття психології була додана
     if (addedCount > 0) {
         await saveBlogToGitHub();
-        console.log(`🎉 Успішно згенеровано та збережено статей: ${addedCount}`);
+        console.log(`🎉 Автооновлення завершено. Додано нових матеріалів: ${addedCount}`);
     } else {
-        console.log("✅ Немає нових унікальних тем або новин. Публікація пропущена.");
+        console.log("✅ Перевірка завершена. Нових публікацій на сайтах-джерелах поки немає.");
     }
 }
 
