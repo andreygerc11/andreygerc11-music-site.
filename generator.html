@@ -703,7 +703,30 @@
             if (isJson) syncUserData();
             return data.candidates[0].content.parts[0].text;
         }
-
+        // Функція для стиснення 4K зображень до 1080p
+        async function resizeBase64Image(base64Str, maxDim = 1080) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.onload = () => {
+                    let w = img.width;
+                    let h = img.height;
+                    
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; } 
+                        else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                    }
+                    
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = w; tempCanvas.height = h;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.drawImage(img, 0, 0, w, h);
+                    
+                    resolve(tempCanvas.toDataURL('image/jpeg', 0.85));
+                };
+                img.src = base64Str;
+            });
+        }
         async function generateImagenImage(prompt, aspect = "1:1") {
             if (!currentUser || !currentUser.email) {
                 throw new Error("Потрібна авторизація");
@@ -728,7 +751,9 @@
             }
             
             const data = await response.json();
-            return `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
+            const originalBase64 = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
+            // Стискаємо отримане зображення перед тим, як віддати його в масив
+            return await resizeBase64Image(originalBase64, 1080);
         }
 
         // === VIEW SWITCHER LOGIC ===
