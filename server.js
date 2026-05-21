@@ -646,7 +646,7 @@ const allBlogSources = [
     { type: "psychology", url: "https://mozhna.space/onko-psy" },
     { type: "psychology", url: "https://www.cancercare.org/services" },
     { type: "psychology", url: "https://www.cancersupportcommunity.org/" },
-    { type: "psychology", url: "https://apos-society.org/people-affected-by-cancer/resources-for-people-affected-by-cancer/" }
+    { type: "psychology", url: "https://apos-society.org/people-affected-by-cancer/resources-for-people-affected-by-cancer/" },
 
     // === ДЖЕРЕЛА ДЛЯ РЕАБІЛІТАЦІЇ ===
     { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%BF%D1%96%D1%81%D0%BB%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" }, 
@@ -654,6 +654,7 @@ const allBlogSources = [
     { type: "rehab", url: "https://news.google.com/rss/search?q=rehabilitation+therapy+breakthrough+cancer&hl=en-US&gl=US&ceid=US:en" }, 
     { type: "rehab", url: "https://medicalxpress.com/rss-feed/rehabilitation-news/" }
 ];
+
 const psychologyTopics = [
     "Як прийняти діагноз: перші кроки після того, як ви дізналися про рак",
     "Як правильно спілкуватися з близькою людиною, яка хворіє на онкологію",
