@@ -2137,10 +2137,14 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
             downloadVideoBtn.style.display = 'none'; isGenerating = true; isCancelled = false; chunks = [];
 
             let mimeType = ''; let fileExt = 'webm'; let useWebmFix = true;
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) mimeType = 'video/webm;codecs=vp9,opus';
-            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) mimeType = 'video/webm;codecs=vp8,opus';
-            else if (MediaRecorder.isTypeSupported('video/webm')) mimeType = 'video/webm';
+            // 1. Ставимо MP4 найвищим пріоритетом (найшвидший і найстабільніший апаратний кодек)
+            if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) { mimeType = 'video/mp4;codecs=avc1'; fileExt = 'mp4'; useWebmFix = false; }
             else if (MediaRecorder.isTypeSupported('video/mp4')) { mimeType = 'video/mp4'; fileExt = 'mp4'; useWebmFix = false; }
+            // 2. Якщо MP4 недоступний, беремо VP8 (він значно легший за VP9)
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) { mimeType = 'video/webm;codecs=vp8,opus'; }
+            // 3. Залишаємо VP9 тільки як найостанніший варіант
+            else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) { mimeType = 'video/webm;codecs=vp9,opus'; }
+            else if (MediaRecorder.isTypeSupported('video/webm')) { mimeType = 'video/webm'; }
 
             generateVideoBtn.style.display = 'none'; stopRenderBtn.style.display = 'block';
             renderOverlay.style.display = 'flex'; generateProgress.value = 0;
@@ -2150,7 +2154,8 @@ Make it look like a still from a blockbuster movie or a premium music video. Foc
             const audioStream = mediaDest.stream;
             const canvasStream = canvas.captureStream(30); 
             const combinedStream = new MediaStream([...canvasStream.getTracks(), ...audioStream.getTracks()]);
-            const options = { mimeType: mimeType, videoBitsPerSecond: 8000000, audioBitsPerSecond: 128000 };
+            // ЗНИЖЕНО БІТРЕЙТ ДО 4.5 Мбіт/с. Це ідеально для 1080p і розвантажує процесор, прибираючи ривки
+            const options = { mimeType: mimeType, videoBitsPerSecond: 4500000, audioBitsPerSecond: 128000 };
             mediaRecorder = new MediaRecorder(combinedStream, options);
             
             mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
