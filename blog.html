@@ -103,7 +103,7 @@
 
         /* Hero */
         .blog-hero { 
-            padding: 100px 5% 60px; 
+            padding: 100px 5% 40px; 
             text-align: center; 
         }
         .blog-hero h1 { 
@@ -118,6 +118,34 @@
             max-width: 800px; 
             margin: 0 auto; 
             font-size: 1.1rem; 
+        }
+
+        /* === ПОШУК === */
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 0 5%;
+        }
+        .search-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 14px 24px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: var(--card-bg);
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            font-family: inherit;
+            transition: 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(255, 77, 77, 0.2);
+        }
+        .search-input::placeholder {
+            color: var(--text-muted);
         }
 
         /* Табули */
@@ -355,11 +383,16 @@
         <p>Світові наукові прориви, сучасні методи терапії та щира психологічна підтримка для тих, хто бореться.</p>
     </section>
 
-    <!-- Табули категорій -->
+    <!-- Пошук та Табули категорій -->
+    <div class="search-container" data-aos="fade-up" data-aos-delay="50">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Пошук статей за ключовим словом...">
+    </div>
+
     <div class="blog-tabs" data-aos="fade-up" data-aos-delay="100">
         <button class="tab-btn active" data-category="all">Усі статті</button>
-        <button class="tab-btn" data-category="news">📰 Новини та дослідження</button>
-        <button class="tab-btn" data-category="psychology">🫂 Психологічна підтримка</button>
+        <button class="tab-btn" data-category="news">📰 Новини</button>
+        <button class="tab-btn" data-category="psychology">🫂 Психологія</button>
+        <button class="tab-btn" data-category="rehab">💪 Реабілітація</button>
     </div>
 
     <div class="blog-container" id="blog-posts">
@@ -371,25 +404,16 @@
 
 <footer>
     <a href="index.html" class="footer-logo logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">© 2026 ФОП Герц Андрій Костянтинович. Всі права захищені.</p>
-    
-    <!-- Це критично для AdSense -->
-    <div class="footer-links" style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
-        <a href="privacy_policy.html" style="color: #aaa; text-decoration: none; font-size: 0.85rem;">Політика конфіденційності</a>
-        <a href="public_offer.html" style="color: #aaa; text-decoration: none; font-size: 0.85rem;">Публічна оферта</a>
-        <a href="contacts.html" style="color: #aaa; text-decoration: none; font-size: 0.85rem;">Контакти</a>
-    </div>
-
-    <!-- Медичний дисклеймер -->
-    <p style="font-size: 0.75rem; color: #666; max-width: 800px; margin: 0 auto; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-        <b>Відмова від відповідальності:</b> Матеріали на сайті «Голос проти раку» публікуються виключно з інформаційною метою. Ми не ставимо діагнози та не призначаємо лікування. З будь-якими питаннями щодо вашого здоров'я обов'язково звертайтеся до кваліфікованого лікаря-онколога.
-    </p>
+    <p>© 2026 Андрій Герц. Всі права захищені. 🇺🇦</p>
 </footer>
+
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
     AOS.init({ duration: 1000, once: true });
 
     let allPosts = [];
+    let currentCategory = 'all';
+    let searchQuery = '';
 
     function toggleArticle(id, btn) {
         const wrapper = document.getElementById('wrapper-' + id);
@@ -407,12 +431,14 @@
     function getCategoryIcon(category) {
         if (category === 'psychology') return '🫂';
         if (category === 'news') return '📰';
+        if (category === 'rehab') return '💪';
         return '📌';
     }
 
     function getCategoryName(category) {
         if (category === 'psychology') return 'Психологічна підтримка';
         if (category === 'news') return 'Новини та дослідження';
+        if (category === 'rehab') return 'Реабілітація та Відновлення';
         return 'Стаття';
     }
 
@@ -423,7 +449,7 @@
         if (!posts || posts.length === 0) {
             container.innerHTML = `
                 <div class="loader-text">
-                    Наразі немає статей у цій категорії.<br>Скоро з’явиться нова підбірка.
+                    Наразі немає статей, що відповідають вашому запиту.<br>Спробуйте змінити фільтр.
                 </div>`;
             return;
         }
@@ -456,7 +482,7 @@
             const catName = getCategoryName(category);
 
             const postHTML = `
-                <article class="post-card" data-aos="fade-up" data-aos-delay="${index * 60}">
+                <article class="post-card" data-aos="fade-up" data-aos-delay="${(index % 10) * 60}">
                     ${mediaHTML}
                     <div class="post-content">
                         <div class="post-date">
@@ -483,18 +509,33 @@
         });
     }
 
+    function applyFilters() {
+        let filtered = allPosts;
+
+        // 1. Фільтруємо за категорією
+        if (currentCategory !== 'all') {
+            filtered = filtered.filter(post => (post.category || 'news') === currentCategory);
+        }
+
+        // 2. Фільтруємо за пошуком
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            filtered = filtered.filter(post => 
+                (post.title && post.title.toLowerCase().includes(q)) || 
+                (post.content && post.content.toLowerCase().includes(q))
+            );
+        }
+
+        renderPosts(filtered);
+    }
+
     function filterCategory(category) {
+        currentCategory = category;
         const buttons = document.querySelectorAll('.tab-btn');
         buttons.forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-category') === category);
         });
-
-        if (category === 'all') {
-            renderPosts(allPosts);
-        } else {
-            const filtered = allPosts.filter(post => (post.category || 'news') === category);
-            renderPosts(filtered);
-        }
+        applyFilters();
     }
 
     async function fetchBlogPosts() {
@@ -531,6 +572,15 @@
                 filterCategory(category);
             });
         });
+
+        // Обробка пошуку (Живий пошук при введенні)
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim();
+                applyFilters();
+            });
+        }
     });
 </script>
 
