@@ -639,7 +639,6 @@ const allBlogSources = [
     { type: "news", url: "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en" },
     { type: "news", url: "https://medicalxpress.com/rss-feed/cancer-news/" },
     { type: "news", url: "https://www.sciencedaily.com/rss/health_medicine/cancer.xml" },
-
     { type: "psychology", url: "https://upoa.info/" },
     { type: "psychology", url: "https://vartozhyty.com.ua/" },
     { type: "psychology", url: "https://unci.org.ua/psychologichna-pidtrymka" },
@@ -647,14 +646,11 @@ const allBlogSources = [
     { type: "psychology", url: "https://www.cancercare.org/services" },
     { type: "psychology", url: "https://www.cancersupportcommunity.org/" },
     { type: "psychology", url: "https://apos-society.org/people-affected-by-cancer/resources-for-people-affected-by-cancer/" },
-
-    // === ДЖЕРЕЛА ДЛЯ РЕАБІЛІТАЦІЇ ===
     { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%BF%D1%96%D1%81%D0%BB%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" }, 
     { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97&hl=uk&gl=UA&ceid=UA:uk" },
     { type: "rehab", url: "https://news.google.com/rss/search?q=rehabilitation+therapy+breakthrough+cancer&hl=en-US&gl=US&ceid=US:en" }, 
     { type: "rehab", url: "https://medicalxpress.com/rss-feed/rehabilitation-news/" }
 ];
-
 const psychologyTopics = [
     "Як прийняти діагноз: перші кроки після того, як ви дізналися про рак",
     "Як правильно спілкуватися з близькою людиною, яка хворіє на онкологію",
@@ -837,86 +833,60 @@ async function fetchAndRewriteBlog() {
             console.error(`❌ Помилка зчитування статті психології з сайту:`, e.message);
         }
     }
-    // ==========================================
-    // БЛОК 3: РЕАБІЛІТАЦІЯ ТА ЕРГОТЕРАПІЯ
-    // ==========================================
+    // === БЛОК: РЕАБІЛІТАЦІЯ ТА МЕДИЧНІ ПРОРИВИ (GEMINI 2.0 FLASH) ===
     let rehabAddedThisRun = 0;
-    
     const rehabUrls = allBlogSources.filter(src => src.type === "rehab").map(src => src.url);
     const shuffledRehabRss = rehabUrls.sort(() => 0.5 - Math.random());
 
     for (const rssUrl of shuffledRehabRss) {
-        if (rehabAddedThisRun >= 2) break; // Ліміт: 2 статті про реабілітацію за запуск
+        if (rehabAddedThisRun >= 2) break; 
 
         try {
             const response = await axios.get(rssUrl, { timeout: 10000 });
             const xml = response.data;
-            
             const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
             if (!itemMatch) continue;
 
             const itemXml = itemMatch[1];
             const titleMatch = itemXml.match(/<title>(.*?)<\/title>/);
-            const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\/pubDate>/) || itemXml.match(/<published>(.*?)<\/published>/);
+            const pubDateMatch = itemMatch[1].match(/<pubDate>(.*?)<\/pubDate>/) || itemMatch[1].match(/<published>(.*?)<\/published>/);
 
             if (titleMatch) {
                 let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
-                let cleanTitle = rawTitle.split(" - ")[0]; 
-                
-                const isDuplicate = aiBlogPosts.some(p => p.originalTitle === rawTitle);
-                if (isDuplicate) continue;
+                if (aiBlogPosts.some(p => p.originalTitle === rawTitle)) continue;
 
-                console.log(`💪 Знайдено матеріал з реабілітації: ${cleanTitle}`);
-                
+                console.log(`💪 Генерую статтю реабілітації (Gemini 2.0): ${rawTitle}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: "llama-3.3-70b-versatile",
-                    messages: [
-                        { 
-                            role: "system", 
-                            // ОСЬ ТУТ ПРОПИСАНИЙ ПРОФЕСІЙНИЙ ПРОМПТ РЕАБІЛІТОЛОГА:
-                            content: "Ти — висококваліфікований фахівець з фізичної реабілітації та ерготерапії. Твоє завдання: перекласти, адаптувати та написати статтю про прориви у реабілітації, сучасні методики або дати практичні поради для відновлення (зокрема після важких хвороб, таких як онкологія). ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Використовуй професійний, але доступний для пацієнтів тон. Спирайся на доказову медицину та біомеханіку. Структуруй текст зручно: використовуй підзаголовки <h2> для порад. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ ЗАГОЛОВОК (без тегів), а потім — текст статті. ЗАКІНЧУЙ статтю абзацом: 'Важливо: Цей матеріал має ознайомчий характер. Перед початком будь-яких фізичних навантажень або реабілітаційних заходів проконсультуйтеся зі своїм лікуючим лікарем або фізичним терапевтом'." 
-                        }, 
-                        { role: "user", content: `Матеріал для адаптації: ${rawTitle}` }
-                    ],
-                    max_tokens: 2200,
-                    temperature: 0.3
-                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
+                // Виклик Gemini 2.0 Flash
+                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+                const geminiRes = await axios.post(geminiUrl, {
+                    systemInstruction: { 
+                        parts: [{ text: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Перетвори статтю на професійний матеріал. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Використовуй підзаголовки <h2>. Додай секцію 'Як це працює' для пояснення механізму. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням будь-яких методів обов’язково проконсультуйтеся з вашим фізичним терапевтом'." }] 
+                    },
+                    contents: [{ parts: [{ text: `Новина для адаптації: ${rawTitle}` }] }]
+                }, { headers: { 'Content-Type': 'application/json' } });
 
-                const fullResponse = groqRes.data.choices[0].message.content.trim();
-                const lines = fullResponse.split('\n');
-                const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
-                const articleContent = lines.slice(1).join('\n').trim(); 
+                const articleContent = geminiRes.data.candidates[0].content.parts[0].text.trim();
+                const translatedTitle = articleContent.split('\n')[0].replace(/[*#]/g, '').trim(); 
 
                 const post = {
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     date: pubDate, 
-                    category: "rehab", // Нова категорія для сайту
+                    category: "rehab",
                     originalTitle: rawTitle, 
-                    title: translatedTitle || cleanTitle, 
+                    title: translatedTitle, 
                     content: articleContent, 
-                    imageUrl: "article_rehab.png" // Додай таку картинку на сайт, або зміни на існуючу
+                    imageUrl: "reabilitaciya.png"
                 };
 
                 aiBlogPosts.unshift(post);
                 addedCount++;
                 rehabAddedThisRun++;
 
-                if (bot && CHANNEL_ID) {
-                    try {
-                        const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
-                        const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
-                        const tgText = `💪 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати поради реабілітолога</a>`;
-                        await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
-                    } catch (tgErr) {}
-                }
-
                 await new Promise(r => setTimeout(r, 6000));
             }
-        } catch (e) {
-            console.error(`❌ Помилка зчитування статті реабілітації:`, e.message);
-        }
+        } catch (e) { console.error(`❌ Помилка реабілітації:`, e.message); }
     }
     // Збереження результатів, якщо хоч одна новина або стаття психології була додана
     if (addedCount > 0) {
