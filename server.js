@@ -18,7 +18,7 @@ app.use(express.json({ limit: '50mb' }));
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
 // === ЗМІННІ З RENDER ===
-const GROQ_API_KEY = process.env.GROQ_API_KEY; // Залишається для генерації Блогу
+const GROQ_API_KEY = process.env.GROQ_API_KEY; // Ключ для Блогу (Новини, Психологія, Реабілітація)
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Ключ для ШІ-Режисера та Слуху
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -632,24 +632,24 @@ async function saveBlogToGitHub() {
 }
 
 const allBlogSources = [
-    { type: "news", url: "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en" },
-    { type: "news", url: "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en" },
-    { type: "news", url: "https://medicalxpress.com/rss-feed/cancer-news/" },
-    { type: "news", url: "https://www.sciencedaily.com/rss/health_medicine/cancer.xml" },
-    { type: "psychology", url: "https://upoa.info/" },
-    { type: "psychology", url: "https://vartozhyty.com.ua/" },
-    { type: "psychology", url: "https://unci.org.ua/psychologichna-pidtrymka" },
-    { type: "psychology", url: "https://mozhna.space/onko-psy" },
-    { type: "psychology", url: "https://www.cancercare.org/services" },
-    { type: "psychology", url: "https://www.cancersupportcommunity.org/" },
-    { type: "psychology", url: "https://apos-society.org/people-affected-by-cancer/resources-for-people-affected-by-cancer/" },
-    { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%BF%D1%96%D1%81%D0%BB%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" }, 
-    { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "rehab", url: "https://news.google.com/rss/search?q=rehabilitation+therapy+breakthrough+cancer&hl=en-US&gl=US&ceid=US:en" }, 
-    { type: "rehab", url: "https://medicalxpress.com/rss-feed/rehabilitation-news/" }
+    { type: "news", url: "[https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en)" },
+    { type: "news", url: "[https://medicalxpress.com/rss-feed/cancer-news/](https://medicalxpress.com/rss-feed/cancer-news/)" },
+    { type: "news", url: "[https://www.sciencedaily.com/rss/health_medicine/cancer.xml](https://www.sciencedaily.com/rss/health_medicine/cancer.xml)" },
+    { type: "psychology", url: "[https://upoa.info/](https://upoa.info/)" },
+    { type: "psychology", url: "[https://vartozhyty.com.ua/](https://vartozhyty.com.ua/)" },
+    { type: "psychology", url: "[https://unci.org.ua/psychologichna-pidtrymka](https://unci.org.ua/psychologichna-pidtrymka)" },
+    { type: "psychology", url: "[https://mozhna.space/onko-psy](https://mozhna.space/onko-psy)" },
+    { type: "psychology", url: "[https://www.cancercare.org/services](https://www.cancercare.org/services)" },
+    { type: "psychology", url: "[https://www.cancersupportcommunity.org/](https://www.cancersupportcommunity.org/)" },
+    { type: "psychology", url: "[https://apos-society.org/people-affected-by-cancer/resources-for-people-affected-by-cancer/](https://apos-society.org/people-affected-by-cancer/resources-for-people-affected-by-cancer/)" },
+    { type: "rehab", url: "[https://news.google.com/rss/search?q=%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%BF%D1%96%D1%81%D0%BB%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%BF%D1%96%D1%81%D0%BB%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk)" }, 
+    { type: "rehab", url: "[https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "rehab", url: "[https://news.google.com/rss/search?q=rehabilitation+therapy+breakthrough+cancer&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=rehabilitation+therapy+breakthrough+cancer&hl=en-US&gl=US&ceid=US:en)" }, 
+    { type: "rehab", url: "[https://medicalxpress.com/rss-feed/rehabilitation-news/](https://medicalxpress.com/rss-feed/rehabilitation-news/)" }
 ];
 const psychologyTopics = [
     "Як прийняти діагноз: перші кроки після того, як ви дізналися про рак",
@@ -702,7 +702,7 @@ async function fetchAndRewriteBlog() {
                 
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { 
@@ -786,7 +786,7 @@ async function fetchAndRewriteBlog() {
                 
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { 
@@ -858,17 +858,24 @@ async function fetchAndRewriteBlog() {
                 console.log(`💪 Генерую статтю реабілітації (Gemini 2.0): ${rawTitle}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                // Виклик Gemini 2.0 Flash
-                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-                const geminiRes = await axios.post(geminiUrl, {
-                    systemInstruction: { 
-                        parts: [{ text: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Перетвори статтю на професійний матеріал. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Використовуй підзаголовки <h2>. Додай секцію 'Як це працює' для пояснення механізму. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням будь-яких методів обов’язково проконсультуйтеся з вашим фізичним терапевтом'." }] 
-                    },
-                    contents: [{ parts: [{ text: `Новина для адаптації: ${rawTitle}` }] }]
-                }, { headers: { 'Content-Type': 'application/json' } });
+                // Виклик Groq (Llama 3.3)
+                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        { 
+                            role: "system", 
+                            content: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Твоє завдання: адаптувати статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Категорично заборонено використовувати латиницю. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК (без тегів та зірочок), а потім (з нового рядка) — сам текст статті. Додай секцію 'Як це працює' для пояснення механізму. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням будь-яких методів обов’язково проконсультуйтеся з вашим фізичним терапевтом'." 
+                        }, 
+                        { role: "user", content: `Новина для адаптації: ${rawTitle}` }
+                    ],
+                    max_tokens: 2200,
+                    temperature: 0.3
+                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
-                const articleContent = geminiRes.data.candidates[0].content.parts[0].text.trim();
-                const translatedTitle = articleContent.split('\n')[0].replace(/[*#]/g, '').trim(); 
+                const fullResponse = groqRes.data.choices[0].message.content.trim();
+                const lines = fullResponse.split('\n');
+                const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
+                const articleContent = lines.slice(1).join('\n').trim(); 
 
                 const post = {
                     id: Date.now() + Math.floor(Math.random() * 1000), 
