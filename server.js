@@ -591,9 +591,10 @@ const allBlogSources = [
     { type: "psychology", url: "https://news.google.com/rss/search?q=mental+health+cancer+patients&hl=en-US&gl=US&ceid=US:en" },
     
     // === РЕАБІЛІТАЦІЯ ===
-    { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%BF%D1%96%D1%81%D0%BB%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" }, 
-    { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "rehab", url: "https://news.google.com/rss/search?q=rehabilitation+therapy+breakthrough+cancer&hl=en-US&gl=US&ceid=US:en" }
+    { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%B2%D1%96%D0%B4%D0%BD%D0%BE%D0%B2%D0%B0%D0%BB%D0%B5%D0%BD%D0%BD%D1%8F+%D1%80%D1%83%D1%85%D1%83&hl=uk&gl=UA&ceid=UA:uk" }, // Відновлення руху
+    { type: "rehab", url: "https://news.google.com/rss/search?q=%D0%BA%D1%96%D0%BD%D0%B5%D0%B7%D1%96%D0%BE%D1%82%D0%B5%D0%B9%D0%BF%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D0%B0%D0%BF%D0%B0%D1%80%D0%B0%D1%82%D0%BD%D0%B0+%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" }, // Сучасні інструменти
+    { type: "rehab", url: "https://news.google.com/rss/search?q=%D0%B5%D1%80%D0%B3%D0%BE%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D0%B0%D0%B4%D0%B0%D0%BF%D1%82%D0%B0%D1%86%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" }, // Ерготерапія
+    { type: "rehab", url: "https://news.google.com/rss/search?q=physical+therapy+kinesiology+breakthrough&hl=en-US&gl=US&ceid=US:en" }
 ];
 
 async function fetchAndRewriteBlog() {
@@ -737,7 +738,7 @@ async function fetchAndRewriteBlog() {
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        { role: "system", content: "Ти експерт з реабілітації. Адаптуй статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, далі текст. Додай секцію 'Як це працює'. В кінці: 'Важливо: Цей матеріал має ознайомчий характер. Проконсультуйтеся з лікарем'." }, 
+                        { role: "system", content: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Твоє завдання: адаптувати статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. КАТЕГОРИЧНО ЗАБОРОНЕНО згадувати слова 'рак', 'онкологія' чи 'пухлина'. Пиши про загальну реабілітацію, відновлення руху, ерготерапію, сучасні інструменти (тейпування тощо) та психологічну опору після травм. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК, а потім сам текст. Додай секцію 'Як це працює'. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням обов’язково проконсультуйтеся з фізичним терапевтом'." 
                         { role: "user", content: `Новина: ${rawTitle}` }
                     ],
                     max_tokens: 2200, temperature: 0.3
