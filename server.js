@@ -298,7 +298,6 @@ async function saveUsersToGitHub() {
 // 3. БЕЗПЕКА ТА ЛІМІТИ GEMINI API
 // ==========================================
 
-// АВТОРИЗАЦІЯ ТА ВИДАЧА ТРІАЛУ (1 КЛІП)
 app.post('/api/auth/user', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email обов'язковий" });
@@ -319,7 +318,6 @@ app.post('/api/auth/user', async (req, res) => {
     res.json(user);
 });
 
-// ПРОКСІ: GEMINI TEXT (Розкадровка, Текст Пісні)
 app.post('/api/gemini/text', async (req, res) => {
     const { email, payload, isStoryboard } = req.body;
     
@@ -329,7 +327,6 @@ app.post('/api/gemini/text', async (req, res) => {
     let user = usersDB.find(u => u.email === email);
     if (!user) return res.status(403).json({ error: "Користувача не знайдено" });
 
-    // СПИСУЄМО ЛІМІТ ТІЛЬКИ ЗА КЛІП (РОЗКАДРОВКУ)
     if (isStoryboard) {
         if (user.clips_left <= 0) {
             return res.status(403).json({ error: "Ліміт вичерпано", code: "NO_TOKENS" });
@@ -348,7 +345,6 @@ app.post('/api/gemini/text', async (req, res) => {
         res.json(response.data);
     } catch (error) {
         console.error("Gemini Text API Error:", error?.response?.data || error.message);
-        // Якщо сталася помилка Гугла, повертаємо токен людині
         if (isStoryboard) {
             user.clips_left += 1;
             await saveUsersToGitHub();
@@ -357,7 +353,6 @@ app.post('/api/gemini/text', async (req, res) => {
     }
 });
 
-// ПРОКСІ: GEMINI IMAGE (З підтримкою форматів)
 app.post('/api/gemini/image', async (req, res) => {
     const { email, payload } = req.body;
     
@@ -404,6 +399,7 @@ app.post('/api/gemini/image', async (req, res) => {
     }
     res.status(503).json({ error: "ШІ перевантажений, спробуйте пізніше" });
 });
+
 // ==========================================
 // 4. GOOGLE SHEETS
 // ==========================================
@@ -466,13 +462,12 @@ app.post('/api/pay', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Помилка оплати" }); }
 });
 
-// ПЛАТІЖ: 349 грн за 10 Кліпів
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         const { email } = req.body;
         if (!MONO_TOKEN) return res.json({ url: "https://send.monobank.ua/" });
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: 34900, // 349 грн
+            amount: 34900, 
             ccy: 980, 
             merchantPaymInfo: { destination: "Пакет PRO: 10 Генерацій Кліпу", reference: email },
             redirectUrl: "https://golos-proty-raku.pp.ua/success.html", 
@@ -482,7 +477,6 @@ app.post('/api/pay-subscription', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Помилка оплати пакету" }); }
 });
 
-// === ЄДИНИЙ WEBHOOK ДЛЯ САЙТУ ТА БОТА ===
 app.post('/api/webhook', async (req, res) => {
     try {
         const { invoiceId, status, reference } = req.body;
@@ -491,7 +485,6 @@ app.post('/api/webhook', async (req, res) => {
             await sendTelegramMessage(`🔥 <b>Нова оплата!</b>\nРеференс: ${reference}`);
 
             if (reference && reference.startsWith('tg_') && bot) {
-                // ЛОГІКА ДЛЯ КУПІВЛІ ТРЕКУ В БОТІ
                 const parts = reference.split('_');
                 const tgChatId = parts[1];
                 const tgTrackId = parts[2];
@@ -520,14 +513,13 @@ app.post('/api/webhook', async (req, res) => {
                     await bot.sendMessage(tgChatId, `🎉 <b>Дякую за підтримку!</b>\nОсь ваше посилання на файл: <b>${track.name}</b>`, opts);
                 }
             } else if (reference && reference.includes('@')) {
-                // ЛОГІКА ДЛЯ КУПІВЛІ ПАКЕТУ КЛІПІВ (ПО EMAIL)
                 let user = usersDB.find(u => u.email === reference);
                 if (!user) {
                     user = { email: reference, status: "premium", clips_left: 10 };
                     usersDB.push(user);
                 } else {
                     user.status = "premium";
-                    user.clips_left = (user.clips_left || 0) + 10; // +10 КЛІПІВ
+                    user.clips_left = (user.clips_left || 0) + 10; 
                 }
                 await saveUsersToGitHub();
                 console.log(`💰 УСПІШНА ОПЛАТА ПАКЕТУ! Email: ${reference}. Баланс: ${user.clips_left}`);
@@ -538,7 +530,7 @@ app.post('/api/webhook', async (req, res) => {
 });
 
 // ==========================================
-// 5. РОЗПІЗНАВАННЯ АУДІО ЧЕРЕЗ GEMINI 2.5 FLASH (Заміна Whisper)
+// 5. РОЗПІЗНАВАННЯ АУДІО ЧЕРЕЗ GEMINI 2.5 FLASH 
 // ==========================================
 function compressAudio(inputPath, outputPath) {
     return new Promise((resolve, reject) => {
@@ -552,10 +544,8 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         if (!GEMINI_API_KEY) return res.status(500).json({ error: "Немає GEMINI_API_KEY" });
 
         compressedPath = req.file.path + '_comp.mp3';
-        // Стискаємо аудіо, щоб воно легко пройшло через API
         await compressAudio(req.file.path, compressedPath);
         
-        // Читаємо файл і перетворюємо у Base64
         const fileBuffer = fs.readFileSync(compressedPath);
         const base64Audio = fileBuffer.toString('base64');
 
@@ -575,8 +565,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         );
 
         let lrcText = response.data.candidates[0].content.parts[0].text;
-        
-        // Очищення від маркдауну, якщо Gemini додав ```
         lrcText = lrcText.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
 
         res.json({ lrc: lrcText }); 
@@ -584,14 +572,13 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         console.error("Gemini Audio Error:", error?.response?.data || error.message);
         res.status(500).json({ error: "Помилка розпізнавання ШІ (Gemini)" }); 
     } finally { 
-        // Видалення тимчасових файлів
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         if (compressedPath && fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
     }
 });
 
 // ==========================================
-// 6. АВТОМАТИЧНИЙ БЛОГ (Llama через Groq)
+// 6. АВТОМАТИЧНИЙ БЛОГ (Llama 3.3 через Groq)
 // ==========================================
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
@@ -631,6 +618,7 @@ async function saveBlogToGitHub() {
     }
 }
 
+// УСІ ДЖЕРЕЛА ТЕПЕР ЧЕРЕЗ РОБОЧИЙ GOOGLE NEWS RSS
 const allBlogSources = [
     // === НОВИНИ ===
     { type: "news", url: "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk" },
@@ -638,33 +626,18 @@ const allBlogSources = [
     { type: "news", url: "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" },
     { type: "news", url: "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en" },
     { type: "news", url: "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en" },
-    { type: "news", url: "https://medicalxpress.com/rss-feed/cancer-news/" },
-    { type: "news", url: "https://www.sciencedaily.com/rss/health_medicine/cancer.xml" },
     
-    // === ПСИХОЛОГІЯ (ВІДРЕМОНТОВАНІ RSS-ПОСИЛАННЯ) ===
-    { type: "psychology", url: "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BF%D1%81%D0%B8%D0%B7%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" }, // онкопсихологія
-    { type: "psychology", url: "https://news.google.com/rss/search?q=%D0%BF%D1%81%D0%B8%D1%85%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%87%D0%BD%D0%B0+%D0%BF%D1%96%D0%B4%D1%82%D1%80%D0%B8%D0%BC%D0%BA%D0%B0+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk" }, // психологічна підтримка рак
-    { type: "psychology", url: "https://news.google.com/rss/search?q=cancer+psychological+support&hl=en-US&gl=US&ceid=US:en" }, // cancer psychological support
-    { type: "psychology", url: "https://news.google.com/rss/search?q=coping+with+cancer+diagnosis&hl=en-US&gl=US&ceid=US:en" }, // coping with cancer diagnosis
-    { type: "psychology", url: "https://news.google.com/rss/search?q=mental+health+cancer+patients&hl=en-US&gl=US&ceid=US:en" }, // mental health cancer patients
+    // === ПСИХОЛОГІЯ ===
+    { type: "psychology", url: "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BF%D1%81%D0%B8%D0%B7%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" },
+    { type: "psychology", url: "https://news.google.com/rss/search?q=%D0%BF%D1%81%D0%B8%D1%85%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%87%D0%BD%D0%B0+%D0%BF%D1%96%D0%B4%D1%82%D1%80%D0%B8%D0%BC%D0%BA%D0%B0+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk" },
+    { type: "psychology", url: "https://news.google.com/rss/search?q=cancer+psychological+support&hl=en-US&gl=US&ceid=US:en" },
+    { type: "psychology", url: "https://news.google.com/rss/search?q=coping+with+cancer+diagnosis&hl=en-US&gl=US&ceid=US:en" },
+    { type: "psychology", url: "https://news.google.com/rss/search?q=mental+health+cancer+patients&hl=en-US&gl=US&ceid=US:en" },
     
     // === РЕАБІЛІТАЦІЯ ===
     { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%BF%D1%96%D1%81%D0%BB%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" }, 
     { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "rehab", url: "https://news.google.com/rss/search?q=rehabilitation+therapy+breakthrough+cancer&hl=en-US&gl=US&ceid=US:en" }, 
-    { type: "rehab", url: "https://medicalxpress.com/rss-feed/rehabilitation-news/" }
-];
-const psychologyTopics = [
-    "Як прийняти діагноз: перші кроки після того, як ви дізналися про рак",
-    "Як правильно спілкуватися з близькою людиною, яка хворіє на онкологію",
-    "Де знайти внутрішні сили під час виснажливої хіміотерапії",
-    "Страх рецидиву: як жити повноцінно в стані ремісії",
-    "Як пояснити дітям про хворобу батьків",
-    "Важливість груп підтримки: чому не варто проходити цей шлях наодинці",
-    "Як впоратися з емоційним вигоранням, якщо ви доглядаєте за онкохворим",
-    "Техніки релаксації та дихання для зняття тривоги перед операцією",
-    "Як зберегти позитивне мислення, коли здається, що надії немає",
-    "Вплив творчості та арт-терапії на одужання онкопацієнтів"
+    { type: "rehab", url: "https://news.google.com/rss/search?q=rehabilitation+therapy+breakthrough+cancer&hl=en-US&gl=US&ceid=US:en" }
 ];
 
 async function fetchAndRewriteBlog() {
@@ -705,7 +678,7 @@ async function fetchAndRewriteBlog() {
                 
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { 
@@ -749,24 +722,21 @@ async function fetchAndRewriteBlog() {
                 await new Promise(r => setTimeout(r, 6000)); 
             }
         } catch (e) { 
-            console.error(`❌ Помилка генерації новини:`, e.response?.data || e.message); 
+            console.error(`❌ Помилка генерації новини:`, e.message); 
         }
     }
 
     let psychAddedThisRun = 0;
-    
-    // Фільтруємо джерела саме для психології з масиву allBlogSources
     const psychUrls = allBlogSources.filter(src => src.type === "psychology").map(src => src.url);
     const shuffledPsychRss = psychUrls.sort(() => 0.5 - Math.random());
 
     for (const rssUrl of shuffledPsychRss) {
-        if (psychAddedThisRun >= 3) break; // Ліміт: 3 статті за запуск
+        if (psychAddedThisRun >= 3) break; 
 
         try {
             const response = await axios.get(rssUrl, { timeout: 10000 });
             const xml = response.data;
             
-            // Шукаємо статті у потоці сайту
             const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
             if (!itemMatch) continue;
 
@@ -778,23 +748,22 @@ async function fetchAndRewriteBlog() {
                 let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
                 let cleanTitle = rawTitle.split(" - ")[0]; 
                 
-                // Перевіряємо, чи ми вже не писали про це раніше
                 const isDuplicate = aiBlogPosts.some(p => p.originalTitle === rawTitle);
                 if (isDuplicate) {
-                    console.log(`Query пропущено (вже є в базі): ${cleanTitle}`);
+                    console.log(`⏭ Психологію пропущено (вже є): ${cleanTitle}`);
                     continue;
                 }
 
-                console.log(`🫂 Знайдено новий матеріал, генерую статтю підтримки: ${cleanTitle}`);
+                console.log(`🫂 Генерую статтю підтримки: ${cleanTitle}`);
                 
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { 
                             role: "system", 
-                            content: "Ти — досвідчений психолог та волонтер проєкту 'Голос проти раку'. Твоє завдання: адаптувати та переписати знайдену статтю про психологічну підтримку для онкохворих чи їхніх близьких. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Категорично заборонено використовувати латиницю. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК (без тегів та зірочок), а потім (з нового рядка) — сам текст статті. ЗАКІНЧУЙ статтю обов'язковим абзацом: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію з лікарем-онкологом або професійним психотерапевтом'." 
+                            content: "Ти — досвідчений психолог та волонтер проєкту 'Голос проти раку'. Твоє завдання: адаптувати знайдену статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ ЗАГОЛОВОК, а потім сам текст. ЗАКІНЧУЙ статтю абзацом: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію з лікарем-онкологом або професійним психотерапевтом'." 
                         }, 
                         { role: "user", content: `Матеріал для адаптації: ${rawTitle}` }
                     ],
@@ -821,22 +790,14 @@ async function fetchAndRewriteBlog() {
                 addedCount++;
                 psychAddedThisRun++;
 
-                if (bot && CHANNEL_ID) {
-                    try {
-                        const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
-                        const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
-                        const tgText = `🫂 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
-                        await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
-                    } catch (tgErr) {}
-                }
-
-                await new Promise(r => setTimeout(r, 6000)); // Пауза для захисту лімітів API
+                await new Promise(r => setTimeout(r, 6000));
             }
         } catch (e) {
-            console.error(`❌ Помилка зчитування статті психології з сайту:`, e.message);
+            console.error(`❌ Помилка зчитування статті психології:`, e.message);
         }
     }
-    // === БЛОК: РЕАБІЛІТАЦІЯ ТА МЕДИЧНІ ПРОРИВИ (GEMINI 2.0 FLASH) ===
+
+    // === БЛОК РЕАБІЛІТАЦІЇ (LLAMA 3.3) ===
     let rehabAddedThisRun = 0;
     const rehabUrls = allBlogSources.filter(src => src.type === "rehab").map(src => src.url);
     const shuffledRehabRss = rehabUrls.sort(() => 0.5 - Math.random());
@@ -858,11 +819,10 @@ async function fetchAndRewriteBlog() {
                 let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
                 if (aiBlogPosts.some(p => p.originalTitle === rawTitle)) continue;
 
-                console.log(`💪 Генерую статтю реабілітації (Gemini 2.0): ${rawTitle}`);
+                console.log(`💪 Генерую статтю реабілітації (Llama 3.3): ${rawTitle}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                // Виклик Groq (Llama 3.3)
-                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
+                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { 
@@ -898,7 +858,7 @@ async function fetchAndRewriteBlog() {
             }
         } catch (e) { console.error(`❌ Помилка реабілітації:`, e.message); }
     }
-    // Збереження результатів, якщо хоч одна новина або стаття психології була додана
+    
     if (addedCount > 0) {
         await saveBlogToGitHub();
         console.log(`🎉 Автооновлення завершено. Додано нових матеріалів: ${addedCount}`);
@@ -937,3 +897,4 @@ Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub()]
         console.log("⏰ Налаштовано перевірку щодня о 08:00 та 20:00 (Київський час)");
     });
 });
+}
