@@ -18,8 +18,8 @@ app.use(express.json({ limit: '50mb' }));
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
 // === ЗМІННІ З RENDER ===
-const GROQ_API_KEY = process.env.GROQ_API_KEY; // Ключ для Блогу (Новини, Психологія, Реабілітація)
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Ключ для ШІ-Режисера та Слуху
+const GROQ_API_KEY = process.env.GROQ_API_KEY; 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO; 
@@ -34,11 +34,7 @@ const FULL_FOLDER_ID = "1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j";
 
 // === ГЛОБАЛЬНІ ЗМІННІ ТА КЕШ ===
 let aiBlogPosts = [];
-let blogSha = '';
-
 let globalMusicList = [];
-
-// НОВА БАЗА КОРИСТУВАЧІВ
 let usersDB = [];
 let usersSha = '';
 
@@ -98,7 +94,6 @@ if (BOT_TOKEN) {
         try { await bot.answerCallbackQuery(query.id); } catch (e) {}
         const chatId = query.message.chat.id;
         const messageId = query.message.message_id;
-        console.log(`🔘 Натиснуто кнопку: ${query.data}`); 
 
         try {
             if (query.data === 'about_project') {
@@ -188,7 +183,7 @@ if (BOT_TOKEN) {
             }
 
         } catch (error) {
-            console.error(`❌ Помилка обробки кнопки ${query.data}:`, error.message);
+            console.error(`❌ Помилка обробки кнопки:`, error.message);
         }
     });
 
@@ -229,28 +224,17 @@ if (BOT_TOKEN) {
             else bot.sendMessage(chatId, text, opts);
         } catch (e) { bot.sendMessage(chatId, "❌ Помилка сервісу оплати."); }
     }
-
-    bot.onText(/\/send/, async (msg) => {
-        if (msg.from.id !== ADMIN_ID) return;
-        const text = msg.text.replace('/send', '').trim();
-        if (!text) return bot.sendMessage(msg.chat.id, "Введіть текст після команди /send");
-        
-        try {
-            await bot.sendMessage(CHANNEL_ID, text, { parse_mode: "HTML" });
-            bot.sendMessage(msg.chat.id, "✅ Опубліковано на каналі!");
-        } catch (e) { bot.sendMessage(msg.chat.id, `❌ Помилка публікації: ${e.message}`); }
-    });
 }
 
 async function sendTelegramMessage(text) {
-    if (!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === "ТВІЙ_ID_ЯКЩО_НЕ_ДОДАВ_У_RENDER") return;
+    if (!TELEGRAM_CHAT_ID) return;
     try {
         if (bot) {
             await bot.sendMessage(TELEGRAM_CHAT_ID, text, { parse_mode: 'HTML' });
         } else if (BOT_TOKEN) {
             await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' });
         }
-    } catch (e) { console.error("Помилка Telegram:", e.message); }
+    } catch (e) {}
 }
 
 // ==========================================
@@ -267,7 +251,6 @@ async function syncUsersFromGitHub() {
         console.log(`👤 Завантажено ${usersDB.length} користувачів з GitHub`);
     } catch (e) { 
         usersDB = []; 
-        console.log("users.json не знайдено, створюємо пусту базу.");
     }
 }
 
@@ -289,9 +272,7 @@ async function saveUsersToGitHub() {
             sha: sha || undefined 
         }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
         usersSha = res.data.content.sha;
-    } catch (e) { 
-        console.error("Помилка збереження користувачів:", e.message); 
-    }
+    } catch (e) { }
 }
 
 // ==========================================
@@ -307,7 +288,7 @@ app.post('/api/auth/user', async (req, res) => {
         user = { email: email, status: "free", clips_left: 1 };
         usersDB.push(user);
         await saveUsersToGitHub();
-        console.log(`🎉 Зареєстровано нового користувача: ${email} (+1 безкоштовний кліп)`);
+        console.log(`🎉 Зареєстровано нового користувача: ${email}`);
     }
 
     if (email === 'admin@dev.com') {
@@ -333,7 +314,6 @@ app.post('/api/gemini/text', async (req, res) => {
         }
         user.clips_left -= 1;
         await saveUsersToGitHub();
-        console.log(`🎬 Користувач ${email} генерує кліп. Залишок: ${user.clips_left}`);
     }
 
     try {
@@ -344,7 +324,6 @@ app.post('/api/gemini/text', async (req, res) => {
         );
         res.json(response.data);
     } catch (error) {
-        console.error("Gemini Text API Error:", error?.response?.data || error.message);
         if (isStoryboard) {
             user.clips_left += 1;
             await saveUsersToGitHub();
@@ -373,31 +352,17 @@ app.post('/api/gemini/image', async (req, res) => {
         }
     };
 
-    let retries = 3;
-    while (retries > 0) {
-        try {
-            const response = await axios.post(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
-                geminiPayload,
-                { headers: { 'Content-Type': 'application/json' } }
-            );
-            
-            const base64Image = response.data.candidates[0].content.parts[0].inlineData.data;
-            return res.json({ predictions: [{ bytesBase64Encoded: base64Image }] });
-
-        } catch (error) {
-            const status = error.response?.status;
-            if (status === 503) {
-                retries--;
-                console.warn(`⚠️ Модель перевантажена (503). Залишилось спроб: ${retries}`);
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            } else {
-                console.error("Gemini Image Error:", error?.response?.data || error.message);
-                return res.status(500).json({ error: "Помилка відмальовки кадру" });
-            }
-        }
+    try {
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
+            geminiPayload,
+            { headers: { 'Content-Type': 'application/json' } }
+        );
+        const base64Image = response.data.candidates[0].content.parts[0].inlineData.data;
+        res.json({ predictions: [{ bytesBase64Encoded: base64Image }] });
+    } catch (error) {
+        res.status(503).json({ error: "ШІ перевантажений" });
     }
-    res.status(503).json({ error: "ШІ перевантажений, спробуйте пізніше" });
 });
 
 // ==========================================
@@ -434,7 +399,7 @@ async function fetchMusicFromDrive() {
             return { name: cleanName, previewId: f.id, fullId: fullFile ? fullFile.id : null, date: f.createdTime };
         }).filter(m => m.fullId);
         return globalMusicList;
-    } catch (error) { console.error("Drive Fetch Error"); return globalMusicList; }
+    } catch (error) { return globalMusicList; }
 }
 
 app.get('/api/music', async (req, res) => {
@@ -507,7 +472,6 @@ app.post('/api/webhook', async (req, res) => {
                     }, { filename: `${track.name}.mp3`, contentType: 'audio/mpeg' });
 
                 } catch (audioErr) {
-                    console.error("Помилка відправки файлу в ТГ:", audioErr.message);
                     const fileUrl = `https://drive.google.com/uc?export=download&id=${tgTrackId}`;
                     const opts = { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "⬇️ Скачати трек", url: fileUrl }]] } };
                     await bot.sendMessage(tgChatId, `🎉 <b>Дякую за підтримку!</b>\nОсь ваше посилання на файл: <b>${track.name}</b>`, opts);
@@ -522,7 +486,6 @@ app.post('/api/webhook', async (req, res) => {
                     user.clips_left = (user.clips_left || 0) + 10; 
                 }
                 await saveUsersToGitHub();
-                console.log(`💰 УСПІШНА ОПЛАТА ПАКЕТУ! Email: ${reference}. Баланс: ${user.clips_left}`);
             }
         }
         res.status(200).send("OK");
@@ -569,7 +532,6 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
 
         res.json({ lrc: lrcText }); 
     } catch (error) { 
-        console.error("Gemini Audio Error:", error?.response?.data || error.message);
         res.status(500).json({ error: "Помилка розпізнавання ШІ (Gemini)" }); 
     } finally { 
         if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
@@ -590,7 +552,6 @@ async function syncBlogFromGitHub() {
         console.log(`📚 Завантажено ${aiBlogPosts.length} постів з GitHub`);
     } catch (e) { 
         aiBlogPosts = []; 
-        console.log("Створено новий масив постів (Файл ще не існує)");
     }
 }
 
@@ -611,14 +572,9 @@ async function saveBlogToGitHub() {
             content: contentEncoded, 
             sha 
         }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-        
-        console.log("✅ Блог успішно збережено на GitHub");
-    } catch (e) { 
-        console.error("Помилка збереження на GitHub:", e.message); 
-    }
+    } catch (e) {}
 }
 
-// УСІ ДЖЕРЕЛА ТЕПЕР ЧЕРЕЗ РОБОЧИЙ GOOGLE NEWS RSS
 const allBlogSources = [
     // === НОВИНИ ===
     { type: "news", url: "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk" },
@@ -645,18 +601,17 @@ async function fetchAndRewriteBlog() {
     console.log("🔄 Запуск автоматичної генерації блогу (5 новин + 3 психологія)...");
     
     let addedCount = 0;
-    let newsAddedThisRun = 0;
     
+    // === НОВИНИ ===
+    let newsAddedThisRun = 0;
     const newsUrls = allBlogSources.filter(src => src.type === "news").map(src => src.url);
     const shuffledRss = newsUrls.sort(() => 0.5 - Math.random());
 
     for (const rssUrl of shuffledRss) {
         if (newsAddedThisRun >= 5) break; 
-
         try {
             const response = await axios.get(rssUrl, { timeout: 10000 }); 
             const xml = response.data;
-            
             const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
             if (!itemMatch) continue;
 
@@ -667,28 +622,18 @@ async function fetchAndRewriteBlog() {
             if (titleMatch) {
                 let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
                 let cleanTitle = rawTitle.split(" - ")[0]; 
-                
-                const isDuplicate = aiBlogPosts.some(p => p.originalTitle === rawTitle);
-                if (isDuplicate) {
-                    console.log(`⏭ Новину пропущено (вже є): ${cleanTitle}`);
-                    continue;
-                }
+                if (aiBlogPosts.some(p => p.originalTitle === rawTitle)) continue;
 
                 console.log(`✍️ Генерую новину: ${cleanTitle}`);
-                
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        { 
-                            role: "system", 
-                            content: "Ти — професійний український журналіст. Твоє завдання: перекласти англійську новину та написати аналітичну статтю. КАТЕГОРИЧНО ЗАБОРОНЕНО використовувати іноземні слова, латиницю або ієрогліфи. Тільки чиста українська мова. Використовуй цікаві підзаголовки <h2>. Першим рядком твоєї відповіді має бути ПЕРЕКЛАДЕНИЙ ТА ВІДКОРЕГОВАНИЙ ЗАГОЛОВОК (без тегів), а потім (з нового рядка) — сам текст статті з <h2> заголовками. Пиши від імені команди 'Голос проти раку'." 
-                        }, 
-                        { role: "user", content: `Новина для аналізу: ${rawTitle}` }
+                        { role: "system", content: "Ти — професійний український журналіст. Переклади англійську новину та напиши аналітичну статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, далі текст." }, 
+                        { role: "user", content: `Новина: ${rawTitle}` }
                     ],
-                    max_tokens: 2000,
-                    temperature: 0.3 
+                    max_tokens: 2000, temperature: 0.3 
                 }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
                 const fullResponse = groqRes.data.choices[0].message.content.trim();
@@ -696,47 +641,34 @@ async function fetchAndRewriteBlog() {
                 const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
                 const articleContent = lines.slice(1).join('\n').trim(); 
 
-                const post = {
+                aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
-                    date: pubDate, 
-                    category: "news",
-                    originalTitle: rawTitle, 
-                    title: translatedTitle, 
-                    content: articleContent, 
-                    imageUrl: "baner_novunu.png"
-                };
-
-                aiBlogPosts.unshift(post);
-                addedCount++;
-                newsAddedThisRun++;
+                    date: pubDate, category: "news", originalTitle: rawTitle, 
+                    title: translatedTitle, content: articleContent, imageUrl: "baner_novunu.png"
+                });
+                addedCount++; newsAddedThisRun++;
 
                 if (bot && CHANNEL_ID) {
                     try {
-                        const cleanContent = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '');
-                        const shortText = cleanContent.substring(0, 280).replace(/\n/g, ' ');
-                        const tgText = `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`;
-                        await bot.sendMessage(CHANNEL_ID, tgText, { parse_mode: 'HTML' });
-                    } catch (tgErr) {}
+                        const shortText = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '').substring(0, 280).replace(/\n/g, ' ');
+                        await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
+                    } catch (e) {}
                 }
-
                 await new Promise(r => setTimeout(r, 6000)); 
             }
-        } catch (e) { 
-            console.error(`❌ Помилка генерації новини:`, e.message); 
-        }
+        } catch (e) {}
     }
 
+    // === ПСИХОЛОГІЯ ===
     let psychAddedThisRun = 0;
     const psychUrls = allBlogSources.filter(src => src.type === "psychology").map(src => src.url);
     const shuffledPsychRss = psychUrls.sort(() => 0.5 - Math.random());
 
     for (const rssUrl of shuffledPsychRss) {
         if (psychAddedThisRun >= 3) break; 
-
         try {
             const response = await axios.get(rssUrl, { timeout: 10000 });
             const xml = response.data;
-            
             const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
             if (!itemMatch) continue;
 
@@ -747,28 +679,18 @@ async function fetchAndRewriteBlog() {
             if (titleMatch) {
                 let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
                 let cleanTitle = rawTitle.split(" - ")[0]; 
-                
-                const isDuplicate = aiBlogPosts.some(p => p.originalTitle === rawTitle);
-                if (isDuplicate) {
-                    console.log(`⏭ Психологію пропущено (вже є): ${cleanTitle}`);
-                    continue;
-                }
+                if (aiBlogPosts.some(p => p.originalTitle === rawTitle)) continue;
 
                 console.log(`🫂 Генерую статтю підтримки: ${cleanTitle}`);
-                
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        { 
-                            role: "system", 
-                            content: "Ти — досвідчений психолог та волонтер проєкту 'Голос проти раку'. Твоє завдання: адаптувати знайдену статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ ЗАГОЛОВОК, а потім сам текст. ЗАКІНЧУЙ статтю абзацом: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію з лікарем-онкологом або професійним психотерапевтом'." 
-                        }, 
-                        { role: "user", content: `Матеріал для адаптації: ${rawTitle}` }
+                        { role: "system", content: "Ти психолог проєкту 'Голос проти раку'. Адаптуй статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, потім текст. В кінці: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію лікаря'." }, 
+                        { role: "user", content: `Матеріал: ${rawTitle}` }
                     ],
-                    max_tokens: 2200,
-                    temperature: 0.3
+                    max_tokens: 2200, temperature: 0.3
                 }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
                 const fullResponse = groqRes.data.choices[0].message.content.trim();
@@ -776,35 +698,25 @@ async function fetchAndRewriteBlog() {
                 const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
                 const articleContent = lines.slice(1).join('\n').trim(); 
 
-                const post = {
+                aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
-                    date: pubDate, 
-                    category: "psychology",
-                    originalTitle: rawTitle, 
-                    title: translatedTitle || cleanTitle, 
-                    content: articleContent, 
-                    imageUrl: "article_support.png"
-                };
-
-                aiBlogPosts.unshift(post);
-                addedCount++;
-                psychAddedThisRun++;
+                    date: pubDate, category: "psychology", originalTitle: rawTitle, 
+                    title: translatedTitle || cleanTitle, content: articleContent, imageUrl: "article_support.png"
+                });
+                addedCount++; psychAddedThisRun++;
 
                 await new Promise(r => setTimeout(r, 6000));
             }
-        } catch (e) {
-            console.error(`❌ Помилка зчитування статті психології:`, e.message);
-        }
+        } catch (e) {}
     }
 
-    // === БЛОК РЕАБІЛІТАЦІЇ (LLAMA 3.3) ===
+    // === РЕАБІЛІТАЦІЯ ===
     let rehabAddedThisRun = 0;
     const rehabUrls = allBlogSources.filter(src => src.type === "rehab").map(src => src.url);
     const shuffledRehabRss = rehabUrls.sort(() => 0.5 - Math.random());
 
     for (const rssUrl of shuffledRehabRss) {
         if (rehabAddedThisRun >= 2) break; 
-
         try {
             const response = await axios.get(rssUrl, { timeout: 10000 });
             const xml = response.data;
@@ -819,20 +731,16 @@ async function fetchAndRewriteBlog() {
                 let rawTitle = titleMatch[1].replace("<![CDATA[", "").replace("]]>", "").trim();
                 if (aiBlogPosts.some(p => p.originalTitle === rawTitle)) continue;
 
-                console.log(`💪 Генерую статтю реабілітації (Llama 3.3): ${rawTitle}`);
+                console.log(`💪 Генерую статтю реабілітації: ${rawTitle.split(" - ")[0]}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
                 const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        { 
-                            role: "system", 
-                            content: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Твоє завдання: адаптувати статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. Категорично заборонено використовувати латиницю. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК (без тегів та зірочок), а потім (з нового рядка) — сам текст статті. Додай секцію 'Як це працює' для пояснення механізму. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням будь-яких методів обов’язково проконсультуйтеся з вашим фізичним терапевтом'." 
-                        }, 
-                        { role: "user", content: `Новина для адаптації: ${rawTitle}` }
+                        { role: "system", content: "Ти експерт з реабілітації. Адаптуй статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, далі текст. Додай секцію 'Як це працює'. В кінці: 'Важливо: Цей матеріал має ознайомчий характер. Проконсультуйтеся з лікарем'." }, 
+                        { role: "user", content: `Новина: ${rawTitle}` }
                     ],
-                    max_tokens: 2200,
-                    temperature: 0.3
+                    max_tokens: 2200, temperature: 0.3
                 }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
 
                 const fullResponse = groqRes.data.choices[0].message.content.trim();
@@ -840,30 +748,23 @@ async function fetchAndRewriteBlog() {
                 const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
                 const articleContent = lines.slice(1).join('\n').trim(); 
 
-                const post = {
+                aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
-                    date: pubDate, 
-                    category: "rehab",
-                    originalTitle: rawTitle, 
-                    title: translatedTitle, 
-                    content: articleContent, 
-                    imageUrl: "reabilitaciya.png"
-                };
-
-                aiBlogPosts.unshift(post);
-                addedCount++;
-                rehabAddedThisRun++;
+                    date: pubDate, category: "rehab", originalTitle: rawTitle, 
+                    title: translatedTitle, content: articleContent, imageUrl: "reabilitaciya.png"
+                });
+                addedCount++; rehabAddedThisRun++;
 
                 await new Promise(r => setTimeout(r, 6000));
             }
-        } catch (e) { console.error(`❌ Помилка реабілітації:`, e.message); }
+        } catch (e) {}
     }
     
     if (addedCount > 0) {
         await saveBlogToGitHub();
         console.log(`🎉 Автооновлення завершено. Додано нових матеріалів: ${addedCount}`);
     } else {
-        console.log("✅ Перевірка завершена. Нових публікацій на сайтах-джерелах поки немає.");
+        console.log("✅ Перевірка завершена. Нових публікацій немає.");
     }
 }
 
@@ -897,4 +798,3 @@ Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub()]
         console.log("⏰ Налаштовано перевірку щодня о 08:00 та 20:00 (Київський час)");
     });
 });
-}
