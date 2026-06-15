@@ -406,14 +406,12 @@
     <a href="index.html" class="footer-logo logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
     <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">© 2026 ФОП Герц Андрій Костянтинович. Всі права захищені.</p>
     
-    <!-- Це критично для AdSense -->
     <div class="footer-links" style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
         <a href="privacy_policy.html" style="color: #aaa; text-decoration: none; font-size: 0.85rem;">Політика конфіденційності</a>
         <a href="public_offer.html" style="color: #aaa; text-decoration: none; font-size: 0.85rem;">Публічна оферта</a>
         <a href="contacts.html" style="color: #aaa; text-decoration: none; font-size: 0.85rem;">Контакти</a>
     </div>
 
-    <!-- Медичний дисклеймер -->
     <p style="font-size: 0.75rem; color: #666; max-width: 800px; margin: 0 auto; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
         <b>Відмова від відповідальності:</b> Матеріали на сайті «Голос проти раку» публікуються виключно з інформаційною метою. Ми не ставимо діагнози та не призначаємо лікування. З будь-якими питаннями щодо вашого здоров'я обов'язково звертайтеся до кваліфікованого лікаря-онколога.
     </p>
@@ -524,12 +522,10 @@
     function applyFilters() {
         let filtered = allPosts;
 
-        // 1. Фільтруємо за категорією
         if (currentCategory !== 'all') {
             filtered = filtered.filter(post => (post.category || 'news') === currentCategory);
         }
 
-        // 2. Фільтруємо за пошуком
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(post => 
@@ -553,13 +549,24 @@
     async function fetchBlogPosts() {
         const container = document.getElementById('blog-posts');
         try {
-            const response = await fetch('https://andreygerc11-music-site.onrender.com/api/blog');
+            // ДОДАНО: ?t=... гарантує, що браузер завантажить свіжі дані, а не старий кеш
+            const response = await fetch('https://andreygerc11-music-site.onrender.com/api/blog?t=' + Date.now());
             if (!response.ok) throw new Error('Помилка завантаження');
 
             allPosts = await response.json();
 
-            // Сортуємо за датою (новіші зверху)
-            allPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+            // ДОДАНО: Розумний парсер дати, який розуміє український формат (DD.MM.YYYY)
+            allPosts.sort((a, b) => {
+                const parseDate = (d) => {
+                    if (!d) return 0;
+                    if (d.includes('.')) {
+                        let p = d.split('.'); 
+                        return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime();
+                    }
+                    return new Date(d).getTime() || 0;
+                };
+                return parseDate(b.date) - parseDate(a.date);
+            });
 
             renderPosts(allPosts);
 
@@ -573,11 +580,9 @@
         }
     }
 
-    // Ініціалізація
     document.addEventListener('DOMContentLoaded', () => {
         fetchBlogPosts();
 
-        // Обробка кліків по табам
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const category = btn.getAttribute('data-category');
@@ -585,7 +590,6 @@
             });
         });
 
-        // Обробка пошуку (Живий пошук при введенні)
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
