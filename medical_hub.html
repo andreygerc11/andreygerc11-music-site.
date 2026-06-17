@@ -59,8 +59,13 @@
         .nav-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 2rem; color: #fff; text-decoration: none; line-height: 1; }
         .logo span { color: var(--med-accent); }
-        .btn-home { border: 1px solid var(--med-accent); padding: 5px 15px; border-radius: 20px; color: #fff !important; text-decoration: none; font-size: 0.85rem; font-weight: 700; transition: 0.3s; }
+        .nav-links { display: flex; gap: 15px; list-style: none; align-items: center; margin: 0; padding: 0;}
+        .nav-links li { display: inline-block; }
+        .btn-home { border: 1px solid var(--med-accent); padding: 5px 15px; border-radius: 20px; color: #fff !important; text-decoration: none; font-size: 0.85rem; font-weight: 700; transition: 0.3s; cursor: pointer; background: transparent;}
         .btn-home:hover { background: var(--med-accent); color: #000 !important; }
+        
+        .btn-doctor-login { border-color: gold; color: gold !important; }
+        .btn-doctor-login:hover { background: gold; color: #000 !important; }
 
         .med-hero { padding: 120px 5% 60px; text-align: center; position: relative; background: radial-gradient(circle at top, rgba(32, 201, 151, 0.1) 0%, transparent 60%); }
         .med-hero h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900; text-transform: uppercase; margin-bottom: 20px; color: #fff; text-shadow: 0 0 20px rgba(32, 201, 151, 0.5); }
@@ -70,7 +75,36 @@
         .section-title { font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 40px; display: flex; align-items: center; gap: 15px; text-transform: uppercase; justify-content: center;}
         .section-title i { color: var(--med-accent); font-size: 2.2rem; }
 
-        /* === КАРТКИ СТАТЕЙ === */
+        /* === КАРТКИ ОСНОВНИХ НАПРЯМКІВ === */
+        .rehab-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 60px;}
+        .rehab-card {
+            background: linear-gradient(145deg, rgba(20, 25, 30, 0.8) 0%, rgba(10, 12, 15, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(32, 201, 151, 0.2);
+            border-radius: 20px; padding: 35px 25px;
+            transition: 0.4s; position: relative; overflow: hidden;
+            text-align: center;
+        }
+        .rehab-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--med-accent);
+            box-shadow: 0 15px 35px rgba(32, 201, 151, 0.2);
+        }
+        .rehab-icon {
+            width: 70px; height: 70px; background: rgba(32, 201, 151, 0.1);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; color: var(--med-accent); margin: 0 auto 20px auto;
+            box-shadow: 0 0 15px rgba(32, 201, 151, 0.2);
+            transition: 0.4s;
+        }
+        .rehab-card:hover .rehab-icon {
+            background: var(--med-accent); color: #000; box-shadow: 0 0 25px var(--med-accent);
+            transform: scale(1.1) rotate(5deg);
+        }
+        .rehab-card h3 { font-size: 1.3rem; margin-bottom: 15px; color: #fff; font-weight: 900; text-transform: uppercase;}
+        .rehab-card p { font-size: 0.95rem; color: #aaa; line-height: 1.6; text-align: center; margin: 0;}
+
+        /* === КАРТКИ СТАТЕЙ (ШІ ТА ДРУЖИНА) === */
         .rehab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
         .rehab-post { 
             background: var(--card-bg); border: 1px solid rgba(32, 201, 151, 0.15); border-radius: 20px; 
@@ -210,7 +244,12 @@
 <nav class="header-nav">
     <div class="nav-container">
         <a href="index.html" class="logo cursive-text">Golos <span>Proty Raku</span></a>
-        <a href="index.html" class="btn-home"><i class="fas fa-arrow-left"></i> На головну</a>
+        
+        <ul class="nav-links">
+            <li><a href="index.html" class="btn-home"><i class="fas fa-arrow-left"></i> На головну</a></li>
+            <li><button id="doctorLoginBtn" class="btn-home btn-doctor-login" onclick="openAuthorAuth()"><i class="fas fa-user-md"></i> Вхід для лікаря</button></li>
+            <li><button id="doctorLogoutBtn" class="btn-home btn-doctor-login" style="display:none;" onclick="logoutAuthor()"><i class="fas fa-sign-out-alt"></i> Вийти</button></li>
+        </ul>
     </div>
 </nav>
 
@@ -218,6 +257,35 @@
     <section class="med-hero" data-aos="zoom-in">
         <h1 class="cursive-text">Медичний Хаб</h1>
         <p>Поради реабілітолога, доказова медицина та сучасні методики. Створено для підтримки та відновлення.</p>
+    </section>
+
+    <!-- СТАТИЧНІ КАРТКИ НАПРЯМКІВ ЗІ СКРІНШОТУ -->
+    <section class="content-section" data-aos="fade-up">
+        <div class="rehab-grid-4">
+            <div class="rehab-card">
+                <div class="rehab-icon"><i class="fas fa-running"></i></div>
+                <h3>Відновлення руху</h3>
+                <p>Кінезіотерапія та лікувальна фізкультура (ЛФК). Індивідуально підібрані вправи допомагають відновити втрачені функції суглобів та м'язів, заново вчачи тіло рухатися без болю.</p>
+            </div>
+            
+            <div class="rehab-card">
+                <div class="rehab-icon"><i class="fas fa-band-aid"></i></div>
+                <h3>Сучасні інструменти</h3>
+                <p>Фахівці застосовують комплексний підхід: кінезіотейпування для зняття набряків, апаратну електростимуляцію, балансири та спеціальні масажні техніки для активації м'язів.</p>
+            </div>
+            
+            <div class="rehab-card">
+                <div class="rehab-icon"><i class="fas fa-hands-helping"></i></div>
+                <h3>Психологічна опора</h3>
+                <p>Реабілітолог — це часто перший, хто каже пацієнту: «Ти зможеш». Тілесний контакт, емпатія та постійна мотивація відіграють критичну роль у подоланні депресії під час лікування.</p>
+            </div>
+            
+            <div class="rehab-card">
+                <div class="rehab-icon"><i class="fas fa-wheelchair"></i></div>
+                <h3>Ерготерапія</h3>
+                <p>Адаптація до нового життя. Це навчання пацієнтів заново виконувати елементарні побутові дії, повертаючи їм незалежність, самостійність та гідність у повсякденності.</p>
+            </div>
+        </div>
     </section>
 
     <!-- СІТКА СТАТЕЙ (ШІ + ДРУЖИНА) -->
@@ -232,15 +300,15 @@
     </section>
 </main>
 
-<!-- КНОПКА ВИКЛИКУ ВІКНА ДЛЯ ДРУЖИНИ -->
-<button class="wife-btn" onclick="openAuthorCheck()">
+<!-- КНОПКА ВИКЛИКУ РЕДАКТОРА (ВІДОБРАЖАЄТЬСЯ ТІЛЬКИ ПІСЛЯ ВХОДУ) -->
+<button class="wife-btn" id="writeTipBtn" onclick="openWifeModal()">
     <i class="fas fa-pen-nib"></i> Написати пораду
 </button>
 
 <!-- ВІКНО АВТОРИЗАЦІЇ ДЛЯ ДРУЖИНИ -->
 <div class="modal-overlay" id="authModal">
     <div class="modal-box">
-        <h3><i class="fas fa-lock"></i> Вхід для автора</h3>
+        <h3><i class="fas fa-lock"></i> Вхід для лікаря</h3>
         <p style="text-align: center; color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Тільки лікар-реабілітолог Герц Марина Віталіївна має доступ до публікації порад.</p>
         <form onsubmit="verifyAuthor(event)">
             <input type="email" id="authorLogin" placeholder="Логін (Email)" required style="margin-bottom: 15px;">
@@ -261,7 +329,7 @@
         <textarea id="wifeText" placeholder="Напишіть вашу пораду чи спостереження тут..." required></textarea>
         <div class="modal-actions">
             <button class="btn-cancel" onclick="document.getElementById('wifeModal').style.display='none'">Скасувати</button>
-            <button class="btn-publish" onclick="publishWifeArticle()">Опублікувати</button>
+            <button class="btn-publish" onclick="publishWifeArticle()" id="publishBtn">Опублікувати</button>
         </div>
     </div>
 </div>
@@ -306,25 +374,35 @@
 <script>
     AOS.init({ duration: 1000, once: true });
 
-    // Отримуємо поточного користувача (з index.html) для видимості кнопки
-    let currentUser = null;
-    try {
-        currentUser = JSON.parse(localStorage.getItem('hz_user'));
-    } catch(e) {}
-
     function toggleConsult() { document.getElementById('consultWidget').classList.toggle('open'); }
 
     // ==========================================
-    // ЛОГІКА АВТОРИЗАЦІЇ ТА БЛОГУ ДРУЖИНИ
+    // ЛОГІКА АВТОРИЗАЦІЇ
     // ==========================================
-    const WIFE_STORAGE_KEY = 'hz_wife_rehab_tips';
-
-    function openAuthorCheck() {
-        if (sessionStorage.getItem('marina_logged_in') === 'true') {
-            document.getElementById('wifeModal').style.display = 'flex';
+    
+    function checkAuthState() {
+        const isAuth = localStorage.getItem('hz_wife_auth') === 'true';
+        if (isAuth) {
+            document.getElementById('doctorLoginBtn').style.display = 'none';
+            document.getElementById('doctorLogoutBtn').style.display = 'inline-block';
+            document.getElementById('writeTipBtn').style.display = 'flex';
         } else {
-            document.getElementById('authModal').style.display = 'flex';
+            document.getElementById('doctorLoginBtn').style.display = 'inline-block';
+            document.getElementById('doctorLogoutBtn').style.display = 'none';
+            document.getElementById('writeTipBtn').style.display = 'none';
         }
+    }
+
+    function openAuthorAuth() {
+        document.getElementById('authModal').style.display = 'flex';
+    }
+
+    function logoutAuthor() {
+        localStorage.removeItem('hz_wife_auth');
+        localStorage.removeItem('hz_wife_login');
+        localStorage.removeItem('hz_wife_pass');
+        checkAuthState();
+        renderAllArticles(); // Приховує кнопки "Видалити"
     }
 
     function verifyAuthor(e) {
@@ -332,19 +410,31 @@
         const l = document.getElementById('authorLogin').value.trim();
         const p = document.getElementById('authorPass').value.trim();
 
-        if (l === 'administration@dev.com' && p === '113130DronMarina45234511@') {
-            sessionStorage.setItem('marina_logged_in', 'true');
+        if ((l === 'administration@dev.com' || l === 'admin@dev.com') && p === '113130DronMarina45234511@') {
+            localStorage.setItem('hz_wife_auth', 'true');
+            localStorage.setItem('hz_wife_login', l);
+            localStorage.setItem('hz_wife_pass', p);
+            
             document.getElementById('authModal').style.display = 'none';
-            document.getElementById('wifeModal').style.display = 'flex';
+            checkAuthState();
             renderAllArticles(); 
         } else {
-            alert('Невірний логін або пароль! Доступ відкрито тільки для адміністратора.');
+            alert('Невірний логін або пароль! Доступ відкрито тільки для лікаря.');
         }
     }
 
-    function publishWifeArticle() {
+    // ==========================================
+    // ЛОГІКА БЛОГУ ДРУЖИНИ (ЧЕРЕЗ GITHUB)
+    // ==========================================
+
+    function openWifeModal() {
+        document.getElementById('wifeModal').style.display = 'flex';
+    }
+
+    async function publishWifeArticle() {
         const titleInput = document.getElementById('wifeTitle');
         const textInput = document.getElementById('wifeText');
+        const publishBtn = document.getElementById('publishBtn');
         
         const title = titleInput.value.trim();
         const text = textInput.value.trim();
@@ -353,31 +443,67 @@
             alert('Будь ласка, заповніть усі поля!'); return;
         }
 
+        publishBtn.innerText = 'Збереження...';
+        publishBtn.disabled = true;
+
         const newTip = {
             id: Date.now(),
             isWifeTip: true,
-            category: 'rehab',
+            category: 'rehab_wife',
             title: title,
             content: text,
-            date: new Date().toLocaleDateString('uk-UA')
+            date: new Date().toLocaleDateString('uk-UA'),
+            imageUrl: 'article_rehab.png'
         };
 
-        const tips = JSON.parse(localStorage.getItem(WIFE_STORAGE_KEY) || '[]');
-        tips.unshift(newTip);
-        localStorage.setItem(WIFE_STORAGE_KEY, JSON.stringify(tips));
+        try {
+            const res = await fetch('https://andreygerc11-music-site.onrender.com/api/wife-blog', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    login: localStorage.getItem('hz_wife_login'), 
+                    password: localStorage.getItem('hz_wife_pass'), 
+                    article: newTip 
+                })
+            });
 
-        titleInput.value = ''; textInput.value = '';
-        document.getElementById('wifeModal').style.display = 'none';
-        
-        renderAllArticles();
+            if (res.ok) {
+                titleInput.value = ''; textInput.value = '';
+                document.getElementById('wifeModal').style.display = 'none';
+                renderAllArticles();
+            } else {
+                alert('Помилка авторизації на сервері. Перезайдіть у кабінет.');
+                logoutAuthor();
+            }
+        } catch (e) {
+            alert('Помилка з\'єднання з сервером.');
+        } finally {
+            publishBtn.innerText = 'Опублікувати';
+            publishBtn.disabled = false;
+        }
     }
 
-    function deleteWifeTip(id) {
+    async function deleteWifeTip(id) {
         if(confirm("Ви впевнені, що хочете видалити цю пораду?")) {
-            let tips = JSON.parse(localStorage.getItem(WIFE_STORAGE_KEY) || '[]');
-            tips = tips.filter(tip => tip.id !== id);
-            localStorage.setItem(WIFE_STORAGE_KEY, JSON.stringify(tips));
-            renderAllArticles();
+            try {
+                const res = await fetch('https://andreygerc11-music-site.onrender.com/api/wife-blog/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        login: localStorage.getItem('hz_wife_login'), 
+                        password: localStorage.getItem('hz_wife_pass'), 
+                        id: id 
+                    })
+                });
+
+                if (res.ok) {
+                    renderAllArticles();
+                } else {
+                    alert('Помилка авторизації.');
+                }
+            } catch(e) {
+                alert('Помилка сервера.');
+            }
         }
     }
 
@@ -394,45 +520,21 @@
     }
 
     // ==========================================
-    // ЛОГІКА МАЛЮВАННЯ КАРТИНОК ЧЕРЕЗ ТВІЙ СЕРВЕР (GEMINI IMAGEN)
-    // ==========================================
-    async function fetchGeminiImageFromServer(prompt, imgId) {
-        try {
-            const res = await fetch('https://andreygerc11-music-site.onrender.com/api/gemini/image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: 'admin@dev.com',
-                    payload: { instances: [{ prompt: "High quality medical photography, physical rehabilitation therapy, " + prompt }] }
-                })
-            });
-            const data = await res.json();
-            if (data.predictions && data.predictions[0] && data.predictions[0].bytesBase64Encoded) {
-                document.getElementById(imgId).src = "data:image/jpeg;base64," + data.predictions[0].bytesBase64Encoded;
-            } else {
-                document.getElementById(imgId).src = "article_support.png"; 
-            }
-        } catch (err) {
-            document.getElementById(imgId).src = "article_support.png";
-        }
-    }
-
-    // ==========================================
-    // ЗАВАНТАЖЕННЯ ВСІХ СТАТЕЙ (ШІ + ДРУЖИНА)
+    // ЗАВАНТАЖЕННЯ ВСІХ СТАТЕЙ
     // ==========================================
     async function renderAllArticles() {
         const container = document.getElementById('combinedArticlesGrid');
         container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #888;"><i class="fas fa-spinner fa-spin"></i> Завантаження статей...</div>';
 
-        let aiRehabPosts = [];
+        let allRehabPosts = [];
         try {
             const response = await fetch('https://andreygerc11-music-site.onrender.com/api/blog?t=' + Date.now());
             if (response.ok) {
                 const allPosts = await response.json();
                 
-                // ВАЖЛИВО: Залишаємо ТІЛЬКИ ті статті з бази, які НЕ МІСТЯТЬ слова "рак" чи "онко"
-                aiRehabPosts = allPosts.filter(p => {
-                    if (p.category !== 'rehab') return false;
+                // ВАЖЛИВО: Залишаємо ТІЛЬКИ статті з реабілітації, які НЕ містять слова "рак"
+                allRehabPosts = allPosts.filter(p => {
+                    if (p.category !== 'rehab' && p.category !== 'rehab_wife') return false;
                     const titleText = (p.title || "").toLowerCase();
                     const contentText = (p.content || "").toLowerCase();
                     if (titleText.includes('рак') || titleText.includes('онко')) return false;
@@ -442,10 +544,8 @@
             }
         } catch (e) {}
 
-        const wifeTips = JSON.parse(localStorage.getItem(WIFE_STORAGE_KEY) || '[]');
-        let combined = [...aiRehabPosts, ...wifeTips];
-
-        combined.sort((a, b) => {
+        // Сортуємо новіші зверху
+        allRehabPosts.sort((a, b) => {
             const parseDate = (d) => {
                 if (!d) return 0;
                 if (d.includes('.')) { let p = d.split('.'); return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime(); }
@@ -456,7 +556,7 @@
 
         container.innerHTML = '';
 
-        if (combined.length === 0) {
+        if (allRehabPosts.length === 0) {
             container.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; color: #666; padding: 30px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 20px;">
                     Тут поки немає статей з фізичної реабілітації.
@@ -464,22 +564,18 @@
             return;
         }
 
-        const isMarinaLoggedIn = sessionStorage.getItem('marina_logged_in') === 'true';
+        const isWifeAuth = localStorage.getItem('hz_wife_auth') === 'true';
 
-        combined.forEach(post => {
-            const imgId = "img_rehab_" + post.id;
+        allRehabPosts.forEach(post => {
             let cleanText = (post.content || post.text || "").replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
 
             let badgeHtml = '';
             let authorHtml = '';
             let deleteBtnHtml = '';
             let cardClass = 'rehab-post';
-            let initialImage = post.imageUrl || 'baner.png';
-            let needsGeneration = false;
-            let wrapperId = '';
+            let wrapperId = `post-wrap-${post.id}`;
 
-            if (post.isWifeTip) {
-                wrapperId = `wife-tip-${post.id}`;
+            if (post.isWifeTip || post.category === 'rehab_wife') {
                 cardClass += ' author-marina';
                 badgeHtml = '<span class="rehab-badge" style="background: gold; color: #000;">Порада Реабілітолога</span>';
                 authorHtml = `
@@ -488,25 +584,19 @@
                         <span>Автор: <b>Герц Марина Віталіївна</b>, лікар-реабілітолог</span>
                     </div>
                 `;
-                needsGeneration = true; 
 
-                if (isMarinaLoggedIn) {
-                    deleteBtnHtml = `<button onclick="deleteWifeTip(${post.id})" style="background:transparent; border:none; color:#ff4d4d; cursor:pointer; font-size:0.75rem; font-weight:bold; text-transform:uppercase; margin-top: 10px;"><i class="fas fa-trash"></i> Видалити пораду</button>`;
+                if (isWifeAuth) {
+                    deleteBtnHtml = `<button onclick="deleteWifeTip(${post.id})" style="background:transparent; border:none; color:#ff4d4d; cursor:pointer; font-size:0.75rem; font-weight:bold; text-transform:uppercase; margin-top: 10px;"><i class="fas fa-trash"></i> Видалити</button>`;
                 }
             } else {
-                wrapperId = `ai-post-${post.id}`;
                 badgeHtml = '<span class="rehab-badge" style="background: var(--med-accent); color: #000;">Доказова медицина</span>';
-                if (!post.imageUrl || post.imageUrl === 'reabilitaciya.png' || post.imageUrl === 'article_rehab.png') {
-                    initialImage = 'baner.png';
-                    needsGeneration = true;
-                }
             }
 
             container.innerHTML += `
                 <div class="${cardClass}" data-aos="fade-up">
                     <div class="rehab-img">
                         ${badgeHtml}
-                        <img id="${imgId}" src="${initialImage}" alt="${post.title}">
+                        <img src="article_rehab.png" alt="${post.title}">
                     </div>
                     <div class="rehab-content">
                         <div class="rehab-date"><i class="far fa-calendar-alt"></i> ${post.date}</div>
@@ -525,20 +615,12 @@
                     </div>
                 </div>
             `;
-            
-            if (needsGeneration) {
-                fetchGeminiImageFromServer(post.title, imgId);
-            }
         });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        checkAuthState();
         renderAllArticles();
-        
-        const wifeBtn = document.querySelector('.wife-btn');
-        if (wifeBtn && currentUser && currentUser.email === 'admin@dev.com') {
-            wifeBtn.style.display = 'flex';
-        }
     });
 
     // ==========================================
