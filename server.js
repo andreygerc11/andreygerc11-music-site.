@@ -774,6 +774,27 @@ app.get('/api/blog', (req, res) => {
     res.json(aiBlogPosts); 
 });
 
+// === НОВІ ШЛЯХИ ДЛЯ БЛОГУ ДРУЖИНИ ===
+app.post('/api/wife-blog', async (req, res) => {
+    const { login, password, article } = req.body;
+    if (login !== 'administration@dev.com' || password !== '113130DronMarina45234511@') {
+        return res.status(403).json({ error: "Невірний логін або пароль" });
+    }
+    aiBlogPosts.unshift(article);
+    await saveBlogToGitHub();
+    res.json({ success: true });
+});
+
+app.post('/api/wife-blog/delete', async (req, res) => {
+    const { login, password, id } = req.body;
+    if (login !== 'administration@dev.com' || password !== '113130DronMarina45234511@') {
+        return res.status(403).json({ error: "Невірний логін або пароль" });
+    }
+    aiBlogPosts = aiBlogPosts.filter(p => p.id !== id);
+    await saveBlogToGitHub();
+    res.json({ success: true });
+});
+
 // ==========================================
 // 7. ЗАПУСК СЕРВЕРА
 // ==========================================
