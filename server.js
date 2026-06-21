@@ -366,7 +366,7 @@ app.post('/api/gemini/image', async (req, res) => {
 });
 
 // ==========================================
-// 4. GOOGLE SHEETS (ВИПРАВЛЕНО FETCH НА AXIOS)
+// 4. GOOGLE SHEETS
 // ==========================================
 async function sendToGoogle(data) {
     if (!GOOGLE_SHEETS_URL) return { success: true };
