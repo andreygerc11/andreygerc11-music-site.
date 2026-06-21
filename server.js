@@ -64,8 +64,8 @@ if (BOT_TOKEN) {
                     [{ text: "🎵 Каталог пісень (37,36 грн)", callback_data: "show_menu" }],
                     [{ text: "🗣 Об'єднані голоси", callback_data: "united_voices" }],
                     [{ text: "ℹ️ Про проєкт та автора", callback_data: "about_project" }],
-                    [{ text: "🎬 Створити свій кліп (ШІ-Студія)", url: "https://golos-proty-raku.pp.ua/#generator" }],
-                    [{ text: "📰 Читати блог", url: "https://golos-proty-raku.pp.ua/#blog" }, { text: "🌐 Наш сайт", url: "https://golos-proty-raku.pp.ua" }],
+                    [{ text: "🎬 Створити свій кліп (ШІ-Студія)", url: "[https://golos-proty-raku.pp.ua/#generator](https://golos-proty-raku.pp.ua/#generator)" }],
+                    [{ text: "📰 Читати блог", url: "[https://golos-proty-raku.pp.ua/#blog](https://golos-proty-raku.pp.ua/#blog)" }, { text: "🌐 Наш сайт", url: "[https://golos-proty-raku.pp.ua](https://golos-proty-raku.pp.ua)" }],
                     [{ text: "🤝 Підтримати проєкт (Офіційно)", callback_data: "support_project" }]
                 ]
             }
@@ -113,7 +113,7 @@ if (BOT_TOKEN) {
                     message_id: messageId, 
                     parse_mode: 'HTML', 
                     reply_markup: { inline_keyboard: [
-                        [{ text: "👑 Оформити підписку на сайті", url: "https://golos-proty-raku.pp.ua/#generator" }], 
+                        [{ text: "👑 Оформити підписку на сайті", url: "[https://golos-proty-raku.pp.ua/#generator](https://golos-proty-raku.pp.ua/#generator)" }], 
                         [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
                     ] } 
                 });
@@ -127,7 +127,7 @@ if (BOT_TOKEN) {
                     parse_mode: 'HTML', 
                     reply_markup: { inline_keyboard: [
                         [{ text: "📝 Розповісти свою історію", callback_data: "write_story" }],
-                        [{ text: "💬 Чат незламних", url: "https://t.me/golos_pidtrymka" }],
+                        [{ text: "💬 Чат незламних", url: "[https://t.me/golos_pidtrymka](https://t.me/golos_pidtrymka)" }],
                         [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
                     ] } 
                 });
@@ -203,10 +203,10 @@ if (BOT_TOKEN) {
         if (!track) return bot.sendMessage(chatId, "❌ Трек не знайдено.");
 
         try {
-            const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
+            const monoRes = await axios.post('[https://api.monobank.ua/api/merchant/invoice/create](https://api.monobank.ua/api/merchant/invoice/create)', {
                 amount: BOT_PRICE, ccy: 980,
                 merchantPaymInfo: { destination: `Трек: ${track.name}`, reference: `tg_${chatId}_${track.fullId}` },
-                webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
+                webHookUrl: "[https://andreygerc11-music-site.onrender.com/api/webhook](https://andreygerc11-music-site.onrender.com/api/webhook)"
             }, { headers: { 'X-Token': MONO_TOKEN } });
 
             const text = `Ви обрали: <b>${track.name}</b>\n\n✅ Після оплати бот МИТТЄВО надішле вам аудіофайл прямо сюди.`;
@@ -232,7 +232,7 @@ async function sendTelegramMessage(text) {
         if (bot) {
             await bot.sendMessage(TELEGRAM_CHAT_ID, text, { parse_mode: 'HTML' });
         } else if (BOT_TOKEN) {
-            await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' });
+            await axios.post(`[https://api.telegram.org/bot$](https://api.telegram.org/bot$){BOT_TOKEN}/sendMessage`, { chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' });
         }
     } catch (e) {}
 }
@@ -243,7 +243,7 @@ async function sendTelegramMessage(text) {
 async function syncUsersFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
-        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/users.json`, { 
+        const res = await axios.get(`[https://api.github.com/repos/$](https://api.github.com/repos/$){GITHUB_REPO}/contents/users.json`, { 
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` } 
         });
         usersDB = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
@@ -257,7 +257,7 @@ async function syncUsersFromGitHub() {
 async function saveUsersToGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
-        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/users.json`;
+        const url = `[https://api.github.com/repos/$](https://api.github.com/repos/$){GITHUB_REPO}/contents/users.json`;
         let sha = usersSha;
         if (!sha) {
             try { 
@@ -291,7 +291,7 @@ app.post('/api/auth/user', async (req, res) => {
         console.log(`🎉 Зареєстровано нового користувача: ${email}`);
     }
 
-    if (email === 'admin@dev.com') {
+    if (email === 'admin@dev.com' || email === 'administration@dev.com') {
         user.status = 'premium';
         user.clips_left = 999; 
     }
@@ -318,7 +318,7 @@ app.post('/api/gemini/text', async (req, res) => {
 
     try {
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            `[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$){GEMINI_API_KEY}`,
             payload,
             { headers: { 'Content-Type': 'application/json' } }
         );
@@ -354,7 +354,7 @@ app.post('/api/gemini/image', async (req, res) => {
 
     try {
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${GEMINI_API_KEY}`,
+            `[https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=$){GEMINI_API_KEY}`,
             geminiPayload,
             { headers: { 'Content-Type': 'application/json' } }
         );
@@ -366,14 +366,22 @@ app.post('/api/gemini/image', async (req, res) => {
 });
 
 // ==========================================
-// 4. GOOGLE SHEETS
+// 4. GOOGLE SHEETS (ВИПРАВЛЕНО FETCH НА AXIOS)
 // ==========================================
 async function sendToGoogle(data) {
     if (!GOOGLE_SHEETS_URL) return { success: true };
-    const response = await fetch(GOOGLE_SHEETS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), redirect: 'follow' });
-    if (!response.ok) throw new Error(`Google Script повернув статус: ${response.status}`);
-    const textResponse = await response.text();
-    try { return JSON.parse(textResponse); } catch (e) { return { success: true }; }
+    try {
+        const response = await axios.post(GOOGLE_SHEETS_URL, data, {
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (typeof response.data === 'string') {
+            try { return JSON.parse(response.data); } catch (e) { return { success: true }; }
+        }
+        return response.data;
+    } catch (error) {
+        throw new Error(`Google Script повернув помилку: ${error.message}`);
+    }
 }
 
 app.post('/api/register', async (req, res) => { try { res.json(await sendToGoogle({ action: 'register', ...req.body })); } catch (e) { res.status(500).json({ error: e.message }); } });
@@ -382,7 +390,12 @@ app.post('/api/social-auth', async (req, res) => { try { res.json(await sendToGo
 app.post('/api/subscriptions', async (req, res) => { try { res.json(await sendToGoogle({ action: 'new_sub', ...req.body })); } catch (error) { res.status(500).json({ error: error.message }); } });
 app.get('/api/subscriptions', async (req, res) => {
     if (!GOOGLE_SHEETS_URL) return res.json([]);
-    try { const response = await fetch(`${GOOGLE_SHEETS_URL}?action=getSubs`, { redirect: 'follow' }); const data = await response.json(); res.json(data); } catch (error) { res.status(500).json({ error: error.message }); }
+    try { 
+        const response = await axios.get(`${GOOGLE_SHEETS_URL}?action=getSubs`); 
+        res.json(response.data); 
+    } catch (error) { 
+        res.status(500).json({ error: error.message }); 
+    }
 });
 
 // ==========================================
@@ -391,8 +404,8 @@ app.get('/api/subscriptions', async (req, res) => {
 async function fetchMusicFromDrive() {
     try {
         if (!GOOGLE_API_KEY) return [];
-        const prevRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${PREVIEW_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,createdTime)&key=${GOOGLE_API_KEY}`);
-        const fullRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${FULL_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name)&key=${GOOGLE_API_KEY}`);
+        const prevRes = await axios.get(`[https://www.googleapis.com/drive/v3/files?q='$](https://www.googleapis.com/drive/v3/files?q='$){PREVIEW_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,createdTime)&key=${GOOGLE_API_KEY}`);
+        const fullRes = await axios.get(`[https://www.googleapis.com/drive/v3/files?q='$](https://www.googleapis.com/drive/v3/files?q='$){FULL_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name)&key=${GOOGLE_API_KEY}`);
         globalMusicList = prevRes.data.files.map(f => {
             const cleanName = f.name.replace(/\.[^/.]+$/, "").replace(" (Прев'ю)", "").trim();
             const fullFile = fullRes.data.files.find(full => full.name.replace(/\.[^/.]+$/, "").trim() === cleanName);
@@ -410,7 +423,7 @@ app.get('/api/music', async (req, res) => {
 app.get('/api/stream/:fileId', async (req, res) => {
     try {
         if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
-        const response = await axios({ method: 'get', url: `https://www.googleapis.com/drive/v3/files/${req.params.fileId}?alt=media&key=${GOOGLE_API_KEY}`, responseType: 'stream' });
+        const response = await axios({ method: 'get', url: `[https://www.googleapis.com/drive/v3/files/$](https://www.googleapis.com/drive/v3/files/$){req.params.fileId}?alt=media&key=${GOOGLE_API_KEY}`, responseType: 'stream' });
         res.setHeader('Content-Type', 'audio/mpeg'); res.setHeader('Accept-Ranges', 'bytes'); response.data.pipe(res);
     } catch (error) { res.status(500).send("Помилка відтворення"); }
 });
@@ -418,10 +431,10 @@ app.get('/api/stream/:fileId', async (req, res) => {
 app.post('/api/pay', async (req, res) => {
     try {
         const { songId, songName } = req.body;
-        if (!MONO_TOKEN) return res.json({ url: "https://send.monobank.ua/" });
-        const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
+        if (!MONO_TOKEN) return res.json({ url: "[https://send.monobank.ua/](https://send.monobank.ua/)" });
+        const monoRes = await axios.post('[https://api.monobank.ua/api/merchant/invoice/create](https://api.monobank.ua/api/merchant/invoice/create)', {
             amount: 3736, ccy: 980, merchantPaymInfo: { destination: `Трек: ${songName}`, reference: songId },
-            redirectUrl: "https://golos-proty-raku.pp.ua/success.html", webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
+            redirectUrl: "[https://golos-proty-raku.pp.ua/success.html](https://golos-proty-raku.pp.ua/success.html)", webHookUrl: "[https://andreygerc11-music-site.onrender.com/api/webhook](https://andreygerc11-music-site.onrender.com/api/webhook)"
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: monoRes.data.pageUrl });
     } catch (error) { res.status(500).json({ error: "Помилка оплати" }); }
@@ -430,13 +443,13 @@ app.post('/api/pay', async (req, res) => {
 app.post('/api/pay-subscription', async (req, res) => {
     try {
         const { email } = req.body;
-        if (!MONO_TOKEN) return res.json({ url: "https://send.monobank.ua/" });
-        const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
+        if (!MONO_TOKEN) return res.json({ url: "[https://send.monobank.ua/](https://send.monobank.ua/)" });
+        const monoRes = await axios.post('[https://api.monobank.ua/api/merchant/invoice/create](https://api.monobank.ua/api/merchant/invoice/create)', {
             amount: 34900, 
             ccy: 980, 
             merchantPaymInfo: { destination: "Пакет PRO: 10 Генерацій Кліпу", reference: email },
-            redirectUrl: "https://golos-proty-raku.pp.ua/success.html", 
-            webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
+            redirectUrl: "[https://golos-proty-raku.pp.ua/success.html](https://golos-proty-raku.pp.ua/success.html)", 
+            webHookUrl: "[https://andreygerc11-music-site.onrender.com/api/webhook](https://andreygerc11-music-site.onrender.com/api/webhook)"
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: monoRes.data.pageUrl });
     } catch (error) { res.status(500).json({ error: "Помилка оплати пакету" }); }
@@ -460,7 +473,7 @@ app.post('/api/webhook', async (req, res) => {
 
                     const fileStreamRes = await axios({ 
                         method: 'get', 
-                        url: `https://www.googleapis.com/drive/v3/files/${tgTrackId}?alt=media&key=${GOOGLE_API_KEY}`, 
+                        url: `[https://www.googleapis.com/drive/v3/files/$](https://www.googleapis.com/drive/v3/files/$){tgTrackId}?alt=media&key=${GOOGLE_API_KEY}`, 
                         responseType: 'stream' 
                     });
 
@@ -472,7 +485,7 @@ app.post('/api/webhook', async (req, res) => {
                     }, { filename: `${track.name}.mp3`, contentType: 'audio/mpeg' });
 
                 } catch (audioErr) {
-                    const fileUrl = `https://drive.google.com/uc?export=download&id=${tgTrackId}`;
+                    const fileUrl = `[https://drive.google.com/uc?export=download&id=$](https://drive.google.com/uc?export=download&id=$){tgTrackId}`;
                     const opts = { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "⬇️ Скачати трек", url: fileUrl }]] } };
                     await bot.sendMessage(tgChatId, `🎉 <b>Дякую за підтримку!</b>\nОсь ваше посилання на файл: <b>${track.name}</b>`, opts);
                 }
@@ -522,13 +535,15 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
         };
 
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            `[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$){GEMINI_API_KEY}`,
             payload,
             { headers: { 'Content-Type': 'application/json' } }
         );
 
         let lrcText = response.data.candidates[0].content.parts[0].text;
-        lrcText = lrcText.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
+        
+        // БЕЗПЕЧНА ЗАМІНА БЕЗ РОЗРИВУ КОДУ
+        lrcText = lrcText.replace(/\x60\x60\x60[a-z]*\n?/g, '').replace(/\x60\x60\x60/g, '').trim();
 
         res.json({ lrc: lrcText }); 
     } catch (error) { 
@@ -545,7 +560,7 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
-        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`, { 
+        const res = await axios.get(`[https://api.github.com/repos/$](https://api.github.com/repos/$){GITHUB_REPO}/contents/blog_posts.json`, { 
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` } 
         });
         aiBlogPosts = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
@@ -558,7 +573,7 @@ async function syncBlogFromGitHub() {
 async function saveBlogToGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
-        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`;
+        const url = `[https://api.github.com/repos/$](https://api.github.com/repos/$){GITHUB_REPO}/contents/blog_posts.json`;
         let sha = null;
         try { 
             const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } }); 
@@ -577,24 +592,24 @@ async function saveBlogToGitHub() {
 
 const allBlogSources = [
     // === НОВИНИ ===
-    { type: "news", url: "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "news", url: "https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en" },
-    { type: "news", url: "https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%BB%D0%B5%D0%B9%D0%BA%D0%B5%D0%BC%D1%96%D1%8F+%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D1%96%D0%BD%D0%BD%D0%BE%D0%B2%D0%B0%D1%86%D1%96%D1%97+%D0%BB%D1%96%D0%BA%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D1%80%D0%B0%D0%BA%D1%83&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=cancer+research+breakthrough&hl=en-US&gl=US&ceid=US:en)" },
+    { type: "news", url: "[https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=leukemia+treatment+advances&hl=en-US&gl=US&ceid=US:en)" },
     
     // === ПСИХОЛОГІЯ ===
-    { type: "psychology", url: "https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BF%D1%81%D0%B8%D0%B7%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "psychology", url: "https://news.google.com/rss/search?q=%D0%BF%D1%81%D0%B8%D1%85%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%87%D0%BD%D0%B0+%D0%BF%D1%96%D0%B4%D1%82%D1%80%D0%B8%D0%BC%D0%BA%D0%B0+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk" },
-    { type: "psychology", url: "https://news.google.com/rss/search?q=cancer+psychological+support&hl=en-US&gl=US&ceid=US:en" },
-    { type: "psychology", url: "https://news.google.com/rss/search?q=coping+with+cancer+diagnosis&hl=en-US&gl=US&ceid=US:en" },
-    { type: "psychology", url: "https://news.google.com/rss/search?q=mental+health+cancer+patients&hl=en-US&gl=US&ceid=US:en" },
+    { type: "psychology", url: "[https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BF%D1%81%D0%B8%D0%B7%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%BE%D0%BD%D0%BA%D0%BE%D0%BF%D1%81%D0%B8%D0%B7%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "psychology", url: "[https://news.google.com/rss/search?q=%D0%BF%D1%81%D0%B8%D1%85%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%87%D0%BD%D0%B0+%D0%BF%D1%96%D0%B4%D1%82%D1%80%D0%B8%D0%BC%D0%BA%D0%B0+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%BF%D1%81%D0%B8%D1%85%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%87%D0%BD%D0%B0+%D0%BF%D1%96%D0%B4%D1%82%D1%80%D0%B8%D0%BC%D0%BA%D0%B0+%D1%80%D0%B0%D0%BA&hl=uk&gl=UA&ceid=UA:uk)" },
+    { type: "psychology", url: "[https://news.google.com/rss/search?q=cancer+psychological+support&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=cancer+psychological+support&hl=en-US&gl=US&ceid=US:en)" },
+    { type: "psychology", url: "[https://news.google.com/rss/search?q=coping+with+cancer+diagnosis&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=coping+with+cancer+diagnosis&hl=en-US&gl=US&ceid=US:en)" },
+    { type: "psychology", url: "[https://news.google.com/rss/search?q=mental+health+cancer+patients&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=mental+health+cancer+patients&hl=en-US&gl=US&ceid=US:en)" },
     
     // === РЕАБІЛІТАЦІЯ (БЕЗ РАКУ) ===
-    { type: "rehab", url: "https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%B2%D1%96%D0%B4%D0%BD%D0%BE%D0%B2%D0%B0%D0%BB%D0%B5%D0%BD%D0%BD%D1%8F+%D1%80%D1%83%D1%85%D1%83&hl=uk&gl=UA&ceid=UA:uk" }, 
-    { type: "rehab", url: "https://news.google.com/rss/search?q=%D0%BA%D1%96%D0%BD%D0%B5%D0%B7%D1%96%D0%BE%D1%82%D0%B5%D0%B9%D0%BF%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D0%B0%D0%BF%D0%B0%D1%80%D0%B0%D1%82%D0%BD%D0%B0+%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" }, 
-    { type: "rehab", url: "https://news.google.com/rss/search?q=%D0%B5%D1%80%D0%B3%D0%BE%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D0%B0%D0%B4%D0%B0%D0%BF%D1%82%D0%B0%D1%86%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk" }, 
-    { type: "rehab", url: "https://news.google.com/rss/search?q=physical+therapy+kinesiology+breakthrough&hl=en-US&gl=US&ceid=US:en" }
+    { type: "rehab", url: "[https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%B2%D1%96%D0%B4%D0%BD%D0%BE%D0%B2%D0%B0%D0%BB%D0%B5%D0%BD%D0%BD%D1%8F+%D1%80%D1%83%D1%85%D1%83&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D1%84%D1%96%D0%B7%D0%B8%D1%87%D0%BD%D0%B0+%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F+%D0%B2%D1%96%D0%B4%D0%BD%D0%BE%D0%B2%D0%B0%D0%BB%D0%B5%D0%BD%D0%BD%D1%8F+%D1%80%D1%83%D1%85%D1%83&hl=uk&gl=UA&ceid=UA:uk)" }, 
+    { type: "rehab", url: "[https://news.google.com/rss/search?q=%D0%BA%D1%96%D0%BD%D0%B5%D0%B7%D1%96%D0%BE%D1%82%D0%B5%D0%B9%D0%BF%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D0%B0%D0%BF%D0%B0%D1%80%D0%B0%D1%82%D0%BD%D0%B0+%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%BA%D1%96%D0%BD%D0%B5%D0%B7%D1%96%D0%BE%D1%82%D0%B5%D0%B9%D0%BF%D1%83%D0%B2%D0%B0%D0%BD%D0%BD%D1%8F+%D0%B0%D0%BF%D0%B0%D1%80%D0%B0%D1%82%D0%BD%D0%B0+%D1%80%D0%B5%D0%B0%D0%B1%D1%96%D0%BB%D1%96%D1%82%D0%B0%D1%86%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk)" }, 
+    { type: "rehab", url: "[https://news.google.com/rss/search?q=%D0%B5%D1%80%D0%B3%D0%BE%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D0%B0%D0%B4%D0%B0%D0%BF%D1%82%D0%B0%D1%86%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk](https://news.google.com/rss/search?q=%D0%B5%D1%80%D0%B3%D0%BE%D1%82%D0%B5%D1%80%D0%B0%D0%BF%D1%96%D1%8F+%D0%B0%D0%B4%D0%B0%D0%BF%D1%82%D0%B0%D1%86%D1%96%D1%8F&hl=uk&gl=UA&ceid=UA:uk)" }, 
+    { type: "rehab", url: "[https://news.google.com/rss/search?q=physical+therapy+kinesiology+breakthrough&hl=en-US&gl=US&ceid=US:en](https://news.google.com/rss/search?q=physical+therapy+kinesiology+breakthrough&hl=en-US&gl=US&ceid=US:en)" }
 ];
 
 async function fetchAndRewriteBlog() {
@@ -628,7 +643,7 @@ async function fetchAndRewriteBlog() {
                 console.log(`✍️ Генерую новину: ${cleanTitle}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { role: "system", content: "Ти — професійний український журналіст. Переклади англійську новину та напиши аналітичну статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, далі текст." }, 
@@ -652,7 +667,7 @@ async function fetchAndRewriteBlog() {
                 if (bot && CHANNEL_ID) {
                     try {
                         const shortText = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '').substring(0, 280).replace(/\n/g, ' ');
-                        await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
+                        await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="[https://golos-proty-raku.pp.ua/#blog](https://golos-proty-raku.pp.ua/#blog)">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
                     } catch (e) {}
                 }
                 await new Promise(r => setTimeout(r, 6000)); 
@@ -685,7 +700,7 @@ async function fetchAndRewriteBlog() {
                 console.log(`🫂 Генерую статтю підтримки: ${cleanTitle}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { role: "system", content: "Ти психолог проєкту 'Голос проти раку'. Адаптуй статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, потім текст. В кінці: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію лікаря'." }, 
@@ -735,7 +750,7 @@ async function fetchAndRewriteBlog() {
                 console.log(`💪 Генерую статтю реабілітації: ${rawTitle.split(" - ")[0]}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                const groqRes = await axios.post('[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)', {
                     model: "llama-3.3-70b-versatile",
                     messages: [
                         { role: "system", content: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Твоє завдання: адаптувати статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. КАТЕГОРИЧНО ЗАБОРОНЕНО згадувати слова 'рак', 'онкологія' чи 'пухлина'. Пиши про загальну реабілітацію, відновлення руху, ерготерапію, сучасні інструменти (тейпування тощо) та психологічну опору після травм. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК, а потім сам текст. Додай секцію 'Як це працює'. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням обов’язково проконсультуйтеся з фізичним терапевтом'." }, 
