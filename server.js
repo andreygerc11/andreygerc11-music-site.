@@ -24,8 +24,9 @@ const MONO_TOKEN = process.env.MONO_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO; 
 const BOT_TOKEN = process.env.BOT_TOKEN; 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "5853625377";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // === ТВОЇ ID ПАПОК GOOGLE DRIVE ===
 const PREVIEW_FOLDER_ID = "1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S"; 
@@ -389,7 +390,7 @@ app.post('/api/login', async (req, res) => {
         const { email, password } = req.body;
 
         // Перевірка, чи це адмін 
-        if ((email === 'admin@dev.com' || email === 'administration@dev.com') && password === '113130DronMarina45234511@') {
+        if ((email === 'admin@dev.com' || email === 'administration@dev.com') && ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
             return res.json({ success: true, user: { email, name: "Адміністратор", status: "premium" } });
         }
 
@@ -804,9 +805,21 @@ app.get('/api/blog', (req, res) => {
 });
 
 // === НОВІ ШЛЯХИ ДЛЯ БЛОГУ ДРУЖИНИ ===
+function isValidWifeAuth(login, password) {
+    return login === 'administration@dev.com' && ADMIN_PASSWORD && password === ADMIN_PASSWORD;
+}
+
+app.post('/api/wife-blog/verify', (req, res) => {
+    const { login, password } = req.body;
+    if (isValidWifeAuth(login, password)) {
+        return res.json({ success: true });
+    }
+    res.status(403).json({ error: "Невірний логін або пароль" });
+});
+
 app.post('/api/wife-blog', async (req, res) => {
     const { login, password, article } = req.body;
-    if (login !== 'administration@dev.com' || password !== '113130DronMarina45234511@') {
+    if (!isValidWifeAuth(login, password)) {
         return res.status(403).json({ error: "Невірний логін або пароль" });
     }
     aiBlogPosts.unshift(article);
@@ -816,7 +829,7 @@ app.post('/api/wife-blog', async (req, res) => {
 
 app.post('/api/wife-blog/delete', async (req, res) => {
     const { login, password, id } = req.body;
-    if (login !== 'administration@dev.com' || password !== '113130DronMarina45234511@') {
+    if (!isValidWifeAuth(login, password)) {
         return res.status(403).json({ error: "Невірний логін або пароль" });
     }
     aiBlogPosts = aiBlogPosts.filter(p => p.id !== id);

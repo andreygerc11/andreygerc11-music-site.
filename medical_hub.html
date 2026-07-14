@@ -335,21 +335,31 @@
         renderAllArticles(); // Оновлюємо сітку, щоб сховати кнопки видалення
     }
 
-    function verifyAuthor(e) {
+    async function verifyAuthor(e) {
         e.preventDefault();
         const l = document.getElementById('authorLogin').value.trim();
         const p = document.getElementById('authorPass').value.trim();
 
-        if (l === 'administration@dev.com' && p === '113130DronMarina45234511@') {
-            localStorage.setItem('hz_wife_auth', 'true');
-            localStorage.setItem('hz_wife_login', l);
-            localStorage.setItem('hz_wife_pass', p);
-            
-            document.getElementById('authModal').style.display = 'none';
-            checkAuthState();
-            renderAllArticles(); 
-        } else {
-            alert('Невірний логін або пароль! Доступ відкрито тільки для лікаря.');
+        try {
+            const res = await fetch('https://andreygerc11-music-site.onrender.com/api/wife-blog/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login: l, password: p })
+            });
+
+            if (res.ok) {
+                localStorage.setItem('hz_wife_auth', 'true');
+                localStorage.setItem('hz_wife_login', l);
+                localStorage.setItem('hz_wife_pass', p);
+
+                document.getElementById('authModal').style.display = 'none';
+                checkAuthState();
+                renderAllArticles();
+            } else {
+                alert('Невірний логін або пароль! Доступ відкрито тільки для лікаря.');
+            }
+        } catch (err) {
+            alert('Помилка з\'єднання з сервером.');
         }
     }
 
