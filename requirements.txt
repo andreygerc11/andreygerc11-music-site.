@@ -1,7 +1,0 @@
-aiogram
-python-dotenv
-google-api-python-client
-flask
-flask-cors
-aiohttp
-gunicorn
