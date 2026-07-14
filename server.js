@@ -4,6 +4,7 @@ const axios = require('axios');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const FormData = require('form-data');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
@@ -13,7 +14,7 @@ ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
@@ -473,8 +474,36 @@ app.post('/api/pay-subscription', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Помилка оплати пакету" }); }
 });
 
+let cachedMonoPubKey = null;
+async function getMonoPubKey() {
+    if (cachedMonoPubKey) return cachedMonoPubKey;
+    const res = await axios.get('https://api.monobank.ua/api/merchant/pubkey', { headers: { 'X-Token': MONO_TOKEN } });
+    cachedMonoPubKey = Buffer.from(res.data.key, 'base64');
+    return cachedMonoPubKey;
+}
+
+async function isValidMonoSignature(req) {
+    const signature = req.headers['x-sign'];
+    if (!signature || !req.rawBody) return false;
+    try {
+        const pubKey = await getMonoPubKey();
+        const verifier = crypto.createVerify('SHA256');
+        verifier.update(req.rawBody);
+        verifier.end();
+        return verifier.verify(pubKey, signature, 'base64');
+    } catch (e) {
+        console.error('❌ Помилка перевірки підпису вебхука Monobank:', e.message);
+        return false;
+    }
+}
+
 app.post('/api/webhook', async (req, res) => {
     try {
+        if (MONO_TOKEN && !(await isValidMonoSignature(req))) {
+            console.error('❌ Вебхук відхилено: невалідний підпис Monobank');
+            return res.status(400).send('Invalid signature');
+        }
+
         const { invoiceId, status, reference } = req.body;
         if (status === 'success') {
             await sendTelegramMessage(`🔥 <b>Нова оплата!</b>\nРеференс: ${reference}`);
