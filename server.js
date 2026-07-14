@@ -14,7 +14,7 @@ const bcrypt = require('bcryptjs');
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: ['https://golos-proty-raku.pp.ua', 'https://www.golos-proty-raku.pp.ua'] }));
 app.use(express.json({ limit: '50mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
