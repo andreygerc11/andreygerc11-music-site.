@@ -39,8 +39,7 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "5853625377";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// === ТВОЇ ID ПАПОК GOOGLE DRIVE ===
-const PREVIEW_FOLDER_ID = "1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S"; 
+// === ТВІЙ ID ПАПКИ GOOGLE DRIVE З ПОВНИМИ ТРЕКАМИ ===
 const FULL_FOLDER_ID = "1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j";
 
 // === ГЛОБАЛЬНІ ЗМІННІ ТА КЕШ ===
@@ -441,13 +440,11 @@ app.post('/api/social-auth', authRateLimiter, async (req, res) => {
 async function fetchMusicFromDrive() {
     try {
         if (!GOOGLE_API_KEY) return [];
-        const prevRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${PREVIEW_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,createdTime)&key=${GOOGLE_API_KEY}`);
-        const fullRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${FULL_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name)&key=${GOOGLE_API_KEY}`);
-        globalMusicList = prevRes.data.files.map(f => {
-            const cleanName = f.name.replace(/\.[^/.]+$/, "").replace(" (Прев'ю)", "").trim();
-            const fullFile = fullRes.data.files.find(full => full.name.replace(/\.[^/.]+$/, "").trim() === cleanName);
-            return { name: cleanName, previewId: f.id, fullId: fullFile ? fullFile.id : null, date: f.createdTime };
-        }).filter(m => m.fullId);
+        const fullRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${FULL_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,createdTime)&key=${GOOGLE_API_KEY}`);
+        globalMusicList = fullRes.data.files.map(f => {
+            const cleanName = f.name.replace(/\.[^/.]+$/, "").trim();
+            return { name: cleanName, fullId: f.id, date: f.createdTime };
+        });
         return globalMusicList;
     } catch (error) { return globalMusicList; }
 }

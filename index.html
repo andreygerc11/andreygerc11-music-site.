@@ -1188,6 +1188,12 @@
       }, 30000);
   });
 
+  audio.addEventListener('ended', () => {
+      if (currentIndex === -1 || songsData.length === 0) return;
+      const nextIndex = (currentIndex + 1) % songsData.length;
+      loadAndPlayTrack(nextIndex);
+  });
+
   function closeLimitModal() { 
       document.getElementById('limitModal').style.display = 'none'; 
   }
