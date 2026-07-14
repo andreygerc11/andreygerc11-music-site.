@@ -10,6 +10,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const TelegramBot = require('node-telegram-bot-api');
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
@@ -18,6 +19,14 @@ app.use(cors());
 app.use(express.json({ limit: '50mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
+
+const authRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Забагато спроб. Спробуйте пізніше." }
+});
 
 // === ЗМІННІ З RENDER ===
 const GROQ_API_KEY = process.env.GROQ_API_KEY; 
@@ -377,7 +386,7 @@ app.post('/api/gemini/image', async (req, res) => {
 // 4. СИСТЕМА КОРИСТУВАЧІВ ТА АВТОРИЗАЦІЯ (ЧЕРЕЗ GITHUB)
 // ==========================================
 
-app.post('/api/register', async (req, res) => { 
+app.post('/api/register', authRateLimiter, async (req, res) => {
     try {
         const { email, password, name } = req.body;
         if (!email || !password) return res.json({ error: "Всі поля обов'язкові" });
@@ -394,7 +403,7 @@ app.post('/api/register', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', authRateLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -413,7 +422,7 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/social-auth', async (req, res) => {
+app.post('/api/social-auth', authRateLimiter, async (req, res) => {
     try {
         const { email, name } = req.body;
         let user = usersDB.find(u => u.email === email);
