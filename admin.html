@@ -7,23 +7,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://unpkg.com/browser-id3-writer@3.0.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
     <style>
-        :root { --accent: #ff4d4d; --bg: #0a0a0b; --card: #161618; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .admin-panel { background: var(--card); padding: 40px; border-radius: 20px; border: 1px solid var(--accent); width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(255, 77, 77, 0.2); max-height: 90vh; overflow-y: auto; }
-        h1 { text-align: center; text-transform: uppercase; font-size: 1.5rem; margin-top: 0; margin-bottom: 20px;}
-        .form-group { margin-bottom: 15px; }
+        :root { --accent: #ff4d4d; --bg: #0a0a0b; --card: #161618; --card-2: #1e1e21; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .admin-panel { background: var(--card); padding: 40px; border-radius: 20px; border: 1px solid var(--accent); width: 100%; max-width: 520px; box-shadow: 0 10px 30px rgba(255, 77, 77, 0.2); max-height: 90vh; overflow-y: auto; }
+        h1 { text-align: center; text-transform: uppercase; font-size: 1.5rem; margin-top: 0; margin-bottom: 4px; }
+        .subtitle { text-align: center; color: #888; font-size: 0.85rem; margin-bottom: 25px; }
+        .form-group { margin-bottom: 18px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #ccc; font-size: 0.9rem; }
         input[type="text"], input[type="file"] { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-family: inherit; box-sizing: border-box; }
+        input[type="text"]:focus, input[type="file"]:focus { outline: none; border-color: var(--accent); }
         .btn { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn:hover { background: white; color: var(--accent); }
         .btn:disabled { background: #555; cursor: not-allowed; color: #aaa; }
+
+        #progressWrap { display: none; margin-top: 15px; }
+        #progressLabel { font-size: 0.8rem; color: #ccc; margin-bottom: 6px; display: flex; justify-content: space-between; }
+        #progressTrack { background: rgba(255,255,255,0.08); border-radius: 6px; height: 8px; overflow: hidden; }
+        #progressFill { background: var(--accent); height: 100%; width: 0%; transition: width 0.3s ease; }
+
         #logArea { margin-top: 20px; background: #000; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; color: #4CAF50; height: 200px; overflow-y: auto; border: 1px solid #333; }
         .log-error { color: #ff4d4d; }
         .log-wait { color: #ffcc00; }
         .log-header { color: #00bcd4; font-weight: bold; margin-top: 10px; display: block; }
-        
+
         #logoStatus { background: rgba(76, 175, 80, 0.2); border: 1px solid #4CAF50; padding: 10px; border-radius: 8px; color: #4CAF50; font-size: 0.9rem; display: none; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .btn-small { background: #333; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
         .btn-small:hover { background: #ff4d4d; }
@@ -33,7 +41,8 @@
 
 <div class="admin-panel">
     <h1>Масове Завантаження</h1>
-    
+    <p class="subtitle">Завантаження треків у папку повних версій на Google Drive</p>
+
     <div id="logoStatus">
         <span>✅ Логотип завантажено з пам'яті</span>
         <button class="btn-small" onclick="clearLogo()">Змінити</button>
@@ -45,37 +54,58 @@
     </div>
 
     <div class="form-group">
+        <label>Ім'я виконавця (тег ID3):</label>
+        <input type="text" id="artistName" placeholder="Andriy Hertz">
+    </div>
+
+    <div class="form-group">
         <label>Обери пісні (можна виділити багато):</label>
         <input type="file" id="audioFiles" accept="audio/mp3" multiple>
     </div>
 
     <button class="btn" id="startBtn" onclick="startProcess()">Прошити та Завантажити ВСІ</button>
 
+    <div id="progressWrap">
+        <div id="progressLabel"><span id="progressText">0 / 0</span><span id="progressPercent">0%</span></div>
+        <div id="progressTrack"><div id="progressFill"></div></div>
+    </div>
+
     <div id="logArea">
-        > Система готова. Вбудовано фізичну обрізку треків до 1 хв 20 с.<br>
+        > Система готова. Кожен файл прошивається ID3-тегами й вантажиться одразу в основну папку.<br>
     </div>
 </div>
 
 <script>
     const CLIENT_ID = '724333690730-kjj7rl1tn72vq452flbdhb1ngq3q7dqd.apps.googleusercontent.com';
     const FOLDER_FULL = '1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j';
-    const FOLDER_PREV = '1Vmwzr3kt98gDYIOaPTsZ0f6FwqcOMQ7S';
-    const ARTIST_NAME = 'Andriy Hertz';
-    const TRIM_DURATION_SECONDS = 80; // 1 хвилина 20 секунд
+    const DEFAULT_ARTIST_NAME = 'Andriy Hertz';
 
     const logArea = document.getElementById('logArea');
     const startBtn = document.getElementById('startBtn');
-    let finalCoverBuffer = null; 
+    const artistNameInput = document.getElementById('artistName');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressText = document.getElementById('progressText');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressFill = document.getElementById('progressFill');
+    let finalCoverBuffer = null;
 
     function log(msg, type = 'normal') {
         const span = document.createElement('span');
         if (type === 'error') span.className = 'log-error';
         if (type === 'wait') span.className = 'log-wait';
         if (type === 'header') span.className = 'log-header';
-        
+
         span.innerHTML = type === 'header' ? `${msg}<br>` : `> ${msg}<br>`;
         logArea.appendChild(span);
         logArea.scrollTop = logArea.scrollHeight;
+    }
+
+    function updateProgress(done, total) {
+        progressWrap.style.display = 'block';
+        const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+        progressText.innerText = `${done} / ${total}`;
+        progressPercent.innerText = `${percent}%`;
+        progressFill.style.width = `${percent}%`;
     }
 
     function base64ToArrayBuffer(base64) {
@@ -93,6 +123,12 @@
         document.getElementById('logoStatus').style.display = 'flex';
     }
 
+    const savedArtistName = localStorage.getItem('myArtistName');
+    artistNameInput.value = savedArtistName || DEFAULT_ARTIST_NAME;
+    artistNameInput.addEventListener('change', function() {
+        localStorage.setItem('myArtistName', artistNameInput.value.trim() || DEFAULT_ARTIST_NAME);
+    });
+
     function clearLogo() {
         localStorage.removeItem('myCoverLogo');
         finalCoverBuffer = null;
@@ -106,7 +142,7 @@
         const reader = new FileReader();
         reader.onload = function(event) {
             const base64String = event.target.result;
-            localStorage.setItem('myCoverLogo', base64String); 
+            localStorage.setItem('myCoverLogo', base64String);
             finalCoverBuffer = base64ToArrayBuffer(base64String);
             log("✅ Логотип збережено в пам'ять браузера!", "wait");
             document.getElementById('logoGroup').style.display = 'none';
@@ -131,68 +167,13 @@
         });
     }
 
-    async function trimAudioToMp3(file, durationSec) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    const audioBuffer = await audioCtx.decodeAudioData(e.target.result);
-
-                    const sampleRate = audioBuffer.sampleRate;
-                    const channels = audioBuffer.numberOfChannels;
-                    const length = Math.min(audioBuffer.length, sampleRate * durationSec);
-
-                    const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128); 
-                    let mp3Data = [];
-
-                    const left = audioBuffer.getChannelData(0);
-                    const right = channels > 1 ? audioBuffer.getChannelData(1) : left;
-
-                    const sampleBlockSize = 1152;
-                    let left16 = new Int16Array(sampleBlockSize);
-                    let right16 = new Int16Array(sampleBlockSize);
-
-                    for (let i = 0; i < length; i += sampleBlockSize) {
-                        let chunk = Math.min(sampleBlockSize, length - i);
-                        for (let j = 0; j < chunk; j++) {
-                            let l = left[i + j];
-                            left16[j] = l < 0 ? l * 0x8000 : l * 0x7FFF;
-                            if (channels > 1) {
-                                let r = right[i + j];
-                                right16[j] = r < 0 ? r * 0x8000 : r * 0x7FFF;
-                            }
-                        }
-                        
-                        let mp3buf;
-                        if (channels === 1) {
-                            mp3buf = mp3encoder.encodeBuffer(left16.subarray(0, chunk));
-                        } else {
-                            mp3buf = mp3encoder.encodeBuffer(left16.subarray(0, chunk), right16.subarray(0, chunk));
-                        }
-                        if (mp3buf.length > 0) mp3Data.push(mp3buf);
-                    }
-
-                    let mp3buf = mp3encoder.flush();
-                    if (mp3buf.length > 0) mp3Data.push(mp3buf);
-
-                    resolve(new Blob(mp3Data, { type: 'audio/mp3' }));
-                } catch (err) {
-                    reject(err);
-                }
-            };
-            reader.onerror = reject;
-            reader.readAsArrayBuffer(file);
-        });
-    }
-
-    async function tagAudio(audioBuffer, songName) {
+    async function tagAudio(audioBuffer, songName, artistName) {
         const writer = new ID3Writer(audioBuffer);
-        writer.setFrame('TIT2', songName) 
-              .setFrame('TPE1', [ARTIST_NAME]) 
+        writer.setFrame('TIT2', songName)
+              .setFrame('TPE1', [artistName])
               .setFrame('APIC', {
-                  type: 3, 
-                  data: finalCoverBuffer, 
+                  type: 3,
+                  data: finalCoverBuffer,
                   description: 'Логотип'
               });
         writer.addTag();
@@ -201,31 +182,33 @@
 
     async function startProcess() {
         const files = document.getElementById('audioFiles').files;
+        const artistName = artistNameInput.value.trim() || DEFAULT_ARTIST_NAME;
 
         if (files.length === 0) {
             log("Помилка: Виберіть хоча б один аудіофайл!", "error");
             return;
         }
-        
+
         if (!finalCoverBuffer) {
             log("Помилка: Виберіть логотип хоча б один раз!", "error");
             return;
         }
 
         try {
-            if (typeof ID3Writer === 'undefined' || typeof lamejs === 'undefined') {
-                log("Помилка: Бібліотеки не змогли завантажитись. Перевірте інтернет та оновіть сторінку.", "error");
+            if (typeof ID3Writer === 'undefined') {
+                log("Помилка: Бібліотека ID3-тегів не змогла завантажитись. Перевірте інтернет та оновіть сторінку.", "error");
                 return;
             }
 
             startBtn.disabled = true;
             startBtn.innerText = "Обробка...";
+            updateProgress(0, files.length);
             log(`Авторизація в Google...`, "wait");
 
             const client = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
-                // ВИПРАВЛЕНО: Змінено на повний доступ, щоб скрипт міг бачити ваші існуючі папки
-                scope: 'https://www.googleapis.com/auth/drive', 
+                // Доступ лише до файлів, створених цим інструментом (замість повного доступу до Диска)
+                scope: 'https://www.googleapis.com/auth/drive.file',
                 callback: async (response) => {
                     if (response.error) {
                         log("Помилка доступу до Диску", "error");
@@ -233,44 +216,27 @@
                         startBtn.innerText = "Прошити та Завантажити ВСІ";
                         return;
                     }
-                    
+
                     log("Доступ отримано! Починаю масову обробку...", "wait");
 
                     for (let i = 0; i < files.length; i++) {
                         const file = files[i];
-                        const name = file.name.trim(); 
-                        
+                        const name = file.name.trim();
+
                         log(`--- Файл ${i + 1} з ${files.length}: "${name}" ---`, "header");
-                        
-                        // 1. Обробка ПОВНОГО файлу
-                        log(`Прошиваю повний трек логотипом...`);
+
+                        log(`Прошиваю трек логотипом та тегами...`);
                         const fullBuffer = await readFileAsArrayBuffer(file);
-                        const fullTaggedBlob = await tagAudio(fullBuffer, name);
+                        const fullTaggedBlob = await tagAudio(fullBuffer, name, artistName);
                         await uploadFileToDrive(fullTaggedBlob, name, FOLDER_FULL, response.access_token);
 
-                        // 2. Обрізка і обробка ПРЕВ'Ю
-                        log(`✂️ Обрізаю трек до ${TRIM_DURATION_SECONDS} секунд... (вкладка може на мить підвиснути)`, "wait");
-                        
-                        // ВИПРАВЛЕНО: Даємо браузеру час оновити текст у логах перед тим, як він почне важку обрізку
-                        await new Promise(resolve => setTimeout(resolve, 100));
-
-                        const trimmedBlob = await trimAudioToMp3(file, TRIM_DURATION_SECONDS);
-                        
-                        log(`Прошиваю прев'ю логотипом...`);
-                        const trimmedBuffer = await trimmedBlob.arrayBuffer();
-                        const trimmedTaggedBlob = await tagAudio(trimmedBuffer, name);
-                        
-                        // ВИПРАВЛЕНО: Надійна генерація імені для прев'ю
-                        let prevName = name.replace(/\.mp3$/i, ' (Прев\'ю).mp3');
-                        if (!prevName.includes('(Прев\'ю)')) prevName += ' (Прев\'ю).mp3';
-
-                        await uploadFileToDrive(trimmedTaggedBlob, prevName, FOLDER_PREV, response.access_token);
+                        updateProgress(i + 1, files.length);
                     }
 
                     log("🎉 УСІ ТРЕКИ УСПІШНО ОБРОБЛЕНО ТА ЗАВАНТАЖЕНО!", "header");
                     startBtn.disabled = false;
                     startBtn.innerText = "Прошити та Завантажити ВСІ";
-                    document.getElementById('audioFiles').value = ''; 
+                    document.getElementById('audioFiles').value = '';
                 },
             });
             client.requestAccessToken();
