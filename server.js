@@ -9,6 +9,7 @@ const FormData = require('form-data');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const TelegramBot = require('node-telegram-bot-api');
+const bcrypt = require('bcryptjs');
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
@@ -280,6 +281,12 @@ async function saveUsersToGitHub() {
 // 3. БЕЗПЕКА ТА ЛІМІТИ GEMINI API
 // ==========================================
 
+function sanitizeUser(user) {
+    if (!user) return user;
+    const { password, ...safeUser } = user;
+    return safeUser;
+}
+
 app.post('/api/auth/user', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email обов'язковий" });
@@ -294,10 +301,10 @@ app.post('/api/auth/user', async (req, res) => {
 
     if (email === 'admin@dev.com' || email === 'administration@dev.com') {
         user.status = 'premium';
-        user.clips_left = 999; 
+        user.clips_left = 999;
     }
 
-    res.json(user);
+    res.json(sanitizeUser(user));
 });
 
 app.post('/api/gemini/text', async (req, res) => {
@@ -379,32 +386,34 @@ app.post('/api/register', async (req, res) => {
             return res.json({ error: "Користувач з таким email вже існує" });
         }
         
-        const newUser = { email, password, name, status: "free", clips_left: 1 };
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = { email, password: hashedPassword, name, status: "free", clips_left: 1 };
         usersDB.push(newUser);
         await saveUsersToGitHub();
-        res.json({ success: true, user: newUser });
+        res.json({ success: true, user: sanitizeUser(newUser) });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/login', async (req, res) => { 
+app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Перевірка, чи це адмін 
+        // Перевірка, чи це адмін
         if ((email === 'admin@dev.com' || email === 'administration@dev.com') && ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
             return res.json({ success: true, user: { email, name: "Адміністратор", status: "premium" } });
         }
 
-        const user = usersDB.find(u => u.email === email && u.password === password);
-        if (user) {
-            res.json({ success: true, user });
+        const user = usersDB.find(u => u.email === email);
+        const passwordMatches = user && user.password && await bcrypt.compare(password || '', user.password);
+        if (passwordMatches) {
+            res.json({ success: true, user: sanitizeUser(user) });
         } else {
             res.json({ error: "Невірний email або пароль" });
         }
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/social-auth', async (req, res) => { 
+app.post('/api/social-auth', async (req, res) => {
     try {
         const { email, name } = req.body;
         let user = usersDB.find(u => u.email === email);
@@ -413,7 +422,7 @@ app.post('/api/social-auth', async (req, res) => {
             usersDB.push(user);
             await saveUsersToGitHub();
         }
-        res.json({ success: true, user });
+        res.json({ success: true, user: sanitizeUser(user) });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
