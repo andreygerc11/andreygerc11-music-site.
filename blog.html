@@ -555,18 +555,10 @@
 
             allPosts = await response.json();
 
-            // ДОДАНО: Розумний парсер дати, який розуміє український формат (DD.MM.YYYY)
-            allPosts.sort((a, b) => {
-                const parseDate = (d) => {
-                    if (!d) return 0;
-                    if (d.includes('.')) {
-                        let p = d.split('.'); 
-                        return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime();
-                    }
-                    return new Date(d).getTime() || 0;
-                };
-                return parseDate(b.date) - parseDate(a.date);
-            });
+            // Пости вже приходять від сервера в порядку "найновіший доданий - першим".
+            // Раніше тут було сортування за post.date, але це дата ОРИГІНАЛЬНОЇ статті-джерела
+            // (з RSS), а не дата публікації на сайті — старі джерела ховали щойно додані пости
+            // в кінець списку.
 
             renderPosts(allPosts);
 
