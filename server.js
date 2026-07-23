@@ -827,7 +827,7 @@ async function fetchAndRewriteBlog() {
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     date: pubDate, category: "rehab", originalTitle: rawTitle, 
-                    title: translatedTitle, content: articleContent, imageUrl: "reabilitaciya.png"
+                    title: translatedTitle, content: articleContent, imageUrl: "article_rehab.png"
                 });
                 addedCount++; rehabAddedThisRun++;
 
