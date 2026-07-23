@@ -1,0 +1,13 @@
+name: Keep Render service awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend to prevent it from spinning down
+        run: curl -sS --max-time 60 --retry 2 https://andreygerc11-music-site.onrender.com/api/music -o /dev/null || true
