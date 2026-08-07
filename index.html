@@ -1084,6 +1084,8 @@
   let songsData = [];
   let currentIndex = -1;
   let previewTimer;
+  let stallWatchdog;
+  let skipAttempts = 0;
   
   const audio = document.getElementById('apAudio');
   const playPauseBtn = document.getElementById('apPlayPauseBtn');
@@ -1142,11 +1144,29 @@
       tracklistEl.children[i].classList.add('active');
       titleEl.innerText = song.name;
       coverImg.style.filter = 'grayscale(0%) contrast(1.2)';
-      
+
       // Завантажуємо повну версію треку
       audio.src = streamURL + song.fullId;
-      audio.play();
+      const playPromise = audio.play();
+      if (playPromise && playPromise.catch) {
+          playPromise.catch(() => { /* реальні збої ловить подія 'error' нижче */ });
+      }
       playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+
+      // Якщо трек не почав грати за 12 секунд (завис / не відповідає) —
+      // вважаємо його непрацюючим і переходимо до наступного.
+      clearTimeout(stallWatchdog);
+      stallWatchdog = setTimeout(() => {
+          if (currentIndex === i && audio.currentTime === 0) skipToNextOnFailure();
+      }, 12000);
+  }
+
+  function skipToNextOnFailure() {
+      if (currentIndex === -1 || songsData.length === 0) return;
+      skipAttempts++;
+      if (skipAttempts >= songsData.length) { skipAttempts = 0; return; } // усі треки не грають — не крутимо нескінченно
+      const nextIndex = (currentIndex + 1) % songsData.length;
+      loadAndPlayTrack(nextIndex);
   }
 
   playPauseBtn.addEventListener('click', () => {
@@ -1188,9 +1208,19 @@
   });
 
   audio.addEventListener('ended', () => {
+      skipAttempts = 0;
       if (currentIndex === -1 || songsData.length === 0) return;
       const nextIndex = (currentIndex + 1) % songsData.length;
       loadAndPlayTrack(nextIndex);
+  });
+
+  audio.addEventListener('playing', () => {
+      clearTimeout(stallWatchdog);
+      skipAttempts = 0;
+  });
+
+  audio.addEventListener('error', () => {
+      skipToNextOnFailure();
   });
 
   function closeLimitModal() { 
