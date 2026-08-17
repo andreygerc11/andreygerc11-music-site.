@@ -82,6 +82,9 @@
             border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 50px; transition: 0.3s;
         }
         .btn-back:hover { background: #fff; color: var(--dark); }
+        .nav-actions { display: flex; align-items: center; gap: 15px; }
+        .auth-btn-nav { border: 1px solid var(--accent); padding: 5px 15px; border-radius: 20px; color: #fff !important; text-decoration: none; font-size: 0.85rem; font-weight: 700; transition: 0.3s; }
+        .auth-btn-nav:hover { background: var(--accent); }
 
         /* Шапка статті */
         .article-hero {
@@ -174,7 +177,11 @@
 <nav class="header-nav">
     <div class="nav-container">
         <a href="index.html" class="logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
-        <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
+        <div class="nav-actions">
+            <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
+            <a href="login.html" id="authBtn" class="auth-btn-nav"><i class="fas fa-sign-in-alt"></i> Увійти</a>
+            <a href="profile.html" id="userProfileBtn" class="auth-btn-nav" style="display:none;"><i class="fas fa-user"></i> Кабінет</a>
+        </div>
     </div>
 </nav>
 
@@ -237,6 +244,18 @@
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
     AOS.init({ duration: 1000, once: true });
+
+    // Показуємо "Кабінет" замість "Увійти", якщо користувач уже авторизований
+    (function() {
+        let currentUser = null;
+        try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
+        const authBtn = document.getElementById('authBtn');
+        const profileBtn = document.getElementById('userProfileBtn');
+        if (authBtn && profileBtn) {
+            if (currentUser) { profileBtn.style.display = 'inline-block'; authBtn.style.display = 'none'; }
+            else { profileBtn.style.display = 'none'; authBtn.style.display = 'inline-block'; }
+        }
+    })();
 
     // Логіка копіювання посилання
     function shareArticle() {
