@@ -67,6 +67,8 @@
         .btn-doctor-login:hover { background: gold; color: #000 !important; }
         .btn-doctor-logout { border-color: var(--accent); color: var(--accent) !important; }
         .btn-doctor-logout:hover { background: var(--accent); color: #fff !important; }
+        .auth-btn-nav { border: 1px solid var(--accent); padding: 5px 15px; border-radius: 20px; color: #fff !important; text-decoration: none; font-size: 0.85rem; font-weight: 700; transition: 0.3s; }
+        .auth-btn-nav:hover { background: var(--accent); }
 
         .med-hero { padding: 120px 5% 60px; text-align: center; position: relative; background: radial-gradient(circle at top, rgba(32, 201, 151, 0.1) 0%, transparent 60%); }
         .med-hero h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900; text-transform: uppercase; margin-bottom: 20px; color: #fff; text-shadow: 0 0 20px rgba(32, 201, 151, 0.5); }
@@ -218,6 +220,8 @@
         
         <ul class="nav-links">
             <li><a href="index.html" class="btn-home"><i class="fas fa-arrow-left"></i> На головну</a></li>
+            <li><a href="login.html" id="authBtn" class="auth-btn-nav"><i class="fas fa-sign-in-alt"></i> Увійти</a></li>
+            <li><a href="profile.html" id="userProfileBtn" class="auth-btn-nav" style="display:none;"><i class="fas fa-user"></i> Кабінет</a></li>
             <li><button id="doctorLoginBtn" class="btn-home btn-doctor-login" onclick="openAuthorAuth()"><i class="fas fa-user-md"></i> Вхід лікаря</button></li>
             <li><button id="doctorLogoutBtn" class="btn-home btn-doctor-logout" style="display:none;" onclick="logoutAuthor()"><i class="fas fa-sign-out-alt"></i> Вийти</button></li>
         </ul>
@@ -304,6 +308,18 @@
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
     AOS.init({ duration: 1000, once: true });
+
+    // Показуємо "Кабінет" замість "Увійти", якщо користувач уже авторизований
+    (function() {
+        let currentUser = null;
+        try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
+        const authBtn = document.getElementById('authBtn');
+        const profileBtn = document.getElementById('userProfileBtn');
+        if (authBtn && profileBtn) {
+            if (currentUser) { profileBtn.style.display = 'inline-block'; authBtn.style.display = 'none'; }
+            else { profileBtn.style.display = 'none'; authBtn.style.display = 'inline-block'; }
+        }
+    })();
 
     function toggleConsult() { document.getElementById('consultWidget').classList.toggle('open'); }
 

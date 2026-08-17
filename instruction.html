@@ -139,9 +139,31 @@
             .header h1 { font-size: 2rem; }
             .bg-text-row { font-size: 8vw; }
         }
+
+        .site-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5%; background: rgba(10, 10, 11, 0.9); backdrop-filter: blur(20px);
+            position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--border-color);
+        }
+        .site-nav .logo { font-size: 1.2rem; font-weight: 900; text-decoration: none; color: #fff; letter-spacing: 1px; }
+        .site-nav .logo span { color: var(--accent); }
+        .nav-actions { display: flex; align-items: center; gap: 15px; }
+        .btn-home { color: #fff; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: 0.3s; }
+        .btn-home:hover { color: var(--accent); }
+        .auth-btn-nav { border: 1px solid var(--accent); padding: 5px 15px; border-radius: 20px; color: #fff !important; text-decoration: none; font-size: 0.85rem; font-weight: 700; transition: 0.3s; }
+        .auth-btn-nav:hover { background: var(--accent); }
     </style>
 </head>
 <body>
+
+<nav class="site-nav">
+    <a href="index.html" class="logo">ГОЛОС <span>ПРОТИ РАКУ</span></a>
+    <div class="nav-actions">
+        <a href="index.html" class="btn-home"><i class="fas fa-arrow-left"></i> На головну</a>
+        <a href="login.html" id="authBtn" class="auth-btn-nav"><i class="fas fa-sign-in-alt"></i> Увійти</a>
+        <a href="profile.html" id="userProfileBtn" class="auth-btn-nav" style="display:none;"><i class="fas fa-user"></i> Кабінет</a>
+    </div>
+</nav>
 
 <div class="animated-background">
     <div class="bg-text-container">
@@ -235,6 +257,20 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Показуємо "Кабінет" замість "Увійти", якщо користувач уже авторизований
+    (function() {
+        let currentUser = null;
+        try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
+        const authBtn = document.getElementById('authBtn');
+        const profileBtn = document.getElementById('userProfileBtn');
+        if (authBtn && profileBtn) {
+            if (currentUser) { profileBtn.style.display = 'inline-block'; authBtn.style.display = 'none'; }
+            else { profileBtn.style.display = 'none'; authBtn.style.display = 'inline-block'; }
+        }
+    })();
+</script>
 
 </body>
 </html>
