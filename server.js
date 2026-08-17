@@ -440,8 +440,23 @@ app.post('/api/social-auth', authRateLimiter, async (req, res) => {
 async function fetchMusicFromDrive() {
     try {
         if (!GOOGLE_API_KEY) return [];
-        const fullRes = await axios.get(`https://www.googleapis.com/drive/v3/files?q='${FULL_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,createdTime)&key=${GOOGLE_API_KEY}`);
-        globalMusicList = fullRes.data.files.map(f => {
+        let files = [];
+        let pageToken;
+        do {
+            const res = await axios.get('https://www.googleapis.com/drive/v3/files', {
+                params: {
+                    q: `'${FULL_FOLDER_ID}' in parents and trashed=false`,
+                    fields: 'nextPageToken, files(id,name,createdTime)',
+                    pageSize: 1000,
+                    pageToken,
+                    key: GOOGLE_API_KEY
+                }
+            });
+            files = files.concat(res.data.files || []);
+            pageToken = res.data.nextPageToken;
+        } while (pageToken);
+
+        globalMusicList = files.map(f => {
             const cleanName = f.name.replace(/\.[^/.]+$/, "").trim();
             return { name: cleanName, fullId: f.id, date: f.createdTime };
         });
@@ -457,8 +472,28 @@ app.get('/api/music', async (req, res) => {
 app.get('/api/stream/:fileId', async (req, res) => {
     try {
         if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
-        const response = await axios({ method: 'get', url: `https://www.googleapis.com/drive/v3/files/${req.params.fileId}?alt=media&key=${GOOGLE_API_KEY}`, responseType: 'stream' });
-        res.setHeader('Content-Type', 'audio/mpeg'); res.setHeader('Accept-Ranges', 'bytes'); response.data.pipe(res);
+
+        // Проксіюємо Range-заголовок до Google Drive, щоб браузер міг
+        // коректно перемотувати та буферизувати потік, а не отримувати
+        // щоразу весь файл наново під виглядом часткової відповіді.
+        const headers = {};
+        if (req.headers.range) headers.Range = req.headers.range;
+
+        const response = await axios({
+            method: 'get',
+            url: `https://www.googleapis.com/drive/v3/files/${req.params.fileId}?alt=media&key=${GOOGLE_API_KEY}`,
+            responseType: 'stream',
+            headers,
+            validateStatus: s => s === 200 || s === 206
+        });
+
+        res.status(response.status);
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Accept-Ranges', 'bytes');
+        if (response.headers['content-range']) res.setHeader('Content-Range', response.headers['content-range']);
+        if (response.headers['content-length']) res.setHeader('Content-Length', response.headers['content-length']);
+
+        response.data.pipe(res);
     } catch (error) { res.status(500).send("Помилка відтворення"); }
 });
 
