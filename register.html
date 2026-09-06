@@ -224,7 +224,7 @@
             const data = await res.json();
             if (data.success) {
                 localStorage.setItem('hz_user', JSON.stringify({ email: payload.email, name: payload.name }));
-                window.location.href = 'generator.html';
+                window.location.href = 'profile.html';
             }
         } catch (err) {
             console.error('Google Auth Error:', err);
