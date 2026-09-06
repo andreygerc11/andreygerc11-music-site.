@@ -192,6 +192,24 @@
             </div>
 
             <div class="settings-card">
+                <h2><i class="fas fa-calendar-plus"></i> Записатися до лікаря</h2>
+                <p style="color: var(--text-muted); margin-bottom: 18px; font-size: 0.9rem;">Оберіть фахівця, день і зручний час. Прийоми — щогодини, Пн–Пт, з 09:00 до 18:00.</p>
+                <div class="form-group">
+                    <label>Лікар</label>
+                    <select id="apptDoctor"><option value="">Завантаження...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>День (Пн–Пт)</label>
+                    <input type="date" id="apptDate">
+                </div>
+                <div id="apptSlots" class="appt-slots"><div class="empty-state">Оберіть лікаря і день, щоб побачити вільний час.</div></div>
+                <button class="btn-action" id="apptBookBtn" disabled style="margin-top:16px;"><i class="fas fa-check"></i> Записатися</button>
+                <div id="apptStatus" style="margin-top:10px; font-size:0.85rem; font-weight:700;"></div>
+                <h3 style="margin-top:26px; font-size:1rem;">Мої записи на прийом</h3>
+                <div class="consult-list" id="apptList"><div class="empty-state">Завантаження...</div></div>
+            </div>
+
+            <div class="settings-card">
                 <h2><i class="fas fa-calendar-check"></i> Консультації</h2>
                 <div class="consult-price-box">
                     <div>
@@ -264,6 +282,7 @@
             document.getElementById('userEmail').innerText = currentUser.email;
             document.getElementById('userInitial').innerText = currentUser.email.charAt(0).toUpperCase();
             fetchPatientProfile();
+            initAppointments();
         }
 
         const STATUS_LABELS = {
@@ -276,6 +295,127 @@
             if (!iso) return '';
             try { return new Date(iso).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
             catch (e) { return iso; }
+        }
+
+        // ===== КАЛЕНДАР ЗАПИСУ ДО ЛІКАРЯ =====
+        function escapeH(s) { const d = document.createElement('div'); d.innerText = s || ''; return d.innerHTML; }
+        let apptSelectedTime = null;
+
+        async function initAppointments() {
+            const dateEl = document.getElementById('apptDate');
+            const today = new Date();
+            dateEl.min = today.toISOString().slice(0, 10);
+            const max = new Date(today.getTime() + 60 * 24 * 3600 * 1000);
+            dateEl.max = max.toISOString().slice(0, 10);
+
+            await loadDoctors();
+            document.getElementById('apptDoctor').addEventListener('change', loadSlots);
+            dateEl.addEventListener('change', loadSlots);
+            document.getElementById('apptBookBtn').addEventListener('click', bookAppointment);
+            loadMyAppointments();
+        }
+
+        async function loadDoctors() {
+            const sel = document.getElementById('apptDoctor');
+            try {
+                const res = await fetch(`${API}/api/doctors`);
+                const docs = await res.json();
+                if (!docs || docs.length === 0) { sel.innerHTML = '<option value="">Немає доступних лікарів</option>'; return; }
+                sel.innerHTML = '<option value="">— Оберіть лікаря —</option>' +
+                    docs.map(d => `<option value="${escapeH(d.login)}">${escapeH(d.name)}</option>`).join('');
+            } catch (e) { sel.innerHTML = '<option value="">Не вдалося завантажити</option>'; }
+        }
+
+        async function loadSlots() {
+            apptSelectedTime = null;
+            document.getElementById('apptBookBtn').disabled = true;
+            document.getElementById('apptStatus').innerText = '';
+            const doctorLogin = document.getElementById('apptDoctor').value;
+            const date = document.getElementById('apptDate').value;
+            const box = document.getElementById('apptSlots');
+            if (!doctorLogin || !date) { box.innerHTML = '<div class="empty-state">Оберіть лікаря і день, щоб побачити вільний час.</div>'; return; }
+            box.innerHTML = '<div class="empty-state">Завантаження вільного часу...</div>';
+            try {
+                const res = await fetch(`${API}/api/appointments/slots`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doctorLogin, date })
+                });
+                const data = await res.json();
+                if (!data.weekday) { box.innerHTML = '<div class="empty-state">Прийом лише у робочі дні (Пн–Пт). Оберіть інший день.</div>'; return; }
+                box.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:10px;">' + data.slots.map(s => {
+                    if (s.taken) return `<span style="padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.05);color:#666;text-decoration:line-through;">${s.time}</span>`;
+                    return `<button type="button" class="slot-btn" data-time="${s.time}" style="padding:10px 16px;border-radius:10px;border:1px solid var(--accent, #20c997);background:transparent;color:var(--accent, #20c997);font-weight:700;cursor:pointer;">${s.time}</button>`;
+                }).join('') + '</div>';
+                box.querySelectorAll('.slot-btn').forEach(btn => btn.addEventListener('click', () => {
+                    box.querySelectorAll('.slot-btn').forEach(b => { b.style.background = 'transparent'; b.style.color = 'var(--accent, #20c997)'; });
+                    btn.style.background = 'var(--accent, #20c997)'; btn.style.color = '#04120d';
+                    apptSelectedTime = btn.dataset.time;
+                    document.getElementById('apptBookBtn').disabled = false;
+                }));
+            } catch (e) { box.innerHTML = '<div class="empty-state">Не вдалося завантажити час.</div>'; }
+        }
+
+        async function bookAppointment() {
+            const doctorLogin = document.getElementById('apptDoctor').value;
+            const date = document.getElementById('apptDate').value;
+            const status = document.getElementById('apptStatus');
+            const btn = document.getElementById('apptBookBtn');
+            if (!doctorLogin || !date || !apptSelectedTime) return;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Записуємо...';
+            try {
+                const res = await fetch(`${API}/api/appointments/book`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentUser.email, doctorLogin, date, time: apptSelectedTime })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    status.style.color = 'var(--accent, #20c997)';
+                    status.innerText = '✅ Вас записано! Чекаємо на прийомі.';
+                    apptSelectedTime = null;
+                    loadSlots(); loadMyAppointments();
+                } else {
+                    status.style.color = '#ff6b6b';
+                    status.innerText = data.error || 'Не вдалося записатися.';
+                }
+            } catch (e) {
+                status.style.color = '#ff6b6b'; status.innerText = 'Помилка з\'єднання із сервером.';
+            } finally {
+                btn.innerHTML = '<i class="fas fa-check"></i> Записатися';
+            }
+        }
+
+        async function loadMyAppointments() {
+            const list = document.getElementById('apptList');
+            try {
+                const res = await fetch(`${API}/api/appointments/my`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentUser.email })
+                });
+                const items = await res.json();
+                const active = (items || []).filter(a => a.status !== 'cancelled');
+                if (active.length === 0) { list.innerHTML = '<div class="empty-state">Записів ще немає.</div>'; return; }
+                list.innerHTML = active.map(a => `
+                    <div class="consult-item">
+                        <div class="consult-item-head">
+                            <span class="consult-date"><i class="fas fa-calendar-day"></i> ${escapeH(a.date)} о ${escapeH(a.time)}</span>
+                        </div>
+                        <div class="consult-body">
+                            <p><span class="field-label">Лікар:</span> ${escapeH(a.doctorName)}</p>
+                            <button type="button" class="btn-outline" style="margin-top:8px;padding:6px 12px;font-size:0.8rem;" onclick="cancelAppointment(${a.id})">Скасувати запис</button>
+                        </div>
+                    </div>`).join('');
+            } catch (e) { list.innerHTML = '<div class="empty-state">Не вдалося завантажити записи.</div>'; }
+        }
+
+        async function cancelAppointment(id) {
+            if (!confirm('Скасувати цей запис?')) return;
+            try {
+                await fetch(`${API}/api/appointments/cancel`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentUser.email, id })
+                });
+                loadMyAppointments(); loadSlots();
+            } catch (e) {}
         }
 
         function renderConsultations(consultations) {

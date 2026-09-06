@@ -151,6 +151,7 @@
         <div id="listView" style="display:none;">
             <div class="view-tabs">
                 <button class="view-tab active" id="tabPatients" onclick="switchTab('patients')">Пацієнти</button>
+                <button class="view-tab" id="tabSchedule" onclick="switchTab('schedule')">Розклад</button>
                 <button class="view-tab" id="tabReviews" onclick="switchTab('reviews')">Відгуки</button>
             </div>
 
@@ -164,6 +165,10 @@
                     </thead>
                     <tbody id="patientsTableBody"></tbody>
                 </table>
+            </div>
+
+            <div id="schedulePane" style="display:none;">
+                <div id="scheduleList"><div class="empty-state">Завантаження...</div></div>
             </div>
 
             <div id="reviewsPane" style="display:none;">
@@ -226,10 +231,39 @@
 
         function switchTab(tab) {
             document.getElementById('tabPatients').classList.toggle('active', tab === 'patients');
+            document.getElementById('tabSchedule').classList.toggle('active', tab === 'schedule');
             document.getElementById('tabReviews').classList.toggle('active', tab === 'reviews');
             document.getElementById('patientsPane').style.display = tab === 'patients' ? 'block' : 'none';
+            document.getElementById('schedulePane').style.display = tab === 'schedule' ? 'block' : 'none';
             document.getElementById('reviewsPane').style.display = tab === 'reviews' ? 'block' : 'none';
             if (tab === 'reviews') loadReviews();
+            if (tab === 'schedule') loadSchedule();
+        }
+
+        async function loadSchedule() {
+            const list = document.getElementById('scheduleList');
+            list.innerHTML = '<div class="empty-state">Завантаження...</div>';
+            try {
+                const res = await doctorApi('/api/doctor/appointments');
+                if (!res.ok) throw new Error();
+                const items = await res.json();
+                if (!items || items.length === 0) { list.innerHTML = '<div class="empty-state">Записів на прийом ще немає.</div>'; return; }
+                // Групуємо за датою
+                const byDate = {};
+                items.forEach(a => { (byDate[a.date] = byDate[a.date] || []).push(a); });
+                list.innerHTML = Object.keys(byDate).sort().map(date => `
+                    <div style="margin-bottom:18px;">
+                        <div style="font-weight:800;color:var(--accent);margin-bottom:8px;"><i class="fas fa-calendar-day"></i> ${escapeHtml(date)}</div>
+                        ${byDate[date].sort((x,y)=>x.time.localeCompare(y.time)).map(a => `
+                            <div style="display:flex;gap:14px;align-items:center;padding:10px 14px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:10px;margin-bottom:8px;">
+                                <span style="font-weight:800;min-width:52px;">${escapeHtml(a.time)}</span>
+                                <span style="flex:1;">${escapeHtml(a.patientName || a.patientEmail)}<br><span style="color:var(--text-muted);font-size:0.82rem;">${escapeHtml(a.patientEmail)}</span></span>
+                                <span style="color:var(--text-muted);font-size:0.82rem;">${escapeHtml(a.doctorName)}</span>
+                            </div>`).join('')}
+                    </div>`).join('');
+            } catch (e) {
+                list.innerHTML = '<div class="empty-state">Помилка завантаження розкладу.</div>';
+            }
         }
 
         const REVIEW_STATUS_LABELS = { pending: 'На перевірці', approved: 'Опубліковано', rejected: 'Відхилено' };

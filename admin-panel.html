@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Керування сайтом | Надія</title>
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --accent: #20c997;
+            --accent-dark: #0ca678;
+            --dark: #0a0e0d;
+            --panel: #121917;
+            --panel2: #16201d;
+            --border: rgba(255,255,255,0.09);
+            --text: #eaf2ef;
+            --muted: #8ea39d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+        a { color: var(--accent); }
+
+        /* Логін */
+        .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-box { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 100%; max-width: 400px; }
+        .login-box h1 { font-size: 1.25rem; text-align: center; margin-bottom: 6px; }
+        .login-box .sub { text-align: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 26px; }
+        label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px; }
+        input, textarea {
+            width: 100%; padding: 12px 14px; background: var(--panel2); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text); font-family: inherit; font-size: 0.95rem; outline: none; transition: .2s;
+        }
+        input:focus, textarea:focus { border-color: var(--accent); }
+        textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+        .field { margin-bottom: 18px; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            background: var(--accent); color: #04120d; border: none; border-radius: 10px; padding: 13px 22px;
+            font-family: inherit; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: .2s; text-transform: uppercase; letter-spacing: .5px;
+        }
+        .btn:hover { background: #3ddcae; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: var(--panel2); color: var(--text); }
+        .login-error { color: #ff6b6b; font-size: 0.85rem; margin-top: 12px; text-align: center; min-height: 18px; }
+
+        /* Панель */
+        .topbar {
+            position: sticky; top: 0; z-index: 50; background: rgba(10,14,13,0.9); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border); padding: 14px 22px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+        }
+        .topbar .logo { font-weight: 900; font-size: 1.05rem; }
+        .topbar .logo span { color: var(--accent); }
+        .topbar .spacer { flex: 1; }
+        .topbar .save-status { font-size: 0.82rem; color: var(--muted); }
+        .wrap { max-width: 860px; margin: 0 auto; padding: 26px 20px 120px; }
+        .intro { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 24px; }
+        .section { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 18px; overflow: hidden; }
+        .section-head {
+            display: flex; align-items: center; gap: 12px; padding: 16px 20px; cursor: pointer; user-select: none;
+            background: var(--panel2);
+        }
+        .section-head i.icon { color: var(--accent); width: 22px; text-align: center; }
+        .section-head h2 { font-size: 1rem; flex: 1; }
+        .section-head .chev { color: var(--muted); transition: .2s; }
+        .section.collapsed .chev { transform: rotate(-90deg); }
+        .section-body { padding: 20px; }
+        .section.collapsed .section-body { display: none; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 620px) { .grid2 { grid-template-columns: 1fr; } }
+        .hint { font-size: 0.72rem; color: var(--muted); margin-top: 5px; }
+
+        .savebar {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; background: rgba(10,14,13,0.95);
+            backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 14px 22px;
+            display: flex; align-items: center; gap: 14px; justify-content: flex-end;
+        }
+        .savebar .msg { margin-right: auto; font-size: 0.85rem; }
+        .msg.ok { color: var(--accent); }
+        .msg.err { color: #ff6b6b; }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+<!-- ЛОГІН -->
+<div class="login-wrap" id="loginView">
+    <div class="login-box">
+        <h1><i class="fas fa-shield-halved" style="color:var(--accent)"></i> Керування сайтом</h1>
+        <div class="sub">Доступ лише для адміністратора</div>
+        <form id="loginForm">
+            <div class="field">
+                <label>Логін</label>
+                <input type="text" id="loginInput" value="administration@dev.com" autocomplete="username" required>
+            </div>
+            <div class="field">
+                <label>Пароль</label>
+                <input type="password" id="passwordInput" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn" style="width:100%" id="loginBtn">Увійти</button>
+            <div class="login-error" id="loginError"></div>
+        </form>
+    </div>
+</div>
+
+<!-- ПАНЕЛЬ -->
+<div id="panelView" hidden>
+    <div class="topbar">
+        <div class="logo">НАДІ<span>Я</span> · керування</div>
+        <div class="spacer"></div>
+        <a href="index.html" target="_blank" class="btn btn-ghost" style="text-transform:none;font-weight:600;"><i class="fas fa-external-link-alt"></i> Відкрити сайт</a>
+        <button class="btn btn-ghost" id="logoutBtn" style="text-transform:none;font-weight:600;"><i class="fas fa-sign-out-alt"></i> Вийти</button>
+    </div>
+    <div class="wrap">
+        <p class="intro">
+            Тут ви змінюєте <b>усі тексти головної сторінки</b>. Залиште поле порожнім — на сайті лишиться стандартний текст (показаний сірим як підказка). Після «Зберегти» зміни з'являються на сайті протягом хвилини.
+        </p>
+        <div id="sections"></div>
+    </div>
+    <div class="savebar">
+        <div class="msg" id="saveMsg"></div>
+        <button class="btn btn-ghost" id="reloadBtn" style="text-transform:none;font-weight:600;"><i class="fas fa-rotate"></i> Скинути зміни</button>
+        <button class="btn" id="saveBtn"><i class="fas fa-floppy-disk"></i> Зберегти</button>
+    </div>
+</div>
+
+<script>
+    const API = 'https://andreygerc11-music-site.onrender.com';
+    let creds = null;
+    try { creds = JSON.parse(sessionStorage.getItem('nadiya_admin_creds')); } catch(e) {}
+
+    // Опис усіх полів. key = data-cms на головній; default = стандартний текст (підказка).
+    const SECTIONS = [
+        { icon: 'fa-star', title: 'Головний банер', fields: [
+            { key: 'hero.eyebrow', label: 'Напис зверху', def: 'Реабілітаційний центр' },
+            { key: 'hero.subtitle', label: 'Підзаголовок', area: true, def: 'Комплексна фізична терапія, ерготерапія та психологічна підтримка — крок за кроком повертаємо тілу рух, а людині віру в себе.' },
+            { key: 'hero.cta', label: 'Текст кнопки запису', def: 'Записатися на прийом' },
+        ]},
+        { icon: 'fa-circle-info', title: 'Про центр', fields: [
+            { key: 'about.eyebrow', label: 'Напис зверху', def: 'Про центр' },
+            { key: 'about.heading', label: 'Заголовок', def: 'Реабілітація — це шлях, який легше пройти не самому' },
+            { key: 'about.text1', label: 'Абзац 1', area: true, def: '«Надія» — це команда фізичних терапевтів, які щодня допомагають людям відновлюватися після травм, поранень, операцій та важких хвороб. Ми поєднуємо доказові методики фізичної терапії з щирою людською підтримкою.' },
+            { key: 'about.text2', label: 'Абзац 2', area: true, def: 'Тут і далі — орієнтовний текст-заповнювач: реальний опис місії, історію центру та фото ми додамо, щойно ти надішлеш матеріали.' },
+        ]},
+        { icon: 'fa-chart-simple', title: 'Показники (3 блоки)', fields: [
+            { key: 'stat1.num', label: 'Число 1', def: '5+' },
+            { key: 'stat1.lbl', label: 'Підпис 1', def: 'Фахівців у команді' },
+            { key: 'stat2.num', label: 'Число 2', def: '100+' },
+            { key: 'stat2.lbl', label: 'Підпис 2', def: 'Програм відновлення' },
+            { key: 'stat3.num', label: 'Число 3', def: '9–18' },
+            { key: 'stat3.lbl', label: 'Підпис 3', def: 'Підтримка пацієнтів (Пн–Пт)' },
+        ]},
+        { icon: 'fa-briefcase-medical', title: 'Послуги (6 карток)', fields: [
+            { key: 'services.desc', label: 'Опис розділу', area: true, def: 'Індивідуальний план відновлення для кожного пацієнта — від перших кроків після травми до повернення до активного життя.' },
+            { key: 'service1.title', label: 'Послуга 1 — назва', def: 'Відновлення руху' },
+            { key: 'service1.text', label: 'Послуга 1 — опис', area: true, def: 'Кінезіотерапія та лікувальна фізкультура. Індивідуально підібрані вправи повертають втрачені функції суглобів і м\'язів.' },
+            { key: 'service2.title', label: 'Послуга 2 — назва', def: 'Кінезіотейпування' },
+            { key: 'service2.text', label: 'Послуга 2 — опис', area: true, def: 'Зняття набряків та підтримка м\'язів за допомогою сучасного тейпування й апаратної електростимуляції.' },
+            { key: 'service3.title', label: 'Послуга 3 — назва', def: 'Психологічна підтримка' },
+            { key: 'service3.text', label: 'Послуга 3 — опис', area: true, def: 'Тілесний контакт, емпатія та постійна мотивація — критична частина подолання труднощів у процесі лікування.' },
+            { key: 'service4.title', label: 'Послуга 4 — назва', def: 'Ерготерапія' },
+            { key: 'service4.text', label: 'Послуга 4 — опис', area: true, def: 'Навчання виконувати повсякденні дії заново — повертаємо пацієнтам незалежність і гідність у побуті.' },
+            { key: 'service5.title', label: 'Послуга 5 — назва', def: 'Масажна терапія' },
+            { key: 'service5.text', label: 'Послуга 5 — опис', area: true, def: 'Лікувальний та відновлювальний масаж для зняття напруги, покращення кровообігу та прискорення реабілітації.' },
+            { key: 'service6.title', label: 'Послуга 6 — назва', def: 'Реабілітація після поранень' },
+            { key: 'service6.text', label: 'Послуга 6 — опис', area: true, def: 'Спеціалізовані програми відновлення для військових — від перших рухів після операції до повернення сили.' },
+        ]},
+        { icon: 'fa-user-doctor', title: 'Команда (5 фахівців)', fields: [
+            { key: 'team.desc', label: 'Опис розділу', area: true, def: 'Фізичні терапевти центру «Надія». Фотографії команди додамо найближчим часом.' },
+            { key: 'team1.name', label: 'Фахівець 1 — ПІБ', def: 'Герц Марина Віталіївна' },
+            { key: 'team1.role', label: 'Фахівець 1 — посада', def: 'Фізичний терапевт' },
+            { key: 'team2.name', label: 'Фахівець 2 — ПІБ', def: 'Медоліз Вікторія Павлівна' },
+            { key: 'team2.role', label: 'Фахівець 2 — посада', def: 'Фізичний терапевт' },
+            { key: 'team3.name', label: 'Фахівець 3 — ПІБ', def: 'Єпіков Аллан Андрійович' },
+            { key: 'team3.role', label: 'Фахівець 3 — посада', def: 'Фізичний терапевт' },
+            { key: 'team4.name', label: 'Фахівець 4 — ПІБ', def: 'Бондаренко Оксана Анатоліївна' },
+            { key: 'team4.role', label: 'Фахівець 4 — посада', def: 'Фізичний терапевт' },
+            { key: 'team5.name', label: 'Фахівець 5 — ПІБ', def: 'Фролов Георгій В\'ячеславович' },
+            { key: 'team5.role', label: 'Фахівець 5 — посада', def: 'Фізичний терапевт' },
+            { key: 'team.note', label: 'Примітка під командою', area: true, def: 'Дані про освіту, спеціалізацію та досвід кожного фахівця будуть додані найближчим часом.' },
+        ]},
+        { icon: 'fa-calendar-check', title: 'Банер запису', fields: [
+            { key: 'booking.heading', label: 'Заголовок', def: 'Запишіться на консультацію' },
+            { key: 'booking.text', label: 'Текст', area: true, def: 'Розкажіть нам про свій стан у Telegram-боті — і ми підберемо оптимальну програму відновлення та зручний час прийому.' },
+        ]},
+        { icon: 'fa-location-dot', title: 'Контакти', fields: [
+            { key: 'contacts.address', label: 'Адреса', def: 'Адресу центру буде додано найближчим часом' },
+            { key: 'contacts.phone', label: 'Телефон', def: 'Номер телефону буде додано найближчим часом' },
+            { key: 'contacts.hours', label: 'Графік роботи', def: 'Пн–Пт: 09:00–18:00' },
+        ]},
+        { icon: 'fa-copyright', title: 'Підвал', fields: [
+            { key: 'footer.copy', label: 'Копірайт', def: '© 2026 ФОП Герц Андрій Костянтинович. Всі права захищені.' },
+        ]},
+    ];
+
+    const $ = id => document.getElementById(id);
+    function esc(s) { const d = document.createElement('div'); d.innerText = s || ''; return d.innerHTML; }
+    function inputId(key) { return 'f_' + key.replace(/\W/g, '_'); }
+
+    function renderSections(content) {
+        const html = SECTIONS.map((sec, si) => {
+            const fields = sec.fields.map(f => {
+                const cur = (content && typeof content[f.key] === 'string') ? content[f.key] : '';
+                const ph = esc(f.def);
+                const control = f.area
+                    ? `<textarea id="${inputId(f.key)}" placeholder="${ph}">${esc(cur)}</textarea>`
+                    : `<input type="text" id="${inputId(f.key)}" placeholder="${ph}" value="${esc(cur)}">`;
+                return `<div class="field"><label>${esc(f.label)}</label>${control}</div>`;
+            }).join('');
+            return `
+                <div class="section${si > 0 ? ' collapsed' : ''}">
+                    <div class="section-head" data-toggle>
+                        <i class="fas ${sec.icon} icon"></i>
+                        <h2>${esc(sec.title)}</h2>
+                        <i class="fas fa-chevron-down chev"></i>
+                    </div>
+                    <div class="section-body">${fields}</div>
+                </div>`;
+        }).join('');
+        $('sections').innerHTML = html;
+        document.querySelectorAll('[data-toggle]').forEach(h => {
+            h.addEventListener('click', () => h.closest('.section').classList.toggle('collapsed'));
+        });
+    }
+
+    function collect() {
+        const out = {};
+        SECTIONS.forEach(sec => sec.fields.forEach(f => {
+            const el = $(inputId(f.key));
+            if (el && el.value.trim() !== '') out[f.key] = el.value.trim();
+        }));
+        return out;
+    }
+
+    async function loadContent() {
+        let content = {};
+        try {
+            const res = await fetch(`${API}/api/site-content`);
+            if (res.ok) content = await res.json();
+        } catch (e) {}
+        renderSections(content || {});
+    }
+
+    function showPanel() {
+        $('loginView').hidden = true;
+        $('panelView').hidden = false;
+        loadContent();
+    }
+    function showLogin() {
+        $('panelView').hidden = true;
+        $('loginView').hidden = false;
+    }
+
+    // Логін
+    $('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = $('loginBtn'); const err = $('loginError');
+        btn.disabled = true; btn.innerText = 'Перевірка...'; err.innerText = '';
+        const login = $('loginInput').value.trim();
+        const password = $('passwordInput').value;
+        try {
+            const res = await fetch(`${API}/api/wife-blog/verify`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login, password })
+            });
+            if (res.ok) {
+                creds = { login, password };
+                sessionStorage.setItem('nadiya_admin_creds', JSON.stringify(creds));
+                showPanel();
+            } else {
+                err.innerText = 'Невірний логін або пароль';
+            }
+        } catch (e) {
+            err.innerText = 'Помилка з\'єднання із сервером';
+        } finally {
+            btn.disabled = false; btn.innerText = 'Увійти';
+        }
+    });
+
+    $('logoutBtn').addEventListener('click', () => {
+        sessionStorage.removeItem('nadiya_admin_creds');
+        creds = null; showLogin();
+    });
+
+    $('reloadBtn').addEventListener('click', () => { $('saveMsg').innerText = ''; loadContent(); });
+
+    $('saveBtn').addEventListener('click', async () => {
+        const btn = $('saveBtn'); const msg = $('saveMsg');
+        if (!creds) { showLogin(); return; }
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Збереження...'; msg.className = 'msg'; msg.innerText = '';
+        try {
+            const res = await fetch(`${API}/api/admin/site-content`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login: creds.login, password: creds.password, content: collect() })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success) {
+                msg.className = 'msg ok'; msg.innerText = '✅ Збережено! Зміни з\'являться на сайті протягом хвилини.';
+            } else if (res.status === 403) {
+                msg.className = 'msg err'; msg.innerText = 'Сесія недійсна — увійдіть знову.';
+                setTimeout(() => { sessionStorage.removeItem('nadiya_admin_creds'); showLogin(); }, 1500);
+            } else {
+                msg.className = 'msg err'; msg.innerText = data.error || 'Не вдалося зберегти.';
+            }
+        } catch (e) {
+            msg.className = 'msg err'; msg.innerText = 'Помилка з\'єднання із сервером.';
+        } finally {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Зберегти';
+        }
+    });
+
+    if (creds) showPanel(); else showLogin();
+</script>
+</body>
+</html>
