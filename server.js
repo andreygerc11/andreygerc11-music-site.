@@ -57,6 +57,12 @@ let usersSha = '';
 let siteReviews = [];
 let reviewsSha = '';
 
+// Редагований контент сайту (CMS). Плоский об'єкт ключ→текст; головна сторінка
+// підставляє значення поверх дефолтів за атрибутом data-cms. Зберігається у
+// публічному репо (site_content.json) — тексти не є чутливими.
+let siteContent = {};
+let siteContentSha = '';
+
 // ==========================================
 // 1. ТЕЛЕГРАМ БОТ ТА АДМІН-ФУНКЦІЇ
 // ==========================================
@@ -371,6 +377,42 @@ async function saveReviewsToGitHub() {
         }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
         reviewsSha = res.data.content.sha;
     } catch (e) { }
+}
+
+async function syncSiteContentFromGitHub() {
+    if (!GITHUB_TOKEN || !GITHUB_REPO) return;
+    try {
+        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/site_content.json`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        siteContent = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
+        siteContentSha = res.data.sha;
+        console.log(`📝 Завантажено контент сайту: ${Object.keys(siteContent).length} полів`);
+    } catch (e) {
+        siteContent = {};
+    }
+}
+
+async function saveSiteContentToGitHub() {
+    if (!GITHUB_TOKEN || !GITHUB_REPO) return false;
+    try {
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/site_content.json`;
+        let sha = siteContentSha;
+        if (!sha) {
+            try {
+                const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+                sha = getRes.data.sha;
+            } catch (e) {}
+        }
+        const contentEncoded = Buffer.from(JSON.stringify(siteContent, null, 2), 'utf8').toString('base64');
+        const res = await axios.put(url, {
+            message: `Оновлення контенту сайту (адмін-панель)`,
+            content: contentEncoded,
+            sha: sha || undefined
+        }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        siteContentSha = res.data.content.sha;
+        return true;
+    } catch (e) { return false; }
 }
 
 // ==========================================
@@ -1285,6 +1327,30 @@ app.get('/api/reviews', (req, res) => {
 });
 
 // ==========================================
+// КОНТЕНТ САЙТУ (CMS) — публічне читання + редагування тільки адміном
+// ==========================================
+app.get('/api/site-content', (req, res) => {
+    res.json(siteContent || {});
+});
+
+app.post('/api/admin/site-content', authRateLimiter, async (req, res) => {
+    const { login, password, content } = req.body;
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Доступ лише для адміністратора" });
+    if (!content || typeof content !== 'object' || Array.isArray(content)) {
+        return res.status(400).json({ error: "Некоректні дані" });
+    }
+    // Зберігаємо лише рядкові значення (плоский ключ→текст), обрізаємо надто довгі.
+    const cleaned = {};
+    for (const [k, v] of Object.entries(content)) {
+        if (typeof v === 'string') cleaned[String(k).slice(0, 100)] = v.slice(0, 4000);
+    }
+    siteContent = cleaned;
+    const saved = await saveSiteContentToGitHub();
+    if (!saved) return res.status(500).json({ error: "Не вдалося зберегти" });
+    res.json({ success: true });
+});
+
+// ==========================================
 // КАБІНЕТ ЛІКАРЯ (доступ мають усі лікарі — спільний пароль, як і для блогу)
 // ==========================================
 app.post('/api/doctor/patients', authRateLimiter, async (req, res) => {
@@ -1393,7 +1459,7 @@ app.post('/api/wife-blog/delete', async (req, res) => {
 // ==========================================
 const PORT = process.env.PORT || 10000;
 
-Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(), syncReviewsFromGitHub()]).then(() => {
+Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(), syncReviewsFromGitHub(), syncSiteContentFromGitHub()]).then(() => {
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
 
