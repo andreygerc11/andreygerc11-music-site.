@@ -1393,6 +1393,38 @@ app.post('/api/admin/site-content', authRateLimiter, async (req, res) => {
     res.json({ success: true });
 });
 
+// Завантаження зображень/дипломів у публічний репо (лише адмін). Повертає URL,
+// який адмін-панель потім зберігає у site_content (напр. hero.bg, team1.photo).
+app.post('/api/admin/upload', authRateLimiter, async (req, res) => {
+    const { login, password, dataUrl, key } = req.body;
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Доступ лише для адміністратора" });
+    if (!GITHUB_TOKEN || !GITHUB_REPO) return res.status(500).json({ error: "Немає доступу до репозиторію" });
+    if (!dataUrl || typeof dataUrl !== 'string') return res.status(400).json({ error: "Немає файлу" });
+
+    const m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (!m) return res.status(400).json({ error: "Некоректний формат файлу" });
+    const mime = m[1];
+    const b64 = m[2];
+    const extMap = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf' };
+    const ext = extMap[mime];
+    if (!ext) return res.status(400).json({ error: "Дозволені лише зображення (JPG/PNG/WEBP) або PDF" });
+
+    const bytes = Buffer.from(b64, 'base64');
+    if (bytes.length > 5 * 1024 * 1024) return res.status(400).json({ error: "Файл завеликий (макс 5 МБ)" });
+
+    const safeKey = String(key || 'file').replace(/[^a-zA-Z0-9_.-]/g, '_').slice(0, 40);
+    const path = `uploads/${safeKey}-${Date.now()}.${ext}`;
+    try {
+        await axios.put(`https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`, {
+            message: `Завантаження ${path} (адмін-панель)`,
+            content: b64
+        }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        res.json({ success: true, url: `https://golos-proty-raku.pp.ua/${path}` });
+    } catch (e) {
+        res.status(500).json({ error: "Не вдалося завантажити файл" });
+    }
+});
+
 // ==========================================
 // КАЛЕНДАР ЗАПИСУ ДО ЛІКАРЯ (слоти по 60 хв, Пн–Пт 09:00–18:00)
 // ==========================================
