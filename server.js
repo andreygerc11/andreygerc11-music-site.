@@ -1054,27 +1054,29 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
 // ==========================================
 // 6. АВТОМАТИЧНИЙ БЛОГ (Llama 3.3 через Groq)
 // ==========================================
-// Кілька різних банерів для новин (щоб не було однаково)
-const NEWS_BANNERS = ['news_banner_1.svg', 'news_banner_2.svg', 'news_banner_3.svg', 'news_banner_4.svg', 'news_banner_5.svg', 'news_banner_6.svg'];
-function randomNewsBanner() {
-    return NEWS_BANNERS[Math.floor(Math.random() * NEWS_BANNERS.length)];
-}
-// Застарілі однакові банери, які треба замінити на різні
-const OLD_NEWS_BANNERS = ['news_banner.svg', 'baner_novunu.png'];
+// Окремі набори банерів під кожну категорію блогу
+const NEWS_BANNERS = ['banner_news_1.svg', 'banner_news_2.svg', 'banner_news_3.svg'];
+const PSY_BANNERS = ['banner_psy_1.svg', 'banner_psy_2.svg', 'banner_psy_3.svg'];
+const REHAB_BANNERS = ['banner_rehab_1.svg', 'banner_rehab_2.svg', 'banner_rehab_3.svg'];
+const BANNERS_BY_CATEGORY = { news: NEWS_BANNERS, psychology: PSY_BANNERS, rehab: REHAB_BANNERS };
+function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randomNewsBanner() { return randomFrom(NEWS_BANNERS); }
 
-// Одноразова міграція: старим новинам роздаємо різні банери (стабільно за індексом),
-// зберігаємо один раз. Сервер володіє blog_posts.json, тож це durable.
-async function migrateNewsBanners() {
+// Одноразова міграція: кожній категорії — свій набір банерів (стабільно за індексом).
+// Замінює старі однакові фото/банери. Сервер володіє blog_posts.json → durable.
+async function migrateCategoryBanners() {
     let changed = 0;
     aiBlogPosts.forEach((p, i) => {
-        if (p && OLD_NEWS_BANNERS.includes(p.imageUrl)) {
-            p.imageUrl = NEWS_BANNERS[i % NEWS_BANNERS.length];
+        if (!p) return;
+        const set = BANNERS_BY_CATEGORY[p.category];
+        if (set && !set.includes(p.imageUrl)) {
+            p.imageUrl = set[i % set.length];
             changed++;
         }
     });
     if (changed > 0) {
         await saveBlogToGitHub();
-        console.log(`🎨 Оновлено банери у ${changed} новинах (різні замість однакового).`);
+        console.log(`🎨 Оновлено банери у ${changed} постах (свій набір на кожну категорію).`);
     }
 }
 
@@ -1242,7 +1244,7 @@ async function fetchAndRewriteBlog() {
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     date: pubDate, category: "psychology", originalTitle: rawTitle, 
-                    title: translatedTitle || cleanTitle, content: articleContent, imageUrl: "article_support.png"
+                    title: translatedTitle || cleanTitle, content: articleContent, imageUrl: randomFrom(PSY_BANNERS)
                 });
                 addedCount++; psychAddedThisRun++;
 
@@ -1292,7 +1294,7 @@ async function fetchAndRewriteBlog() {
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     date: pubDate, category: "rehab", originalTitle: rawTitle, 
-                    title: translatedTitle, content: articleContent, imageUrl: "article_rehab.png"
+                    title: translatedTitle, content: articleContent, imageUrl: randomFrom(REHAB_BANNERS)
                 });
                 addedCount++; rehabAddedThisRun++;
 
@@ -1792,7 +1794,7 @@ app.post('/api/wife-blog/delete', async (req, res) => {
 const PORT = process.env.PORT || 10000;
 
 Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(), syncReviewsFromGitHub(), syncSiteContentFromGitHub(), syncAppointmentsFromGitHub()]).then(() => {
-    migrateNewsBanners().catch(e => console.error('Помилка міграції банерів:', e.message));
+    migrateCategoryBanners().catch(e => console.error('Помилка міграції банерів:', e.message));
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
 

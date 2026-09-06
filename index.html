@@ -592,7 +592,7 @@
           // Найновіші зверху — за id (це час публікації), а не за датою джерела
           const latest = posts.slice().sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 3);
           grid.innerHTML = latest.map(p => {
-              const img = p.imageUrl ? p.imageUrl : ('news_banner_' + (((p.id || 0) % 6) + 1) + '.svg');
+              const img = p.imageUrl ? p.imageUrl : ('banner_news_' + (((p.id || 0) % 3) + 1) + '.svg');
               const text = esc(stripHtml(p.title) || stripHtml(p.content).slice(0, 90));
               const dateStr = fmtDate(p.id);
               return `
