@@ -587,14 +587,19 @@
               return;
           }
           const esc = s => (s || '').replace(/</g, '&lt;');
-          grid.innerHTML = posts.slice(0, 3).map(p => {
-              const img = p.imageUrl ? p.imageUrl : 'novunu.png';
-              const text = esc(p.title || (p.content || '').slice(0, 90));
+          const stripHtml = s => (s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          const fmtDate = ms => { const d = new Date(ms); return isNaN(d) ? '' : d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
+          // Найновіші зверху — за id (це час публікації), а не за датою джерела
+          const latest = posts.slice().sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 3);
+          grid.innerHTML = latest.map(p => {
+              const img = p.imageUrl ? p.imageUrl : 'news_banner.svg';
+              const text = esc(stripHtml(p.title) || stripHtml(p.content).slice(0, 90));
+              const dateStr = fmtDate(p.id);
               return `
                   <a href="blog.html" class="news-card">
                       <div class="news-img" style="background-image:url('${(img || '').replace(/'/g, '')}')"></div>
                       <div class="news-body">
-                          ${p.date ? `<span class="news-date">${esc(p.date)}</span>` : ''}
+                          ${dateStr ? `<span class="news-date">${dateStr}</span>` : ''}
                           <h4>${text}</h4>
                       </div>
                   </a>`;

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Новини — Реабілітаційний центр Надія">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a1512"/>
+      <stop offset="0.55" stop-color="#0c2620"/>
+      <stop offset="1" stop-color="#0a0f0e"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#20c997"/>
+      <stop offset="1" stop-color="#14997a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- decorative pulse line -->
+  <path d="M0 470 H360 l40 -120 l55 250 l60 -330 l45 200 H1200"
+        fill="none" stroke="url(#teal)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
+  <path d="M0 470 H360 l40 -120 l55 250 l60 -330 l45 200 H1200"
+        fill="none" stroke="#20c997" stroke-width="16" stroke-linejoin="round" stroke-linecap="round" opacity="0.08"/>
+
+  <!-- soft circles -->
+  <circle cx="1010" cy="150" r="230" fill="#20c997" opacity="0.06"/>
+  <circle cx="150" cy="120" r="140" fill="#20c997" opacity="0.05"/>
+
+  <!-- medical cross emblem -->
+  <g transform="translate(90,250)">
+    <rect x="0" y="0" width="92" height="92" rx="20" fill="url(#teal)"/>
+    <rect x="38" y="18" width="16" height="56" rx="5" fill="#04140f"/>
+    <rect x="18" y="38" width="56" height="16" rx="5" fill="#04140f"/>
+  </g>
+
+  <text x="210" y="300" font-family="Georgia, 'Times New Roman', serif" font-size="42" fill="#20c997" letter-spacing="6">НОВИНИ</text>
+  <text x="210" y="372" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="72" fill="#ffffff">Реабілітація</text>
+  <text x="210" y="440" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="30" fill="#cfe9e1" letter-spacing="1">та сучасна медицина · центр «Надія»</text>
+
+  <text x="90" y="560" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="22" fill="#7fb8a8" letter-spacing="3">GOLOS-PROTY-RAKU.PP.UA</text>
+</svg>
