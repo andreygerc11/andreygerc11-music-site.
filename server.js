@@ -15,6 +15,10 @@ const rateLimit = require('express-rate-limit');
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const app = express();
+// Render працює за проксі: без цього express-rate-limit кидає помилку
+// ERR_ERL_UNEXPECTED_X_FORWARDED_FOR і ламає захищені роути (логін, реєстрація,
+// запис на консультацію, кабінет лікаря). Довіряємо одному проксі Render.
+app.set('trust proxy', 1);
 app.use(cors({ origin: ['https://golos-proty-raku.pp.ua', 'https://www.golos-proty-raku.pp.ua'] }));
 app.use(express.json({ limit: '50mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
