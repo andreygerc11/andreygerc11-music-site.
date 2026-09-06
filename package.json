@@ -1,7 +1,7 @@
 {
-  "name": "hertz-spectrum-backend",
+  "name": "nadiya-backend",
   "version": "1.0.0",
-  "description": "Backend for Hertz Spectrum",
+  "description": "Backend for Nadiya rehabilitation center",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
