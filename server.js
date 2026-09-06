@@ -112,7 +112,7 @@ if (BOT_TOKEN) {
 
         try {
             if (query.data === 'about_project') {
-                const aboutText = `<b>Про проєкт «Голос проти раку»</b>\n\n«Голос проти раку» — благодійна музична інціатива, що поєднує музику з підтримкою людей, які борються з онкологічними захворюваннями.\n\nКожна покупка пісні чи підписка допомагає розвивати цю спільноту та надавати реальну підтримку тим, хто цього потребує. Дякуємо, що ви з нами! 🇺🇦`;
+                const aboutText = `<b>Про проєкт «Голос проти раку»</b>\n\n«Голос проти раку» — благодійна музична інціатива, що поєднує музику з підтримкою людей, які борються з онкологічними захворюваннями.\n\nКожна придбана пісня допомагає розвивати цю спільноту та надавати реальну підтримку тим, хто цього потребує. Дякуємо, що ви з нами! 🇺🇦`;
                 await bot.editMessageText(aboutText, { 
                     chat_id: chatId, 
                     message_id: messageId, 
@@ -226,7 +226,7 @@ if (BOT_TOKEN) {
                 return;
             }
             try {
-                const result = await createConsultationInvoiceForEmail(email);
+                const result = await createConsultationInvoiceForEmail(email, msg.chat.id);
                 await bot.sendMessage(msg.chat.id,
                     `Дякуємо! Запис створено на <b>${email}</b>.\n\nІсторію консультацій та нотатки лікаря ви зможете побачити в особистому кабінеті на сайті (вхід за цим самим email).`,
                     { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "💳 Оплатити 400 грн", url: result.url }]] } }
@@ -761,6 +761,19 @@ app.post('/api/webhook', async (req, res) => {
                             consultation.paidAt = new Date().toISOString();
                             await savePatientRecord(record.email, record);
                             await sendTelegramMessage(`📅 Оплачено онлайн-консультацію (${CONSULTATION_PRICE_UAH} грн)\nПацієнт: ${record.email}`);
+
+                            // Якщо запис створено через бот — підтверджуємо оплату користувачу
+                            // прямо в чаті бота (для запису з сайту telegramChatId === null).
+                            if (consultation.telegramChatId && bot) {
+                                try {
+                                    await bot.sendMessage(consultation.telegramChatId,
+                                        `🎉 <b>Оплату отримано! Дякуємо.</b>\n\nВаш запис на онлайн-консультацію з фізичної реабілітації підтверджено. Наш фахівець зв'яжеться з вами найближчим часом.\n\nІсторію консультацій, нотатки та призначення лікаря ви завжди знайдете в особистому кабінеті на сайті (вхід за email <b>${record.email}</b>).`,
+                                        { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "🌐 Відкрити кабінет", url: "https://golos-proty-raku.pp.ua/login.html" }]] } }
+                                    );
+                                } catch (notifyErr) {
+                                    console.error('❌ Не вдалося надіслати підтвердження консультації в бот:', notifyErr.message);
+                                }
+                            }
                         }
                     }
                 }
@@ -1115,7 +1128,7 @@ app.put('/api/patient/profile', authRateLimiter, async (req, res) => {
 
 // Спільна логіка для запису на консультацію — використовується і з
 // сайту (/api/patient/book-consultation), і з Telegram-бота напряму.
-async function createConsultationInvoiceForEmail(email) {
+async function createConsultationInvoiceForEmail(email, telegramChatId = null) {
     if (!MONO_TOKEN) return { url: "https://send.monobank.ua/" };
 
     let record = await getPatientRecord(email);
@@ -1131,7 +1144,10 @@ async function createConsultationInvoiceForEmail(email) {
         doctorName: null,
         notes: null,
         prescription: null,
-        paidAt: null
+        paidAt: null,
+        // Якщо запис зроблено через Telegram-бот — зберігаємо chatId, щоб після
+        // оплати надіслати підтвердження прямо в бот (для запису з сайту — null).
+        telegramChatId: telegramChatId ? String(telegramChatId) : null
     });
 
     const saved = await savePatientRecord(email, record);
