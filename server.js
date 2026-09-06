@@ -1101,6 +1101,30 @@ function isValidWifeAuth(login, password) {
     return login === 'administration@dev.com' && ADMIN_PASSWORD && password === ADMIN_PASSWORD;
 }
 
+// Лікарі з індивідуальними логіном/паролем. Джерело — env DOCTORS_JSON:
+// масив об'єктів [{ "login": "...", "password": "...", "name": "Прізвище Ім'я По батькові" }].
+let doctorsList = [];
+try {
+    if (process.env.DOCTORS_JSON) doctorsList = JSON.parse(process.env.DOCTORS_JSON);
+    if (!Array.isArray(doctorsList)) doctorsList = [];
+} catch (e) {
+    console.error('❌ DOCTORS_JSON має бути валідним JSON-масивом:', e.message);
+    doctorsList = [];
+}
+console.log(`👩‍⚕️ Завантажено лікарів з індивідуальним доступом: ${doctorsList.length}`);
+
+// Повертає { name, isAdmin } для валідних креденшлів лікаря або адміна, інакше null.
+// Кожен лікар бачить усіх пацієнтів (спільний доступ), але заходить під своїм паролем,
+// щоб нотатки й призначення підписувалися його іменем.
+function getDoctorAuth(login, password) {
+    const l = (login || '').trim();
+    const p = password || '';
+    const doc = doctorsList.find(d => d && typeof d.login === 'string' && d.login.toLowerCase() === l.toLowerCase() && d.password === p);
+    if (doc) return { name: (doc.name || l), isAdmin: false };
+    if (isValidWifeAuth(l, p)) return { name: 'Адміністратор', isAdmin: true };
+    return null;
+}
+
 // ==========================================
 // КАБІНЕТ ПАЦІЄНТА
 // ==========================================
@@ -1261,14 +1285,14 @@ app.get('/api/reviews', (req, res) => {
 // ==========================================
 app.post('/api/doctor/patients', authRateLimiter, async (req, res) => {
     const { login, password } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!getDoctorAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
     const summaries = await listPatientSummaries();
     res.json(summaries);
 });
 
 app.post('/api/doctor/patient', authRateLimiter, async (req, res) => {
     const { login, password, email } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!getDoctorAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
     if (!email) return res.status(400).json({ error: "Email обов'язковий" });
 
     const record = await getPatientRecord(email);
@@ -1278,7 +1302,8 @@ app.post('/api/doctor/patient', authRateLimiter, async (req, res) => {
 
 app.post('/api/doctor/patient/note', authRateLimiter, async (req, res) => {
     const { login, password, email, consultationId, doctorName, notes, prescription } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    const noteAuth = getDoctorAuth(login, password);
+    if (!noteAuth) return res.status(403).json({ error: "Невірний логін або пароль" });
     if (!email) return res.status(400).json({ error: "Email обов'язковий" });
 
     const record = await getPatientRecord(email);
@@ -1292,7 +1317,8 @@ app.post('/api/doctor/patient/note', authRateLimiter, async (req, res) => {
         consultation = { id: Date.now(), createdAt: new Date().toISOString(), status: 'completed', amount: 0, paidAt: null };
         record.consultations.push(consultation);
     }
-    consultation.doctorName = (doctorName || '').slice(0, 200);
+    // Підпис — ім'я лікаря, під яким виконано вхід (адмін може вказати ім'я вручну).
+    consultation.doctorName = ((noteAuth.isAdmin && doctorName) ? doctorName : noteAuth.name).slice(0, 200);
     consultation.notes = (notes || '').slice(0, 5000);
     consultation.prescription = (prescription || '').slice(0, 5000);
     if (consultation.status === 'paid') consultation.status = 'completed';
@@ -1304,13 +1330,13 @@ app.post('/api/doctor/patient/note', authRateLimiter, async (req, res) => {
 
 app.post('/api/doctor/reviews', authRateLimiter, async (req, res) => {
     const { login, password } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!getDoctorAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
     res.json(siteReviews);
 });
 
 app.post('/api/doctor/reviews/moderate', authRateLimiter, async (req, res) => {
     const { login, password, id, action } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!getDoctorAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
 
     const review = siteReviews.find(r => r.id === id);
     if (!review) return res.status(404).json({ error: "Відгук не знайдено" });
@@ -1321,6 +1347,13 @@ app.post('/api/doctor/reviews/moderate', authRateLimiter, async (req, res) => {
 
     await saveReviewsToGitHub();
     res.json({ success: true });
+});
+
+app.post('/api/doctor/verify', authRateLimiter, (req, res) => {
+    const { login, password } = req.body;
+    const auth = getDoctorAuth(login, password);
+    if (!auth) return res.status(403).json({ error: "Невірний логін або пароль" });
+    res.json({ success: true, doctorName: auth.name });
 });
 
 app.post('/api/wife-blog/verify', (req, res) => {
