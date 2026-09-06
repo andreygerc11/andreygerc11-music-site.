@@ -72,16 +72,23 @@ if (BOT_TOKEN) {
     });
     console.log("✅ Telegram Bot успішно запущено.");
 
+    // Нативне меню команд Telegram (кнопка «Меню» / список при вводі «/»)
+    bot.setMyCommands([
+        { command: 'menu', description: '📋 Головне меню' },
+        { command: 'start', description: '▶️ Почати / перезапустити бота' }
+    ]).catch(() => {});
+
     const getMainMenu = () => {
         return {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "🏥 Записатися на консультацію (400 грн)", callback_data: "book_consultation" }],
+                    [{ text: "👤 Особистий кабінет", url: "https://golos-proty-raku.pp.ua/login.html" }, { text: "📝 Реєстрація", url: "https://golos-proty-raku.pp.ua/register.html" }],
+                    [{ text: "ℹ️ Про центр «Надія»", callback_data: "about_project" }],
                     [{ text: "🎵 Каталог пісень (37,36 грн)", callback_data: "show_menu" }],
                     [{ text: "🗣 Об'єднані голоси", callback_data: "united_voices" }],
-                    [{ text: "ℹ️ Про проєкт", callback_data: "about_project" }],
                     [{ text: "📰 Читати блог", url: "https://golos-proty-raku.pp.ua/blog.html" }, { text: "🌐 Наш сайт", url: "https://golos-proty-raku.pp.ua" }],
-                    [{ text: "🤝 Підтримати проєкт (Офіційно)", callback_data: "support_project" }]
+                    [{ text: "🤝 Підтримати (Офіційно)", callback_data: "support_project" }]
                 ]
             }
         };
@@ -98,9 +105,9 @@ if (BOT_TOKEN) {
             return;
         }
 
-        const welcomeText = command === 'start' 
-            ? `Вітаю! Це офіційний бот проєкту «Голос проти раку».\nТут ви можете підтримати проєкт, отримати повні версії пісень та знайти підтримку.\n\nОберіть потрібний розділ:`
-            : `📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`;
+        const welcomeText = command === 'start'
+            ? `Вітаю! Це офіційний бот реабілітаційного центру «Надія».\n\nТут ви можете записатися на онлайн-консультацію з фізичної реабілітації, зайти у свій особистий кабінет, а також підтримати нашу благодійну музичну ініціативу.\n\nОберіть потрібний розділ:`
+            : `📍 Головне меню:\nОберіть потрібний розділ нижче:`;
 
         bot.sendMessage(chatId, welcomeText, getMainMenu());
     });
@@ -112,7 +119,7 @@ if (BOT_TOKEN) {
 
         try {
             if (query.data === 'about_project') {
-                const aboutText = `<b>Про проєкт «Голос проти раку»</b>\n\n«Голос проти раку» — благодійна музична інціатива, що поєднує музику з підтримкою людей, які борються з онкологічними захворюваннями.\n\nКожна придбана пісня допомагає розвивати цю спільноту та надавати реальну підтримку тим, хто цього потребує. Дякуємо, що ви з нами! 🇺🇦`;
+                const aboutText = `<b>Про центр «Надія»</b>\n\n«Надія» — центр фізичної реабілітації. Ми допомагаємо відновлюватися після травм, операцій та захворювань: індивідуальні програми відновлення, робота кваліфікованих фізичних терапевтів, онлайн-консультації.\n\n🏥 Записатися на онлайн-консультацію (${CONSULTATION_PRICE_UAH} грн) можна прямо тут, у боті, або в особистому кабінеті на сайті.\n\nОкремо ми розвиваємо благодійну музичну ініціативу «Голос проти раку» — її пісні також доступні в цьому боті. 💙`;
                 await bot.editMessageText(aboutText, { 
                     chat_id: chatId, 
                     message_id: messageId, 
@@ -159,7 +166,7 @@ if (BOT_TOKEN) {
             }
 
             if (query.data === 'back_to_main') {
-                await bot.editMessageText(`📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`, { 
+                await bot.editMessageText(`📍 Головне меню:\nОберіть потрібний розділ нижче:`, {
                     chat_id: chatId, 
                     message_id: messageId, 
                     ...getMainMenu() 
