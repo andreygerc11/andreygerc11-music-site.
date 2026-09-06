@@ -33,8 +33,11 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO; 
-const BOT_TOKEN = process.env.BOT_TOKEN; 
+const GITHUB_REPO = process.env.GITHUB_REPO;
+// Окремий ПРИВАТНИЙ репозиторій для медичних даних пацієнтів — НЕ той, що обслуговує
+// GitHub Pages для сайту. Формат: "власник/репозиторій", напр. "andreygerc11/nadiya-patients-private".
+const PATIENTS_REPO = process.env.PATIENTS_REPO;
+const BOT_TOKEN = process.env.BOT_TOKEN;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "5853625377";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -283,6 +286,102 @@ async function saveUsersToGitHub() {
         }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
         usersSha = res.data.content.sha;
     } catch (e) { }
+}
+
+// ==========================================
+// 2Б. МЕДИЧНІ КАРТКИ ПАЦІЄНТІВ (ПРИВАТНИЙ РЕПОЗИТОРІЙ)
+// ==========================================
+// Кожен пацієнт — окремий файл у ПРИВАТНОМУ репозиторії (не тому, що обслуговує
+// публічний сайт через GitHub Pages). Ім'я файлу — хеш email, а не сам email,
+// щоб навіть у службових URL/логах не світилась реальна адреса.
+const CONSULTATION_PRICE_UAH = 400;
+
+function patientFileKey(email) {
+    return crypto.createHash('sha256').update(String(email).trim().toLowerCase()).digest('hex');
+}
+
+async function getPatientRecord(email) {
+    if (!GITHUB_TOKEN || !PATIENTS_REPO || !email) return null;
+    const key = patientFileKey(email);
+    try {
+        const res = await axios.get(`https://api.github.com/repos/${PATIENTS_REPO}/contents/patients/${key}.json`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        const record = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
+        record._sha = res.data.sha;
+        return record;
+    } catch (e) {
+        return null; // картки ще немає — пацієнт ще не заповнював профіль
+    }
+}
+
+async function getPatientRecordByKey(key) {
+    if (!GITHUB_TOKEN || !PATIENTS_REPO || !key) return null;
+    try {
+        const res = await axios.get(`https://api.github.com/repos/${PATIENTS_REPO}/contents/patients/${key}.json`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        const record = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
+        record._sha = res.data.sha;
+        return record;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function savePatientRecord(email, record) {
+    if (!GITHUB_TOKEN || !PATIENTS_REPO || !email) return false;
+    const key = patientFileKey(email);
+    const url = `https://api.github.com/repos/${PATIENTS_REPO}/contents/patients/${key}.json`;
+    try {
+        let sha = record._sha;
+        if (!sha) {
+            try {
+                const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+                sha = getRes.data.sha;
+            } catch (e) {}
+        }
+        const toSave = { ...record };
+        delete toSave._sha;
+        const contentEncoded = Buffer.from(JSON.stringify(toSave, null, 2), 'utf8').toString('base64');
+        const res = await axios.put(url, {
+            message: `Оновлення картки пацієнта`,
+            content: contentEncoded,
+            sha: sha || undefined
+        }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        return res.data.content.sha;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function listPatientSummaries() {
+    if (!GITHUB_TOKEN || !PATIENTS_REPO) return [];
+    try {
+        const listRes = await axios.get(`https://api.github.com/repos/${PATIENTS_REPO}/contents/patients`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        const files = (listRes.data || []).filter(f => f.name.endsWith('.json'));
+        const records = await Promise.all(files.map(async f => {
+            try {
+                const key = f.name.replace(/\.json$/, '');
+                const record = await getPatientRecordByKey(key);
+                if (!record) return null;
+                const consultations = record.consultations || [];
+                return {
+                    key,
+                    email: record.email || '',
+                    fullName: record.fullName || '',
+                    phone: record.phone || '',
+                    consultationsCount: consultations.length,
+                    lastConsultationDate: consultations.length ? consultations[consultations.length - 1].createdAt : null
+                };
+            } catch (e) { return null; }
+        }));
+        return records.filter(Boolean);
+    } catch (e) {
+        return [];
+    }
 }
 
 // ==========================================
@@ -585,6 +684,22 @@ app.post('/api/webhook', async (req, res) => {
                     const opts = { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "⬇️ Скачати трек", url: fileUrl }]] } };
                     await bot.sendMessage(tgChatId, `🎉 <b>Дякую за підтримку!</b>\nОсь ваше посилання на файл: <b>${track.name}</b>`, opts);
                 }
+            } else if (reference && reference.startsWith('consult_')) {
+                const match = reference.match(/^consult_([0-9a-f]{64})_(\d+)$/);
+                if (match) {
+                    const [, patientKey, consultationIdStr] = match;
+                    const consultationId = Number(consultationIdStr);
+                    const record = await getPatientRecordByKey(patientKey);
+                    if (record) {
+                        const consultation = (record.consultations || []).find(c => c.id === consultationId);
+                        if (consultation && consultation.status === 'pending_payment') {
+                            consultation.status = 'paid';
+                            consultation.paidAt = new Date().toISOString();
+                            await savePatientRecord(record.email, record);
+                            await sendTelegramMessage(`📅 Оплачено онлайн-консультацію (${CONSULTATION_PRICE_UAH} грн)\nПацієнт: ${record.email}`);
+                        }
+                    }
+                }
             } else if (reference && reference.includes('@')) {
                 let user = usersDB.find(u => u.email === reference);
                 if (!user) {
@@ -592,7 +707,7 @@ app.post('/api/webhook', async (req, res) => {
                     usersDB.push(user);
                 } else {
                     user.status = "premium";
-                    user.clips_left = (user.clips_left || 0) + 10; 
+                    user.clips_left = (user.clips_left || 0) + 10;
                 }
                 await saveUsersToGitHub();
             }
@@ -891,6 +1006,132 @@ app.get('/api/blog', (req, res) => {
 function isValidWifeAuth(login, password) {
     return login === 'administration@dev.com' && ADMIN_PASSWORD && password === ADMIN_PASSWORD;
 }
+
+// ==========================================
+// КАБІНЕТ ПАЦІЄНТА
+// ==========================================
+function sanitizePatientRecord(record) {
+    if (!record) return record;
+    const { _sha, ...safe } = record;
+    return safe;
+}
+
+app.post('/api/patient/profile', authRateLimiter, async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: "Email обов'язковий" });
+
+        let record = await getPatientRecord(email);
+        if (!record) {
+            record = { email, fullName: '', phone: '', birthDate: '', medicalHistory: '', consultations: [] };
+        }
+        return res.json(sanitizePatientRecord(record));
+    } catch (e) { res.status(500).json({ error: "Помилка сервера" }); }
+});
+
+app.put('/api/patient/profile', authRateLimiter, async (req, res) => {
+    try {
+        const { email, fullName, phone, birthDate, medicalHistory } = req.body;
+        if (!email) return res.status(400).json({ error: "Email обов'язковий" });
+
+        let record = await getPatientRecord(email);
+        if (!record) record = { email, consultations: [] };
+
+        record.fullName = (fullName || '').slice(0, 200);
+        record.phone = (phone || '').slice(0, 40);
+        record.birthDate = (birthDate || '').slice(0, 20);
+        record.medicalHistory = (medicalHistory || '').slice(0, 5000);
+        if (!record.consultations) record.consultations = [];
+
+        const saved = await savePatientRecord(email, record);
+        if (!saved) return res.status(500).json({ error: "Не вдалося зберегти дані" });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Помилка сервера" }); }
+});
+
+app.post('/api/patient/book-consultation', authRateLimiter, async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: "Email обов'язковий" });
+        if (!MONO_TOKEN) return res.json({ url: "https://send.monobank.ua/" });
+
+        let record = await getPatientRecord(email);
+        if (!record) record = { email, fullName: '', phone: '', birthDate: '', medicalHistory: '', consultations: [] };
+        if (!record.consultations) record.consultations = [];
+
+        const consultationId = Date.now();
+        record.consultations.push({
+            id: consultationId,
+            createdAt: new Date().toISOString(),
+            status: 'pending_payment',
+            amount: CONSULTATION_PRICE_UAH,
+            doctorName: null,
+            notes: null,
+            prescription: null,
+            paidAt: null
+        });
+
+        const saved = await savePatientRecord(email, record);
+        if (!saved) return res.status(500).json({ error: "Не вдалося створити запис" });
+
+        const key = patientFileKey(email);
+        const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
+            amount: CONSULTATION_PRICE_UAH * 100,
+            ccy: 980,
+            merchantPaymInfo: { destination: "Онлайн-консультація «Надія»", reference: `consult_${key}_${consultationId}` },
+            redirectUrl: "https://golos-proty-raku.pp.ua/profile.html",
+            webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
+        }, { headers: { 'X-Token': MONO_TOKEN } });
+
+        res.json({ url: monoRes.data.pageUrl });
+    } catch (error) { res.status(500).json({ error: "Помилка створення оплати консультації" }); }
+});
+
+// ==========================================
+// КАБІНЕТ ЛІКАРЯ (доступ мають усі лікарі — спільний пароль, як і для блогу)
+// ==========================================
+app.post('/api/doctor/patients', authRateLimiter, async (req, res) => {
+    const { login, password } = req.body;
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    const summaries = await listPatientSummaries();
+    res.json(summaries);
+});
+
+app.post('/api/doctor/patient', authRateLimiter, async (req, res) => {
+    const { login, password, email } = req.body;
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!email) return res.status(400).json({ error: "Email обов'язковий" });
+
+    const record = await getPatientRecord(email);
+    if (!record) return res.status(404).json({ error: "Пацієнта не знайдено" });
+    res.json(sanitizePatientRecord(record));
+});
+
+app.post('/api/doctor/patient/note', authRateLimiter, async (req, res) => {
+    const { login, password, email, consultationId, doctorName, notes, prescription } = req.body;
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!email) return res.status(400).json({ error: "Email обов'язковий" });
+
+    const record = await getPatientRecord(email);
+    if (!record) return res.status(404).json({ error: "Пацієнта не знайдено" });
+    if (!record.consultations) record.consultations = [];
+
+    let consultation = record.consultations.find(c => c.id === consultationId);
+    if (!consultation) {
+        // Дозволяємо лікарю додати нотатку навіть без окремої оплаченої консультації
+        // (наприклад, після очного прийому) — створюємо запис вручну.
+        consultation = { id: Date.now(), createdAt: new Date().toISOString(), status: 'completed', amount: 0, paidAt: null };
+        record.consultations.push(consultation);
+    }
+    consultation.doctorName = (doctorName || '').slice(0, 200);
+    consultation.notes = (notes || '').slice(0, 5000);
+    consultation.prescription = (prescription || '').slice(0, 5000);
+    if (consultation.status === 'paid') consultation.status = 'completed';
+
+    const saved = await savePatientRecord(email, record);
+    if (!saved) return res.status(500).json({ error: "Не вдалося зберегти" });
+    res.json({ success: true });
+});
 
 app.post('/api/wife-blog/verify', (req, res) => {
     const { login, password } = req.body;

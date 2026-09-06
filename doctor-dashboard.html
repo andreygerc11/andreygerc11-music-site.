@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кабінет лікаря | Надія</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-base: #09090b;
+            --bg-panel: #141417;
+            --bg-card: #1c1c21;
+            --bg-input: #000000;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent: #20c997;
+            --text-main: #f0f0f0;
+            --text-muted: #888888;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Montserrat', sans-serif; background-color: var(--bg-base); color: var(--text-main);
+            min-height: 100vh; background: radial-gradient(circle at center top, #18181b 0%, #09090b 100%);
+        }
+        .top-bar {
+            min-height: 65px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between; padding: 15px 30px;
+            position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 15px;
+        }
+        .logo { font-size: 1.2rem; font-weight: 900; text-transform: uppercase; color: #fff; text-decoration: none; letter-spacing: 1px; }
+        .logo span { color: var(--accent); }
+        .btn-back { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 8px;}
+        .btn-back:hover { color: #fff; }
+        .btn-logout-small { background: none; border: 1px solid rgba(255,77,77,0.3); color: #ff4d4d; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+        .btn-logout-small:hover { background: #ff4d4d; color: #fff; }
+
+        .wrap { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+
+        /* ЛОГІН */
+        .login-box {
+            max-width: 400px; margin: 80px auto; background: var(--bg-panel); border: 1px solid var(--border-color);
+            border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .login-box h1 { font-size: 1.3rem; margin-bottom: 25px; text-align: center; }
+        .login-box h1 i { color: var(--accent); margin-right: 8px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 700; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 12px 14px; background: var(--bg-input); border: 1px solid var(--border-color);
+            color: #fff; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+        .form-group textarea { resize: vertical; min-height: 90px; }
+        .btn-action {
+            width: 100%; background: linear-gradient(45deg, var(--accent), #17a67f); color: #04140f; border: none; padding: 15px 30px;
+            border-radius: 50px; font-weight: 900; font-size: 0.9rem; text-transform: uppercase;
+            cursor: pointer; transition: 0.3s; letter-spacing: 0.5px;
+        }
+        .btn-action:hover { box-shadow: 0 8px 25px rgba(32, 201, 151, 0.4); }
+        .btn-action:disabled { background: #333; color: #777; cursor: not-allowed; }
+        .login-error { color: #ff4d4d; font-size: 0.85rem; margin-top: 12px; text-align: center; min-height: 18px; }
+
+        /* СПИСОК ПАЦІЄНТІВ */
+        .search-box { margin-bottom: 20px; }
+        .patients-table { width: 100%; border-collapse: collapse; background: var(--bg-panel); border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); }
+        .patients-table th { text-align: left; padding: 14px 18px; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); }
+        .patients-table td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); font-size: 0.92rem; }
+        .patients-table tr:last-child td { border-bottom: none; }
+        .patients-table tr.patient-row { cursor: pointer; transition: 0.2s; }
+        .patients-table tr.patient-row:hover { background: rgba(32,201,151,0.06); }
+        .badge-count { background: rgba(32,201,151,0.15); color: var(--accent); padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+        .empty-state { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 40px 0; }
+
+        /* КАРТКА ПАЦІЄНТА */
+        .patient-detail-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 20px; padding: 30px; }
+        .patient-detail-card h2 { font-size: 1.3rem; margin-bottom: 5px; }
+        .patient-detail-card .sub { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px; }
+        .field-block { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .field-block:last-child { border-bottom: none; }
+        .field-block .field-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 700; }
+        .field-block .field-value { color: #eee; white-space: pre-wrap; }
+
+        .consult-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 18px; }
+        .consult-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+        .consult-status { font-size: 0.72rem; font-weight: 900; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px; }
+        .status-pending_payment { background: rgba(255,193,7,0.15); color: #ffc107; }
+        .status-paid { background: rgba(32,201,151,0.15); color: var(--accent); }
+        .status-completed { background: rgba(76,175,80,0.15); color: #4CAF50; }
+        .note-form textarea { margin-bottom: 10px; }
+        .note-form .btn-action { width: auto; padding: 10px 24px; font-size: 0.8rem; }
+        .save-msg { font-size: 0.8rem; margin-top: 8px; font-weight: 700; min-height: 16px; }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <a href="medical_hub.html" class="logo">НАДІ<span>Я</span> · ЛІКАР</a>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <a href="medical_hub.html" class="btn-back"><i class="fas fa-arrow-left"></i> Медичний хаб</a>
+            <button id="logoutBtn" class="btn-logout-small" style="display:none;"><i class="fas fa-sign-out-alt"></i> Вийти</button>
+        </div>
+    </header>
+
+    <div class="wrap">
+        <div id="loginView">
+            <div class="login-box">
+                <h1><i class="fas fa-user-md"></i>Вхід лікаря</h1>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Логін</label>
+                        <input type="text" id="loginInput" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label>Пароль</label>
+                        <input type="password" id="passwordInput" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn-action">Увійти</button>
+                    <div class="login-error" id="loginError"></div>
+                </form>
+            </div>
+        </div>
+
+        <div id="listView" style="display:none;">
+            <h1 style="margin-bottom: 20px;"><i class="fas fa-users" style="color: var(--accent);"></i> Пацієнти</h1>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Пошук за ім'ям, телефоном або email..." style="width:100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none;">
+            </div>
+            <table class="patients-table" id="patientsTable">
+                <thead>
+                    <tr><th>Ім'я</th><th>Телефон</th><th>Email</th><th>Консультації</th></tr>
+                </thead>
+                <tbody id="patientsTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="detailView" style="display:none;">
+            <a href="javascript:void(0)" onclick="showListView()" class="btn-back" style="margin-bottom: 20px; display: inline-flex;"><i class="fas fa-arrow-left"></i> До списку пацієнтів</a>
+            <div class="patient-detail-card" id="patientDetailContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'https://andreygerc11-music-site.onrender.com';
+        let doctorCreds = null;
+        try { doctorCreds = JSON.parse(sessionStorage.getItem('nadiya_doctor_creds')); } catch(e) {}
+
+        const STATUS_LABELS = {
+            pending_payment: 'Очікує оплати',
+            paid: 'Оплачено, очікує лікаря',
+            completed: 'Завершено'
+        };
+
+        function formatDate(iso) {
+            if (!iso) return '';
+            try { return new Date(iso).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+            catch (e) { return iso; }
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.innerText = str || '';
+            return div.innerHTML;
+        }
+
+        async function doctorApi(path, extra) {
+            const res = await fetch(`${API}${path}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login: doctorCreds.login, password: doctorCreds.password, ...extra })
+            });
+            return res;
+        }
+
+        function showLoginView() {
+            document.getElementById('loginView').style.display = 'block';
+            document.getElementById('listView').style.display = 'none';
+            document.getElementById('detailView').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'none';
+        }
+
+        async function showListView() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('listView').style.display = 'block';
+            document.getElementById('detailView').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'inline-flex';
+            await loadPatients();
+        }
+
+        let allPatients = [];
+
+        async function loadPatients() {
+            const tbody = document.getElementById('patientsTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Завантаження...</td></tr>';
+            try {
+                const res = await doctorApi('/api/doctor/patients');
+                if (res.status === 403) { sessionStorage.removeItem('nadiya_doctor_creds'); showLoginView(); return; }
+                allPatients = await res.json();
+                renderPatientsTable(allPatients);
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Помилка завантаження списку.</td></tr>';
+            }
+        }
+
+        function renderPatientsTable(patients) {
+            const tbody = document.getElementById('patientsTableBody');
+            if (!patients || patients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Пацієнтів ще немає.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = patients.map(p => `
+                <tr class="patient-row" onclick="openPatient('${escapeHtml(p.email)}')">
+                    <td>${escapeHtml(p.fullName) || '<span style="color:var(--text-muted);">Без імені</span>'}</td>
+                    <td>${escapeHtml(p.phone) || '—'}</td>
+                    <td>${escapeHtml(p.email)}</td>
+                    <td><span class="badge-count">${p.consultationsCount}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const q = e.target.value.trim().toLowerCase();
+            if (!q) return renderPatientsTable(allPatients);
+            renderPatientsTable(allPatients.filter(p =>
+                (p.fullName || '').toLowerCase().includes(q) ||
+                (p.phone || '').toLowerCase().includes(q) ||
+                (p.email || '').toLowerCase().includes(q)
+            ));
+        });
+
+        async function openPatient(email) {
+            document.getElementById('listView').style.display = 'none';
+            document.getElementById('detailView').style.display = 'block';
+            const content = document.getElementById('patientDetailContent');
+            content.innerHTML = '<div class="empty-state">Завантаження...</div>';
+            try {
+                const res = await doctorApi('/api/doctor/patient', { email });
+                if (!res.ok) throw new Error();
+                const patient = await res.json();
+                renderPatientDetail(patient);
+            } catch (e) {
+                content.innerHTML = '<div class="empty-state">Не вдалося завантажити картку пацієнта.</div>';
+            }
+        }
+
+        function renderPatientDetail(patient) {
+            const content = document.getElementById('patientDetailContent');
+            const consultations = (patient.consultations || []).slice().reverse();
+
+            content.innerHTML = `
+                <h2>${escapeHtml(patient.fullName) || 'Без імені'}</h2>
+                <div class="sub">${escapeHtml(patient.email)} ${patient.phone ? '· ' + escapeHtml(patient.phone) : ''} ${patient.birthDate ? '· ' + escapeHtml(patient.birthDate) : ''}</div>
+
+                <div class="field-block">
+                    <div class="field-label">Історія хвороби / скарги</div>
+                    <div class="field-value">${escapeHtml(patient.medicalHistory) || '<span style="color:var(--text-muted);">Пацієнт ще не заповнив</span>'}</div>
+                </div>
+
+                <div class="field-block">
+                    <div class="field-label">Консультації (${consultations.length})</div>
+                    ${consultations.length === 0 ? '<div style="color:var(--text-muted);">Ще немає жодної консультації.</div>' : consultations.map(c => `
+                        <div class="consult-card" id="consult-${c.id}">
+                            <div class="consult-card-head">
+                                <span>${formatDate(c.createdAt)}</span>
+                                <span class="consult-status status-${c.status}">${STATUS_LABELS[c.status] || c.status}</span>
+                            </div>
+                            <div class="note-form">
+                                <div class="form-group">
+                                    <label>Лікар</label>
+                                    <input type="text" id="doctorName-${c.id}" value="${escapeHtml(c.doctorName) || ''}" placeholder="Ім'я лікаря">
+                                </div>
+                                <div class="form-group">
+                                    <label>Нотатки консультації</label>
+                                    <textarea id="notes-${c.id}" placeholder="Опис прийому, стан пацієнта...">${escapeHtml(c.notes) || ''}</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Призначення / приписи</label>
+                                    <textarea id="prescription-${c.id}" placeholder="Рекомендації, вправи, препарати...">${escapeHtml(c.prescription) || ''}</textarea>
+                                </div>
+                                <button class="btn-action" onclick="saveNote(${c.id}, '${escapeHtml(patient.email)}')">Зберегти</button>
+                                <div class="save-msg" id="saveMsg-${c.id}"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function saveNote(consultationId, email) {
+            const msgEl = document.getElementById(`saveMsg-${consultationId}`);
+            msgEl.innerText = 'Збереження...';
+            msgEl.style.color = 'var(--text-muted)';
+            try {
+                const res = await doctorApi('/api/doctor/patient/note', {
+                    email,
+                    consultationId,
+                    doctorName: document.getElementById(`doctorName-${consultationId}`).value,
+                    notes: document.getElementById(`notes-${consultationId}`).value,
+                    prescription: document.getElementById(`prescription-${consultationId}`).value
+                });
+                if (!res.ok) throw new Error();
+                msgEl.innerText = '✅ Збережено';
+                msgEl.style.color = '#4CAF50';
+            } catch (e) {
+                msgEl.innerText = '❌ Помилка збереження';
+                msgEl.style.color = '#ff4d4d';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById('loginError');
+            const btn = e.target.querySelector('button');
+            btn.disabled = true; btn.innerText = 'Перевірка...'; errorEl.innerText = '';
+
+            const login = document.getElementById('loginInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+
+            try {
+                const res = await fetch(`${API}/api/doctor/patients`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, password })
+                });
+                if (res.ok) {
+                    doctorCreds = { login, password };
+                    sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify(doctorCreds));
+                    showListView();
+                } else {
+                    errorEl.innerText = 'Невірний логін або пароль';
+                }
+            } catch (e) {
+                errorEl.innerText = 'Помилка з\'єднання з сервером';
+            } finally {
+                btn.disabled = false; btn.innerText = 'Увійти';
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.removeItem('nadiya_doctor_creds');
+            doctorCreds = null;
+            showLoginView();
+        });
+
+        if (doctorCreds) showListView(); else showLoginView();
+    </script>
+</body>
+</html>
