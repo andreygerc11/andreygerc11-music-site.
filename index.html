@@ -164,6 +164,21 @@
 
         /* ==== RESOURCES / BLOG TEASER ==== */
         .resources-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 20px; }
+
+        /* ==== HOME NEWS FEED ==== */
+        .home-news { margin-top: 55px; }
+        .home-news-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 22px; gap: 16px; flex-wrap: wrap; }
+        .home-news-head h3 { font-size: 1.6rem; font-weight: 800; }
+        .home-news-all { color: var(--accent, #20c997); text-decoration: none; font-weight: 700; font-size: 0.9rem; white-space: nowrap; }
+        .home-news-all:hover { text-decoration: underline; }
+        .news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+        .news-card { display: flex; flex-direction: column; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; text-decoration: none; color: inherit; transition: transform .2s, border-color .2s; }
+        .news-card:hover { transform: translateY(-4px); border-color: var(--accent, #20c997); }
+        .news-img { height: 160px; background-size: cover; background-position: center; background-color: #1a1f1e; filter: grayscale(0.15); }
+        .news-body { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 10px; }
+        .news-date { font-size: 0.75rem; color: var(--accent, #20c997); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+        .news-card h4 { font-size: 1.02rem; line-height: 1.4; font-weight: 700; }
+        @media (max-width: 860px) { .news-grid { grid-template-columns: 1fr; } }
         .resource-card {
             position: relative; border-radius: 4px; overflow: hidden; text-decoration: none; color: #fff;
             min-height: 320px; display: flex; align-items: flex-end; padding: 40px;
@@ -403,6 +418,16 @@
                 </div>
             </a>
         </div>
+
+        <div class="home-news" data-aos="fade-up">
+            <div class="home-news-head">
+                <h3>Останні новини</h3>
+                <a href="blog.html" class="home-news-all">Усі новини <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="news-grid" id="homeNewsGrid">
+                <div style="color:#777; grid-column:1/-1;">Завантаження новин...</div>
+            </div>
+        </div>
     </section>
 
     <section id="testimonials">
@@ -526,6 +551,36 @@
       }
   }
   loadReviews();
+
+  // Стрічка останніх новин на головній (з блогу)
+  async function loadHomeNews() {
+      const grid = document.getElementById('homeNewsGrid');
+      if (!grid) return;
+      try {
+          const res = await fetch('https://andreygerc11-music-site.onrender.com/api/blog?t=' + Date.now());
+          const posts = await res.json();
+          if (!posts || posts.length === 0) {
+              grid.innerHTML = '<div style="color:#777; grid-column:1/-1;">Новини скоро з\'являться.</div>';
+              return;
+          }
+          const esc = s => (s || '').replace(/</g, '&lt;');
+          grid.innerHTML = posts.slice(0, 3).map(p => {
+              const img = p.imageUrl ? p.imageUrl : 'novunu.png';
+              const text = esc(p.title || (p.content || '').slice(0, 90));
+              return `
+                  <a href="blog.html" class="news-card">
+                      <div class="news-img" style="background-image:url('${(img || '').replace(/'/g, '')}')"></div>
+                      <div class="news-body">
+                          ${p.date ? `<span class="news-date">${esc(p.date)}</span>` : ''}
+                          <h4>${text}</h4>
+                      </div>
+                  </a>`;
+          }).join('');
+      } catch (e) {
+          grid.innerHTML = '<div style="color:#777; grid-column:1/-1;">Не вдалося завантажити новини.</div>';
+      }
+  }
+  loadHomeNews();
 </script>
 
 </body>
