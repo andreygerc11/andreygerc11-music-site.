@@ -232,7 +232,17 @@ if (BOT_TOKEN) {
                     { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "💳 Оплатити 400 грн", url: result.url }]] } }
                 );
             } catch (e) {
-                bot.sendMessage(msg.chat.id, "❌ Помилка створення оплати. Спробуйте пізніше або напишіть нам напряму.");
+                if (e && e.code === 'NOT_REGISTERED') {
+                    await bot.sendMessage(msg.chat.id,
+                        `❌ Email <b>${email}</b> не зареєстрований на сайті.\n\nЗаписатися на консультацію можуть лише зареєстровані пацієнти. Будь ласка, спочатку створіть акаунт на сайті (за цим самим email), а потім поверніться сюди й натисніть «Записатися на консультацію».`,
+                        { parse_mode: "HTML", reply_markup: { inline_keyboard: [
+                            [{ text: "📝 Зареєструватися на сайті", url: "https://golos-proty-raku.pp.ua/register.html" }],
+                            [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
+                        ] } }
+                    );
+                } else {
+                    bot.sendMessage(msg.chat.id, "❌ Помилка створення оплати. Спробуйте пізніше або напишіть нам напряму.");
+                }
             }
         }
     });
@@ -1129,6 +1139,17 @@ app.put('/api/patient/profile', authRateLimiter, async (req, res) => {
 // Спільна логіка для запису на консультацію — використовується і з
 // сайту (/api/patient/book-consultation), і з Telegram-бота напряму.
 async function createConsultationInvoiceForEmail(email, telegramChatId = null) {
+    // Записатися на консультацію може лише зареєстрований на сайті користувач.
+    // Це відсікає випадкові email із бота — запис прив'язується до реального
+    // акаунта, під яким людина потім зайде в кабінет і побачить історію.
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    const registeredUser = usersDB.find(u => (u.email || '').trim().toLowerCase() === normalizedEmail);
+    if (!registeredUser) {
+        const err = new Error('NOT_REGISTERED');
+        err.code = 'NOT_REGISTERED';
+        throw err;
+    }
+
     if (!MONO_TOKEN) return { url: "https://send.monobank.ua/" };
 
     let record = await getPatientRecord(email);
@@ -1171,7 +1192,12 @@ app.post('/api/patient/book-consultation', authRateLimiter, async (req, res) => 
         if (!email) return res.status(400).json({ error: "Email обов'язковий" });
         const result = await createConsultationInvoiceForEmail(email);
         res.json(result);
-    } catch (error) { res.status(500).json({ error: "Помилка створення оплати консультації" }); }
+    } catch (error) {
+        if (error && error.code === 'NOT_REGISTERED') {
+            return res.status(403).json({ error: "Записатися на консультацію можуть лише зареєстровані пацієнти. Спочатку створіть акаунт на сайті." });
+        }
+        res.status(500).json({ error: "Помилка створення оплати консультації" });
+    }
 });
 
 // Метадані документів, які пацієнт зберігає у СВОЄМУ Google Диску (файли
