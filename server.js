@@ -15,6 +15,10 @@ const rateLimit = require('express-rate-limit');
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const app = express();
+// Render працює за проксі: без цього express-rate-limit кидає помилку
+// ERR_ERL_UNEXPECTED_X_FORWARDED_FOR і ламає захищені роути (логін, реєстрація,
+// запис на консультацію, кабінет лікаря). Довіряємо одному проксі Render.
+app.set('trust proxy', 1);
 app.use(cors({ origin: ['https://golos-proty-raku.pp.ua', 'https://www.golos-proty-raku.pp.ua'] }));
 app.use(express.json({ limit: '50mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
@@ -72,16 +76,23 @@ if (BOT_TOKEN) {
     });
     console.log("✅ Telegram Bot успішно запущено.");
 
+    // Нативне меню команд Telegram (кнопка «Меню» / список при вводі «/»)
+    bot.setMyCommands([
+        { command: 'menu', description: '📋 Головне меню' },
+        { command: 'start', description: '▶️ Почати / перезапустити бота' }
+    ]).catch(() => {});
+
     const getMainMenu = () => {
         return {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: "🏥 Записатися на консультацію (400 грн)", callback_data: "book_consultation" }],
+                    [{ text: "👤 Особистий кабінет", url: "https://golos-proty-raku.pp.ua/login.html" }, { text: "📝 Реєстрація", url: "https://golos-proty-raku.pp.ua/register.html" }],
+                    [{ text: "ℹ️ Про центр «Надія»", callback_data: "about_project" }],
                     [{ text: "🎵 Каталог пісень (37,36 грн)", callback_data: "show_menu" }],
                     [{ text: "🗣 Об'єднані голоси", callback_data: "united_voices" }],
-                    [{ text: "ℹ️ Про проєкт", callback_data: "about_project" }],
                     [{ text: "📰 Читати блог", url: "https://golos-proty-raku.pp.ua/blog.html" }, { text: "🌐 Наш сайт", url: "https://golos-proty-raku.pp.ua" }],
-                    [{ text: "🤝 Підтримати проєкт (Офіційно)", callback_data: "support_project" }]
+                    [{ text: "🤝 Підтримати (Офіційно)", callback_data: "support_project" }]
                 ]
             }
         };
@@ -98,9 +109,9 @@ if (BOT_TOKEN) {
             return;
         }
 
-        const welcomeText = command === 'start' 
-            ? `Вітаю! Це офіційний бот проєкту «Голос проти раку».\nТут ви можете підтримати проєкт, отримати повні версії пісень та знайти підтримку.\n\nОберіть потрібний розділ:`
-            : `📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`;
+        const welcomeText = command === 'start'
+            ? `Вітаю! Це офіційний бот реабілітаційного центру «Надія».\n\nТут ви можете записатися на онлайн-консультацію з фізичної реабілітації, зайти у свій особистий кабінет, а також підтримати нашу благодійну музичну ініціативу.\n\nОберіть потрібний розділ:`
+            : `📍 Головне меню:\nОберіть потрібний розділ нижче:`;
 
         bot.sendMessage(chatId, welcomeText, getMainMenu());
     });
@@ -112,7 +123,7 @@ if (BOT_TOKEN) {
 
         try {
             if (query.data === 'about_project') {
-                const aboutText = `<b>Про проєкт «Голос проти раку»</b>\n\n«Голос проти раку» — благодійна музична інціатива, що поєднує музику з підтримкою людей, які борються з онкологічними захворюваннями.\n\nКожна придбана пісня допомагає розвивати цю спільноту та надавати реальну підтримку тим, хто цього потребує. Дякуємо, що ви з нами! 🇺🇦`;
+                const aboutText = `<b>Про центр «Надія»</b>\n\n«Надія» — центр фізичної реабілітації. Ми допомагаємо відновлюватися після травм, операцій та захворювань: індивідуальні програми відновлення, робота кваліфікованих фізичних терапевтів, онлайн-консультації.\n\n🏥 Записатися на онлайн-консультацію (${CONSULTATION_PRICE_UAH} грн) можна прямо тут, у боті, або в особистому кабінеті на сайті.\n\nОкремо ми розвиваємо благодійну музичну ініціативу «Голос проти раку» — її пісні також доступні в цьому боті. 💙`;
                 await bot.editMessageText(aboutText, { 
                     chat_id: chatId, 
                     message_id: messageId, 
@@ -159,7 +170,7 @@ if (BOT_TOKEN) {
             }
 
             if (query.data === 'back_to_main') {
-                await bot.editMessageText(`📍 Головне меню проєкту:\nОберіть потрібний розділ нижче:`, { 
+                await bot.editMessageText(`📍 Головне меню:\nОберіть потрібний розділ нижче:`, {
                     chat_id: chatId, 
                     message_id: messageId, 
                     ...getMainMenu() 
@@ -232,7 +243,17 @@ if (BOT_TOKEN) {
                     { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "💳 Оплатити 400 грн", url: result.url }]] } }
                 );
             } catch (e) {
-                bot.sendMessage(msg.chat.id, "❌ Помилка створення оплати. Спробуйте пізніше або напишіть нам напряму.");
+                if (e && e.code === 'NOT_REGISTERED') {
+                    await bot.sendMessage(msg.chat.id,
+                        `❌ Email <b>${email}</b> не зареєстрований на сайті.\n\nЗаписатися на консультацію можуть лише зареєстровані пацієнти. Будь ласка, спочатку створіть акаунт на сайті (за цим самим email), а потім поверніться сюди й натисніть «Записатися на консультацію».`,
+                        { parse_mode: "HTML", reply_markup: { inline_keyboard: [
+                            [{ text: "📝 Зареєструватися на сайті", url: "https://golos-proty-raku.pp.ua/register.html" }],
+                            [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
+                        ] } }
+                    );
+                } else {
+                    bot.sendMessage(msg.chat.id, "❌ Помилка створення оплати. Спробуйте пізніше або напишіть нам напряму.");
+                }
             }
         }
     });
@@ -1084,6 +1105,30 @@ function isValidWifeAuth(login, password) {
     return login === 'administration@dev.com' && ADMIN_PASSWORD && password === ADMIN_PASSWORD;
 }
 
+// Лікарі з індивідуальними логіном/паролем. Джерело — env DOCTORS_JSON:
+// масив об'єктів [{ "login": "...", "password": "...", "name": "Прізвище Ім'я По батькові" }].
+let doctorsList = [];
+try {
+    if (process.env.DOCTORS_JSON) doctorsList = JSON.parse(process.env.DOCTORS_JSON);
+    if (!Array.isArray(doctorsList)) doctorsList = [];
+} catch (e) {
+    console.error('❌ DOCTORS_JSON має бути валідним JSON-масивом:', e.message);
+    doctorsList = [];
+}
+console.log(`👩‍⚕️ Завантажено лікарів з індивідуальним доступом: ${doctorsList.length}`);
+
+// Повертає { name, isAdmin } для валідних креденшлів лікаря або адміна, інакше null.
+// Кожен лікар бачить усіх пацієнтів (спільний доступ), але заходить під своїм паролем,
+// щоб нотатки й призначення підписувалися його іменем.
+function getDoctorAuth(login, password) {
+    const l = (login || '').trim();
+    const p = password || '';
+    const doc = doctorsList.find(d => d && typeof d.login === 'string' && d.login.toLowerCase() === l.toLowerCase() && d.password === p);
+    if (doc) return { name: (doc.name || l), isAdmin: false };
+    if (isValidWifeAuth(l, p)) return { name: 'Адміністратор', isAdmin: true };
+    return null;
+}
+
 // ==========================================
 // КАБІНЕТ ПАЦІЄНТА
 // ==========================================
@@ -1129,6 +1174,17 @@ app.put('/api/patient/profile', authRateLimiter, async (req, res) => {
 // Спільна логіка для запису на консультацію — використовується і з
 // сайту (/api/patient/book-consultation), і з Telegram-бота напряму.
 async function createConsultationInvoiceForEmail(email, telegramChatId = null) {
+    // Записатися на консультацію може лише зареєстрований на сайті користувач.
+    // Це відсікає випадкові email із бота — запис прив'язується до реального
+    // акаунта, під яким людина потім зайде в кабінет і побачить історію.
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    const registeredUser = usersDB.find(u => (u.email || '').trim().toLowerCase() === normalizedEmail);
+    if (!registeredUser) {
+        const err = new Error('NOT_REGISTERED');
+        err.code = 'NOT_REGISTERED';
+        throw err;
+    }
+
     if (!MONO_TOKEN) return { url: "https://send.monobank.ua/" };
 
     let record = await getPatientRecord(email);
@@ -1171,7 +1227,12 @@ app.post('/api/patient/book-consultation', authRateLimiter, async (req, res) => 
         if (!email) return res.status(400).json({ error: "Email обов'язковий" });
         const result = await createConsultationInvoiceForEmail(email);
         res.json(result);
-    } catch (error) { res.status(500).json({ error: "Помилка створення оплати консультації" }); }
+    } catch (error) {
+        if (error && error.code === 'NOT_REGISTERED') {
+            return res.status(403).json({ error: "Записатися на консультацію можуть лише зареєстровані пацієнти. Спочатку створіть акаунт на сайті." });
+        }
+        res.status(500).json({ error: "Помилка створення оплати консультації" });
+    }
 });
 
 // Метадані документів, які пацієнт зберігає у СВОЄМУ Google Диску (файли
@@ -1228,14 +1289,14 @@ app.get('/api/reviews', (req, res) => {
 // ==========================================
 app.post('/api/doctor/patients', authRateLimiter, async (req, res) => {
     const { login, password } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!getDoctorAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
     const summaries = await listPatientSummaries();
     res.json(summaries);
 });
 
 app.post('/api/doctor/patient', authRateLimiter, async (req, res) => {
     const { login, password, email } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!getDoctorAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
     if (!email) return res.status(400).json({ error: "Email обов'язковий" });
 
     const record = await getPatientRecord(email);
@@ -1245,7 +1306,8 @@ app.post('/api/doctor/patient', authRateLimiter, async (req, res) => {
 
 app.post('/api/doctor/patient/note', authRateLimiter, async (req, res) => {
     const { login, password, email, consultationId, doctorName, notes, prescription } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    const noteAuth = getDoctorAuth(login, password);
+    if (!noteAuth) return res.status(403).json({ error: "Невірний логін або пароль" });
     if (!email) return res.status(400).json({ error: "Email обов'язковий" });
 
     const record = await getPatientRecord(email);
@@ -1259,7 +1321,8 @@ app.post('/api/doctor/patient/note', authRateLimiter, async (req, res) => {
         consultation = { id: Date.now(), createdAt: new Date().toISOString(), status: 'completed', amount: 0, paidAt: null };
         record.consultations.push(consultation);
     }
-    consultation.doctorName = (doctorName || '').slice(0, 200);
+    // Підпис — ім'я лікаря, під яким виконано вхід (адмін може вказати ім'я вручну).
+    consultation.doctorName = ((noteAuth.isAdmin && doctorName) ? doctorName : noteAuth.name).slice(0, 200);
     consultation.notes = (notes || '').slice(0, 5000);
     consultation.prescription = (prescription || '').slice(0, 5000);
     if (consultation.status === 'paid') consultation.status = 'completed';
@@ -1271,13 +1334,13 @@ app.post('/api/doctor/patient/note', authRateLimiter, async (req, res) => {
 
 app.post('/api/doctor/reviews', authRateLimiter, async (req, res) => {
     const { login, password } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!getDoctorAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
     res.json(siteReviews);
 });
 
 app.post('/api/doctor/reviews/moderate', authRateLimiter, async (req, res) => {
     const { login, password, id, action } = req.body;
-    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!getDoctorAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
 
     const review = siteReviews.find(r => r.id === id);
     if (!review) return res.status(404).json({ error: "Відгук не знайдено" });
@@ -1288,6 +1351,13 @@ app.post('/api/doctor/reviews/moderate', authRateLimiter, async (req, res) => {
 
     await saveReviewsToGitHub();
     res.json({ success: true });
+});
+
+app.post('/api/doctor/verify', authRateLimiter, (req, res) => {
+    const { login, password } = req.body;
+    const auth = getDoctorAuth(login, password);
+    if (!auth) return res.status(403).json({ error: "Невірний логін або пароль" });
+    res.json({ success: true, doctorName: auth.name });
 });
 
 app.post('/api/wife-blog/verify', (req, res) => {

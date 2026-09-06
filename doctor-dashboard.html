@@ -376,7 +376,7 @@
                             <div class="note-form">
                                 <div class="form-group">
                                     <label>Лікар</label>
-                                    <input type="text" id="doctorName-${c.id}" value="${escapeHtml(c.doctorName) || ''}" placeholder="Ім'я лікаря">
+                                    <input type="text" id="doctorName-${c.id}" value="${escapeHtml(c.doctorName || (doctorCreds && doctorCreds.doctorName) || '')}" placeholder="Ім'я лікаря">
                                 </div>
                                 <div class="form-group">
                                     <label>Нотатки консультації</label>
@@ -485,13 +485,14 @@
             const password = document.getElementById('passwordInput').value;
 
             try {
-                const res = await fetch(`${API}/api/doctor/patients`, {
+                const res = await fetch(`${API}/api/doctor/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ login, password })
                 });
                 if (res.ok) {
-                    doctorCreds = { login, password };
+                    const data = await res.json();
+                    doctorCreds = { login, password, doctorName: data.doctorName || '' };
                     sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify(doctorCreds));
                     showListView();
                 } else {
