@@ -1160,8 +1160,8 @@ async function fetchAndRewriteBlog() {
 
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
-                    date: pubDate, category: "news", originalTitle: rawTitle, 
-                    title: translatedTitle, content: articleContent, imageUrl: "baner_novunu.png"
+                    date: pubDate, category: "news", originalTitle: rawTitle,
+                    title: translatedTitle, content: articleContent, imageUrl: "news_banner.svg"
                 });
                 addedCount++; newsAddedThisRun++;
 
