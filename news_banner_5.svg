@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="ЗДОРОВ'Я — центр Надія">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#081a1e"/><stop offset="1" stop-color="#0c2a30"/></linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#22c9d6"/><stop offset="1" stop-color="#0fb3c0"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1010" cy="150" r="240" fill="#22c9d6" opacity="0.06"/>
+  <circle cx="150" cy="120" r="150" fill="#22c9d6" opacity="0.05"/>
+  <circle cx="1000" cy="240" r="90" fill="none" stroke="#22c9d6" stroke-width="3" opacity="0.35"/><circle cx="1000" cy="240" r="150" fill="none" stroke="#22c9d6" stroke-width="3" opacity="0.35"/><circle cx="1000" cy="240" r="210" fill="none" stroke="#22c9d6" stroke-width="3" opacity="0.35"/><circle cx="1000" cy="240" r="280" fill="none" stroke="#22c9d6" stroke-width="3" opacity="0.35"/><circle cx="1000" cy="240" r="40" fill="#0fb3c0" opacity="0.8"/>
+  <g transform="translate(90,250)"><rect x="0" y="0" width="70" height="70" rx="16" fill="url(#g)"/><rect x="29" y="14" width="12" height="42" rx="4" fill="#0a0a0b"/><rect x="14" y="29" width="42" height="12" rx="4" fill="#0a0a0b"/></g>
+  <text x="180" y="288" font-family="Georgia, serif" font-size="38" fill="#22c9d6" letter-spacing="6">ЗДОРОВ'Я</text>
+  <text x="180" y="356" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="60" fill="#ffffff">Профілактика й догляд</text>
+  <text x="180" y="410" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="26" fill="#cfe9e1" letter-spacing="1">Реабілітаційний центр «Надія»</text>
+  <text x="90" y="560" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="20" fill="#0fb3c0" letter-spacing="3" opacity="0.8">GOLOS-PROTY-RAKU.PP.UA</text>
+</svg>
