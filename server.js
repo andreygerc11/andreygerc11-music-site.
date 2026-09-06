@@ -1054,16 +1054,40 @@ app.post('/api/sync-lyrics', upload.single('audio'), async (req, res) => {
 // ==========================================
 // 6. АВТОМАТИЧНИЙ БЛОГ (Llama 3.3 через Groq)
 // ==========================================
+// Кілька різних банерів для новин (щоб не було однаково)
+const NEWS_BANNERS = ['news_banner_1.svg', 'news_banner_2.svg', 'news_banner_3.svg', 'news_banner_4.svg', 'news_banner_5.svg', 'news_banner_6.svg'];
+function randomNewsBanner() {
+    return NEWS_BANNERS[Math.floor(Math.random() * NEWS_BANNERS.length)];
+}
+// Застарілі однакові банери, які треба замінити на різні
+const OLD_NEWS_BANNERS = ['news_banner.svg', 'baner_novunu.png'];
+
+// Одноразова міграція: старим новинам роздаємо різні банери (стабільно за індексом),
+// зберігаємо один раз. Сервер володіє blog_posts.json, тож це durable.
+async function migrateNewsBanners() {
+    let changed = 0;
+    aiBlogPosts.forEach((p, i) => {
+        if (p && OLD_NEWS_BANNERS.includes(p.imageUrl)) {
+            p.imageUrl = NEWS_BANNERS[i % NEWS_BANNERS.length];
+            changed++;
+        }
+    });
+    if (changed > 0) {
+        await saveBlogToGitHub();
+        console.log(`🎨 Оновлено банери у ${changed} новинах (різні замість однакового).`);
+    }
+}
+
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
     try {
-        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`, { 
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` } 
+        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
         aiBlogPosts = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
         console.log(`📚 Завантажено ${aiBlogPosts.length} постів з GitHub`);
-    } catch (e) { 
-        aiBlogPosts = []; 
+    } catch (e) {
+        aiBlogPosts = [];
     }
 }
 
@@ -1161,7 +1185,7 @@ async function fetchAndRewriteBlog() {
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     date: pubDate, category: "news", originalTitle: rawTitle,
-                    title: translatedTitle, content: articleContent, imageUrl: "news_banner.svg"
+                    title: translatedTitle, content: articleContent, imageUrl: randomNewsBanner()
                 });
                 addedCount++; newsAddedThisRun++;
 
@@ -1768,6 +1792,7 @@ app.post('/api/wife-blog/delete', async (req, res) => {
 const PORT = process.env.PORT || 10000;
 
 Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(), syncReviewsFromGitHub(), syncSiteContentFromGitHub(), syncAppointmentsFromGitHub()]).then(() => {
+    migrateNewsBanners().catch(e => console.error('Помилка міграції банерів:', e.message));
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
 
