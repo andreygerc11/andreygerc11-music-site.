@@ -410,25 +410,8 @@
             <span class="eyebrow">Відгуки</span>
             <h2>Що кажуть наші пацієнти</h2>
         </div>
-        <div class="testi-grid">
-            <div class="testi-card" data-aos="fade-up" data-aos-delay="0">
-                <i class="fas fa-quote-left"></i>
-                <p><em>Текст-заповнювач.</em> Тут з'явиться реальний відгук пацієнта про роботу центру «Надія».</p>
-                <div class="testi-name">Ім'я Прізвище</div>
-                <div class="testi-role">Пацієнт</div>
-            </div>
-            <div class="testi-card" data-aos="fade-up" data-aos-delay="80">
-                <i class="fas fa-quote-left"></i>
-                <p><em>Текст-заповнювач.</em> Тут з'явиться реальний відгук пацієнта про роботу центру «Надія».</p>
-                <div class="testi-name">Ім'я Прізвище</div>
-                <div class="testi-role">Пацієнт</div>
-            </div>
-            <div class="testi-card" data-aos="fade-up" data-aos-delay="160">
-                <i class="fas fa-quote-left"></i>
-                <p><em>Текст-заповнювач.</em> Тут з'явиться реальний відгук пацієнта про роботу центру «Надія».</p>
-                <div class="testi-name">Ім'я Прізвище</div>
-                <div class="testi-role">Пацієнт</div>
-            </div>
+        <div class="testi-grid" id="testiGrid">
+            <div class="empty-state" style="color:#777; text-align:center; grid-column: 1/-1;">Завантаження відгуків...</div>
         </div>
     </section>
 
@@ -505,6 +488,29 @@
       document.getElementById('userProfileBtn').style.display = 'none';
       document.getElementById('authBtn').style.display = 'inline-block';
   }
+
+  async function loadReviews() {
+      const grid = document.getElementById('testiGrid');
+      try {
+          const res = await fetch('https://andreygerc11-music-site.onrender.com/api/reviews');
+          const reviews = await res.json();
+          if (!reviews || reviews.length === 0) {
+              grid.innerHTML = '<div style="color:#777; text-align:center; grid-column: 1/-1;">Відгуків ще немає. Будьте першим — залиште свій у особистому кабінеті.</div>';
+              return;
+          }
+          grid.innerHTML = reviews.slice(-9).reverse().map(r => `
+              <div class="testi-card" data-aos="fade-up">
+                  <i class="fas fa-quote-left"></i>
+                  <p>${(r.text || '').replace(/</g, '&lt;')}</p>
+                  <div class="testi-name">${(r.name || 'Пацієнт').replace(/</g, '&lt;')}</div>
+                  <div class="testi-role">Пацієнт</div>
+              </div>
+          `).join('');
+      } catch (e) {
+          grid.innerHTML = '<div style="color:#777; text-align:center; grid-column: 1/-1;">Не вдалося завантажити відгуки.</div>';
+      }
+  }
+  loadReviews();
 </script>
 
 </body>

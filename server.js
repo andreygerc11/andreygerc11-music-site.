@@ -50,6 +50,8 @@ let aiBlogPosts = [];
 let globalMusicList = [];
 let usersDB = [];
 let usersSha = '';
+let siteReviews = [];
+let reviewsSha = '';
 
 // ==========================================
 // 1. ТЕЛЕГРАМ БОТ ТА АДМІН-ФУНКЦІЇ
@@ -74,11 +76,11 @@ if (BOT_TOKEN) {
         return {
             reply_markup: {
                 inline_keyboard: [
+                    [{ text: "🏥 Записатися на консультацію (400 грн)", callback_data: "book_consultation" }],
                     [{ text: "🎵 Каталог пісень (37,36 грн)", callback_data: "show_menu" }],
                     [{ text: "🗣 Об'єднані голоси", callback_data: "united_voices" }],
                     [{ text: "ℹ️ Про проєкт", callback_data: "about_project" }],
-                    [{ text: "🎬 Створити свій кліп (ШІ-Студія)", url: "https://golos-proty-raku.pp.ua/#generator" }],
-                    [{ text: "📰 Читати блог", url: "https://golos-proty-raku.pp.ua/#blog" }, { text: "🌐 Наш сайт", url: "https://golos-proty-raku.pp.ua" }],
+                    [{ text: "📰 Читати блог", url: "https://golos-proty-raku.pp.ua/blog.html" }, { text: "🌐 Наш сайт", url: "https://golos-proty-raku.pp.ua" }],
                     [{ text: "🤝 Підтримати проєкт (Офіційно)", callback_data: "support_project" }]
                 ]
             }
@@ -120,15 +122,15 @@ if (BOT_TOKEN) {
             }
 
             if (query.data === 'support_project') {
-                const supportText = `<b>🤝 Офіційна підтримка проєкту</b>\n\nПроєкт зареєстрований як ФОП, усі платежі проходять офіційно, зі сплатою податків.\n\nНайкращий спосіб підтримати проєкт — придбати пісню з каталогу або оформити підписку на сайті.`;
-                await bot.editMessageText(supportText, { 
-                    chat_id: chatId, 
-                    message_id: messageId, 
-                    parse_mode: 'HTML', 
+                const supportText = `<b>🤝 Офіційна підтримка проєкту</b>\n\nПроєкт зареєстрований як ФОП, усі платежі проходять офіційно, зі сплатою податків.\n\nНайкращий спосіб підтримати проєкт — придбати пісню з каталогу або записатися на консультацію з фізичної реабілітації.`;
+                await bot.editMessageText(supportText, {
+                    chat_id: chatId,
+                    message_id: messageId,
+                    parse_mode: 'HTML',
                     reply_markup: { inline_keyboard: [
-                        [{ text: "👑 Оформити підписку на сайті", url: "https://golos-proty-raku.pp.ua/#generator" }], 
+                        [{ text: "🏥 Записатися на консультацію", callback_data: "book_consultation" }],
                         [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
-                    ] } 
+                    ] }
                 });
             }
 
@@ -148,6 +150,11 @@ if (BOT_TOKEN) {
 
             if (query.data === 'write_story') {
                 const promptText = `Напишіть вашу історію прямо тут, у повідомленні. \n\nВи можете розповісти про свій шлях, поділитися порадою або просто словами підтримки. Я отримаю ваше повідомлення і ми разом вирішимо, як воно зможе допомогти іншим.`;
+                await bot.sendMessage(chatId, promptText, { reply_markup: { force_reply: true } });
+            }
+
+            if (query.data === 'book_consultation') {
+                const promptText = `Щоб записатися на онлайн-консультацію з фізичної реабілітації (400 грн), напишіть, будь ласка, ваш email у відповідь на це повідомлення — на нього ми прив'яжемо запис і історію консультацій у вашому особистому кабінеті на сайті.`;
                 await bot.sendMessage(chatId, promptText, { reply_markup: { force_reply: true } });
             }
 
@@ -205,9 +212,28 @@ if (BOT_TOKEN) {
             const userHistory = msg.text;
             const userName = msg.from.first_name || "Користувач";
             const userHandle = msg.from.username ? `@${msg.from.username}` : "Немає юзернейму";
-            
+
             await bot.sendMessage(ADMIN_ID, `📩 <b>Нова історія для «Об'єднаних голосів»!</b>\nВід: ${userName} (${userHandle})\n\n${userHistory}`, { parse_mode: 'HTML' });
             bot.sendMessage(msg.chat.id, "Дякую, що поділилися! Ваша історія отримана. Разом ми сильніші. 💙");
+            return;
+        }
+
+        if (msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes("Щоб записатися на онлайн-консультацію")) {
+            const email = (msg.text || '').trim();
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                bot.sendMessage(msg.chat.id, "❌ Це не схоже на email. Спробуйте ще раз, натиснувши кнопку «Записатися на консультацію» в меню.");
+                return;
+            }
+            try {
+                const result = await createConsultationInvoiceForEmail(email);
+                await bot.sendMessage(msg.chat.id,
+                    `Дякуємо! Запис створено на <b>${email}</b>.\n\nІсторію консультацій та нотатки лікаря ви зможете побачити в особистому кабінеті на сайті (вхід за цим самим email).`,
+                    { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "💳 Оплатити 400 грн", url: result.url }]] } }
+                );
+            } catch (e) {
+                bot.sendMessage(msg.chat.id, "❌ Помилка створення оплати. Спробуйте пізніше або напишіть нам напряму.");
+            }
         }
     });
 
@@ -285,6 +311,44 @@ async function saveUsersToGitHub() {
             sha: sha || undefined 
         }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
         usersSha = res.data.content.sha;
+    } catch (e) { }
+}
+
+// ==========================================
+// 2В. ВІДГУКИ ПАЦІЄНТІВ (публічний репозиторій — це не медичні дані)
+// ==========================================
+async function syncReviewsFromGitHub() {
+    if (!GITHUB_TOKEN || !GITHUB_REPO) return;
+    try {
+        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/reviews.json`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        siteReviews = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
+        reviewsSha = res.data.sha;
+        console.log(`⭐ Завантажено ${siteReviews.length} відгуків з GitHub`);
+    } catch (e) {
+        siteReviews = [];
+    }
+}
+
+async function saveReviewsToGitHub() {
+    if (!GITHUB_TOKEN || !GITHUB_REPO) return;
+    try {
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/reviews.json`;
+        let sha = reviewsSha;
+        if (!sha) {
+            try {
+                const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+                sha = getRes.data.sha;
+            } catch (e) {}
+        }
+        const contentEncoded = Buffer.from(JSON.stringify(siteReviews, null, 2), 'utf8').toString('base64');
+        const res = await axios.put(url, {
+            message: `Оновлення відгуків`,
+            content: contentEncoded,
+            sha: sha || undefined
+        }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        reviewsSha = res.data.content.sha;
     } catch (e) { }
 }
 
@@ -881,7 +945,7 @@ async function fetchAndRewriteBlog() {
                 if (bot && CHANNEL_ID) {
                     try {
                         const shortText = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '').substring(0, 280).replace(/\n/g, ' ');
-                        await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/#blog">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
+                        await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/blog.html">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
                     } catch (e) {}
                 }
                 await new Promise(r => setTimeout(r, 6000)); 
@@ -1049,42 +1113,98 @@ app.put('/api/patient/profile', authRateLimiter, async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Помилка сервера" }); }
 });
 
+// Спільна логіка для запису на консультацію — використовується і з
+// сайту (/api/patient/book-consultation), і з Telegram-бота напряму.
+async function createConsultationInvoiceForEmail(email) {
+    if (!MONO_TOKEN) return { url: "https://send.monobank.ua/" };
+
+    let record = await getPatientRecord(email);
+    if (!record) record = { email, fullName: '', phone: '', birthDate: '', medicalHistory: '', consultations: [] };
+    if (!record.consultations) record.consultations = [];
+
+    const consultationId = Date.now();
+    record.consultations.push({
+        id: consultationId,
+        createdAt: new Date().toISOString(),
+        status: 'pending_payment',
+        amount: CONSULTATION_PRICE_UAH,
+        doctorName: null,
+        notes: null,
+        prescription: null,
+        paidAt: null
+    });
+
+    const saved = await savePatientRecord(email, record);
+    if (!saved) throw new Error("Не вдалося створити запис пацієнта");
+
+    const key = patientFileKey(email);
+    const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
+        amount: CONSULTATION_PRICE_UAH * 100,
+        ccy: 980,
+        merchantPaymInfo: { destination: "Онлайн-консультація «Надія»", reference: `consult_${key}_${consultationId}` },
+        redirectUrl: "https://golos-proty-raku.pp.ua/profile.html",
+        webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
+    }, { headers: { 'X-Token': MONO_TOKEN } });
+
+    return { url: monoRes.data.pageUrl };
+}
+
 app.post('/api/patient/book-consultation', authRateLimiter, async (req, res) => {
     try {
         const { email } = req.body;
         if (!email) return res.status(400).json({ error: "Email обов'язковий" });
-        if (!MONO_TOKEN) return res.json({ url: "https://send.monobank.ua/" });
+        const result = await createConsultationInvoiceForEmail(email);
+        res.json(result);
+    } catch (error) { res.status(500).json({ error: "Помилка створення оплати консультації" }); }
+});
+
+// Метадані документів, які пацієнт зберігає у СВОЄМУ Google Диску (файли
+// туди вантажаться напряму з браузера пацієнта — сервер їх не бачить і не
+// зберігає, лише посилання/назву/дату для списку в кабінеті й лікаря).
+app.post('/api/patient/documents', authRateLimiter, async (req, res) => {
+    try {
+        const { email, name, driveFileId, webViewLink, mimeType } = req.body;
+        if (!email || !driveFileId) return res.status(400).json({ error: "Email і driveFileId обов'язкові" });
 
         let record = await getPatientRecord(email);
         if (!record) record = { email, fullName: '', phone: '', birthDate: '', medicalHistory: '', consultations: [] };
-        if (!record.consultations) record.consultations = [];
+        if (!record.documents) record.documents = [];
 
-        const consultationId = Date.now();
-        record.consultations.push({
-            id: consultationId,
-            createdAt: new Date().toISOString(),
-            status: 'pending_payment',
-            amount: CONSULTATION_PRICE_UAH,
-            doctorName: null,
-            notes: null,
-            prescription: null,
-            paidAt: null
+        record.documents.push({
+            id: Date.now(),
+            name: (name || 'Документ').slice(0, 200),
+            driveFileId,
+            webViewLink: webViewLink || null,
+            mimeType: mimeType || null,
+            uploadedAt: new Date().toISOString()
         });
 
         const saved = await savePatientRecord(email, record);
-        if (!saved) return res.status(500).json({ error: "Не вдалося створити запис" });
+        if (!saved) return res.status(500).json({ error: "Не вдалося зберегти документ" });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Помилка сервера" }); }
+});
 
-        const key = patientFileKey(email);
-        const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
-            amount: CONSULTATION_PRICE_UAH * 100,
-            ccy: 980,
-            merchantPaymInfo: { destination: "Онлайн-консультація «Надія»", reference: `consult_${key}_${consultationId}` },
-            redirectUrl: "https://golos-proty-raku.pp.ua/profile.html",
-            webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
-        }, { headers: { 'X-Token': MONO_TOKEN } });
+app.post('/api/patient/review', authRateLimiter, async (req, res) => {
+    try {
+        const { email, name, text } = req.body;
+        if (!email || !text || !text.trim()) return res.status(400).json({ error: "Текст відгуку обов'язковий" });
 
-        res.json({ url: monoRes.data.pageUrl });
-    } catch (error) { res.status(500).json({ error: "Помилка створення оплати консультації" }); }
+        siteReviews.push({
+            id: Date.now(),
+            email,
+            name: (name || 'Пацієнт').slice(0, 100),
+            text: text.trim().slice(0, 1000),
+            status: 'pending',
+            createdAt: new Date().toISOString()
+        });
+        await saveReviewsToGitHub();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Помилка сервера" }); }
+});
+
+app.get('/api/reviews', (req, res) => {
+    res.json(siteReviews.filter(r => r.status === 'approved'));
 });
 
 // ==========================================
@@ -1133,6 +1253,27 @@ app.post('/api/doctor/patient/note', authRateLimiter, async (req, res) => {
     res.json({ success: true });
 });
 
+app.post('/api/doctor/reviews', authRateLimiter, async (req, res) => {
+    const { login, password } = req.body;
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+    res.json(siteReviews);
+});
+
+app.post('/api/doctor/reviews/moderate', authRateLimiter, async (req, res) => {
+    const { login, password, id, action } = req.body;
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });
+
+    const review = siteReviews.find(r => r.id === id);
+    if (!review) return res.status(404).json({ error: "Відгук не знайдено" });
+
+    if (action === 'approve') review.status = 'approved';
+    else if (action === 'reject') review.status = 'rejected';
+    else return res.status(400).json({ error: "Невідома дія" });
+
+    await saveReviewsToGitHub();
+    res.json({ success: true });
+});
+
 app.post('/api/wife-blog/verify', (req, res) => {
     const { login, password } = req.body;
     if (isValidWifeAuth(login, password)) {
@@ -1166,7 +1307,7 @@ app.post('/api/wife-blog/delete', async (req, res) => {
 // ==========================================
 const PORT = process.env.PORT || 10000;
 
-Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub()]).then(() => {
+Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(), syncReviewsFromGitHub()]).then(() => {
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
 

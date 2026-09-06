@@ -94,6 +94,10 @@
         .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
         .form-group textarea { resize: vertical; min-height: 100px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .doc-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+        .doc-item a { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .doc-item a:hover { color: var(--accent); }
+        .doc-item .doc-date { color: var(--text-muted); font-size: 0.78rem; }
 
         .btn-action {
             background: linear-gradient(45deg, var(--accent), #17a67f); color: #04140f; border: none; padding: 16px 32px;
@@ -202,6 +206,33 @@
             </div>
 
             <div class="settings-card">
+                <h2><i class="fas fa-file-medical"></i> Медичні документи</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Виписки, епікризи та інші документи зберігаються у <strong>вашому власному</strong> Google Диску, в папці «Медичні документи» — ми не копіюємо файли на свій сервер. Лікар отримає доступ лише до цієї папки, після того як ви завантажите документ.</p>
+                <button class="btn-outline" id="connectDriveBtn" style="margin-bottom: 20px;"><i class="fab fa-google-drive" style="color: #34a853;"></i> Підключити Google Диск</button>
+                <div id="uploadDocRow" style="display:none; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label>Завантажити документ (фото або PDF)</label>
+                        <input type="file" id="docFileInput" accept="image/*,application/pdf">
+                    </div>
+                    <button class="btn-action" id="uploadDocBtn"><i class="fas fa-upload"></i> Завантажити на Диск</button>
+                    <div id="uploadStatus" style="margin-top: 10px; font-size: 0.85rem; font-weight: 700;"></div>
+                </div>
+                <div class="consult-list" id="docList">
+                    <div class="empty-state">Завантаження...</div>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h2><i class="fas fa-star"></i> Залишити відгук</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Ваш відгук з'явиться на головній сторінці після перевірки лікарем.</p>
+                <div class="form-group">
+                    <textarea id="fldReviewText" placeholder="Поділіться враженнями про консультацію чи роботу центру..."></textarea>
+                </div>
+                <button class="btn-action" id="submitReviewBtn"><i class="fas fa-paper-plane"></i> Надіслати відгук</button>
+                <div id="reviewStatus" style="margin-top: 10px; font-size: 0.85rem; font-weight: 700;"></div>
+            </div>
+
+            <div class="settings-card">
                 <h2><i class="fas fa-headset"></i> Підтримка</h2>
                 <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Виникли питання щодо запису, оплати чи консультації? Напишіть нам.</p>
                 <a href="https://t.me/golosprotyraku_bot" target="_blank" class="btn-outline">
@@ -285,10 +316,163 @@
                 document.getElementById('fldMedicalHistory').value = data.medicalHistory || '';
 
                 renderConsultations(data.consultations || []);
+                renderDocuments(data.documents || []);
             } catch (e) {
                 document.getElementById('consultList').innerHTML = '<div class="empty-state">Помилка завантаження даних.</div>';
+                document.getElementById('docList').innerHTML = '<div class="empty-state">Помилка завантаження даних.</div>';
             }
         }
+
+        function renderDocuments(documents) {
+            const list = document.getElementById('docList');
+            if (!documents || documents.length === 0) {
+                list.innerHTML = '<div class="empty-state">Документів ще немає.</div>';
+                return;
+            }
+            list.innerHTML = documents.slice().reverse().map(d => `
+                <div class="doc-item">
+                    <a href="${d.webViewLink || '#'}" target="_blank"><i class="fas fa-file-alt" style="color: var(--accent);"></i> ${(d.name || 'Документ').replace(/</g,'&lt;')}</a>
+                    <span class="doc-date">${formatDate(d.uploadedAt)}</span>
+                </div>
+            `).join('');
+        }
+
+        // ==========================================
+        // GOOGLE ДИСК: пацієнт підключає СВІЙ Диск, файли вантажаться
+        // напряму туди з браузера, сервер бачить лише метадані.
+        // ==========================================
+        const DRIVE_CLIENT_ID = '724333690730-kjj7rl1tn72vq452flbdhb1ngq3q7dqd.apps.googleusercontent.com';
+        const DOCTOR_SHARE_EMAIL = 'andreygerc11@gmail.com'; // TODO: замінити на пошту клініки, якщо буде інша
+        const MEDICAL_FOLDER_NAME = 'Медичні документи';
+        let driveAccessToken = null;
+        let driveFolderId = null;
+
+        async function findOrCreateMedicalFolder(token) {
+            const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${MEDICAL_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`)}&fields=files(id,name)`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const searchData = await searchRes.json();
+            if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
+
+            const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: MEDICAL_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+            });
+            const createData = await createRes.json();
+            return createData.id;
+        }
+
+        document.getElementById('connectDriveBtn').addEventListener('click', function() {
+            const btn = this;
+            btn.disabled = true; btn.innerHTML = 'Підключення...';
+
+            const client = google.accounts.oauth2.initTokenClient({
+                client_id: DRIVE_CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/drive.file',
+                callback: async (response) => {
+                    if (response.error) {
+                        alert('Не вдалося отримати доступ до Google Диска.');
+                        btn.disabled = false; btn.innerHTML = '<i class="fab fa-google-drive" style="color: #34a853;"></i> Підключити Google Диск';
+                        return;
+                    }
+                    driveAccessToken = response.access_token;
+                    try {
+                        driveFolderId = await findOrCreateMedicalFolder(driveAccessToken);
+                        btn.innerHTML = '<i class="fas fa-check" style="color: #4CAF50;"></i> Диск підключено';
+                        document.getElementById('uploadDocRow').style.display = 'block';
+                    } catch (e) {
+                        alert('Не вдалося створити папку на Диску.');
+                        btn.disabled = false; btn.innerHTML = '<i class="fab fa-google-drive" style="color: #34a853;"></i> Підключити Google Диск';
+                    }
+                }
+            });
+            client.requestAccessToken();
+        });
+
+        document.getElementById('uploadDocBtn').addEventListener('click', async function() {
+            const fileInput = document.getElementById('docFileInput');
+            const statusEl = document.getElementById('uploadStatus');
+            const file = fileInput.files[0];
+            if (!file) { statusEl.style.color = '#ff4d4d'; statusEl.innerText = 'Оберіть файл'; return; }
+            if (!driveAccessToken || !driveFolderId) { statusEl.style.color = '#ff4d4d'; statusEl.innerText = 'Спочатку підключіть Google Диск'; return; }
+
+            const btn = this;
+            btn.disabled = true; statusEl.style.color = 'var(--text-muted)'; statusEl.innerText = 'Завантаження на Диск...';
+
+            try {
+                const metadata = { name: file.name, parents: [driveFolderId] };
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', file);
+
+                const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,mimeType', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + driveAccessToken },
+                    body: form
+                });
+                const uploadData = await uploadRes.json();
+                if (!uploadData.id) throw new Error();
+
+                // Надаємо перегляд лікарю на цей конкретний файл (лише для нього, не для всього Диска).
+                try {
+                    await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions`, {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ role: 'reader', type: 'user', emailAddress: DOCTOR_SHARE_EMAIL })
+                    });
+                } catch (shareErr) { /* документ усе одно збережеться, поділимось пізніше вручну за потреби */ }
+
+                await fetch(`${API}/api/patient/documents`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: currentUser.email,
+                        name: file.name,
+                        driveFileId: uploadData.id,
+                        webViewLink: uploadData.webViewLink,
+                        mimeType: uploadData.mimeType
+                    })
+                });
+
+                statusEl.style.color = '#4CAF50'; statusEl.innerText = '✅ Документ завантажено';
+                fileInput.value = '';
+                fetchPatientProfile();
+            } catch (e) {
+                statusEl.style.color = '#ff4d4d'; statusEl.innerText = '❌ Помилка завантаження';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('submitReviewBtn').addEventListener('click', async function() {
+            const textEl = document.getElementById('fldReviewText');
+            const statusEl = document.getElementById('reviewStatus');
+            const text = textEl.value.trim();
+            if (!text) { statusEl.style.color = '#ff4d4d'; statusEl.innerText = 'Введіть текст відгуку'; return; }
+
+            const btn = this;
+            btn.disabled = true; statusEl.style.color = 'var(--text-muted)'; statusEl.innerText = 'Надсилання...';
+
+            try {
+                const res = await fetch(`${API}/api/patient/review`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: currentUser.email,
+                        name: (document.getElementById('fldFullName').value || '').trim(),
+                        text
+                    })
+                });
+                if (!res.ok) throw new Error();
+                statusEl.style.color = '#4CAF50'; statusEl.innerText = '✅ Дякуємо! Відгук з\'явиться після перевірки лікарем.';
+                textEl.value = '';
+            } catch (e) {
+                statusEl.style.color = '#ff4d4d'; statusEl.innerText = '❌ Не вдалося надіслати. Спробуйте пізніше.';
+            } finally {
+                btn.disabled = false;
+            }
+        });
 
         document.getElementById('saveProfileBtn').addEventListener('click', async function() {
             const statusEl = document.getElementById('saveStatus');

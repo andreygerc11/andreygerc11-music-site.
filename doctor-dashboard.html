@@ -90,7 +90,33 @@
         .status-completed { background: rgba(76,175,80,0.15); color: #4CAF50; }
         .note-form textarea { margin-bottom: 10px; }
         .note-form .btn-action { width: auto; padding: 10px 24px; font-size: 0.8rem; }
+        .btn-print { width: auto; padding: 10px 20px; font-size: 0.78rem; background: transparent; border: 1px solid var(--border-color); color: #fff; border-radius: 50px; cursor: pointer; font-weight: 700; margin-top: 10px; }
+        .btn-print:hover { border-color: var(--accent); color: var(--accent); }
         .save-msg { font-size: 0.8rem; margin-top: 8px; font-weight: 700; min-height: 16px; }
+
+        .doc-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; }
+        .doc-item a { color: #fff; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+        .doc-item a:hover { color: var(--accent); }
+        .doc-item .doc-date { color: var(--text-muted); font-size: 0.75rem; }
+
+        /* ТАБИ */
+        .view-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .view-tab { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 10px 22px; border-radius: 30px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+        .view-tab.active { background: var(--accent); color: #04140f; border-color: var(--accent); }
+
+        /* ВІДГУКИ */
+        .review-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 14px; }
+        .review-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .review-status { font-size: 0.72rem; font-weight: 900; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px; }
+        .status-pending { background: rgba(255,193,7,0.15); color: #ffc107; }
+        .status-approved { background: rgba(76,175,80,0.15); color: #4CAF50; }
+        .status-rejected { background: rgba(255,77,77,0.15); color: #ff4d4d; }
+        .review-actions { display: flex; gap: 10px; margin-top: 12px; }
+        .btn-approve, .btn-reject { padding: 8px 18px; border-radius: 30px; font-size: 0.78rem; font-weight: 700; cursor: pointer; border: 1px solid; }
+        .btn-approve { background: transparent; border-color: #4CAF50; color: #4CAF50; }
+        .btn-approve:hover { background: #4CAF50; color: #fff; }
+        .btn-reject { background: transparent; border-color: #ff4d4d; color: #ff4d4d; }
+        .btn-reject:hover { background: #ff4d4d; color: #fff; }
     </style>
 </head>
 <body>
@@ -123,16 +149,26 @@
         </div>
 
         <div id="listView" style="display:none;">
-            <h1 style="margin-bottom: 20px;"><i class="fas fa-users" style="color: var(--accent);"></i> Пацієнти</h1>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 Пошук за ім'ям, телефоном або email..." style="width:100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none;">
+            <div class="view-tabs">
+                <button class="view-tab active" id="tabPatients" onclick="switchTab('patients')">Пацієнти</button>
+                <button class="view-tab" id="tabReviews" onclick="switchTab('reviews')">Відгуки</button>
             </div>
-            <table class="patients-table" id="patientsTable">
-                <thead>
-                    <tr><th>Ім'я</th><th>Телефон</th><th>Email</th><th>Консультації</th></tr>
-                </thead>
-                <tbody id="patientsTableBody"></tbody>
-            </table>
+
+            <div id="patientsPane">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Пошук за ім'ям, телефоном або email..." style="width:100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border-color); color: #fff; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none;">
+                </div>
+                <table class="patients-table" id="patientsTable">
+                    <thead>
+                        <tr><th>Ім'я</th><th>Телефон</th><th>Email</th><th>Консультації</th></tr>
+                    </thead>
+                    <tbody id="patientsTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="reviewsPane" style="display:none;">
+                <div id="reviewsList"><div class="empty-state">Завантаження...</div></div>
+            </div>
         </div>
 
         <div id="detailView" style="display:none;">
@@ -186,6 +222,63 @@
             document.getElementById('detailView').style.display = 'none';
             document.getElementById('logoutBtn').style.display = 'inline-flex';
             await loadPatients();
+        }
+
+        function switchTab(tab) {
+            document.getElementById('tabPatients').classList.toggle('active', tab === 'patients');
+            document.getElementById('tabReviews').classList.toggle('active', tab === 'reviews');
+            document.getElementById('patientsPane').style.display = tab === 'patients' ? 'block' : 'none';
+            document.getElementById('reviewsPane').style.display = tab === 'reviews' ? 'block' : 'none';
+            if (tab === 'reviews') loadReviews();
+        }
+
+        const REVIEW_STATUS_LABELS = { pending: 'На перевірці', approved: 'Опубліковано', rejected: 'Відхилено' };
+
+        async function loadReviews() {
+            const list = document.getElementById('reviewsList');
+            list.innerHTML = '<div class="empty-state">Завантаження...</div>';
+            try {
+                const res = await doctorApi('/api/doctor/reviews');
+                if (!res.ok) throw new Error();
+                const reviews = await res.json();
+                renderReviews(reviews);
+            } catch (e) {
+                list.innerHTML = '<div class="empty-state">Помилка завантаження відгуків.</div>';
+            }
+        }
+
+        function renderReviews(reviews) {
+            const list = document.getElementById('reviewsList');
+            if (!reviews || reviews.length === 0) {
+                list.innerHTML = '<div class="empty-state">Відгуків ще немає.</div>';
+                return;
+            }
+            list.innerHTML = reviews.slice().reverse().map(r => `
+                <div class="review-card">
+                    <div class="review-card-head">
+                        <strong>${escapeHtml(r.name)}</strong>
+                        <span class="review-status status-${r.status}">${REVIEW_STATUS_LABELS[r.status] || r.status}</span>
+                    </div>
+                    <p style="color:#ccc; font-size:0.9rem;">${escapeHtml(r.text)}</p>
+                    <div style="color:var(--text-muted); font-size:0.75rem; margin-top:8px;">${escapeHtml(r.email)} · ${formatDate(r.createdAt)}</div>
+                    ${r.status === 'pending' ? `
+                        <div class="review-actions">
+                            <button class="btn-approve" onclick="moderateReview(${r.id}, 'approve')">Опублікувати</button>
+                            <button class="btn-reject" onclick="moderateReview(${r.id}, 'reject')">Відхилити</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function moderateReview(id, action) {
+            try {
+                const res = await doctorApi('/api/doctor/reviews/moderate', { id, action });
+                if (!res.ok) throw new Error();
+                loadReviews();
+            } catch (e) {
+                alert('Не вдалося оновити відгук.');
+            }
         }
 
         let allPatients = [];
@@ -244,9 +337,13 @@
             }
         }
 
+        let currentPatient = null;
+
         function renderPatientDetail(patient) {
+            currentPatient = patient;
             const content = document.getElementById('patientDetailContent');
             const consultations = (patient.consultations || []).slice().reverse();
+            const documents = patient.documents || [];
 
             content.innerHTML = `
                 <h2>${escapeHtml(patient.fullName) || 'Без імені'}</h2>
@@ -255,6 +352,17 @@
                 <div class="field-block">
                     <div class="field-label">Історія хвороби / скарги</div>
                     <div class="field-value">${escapeHtml(patient.medicalHistory) || '<span style="color:var(--text-muted);">Пацієнт ще не заповнив</span>'}</div>
+                </div>
+
+                <div class="field-block">
+                    <div class="field-label">Медичні документи пацієнта (${documents.length})</div>
+                    ${documents.length === 0 ? '<div style="color:var(--text-muted);">Пацієнт ще не завантажив документи.</div>' : documents.slice().reverse().map(d => `
+                        <div class="doc-item">
+                            <a href="${d.webViewLink || '#'}" target="_blank"><i class="fas fa-file-alt" style="color: var(--accent);"></i> ${escapeHtml(d.name)}</a>
+                            <span class="doc-date">${formatDate(d.uploadedAt)}</span>
+                        </div>
+                    `).join('')}
+                    <p style="color:var(--text-muted); font-size:0.78rem; margin-top:8px;">Документи зберігаються на Google Диску пацієнта — посилання відкриється лише якщо доступ уже надано.</p>
                 </div>
 
                 <div class="field-block">
@@ -279,12 +387,71 @@
                                     <textarea id="prescription-${c.id}" placeholder="Рекомендації, вправи, препарати...">${escapeHtml(c.prescription) || ''}</textarea>
                                 </div>
                                 <button class="btn-action" onclick="saveNote(${c.id}, '${escapeHtml(patient.email)}')">Зберегти</button>
+                                <button class="btn-print" onclick="printConsultationCard(${c.id})"><i class="fas fa-print"></i> Друкувати картку</button>
                                 <div class="save-msg" id="saveMsg-${c.id}"></div>
                             </div>
                         </div>
                     `).join('')}
                 </div>
             `;
+        }
+
+        function printConsultationCard(consultationId) {
+            if (!currentPatient) return;
+            const c = (currentPatient.consultations || []).find(x => x.id === consultationId);
+            if (!c) return;
+
+            // Беремо актуальні значення прямо з полів форми (лікар міг щойно ввести,
+            // ще не натиснувши "Зберегти").
+            const doctorName = document.getElementById(`doctorName-${consultationId}`)?.value || c.doctorName || '';
+            const notes = document.getElementById(`notes-${consultationId}`)?.value || c.notes || '';
+            const prescription = document.getElementById(`prescription-${consultationId}`)?.value || c.prescription || '';
+
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><title>Картка консультації</title>
+                <style>
+                    body { font-family: 'Times New Roman', serif; padding: 30px; color: #000; }
+                    .header { display: flex; justify-content: space-between; border: 1px solid #000; padding: 12px; margin-bottom: 0; }
+                    .header h1 { font-size: 1.1rem; margin: 0 0 6px; }
+                    .header .right { text-align: right; font-size: 0.85rem; }
+                    h2.title { text-align: center; border: 1px solid #000; border-top: none; padding: 14px; margin: 0 0 20px; font-size: 1.2rem; }
+                    .row { display: flex; border-bottom: 1px solid #000; padding: 8px 4px; }
+                    .row .label { width: 260px; font-size: 0.85rem; }
+                    .row .value { flex: 1; border-bottom: 1px dotted #000; min-height: 20px; }
+                    .block { margin-top: 20px; }
+                    .block .label { font-weight: bold; font-size: 0.9rem; margin-bottom: 6px; }
+                    .block .value { border: 1px solid #000; min-height: 60px; padding: 10px; white-space: pre-wrap; font-size: 0.9rem; }
+                    .sign-row { display: flex; justify-content: space-between; margin-top: 50px; font-size: 0.85rem; }
+                    .sign-row div { border-top: 1px solid #000; padding-top: 5px; width: 220px; text-align: center; }
+                    @media print { body { padding: 10px; } }
+                </style></head><body>
+                    <div class="header">
+                        <div><h1>Реабілітаційний центр «Надія»</h1><div style="font-size:0.8rem;">ФОП Герц Андрій Костянтинович</div></div>
+                        <div class="right">КАРТКА КОНСУЛЬТАЦІЇ<br>Дата: ${formatDate(c.createdAt)}</div>
+                    </div>
+                    <h2 class="title">Картка консультації пацієнта</h2>
+
+                    <div class="row"><div class="label">Прізвище, ім'я, по батькові:</div><div class="value">${escapeHtml(currentPatient.fullName) || ''}</div></div>
+                    <div class="row"><div class="label">Дата народження:</div><div class="value">${escapeHtml(currentPatient.birthDate) || ''}</div></div>
+                    <div class="row"><div class="label">Телефон:</div><div class="value">${escapeHtml(currentPatient.phone) || ''}</div></div>
+                    <div class="row"><div class="label">Лікар:</div><div class="value">${escapeHtml(doctorName)}</div></div>
+
+                    <div class="block"><div class="label">Історія хвороби / скарги:</div><div class="value">${escapeHtml(currentPatient.medicalHistory) || ''}</div></div>
+                    <div class="block"><div class="label">Нотатки консультації:</div><div class="value">${escapeHtml(notes)}</div></div>
+                    <div class="block"><div class="label">Призначення / рекомендації:</div><div class="value">${escapeHtml(prescription)}</div></div>
+
+                    <div class="sign-row">
+                        <div>Підпис лікаря</div>
+                        <div>Підпис пацієнта</div>
+                    </div>
+
+                    <p style="font-size:0.72rem; color:#444; margin-top:30px;">Цей документ сформований центром «Надія» на основі даних консультації і не є офіційною формою первинної облікової документації МОЗ України.</p>
+                </body></html>
+            `);
+            win.document.close();
+            win.focus();
+            setTimeout(() => win.print(), 300);
         }
 
         async function saveNote(consultationId, email) {
