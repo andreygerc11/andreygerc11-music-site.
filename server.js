@@ -95,11 +95,15 @@ if (BOT_TOKEN) {
         { command: 'start', description: '▶️ Почати / перезапустити бота' }
     ]).catch(() => {});
 
+    // Сесія майстра запису на прийом (chatId → { email, doctorLogin, date })
+    const botApptSession = {};
+
     const getMainMenu = () => {
         return {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "🏥 Записатися на консультацію (400 грн)", callback_data: "book_consultation" }],
+                    [{ text: "📅 Записатися на прийом до лікаря", callback_data: "appt_start" }],
+                    [{ text: "🏥 Онлайн-консультація (400 грн)", callback_data: "book_consultation" }],
                     [{ text: "👤 Особистий кабінет", url: "https://golos-proty-raku.pp.ua/login.html" }, { text: "📝 Реєстрація", url: "https://golos-proty-raku.pp.ua/register.html" }],
                     [{ text: "ℹ️ Про центр «Надія»", callback_data: "about_project" }],
                     [{ text: "🎵 Каталог пісень (37,36 грн)", callback_data: "show_menu" }],
@@ -110,6 +114,37 @@ if (BOT_TOKEN) {
             }
         };
     };
+
+    // --- Кнопки майстра запису на прийом ---
+    function apptDoctorButtons() {
+        const rows = doctorsList.map(d => [{ text: `👨‍⚕️ ${d.name || d.login}`, callback_data: `appt_doc_${d.login}` }]);
+        rows.push([{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]);
+        return { inline_keyboard: rows };
+    }
+    function apptDayButtons() {
+        const names = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+        const now = new Date();
+        const rows = [];
+        for (let i = 1; rows.length < 8 && i <= 21; i++) {
+            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+            const dow = d.getDay();
+            if (dow === 0 || dow === 6) continue; // лише Пн–Пт
+            const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            rows.push([{ text: `${names[dow]} ${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`, callback_data: `appt_day_${iso}` }]);
+        }
+        rows.push([{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]);
+        return { inline_keyboard: rows };
+    }
+    function apptSlotButtons(doctorLogin, date) {
+        const free = freeSlotsFor(doctorLogin, date);
+        if (free.length === 0) return null;
+        const rows = [];
+        for (let i = 0; i < free.length; i += 3) {
+            rows.push(free.slice(i, i + 3).map(t => ({ text: `🕒 ${t}`, callback_data: `appt_slot_${t}` })));
+        }
+        rows.push([{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]);
+        return { inline_keyboard: rows };
+    }
 
     bot.onText(/\/(start|menu)(.*)/, async (msg, match) => {
         const chatId = msg.chat.id;
@@ -190,6 +225,49 @@ if (BOT_TOKEN) {
                 });
             }
 
+            if (query.data === 'appt_start') {
+                await bot.sendMessage(chatId, `Щоб записатися на ПРИЙОМ до лікаря, напишіть, будь ласка, ваш email у відповідь на це повідомлення (той самий, під яким ви зареєстровані на сайті).`, { reply_markup: { force_reply: true } });
+                return;
+            }
+
+            if (query.data.startsWith('appt_doc_')) {
+                const doctorLogin = query.data.replace('appt_doc_', '');
+                const sess = botApptSession[chatId];
+                if (!sess || !sess.email) { await bot.sendMessage(chatId, "Сесія завершилась. Почніть знову: /menu → «Записатися на прийом»."); return; }
+                sess.doctorLogin = doctorLogin;
+                const doc = doctorsList.find(d => d.login === doctorLogin);
+                await bot.editMessageText(`Лікар: <b>${doc ? doc.name : doctorLogin}</b>\n\nОберіть день прийому (Пн–Пт):`, { chat_id: chatId, message_id: messageId, parse_mode: 'HTML', reply_markup: apptDayButtons() });
+                return;
+            }
+
+            if (query.data.startsWith('appt_day_')) {
+                const date = query.data.replace('appt_day_', '');
+                const sess = botApptSession[chatId];
+                if (!sess || !sess.email || !sess.doctorLogin) { await bot.sendMessage(chatId, "Сесія завершилась. Почніть знову: /menu → «Записатися на прийом»."); return; }
+                sess.date = date;
+                await syncAppointmentsFromGitHub();
+                const kb = apptSlotButtons(sess.doctorLogin, date);
+                if (!kb) { await bot.editMessageText(`На цей день вільних годин немає. Оберіть інший день:`, { chat_id: chatId, message_id: messageId, reply_markup: apptDayButtons() }); return; }
+                await bot.editMessageText(`Оберіть вільний час на <b>${date}</b> (прийом ~60 хв):`, { chat_id: chatId, message_id: messageId, parse_mode: 'HTML', reply_markup: kb });
+                return;
+            }
+
+            if (query.data.startsWith('appt_slot_')) {
+                const time = query.data.replace('appt_slot_', '');
+                const sess = botApptSession[chatId];
+                if (!sess || !sess.email || !sess.doctorLogin || !sess.date) { await bot.sendMessage(chatId, "Сесія завершилась. Почніть знову: /menu → «Записатися на прийом»."); return; }
+                try {
+                    const appt = await bookAppointmentCore(sess.email, sess.doctorLogin, sess.date, time, chatId);
+                    delete botApptSession[chatId];
+                    await bot.editMessageText(`✅ <b>Вас записано!</b>\n\nЛікар: <b>${appt.doctorName}</b>\nДата: <b>${appt.date}</b> о <b>${appt.time}</b>\n\nІсторію записів і призначення дивіться в особистому кабінеті на сайті.`, { chat_id: chatId, message_id: messageId, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🌐 Відкрити кабінет", url: "https://golos-proty-raku.pp.ua/login.html" }], [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]] } });
+                } catch (e) {
+                    const msgMap = { TAKEN: "Цей час щойно зайняли. Оберіть інший.", PAST: "Цей час уже минув. Оберіть інший.", NOT_REGISTERED: "Email не зареєстрований на сайті." };
+                    const kb = apptSlotButtons(sess.doctorLogin, sess.date);
+                    await bot.editMessageText(`❌ ${msgMap[e.code] || 'Не вдалося записатися. Спробуйте ще раз.'}`, { chat_id: chatId, message_id: messageId, reply_markup: kb || apptDayButtons() });
+                }
+                return;
+            }
+
             if (query.data.startsWith('show_menu')) {
                 if (globalMusicList.length === 0) await fetchMusicFromDrive();
                 if (globalMusicList.length === 0) {
@@ -239,6 +317,32 @@ if (BOT_TOKEN) {
 
             await bot.sendMessage(ADMIN_ID, `📩 <b>Нова історія для «Об'єднаних голосів»!</b>\nВід: ${userName} (${userHandle})\n\n${userHistory}`, { parse_mode: 'HTML' });
             bot.sendMessage(msg.chat.id, "Дякую, що поділилися! Ваша історія отримана. Разом ми сильніші. 💙");
+            return;
+        }
+
+        if (msg.reply_to_message && msg.reply_to_message.text && msg.reply_to_message.text.includes("Щоб записатися на ПРИЙОМ до лікаря")) {
+            const email = (msg.text || '').trim();
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                bot.sendMessage(msg.chat.id, "❌ Це не схоже на email. Спробуйте ще раз через меню «Записатися на прийом».");
+                return;
+            }
+            const user = usersDB.find(u => (u.email || '').trim().toLowerCase() === email.toLowerCase());
+            if (!user) {
+                await bot.sendMessage(msg.chat.id,
+                    `❌ Email <b>${email}</b> не зареєстрований на сайті. Записатися на прийом можуть лише зареєстровані пацієнти.`,
+                    { parse_mode: "HTML", reply_markup: { inline_keyboard: [
+                        [{ text: "📝 Зареєструватися на сайті", url: "https://golos-proty-raku.pp.ua/register.html" }],
+                        [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
+                    ] } });
+                return;
+            }
+            if (doctorsList.length === 0) {
+                bot.sendMessage(msg.chat.id, "Наразі немає доступних лікарів для запису. Спробуйте пізніше.");
+                return;
+            }
+            botApptSession[msg.chat.id] = { email: user.email };
+            await bot.sendMessage(msg.chat.id, `Дякуємо! Оберіть лікаря, до якого хочете записатися:`, { reply_markup: apptDoctorButtons() });
             return;
         }
 
@@ -1453,28 +1557,31 @@ app.post('/api/appointments/slots', authRateLimiter, (req, res) => {
     res.json({ date, weekday: isWeekday(date), slots });
 });
 
-// Бронювання слоту — лише зареєстрований пацієнт
-app.post('/api/appointments/book', authRateLimiter, async (req, res) => {
-    const { email, doctorLogin, date, time } = req.body;
-    if (!email || !doctorLogin || !date || !time) return res.status(400).json({ error: "Заповніть усі поля" });
+// Вільні слоти лікаря на дату (список часу)
+function freeSlotsFor(doctorLogin, date) {
+    const taken = appointments
+        .filter(a => a.doctorLogin === doctorLogin && a.date === date && a.status !== 'cancelled')
+        .map(a => a.time);
+    return SLOT_TIMES.filter(t => !taken.includes(t));
+}
 
+// Спільна логіка бронювання прийому (сайт і бот). Кидає Error з .code при помилці.
+async function bookAppointmentCore(email, doctorLogin, date, time, telegramChatId = null) {
+    const fail = (code) => { const e = new Error(code); e.code = code; return e; };
+    if (!email || !doctorLogin || !date || !time) throw fail('MISSING');
     const normEmail = String(email).trim().toLowerCase();
     const user = usersDB.find(u => (u.email || '').trim().toLowerCase() === normEmail);
-    if (!user) return res.status(403).json({ error: "Записатися може лише зареєстрований пацієнт" });
-
+    if (!user) throw fail('NOT_REGISTERED');
     const doctor = doctorsList.find(d => d.login === doctorLogin);
-    if (!doctor) return res.status(400).json({ error: "Такого лікаря немає" });
-    if (!SLOT_TIMES.includes(time)) return res.status(400).json({ error: "Некоректний час" });
-    if (!isWeekday(date)) return res.status(400).json({ error: "Прийом лише у робочі дні (Пн–Пт)" });
-
+    if (!doctor) throw fail('NO_DOCTOR');
+    if (!SLOT_TIMES.includes(time)) throw fail('BAD_TIME');
+    if (!isWeekday(date)) throw fail('NOT_WEEKDAY');
     const slotDate = new Date(`${date}T${time}:00`);
-    if (isNaN(slotDate.getTime()) || slotDate.getTime() < Date.now()) {
-        return res.status(400).json({ error: "Оберіть майбутню дату й час" });
-    }
+    if (isNaN(slotDate.getTime()) || slotDate.getTime() < Date.now()) throw fail('PAST');
 
     await syncAppointmentsFromGitHub(); // свіжий стан перед перевіркою накладок
     const clash = appointments.find(a => a.doctorLogin === doctorLogin && a.date === date && a.time === time && a.status !== 'cancelled');
-    if (clash) return res.status(409).json({ error: "Цей час уже зайнятий, оберіть інший" });
+    if (clash) throw fail('TAKEN');
 
     const appt = {
         id: Date.now(),
@@ -1484,14 +1591,38 @@ app.post('/api/appointments/book', authRateLimiter, async (req, res) => {
         patientName: user.name || '',
         date, time,
         status: 'booked',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        telegramChatId: telegramChatId ? String(telegramChatId) : null
     };
     appointments.push(appt);
     const saved = await saveAppointmentsToGitHub();
-    if (!saved) return res.status(500).json({ error: "Не вдалося зберегти запис" });
+    if (!saved) throw fail('SAVE_FAILED');
 
     await sendTelegramMessage(`📅 Новий запис на прийом\nЛікар: ${appt.doctorName}\nДата: ${date} ${time}\nПацієнт: ${user.email}`);
-    res.json({ success: true, appointment: appt });
+    return appt;
+}
+
+const APPT_ERROR_MAP = {
+    MISSING: [400, "Заповніть усі поля"],
+    NOT_REGISTERED: [403, "Записатися може лише зареєстрований пацієнт"],
+    NO_DOCTOR: [400, "Такого лікаря немає"],
+    BAD_TIME: [400, "Некоректний час"],
+    NOT_WEEKDAY: [400, "Прийом лише у робочі дні (Пн–Пт)"],
+    PAST: [400, "Оберіть майбутню дату й час"],
+    TAKEN: [409, "Цей час уже зайнятий, оберіть інший"],
+    SAVE_FAILED: [500, "Не вдалося зберегти запис"]
+};
+
+// Бронювання слоту — лише зареєстрований пацієнт
+app.post('/api/appointments/book', authRateLimiter, async (req, res) => {
+    const { email, doctorLogin, date, time } = req.body;
+    try {
+        const appt = await bookAppointmentCore(email, doctorLogin, date, time);
+        res.json({ success: true, appointment: appt });
+    } catch (e) {
+        const [code, message] = APPT_ERROR_MAP[e.code] || [500, "Помилка бронювання"];
+        res.status(code).json({ error: message });
+    }
 });
 
 // Записи конкретного пацієнта
