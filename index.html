@@ -264,7 +264,7 @@
 </nav>
 
 <header class="hero">
-    <img src="article_rehab.png" alt="Реабілітаційний центр Надія" class="hero-bg">
+    <img src="article_rehab.png" alt="Реабілітаційний центр Надія" class="hero-bg" data-cms-img="hero.bg">
     <div class="hero-overlay"></div>
     <div class="hero-inner" data-aos="fade-up">
         <span class="hero-eyebrow" data-cms="hero.eyebrow">Реабілітаційний центр</span>
@@ -281,7 +281,7 @@
     <section id="about">
         <div class="about-wrap">
             <div class="about-figure" data-aos="fade-right">
-                <img src="article_support.png" alt="Реабілітаційний центр Надія" loading="lazy" decoding="async">
+                <img src="article_support.png" alt="Реабілітаційний центр Надія" loading="lazy" decoding="async" data-cms-img="about.img">
             </div>
             <div class="about-text" data-aos="fade-left">
                 <span class="eyebrow" data-cms="about.eyebrow">Про центр</span>
@@ -356,29 +356,34 @@
 
         <div class="team-grid">
             <div class="team-card" data-aos="fade-up" data-aos-delay="0">
-                <div class="team-avatar">ГМ</div>
+                <div class="team-avatar" data-team-avatar="1">ГМ</div>
                 <h3 data-cms="team1.name">Герц Марина Віталіївна</h3>
                 <p data-cms="team1.role">Фізичний терапевт</p>
+                <div class="team-diploma" data-team-diploma="1"></div>
             </div>
             <div class="team-card" data-aos="fade-up" data-aos-delay="60">
-                <div class="team-avatar">МВ</div>
+                <div class="team-avatar" data-team-avatar="2">МВ</div>
                 <h3 data-cms="team2.name">Медоліз Вікторія Павлівна</h3>
                 <p data-cms="team2.role">Фізичний терапевт</p>
+                <div class="team-diploma" data-team-diploma="2"></div>
             </div>
             <div class="team-card" data-aos="fade-up" data-aos-delay="120">
-                <div class="team-avatar">ЄА</div>
+                <div class="team-avatar" data-team-avatar="3">ЄА</div>
                 <h3 data-cms="team3.name">Єпіков Аллан Андрійович</h3>
                 <p data-cms="team3.role">Фізичний терапевт</p>
+                <div class="team-diploma" data-team-diploma="3"></div>
             </div>
             <div class="team-card" data-aos="fade-up" data-aos-delay="180">
-                <div class="team-avatar">БО</div>
+                <div class="team-avatar" data-team-avatar="4">БО</div>
                 <h3 data-cms="team4.name">Бондаренко Оксана Анатоліївна</h3>
                 <p data-cms="team4.role">Фізичний терапевт</p>
+                <div class="team-diploma" data-team-diploma="4"></div>
             </div>
             <div class="team-card" data-aos="fade-up" data-aos-delay="240">
-                <div class="team-avatar">ФГ</div>
+                <div class="team-avatar" data-team-avatar="5">ФГ</div>
                 <h3 data-cms="team5.name">Фролов Георгій В'ячеславович</h3>
                 <p data-cms="team5.role">Фізичний терапевт</p>
+                <div class="team-diploma" data-team-diploma="5"></div>
             </div>
         </div>
         <p class="team-note" data-cms="team.note">Дані про освіту, спеціалізацію та досвід кожного фахівця будуть додані найближчим часом.</p>
@@ -525,6 +530,24 @@
               const val = content[el.getAttribute('data-cms')];
               if (typeof val === 'string' && val.trim() !== '') el.textContent = val;
           });
+          // Зображення (банер, фото «Про центр» тощо)
+          document.querySelectorAll('[data-cms-img]').forEach(el => {
+              const val = content[el.getAttribute('data-cms-img')];
+              if (typeof val === 'string' && val.trim() !== '') el.src = val;
+          });
+          // Фото лікарів у кружки + дипломи під картками
+          for (let i = 1; i <= 5; i++) {
+              const photo = content[`team${i}.photo`];
+              if (typeof photo === 'string' && photo.trim() !== '') {
+                  const av = document.querySelector(`[data-team-avatar="${i}"]`);
+                  if (av) { av.textContent = ''; av.style.backgroundImage = `url('${photo.replace(/'/g, '')}')`; av.style.backgroundSize = 'cover'; av.style.backgroundPosition = 'center'; }
+              }
+              const dip = content[`team${i}.diploma`];
+              const dipBox = document.querySelector(`[data-team-diploma="${i}"]`);
+              if (dipBox && typeof dip === 'string' && dip.trim() !== '') {
+                  dipBox.innerHTML = `<a href="${dip.replace(/"/g, '')}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;color:var(--accent,#20c997);text-decoration:none;font-size:0.82rem;font-weight:700;"><i class="fas fa-certificate"></i> Диплом / сертифікат</a>`;
+              }
+          }
       } catch (e) { /* лишаємо дефолтний текст */ }
   }
   loadSiteContent();

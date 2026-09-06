@@ -115,8 +115,23 @@
     </div>
     <div class="wrap">
         <p class="intro">
-            Тут ви змінюєте <b>усі тексти головної сторінки</b>. Залиште поле порожнім — на сайті лишиться стандартний текст (показаний сірим як підказка). Після «Зберегти» зміни з'являються на сайті протягом хвилини.
+            Тут ви змінюєте <b>увесь вміст головної сторінки</b> — тексти, фото банера, фото та дипломи лікарів. Залиште текстове поле порожнім — лишиться стандартний текст. Після «Зберегти» зміни з'являються на сайті протягом хвилини (фото — до 1–2 хв, поки оновиться сайт).
         </p>
+
+        <div class="section" id="previewSection">
+            <div class="section-head" data-toggle>
+                <i class="fas fa-desktop icon"></i>
+                <h2>Так виглядає сайт зараз (жива копія)</h2>
+                <i class="fas fa-chevron-down chev"></i>
+            </div>
+            <div class="section-body" style="padding:0;">
+                <div style="display:flex;justify-content:flex-end;padding:10px 14px;">
+                    <button type="button" class="btn btn-ghost" id="previewReload" style="text-transform:none;font-weight:600;padding:8px 14px;"><i class="fas fa-rotate"></i> Оновити прев'ю</button>
+                </div>
+                <iframe id="sitePreview" src="index.html" style="width:100%;height:600px;border:0;border-top:1px solid var(--border);background:#0a0a0b;"></iframe>
+            </div>
+        </div>
+
         <div id="sections"></div>
     </div>
     <div class="savebar">
@@ -134,11 +149,13 @@
     // Опис усіх полів. key = data-cms на головній; default = стандартний текст (підказка).
     const SECTIONS = [
         { icon: 'fa-star', title: 'Головний банер', fields: [
+            { key: 'hero.bg', label: 'Фото банера (фон на всю ширину)', type: 'image' },
             { key: 'hero.eyebrow', label: 'Напис зверху', def: 'Реабілітаційний центр' },
             { key: 'hero.subtitle', label: 'Підзаголовок', area: true, def: 'Комплексна фізична терапія, ерготерапія та психологічна підтримка — крок за кроком повертаємо тілу рух, а людині віру в себе.' },
             { key: 'hero.cta', label: 'Текст кнопки запису', def: 'Записатися на прийом' },
         ]},
         { icon: 'fa-circle-info', title: 'Про центр', fields: [
+            { key: 'about.img', label: 'Фото розділу «Про центр»', type: 'image' },
             { key: 'about.eyebrow', label: 'Напис зверху', def: 'Про центр' },
             { key: 'about.heading', label: 'Заголовок', def: 'Реабілітація — це шлях, який легше пройти не самому' },
             { key: 'about.text1', label: 'Абзац 1', area: true, def: '«Надія» — це команда фізичних терапевтів, які щодня допомагають людям відновлюватися після травм, поранень, операцій та важких хвороб. Ми поєднуємо доказові методики фізичної терапії з щирою людською підтримкою.' },
@@ -171,14 +188,24 @@
             { key: 'team.desc', label: 'Опис розділу', area: true, def: 'Фізичні терапевти центру «Надія». Фотографії команди додамо найближчим часом.' },
             { key: 'team1.name', label: 'Фахівець 1 — ПІБ', def: 'Герц Марина Віталіївна' },
             { key: 'team1.role', label: 'Фахівець 1 — посада', def: 'Фізичний терапевт' },
+            { key: 'team1.photo', label: 'Фахівець 1 — фото (у кружок)', type: 'image' },
+            { key: 'team1.diploma', label: 'Фахівець 1 — диплом (фото або PDF)', type: 'image' },
             { key: 'team2.name', label: 'Фахівець 2 — ПІБ', def: 'Медоліз Вікторія Павлівна' },
             { key: 'team2.role', label: 'Фахівець 2 — посада', def: 'Фізичний терапевт' },
+            { key: 'team2.photo', label: 'Фахівець 2 — фото (у кружок)', type: 'image' },
+            { key: 'team2.diploma', label: 'Фахівець 2 — диплом (фото або PDF)', type: 'image' },
             { key: 'team3.name', label: 'Фахівець 3 — ПІБ', def: 'Єпіков Аллан Андрійович' },
             { key: 'team3.role', label: 'Фахівець 3 — посада', def: 'Фізичний терапевт' },
+            { key: 'team3.photo', label: 'Фахівець 3 — фото (у кружок)', type: 'image' },
+            { key: 'team3.diploma', label: 'Фахівець 3 — диплом (фото або PDF)', type: 'image' },
             { key: 'team4.name', label: 'Фахівець 4 — ПІБ', def: 'Бондаренко Оксана Анатоліївна' },
             { key: 'team4.role', label: 'Фахівець 4 — посада', def: 'Фізичний терапевт' },
+            { key: 'team4.photo', label: 'Фахівець 4 — фото (у кружок)', type: 'image' },
+            { key: 'team4.diploma', label: 'Фахівець 4 — диплом (фото або PDF)', type: 'image' },
             { key: 'team5.name', label: 'Фахівець 5 — ПІБ', def: 'Фролов Георгій В\'ячеславович' },
             { key: 'team5.role', label: 'Фахівець 5 — посада', def: 'Фізичний терапевт' },
+            { key: 'team5.photo', label: 'Фахівець 5 — фото (у кружок)', type: 'image' },
+            { key: 'team5.diploma', label: 'Фахівець 5 — диплом (фото або PDF)', type: 'image' },
             { key: 'team.note', label: 'Примітка під командою', area: true, def: 'Дані про освіту, спеціалізацію та досвід кожного фахівця будуть додані найближчим часом.' },
         ]},
         { icon: 'fa-calendar-check', title: 'Банер запису', fields: [
@@ -199,14 +226,38 @@
     function esc(s) { const d = document.createElement('div'); d.innerText = s || ''; return d.innerHTML; }
     function inputId(key) { return 'f_' + key.replace(/\W/g, '_'); }
 
+    function previewHtml(id, cur) {
+        if (!cur) return '<span style="color:var(--muted);font-size:0.8rem;">Немає файлу</span>';
+        const isPdf = /\.pdf(\?|$)/i.test(cur);
+        return isPdf
+            ? `<a href="${esc(cur)}" target="_blank" style="color:var(--accent);font-size:0.82rem;font-weight:700;"><i class="fas fa-file-pdf"></i> Переглянути PDF</a>`
+            : `<img src="${esc(cur)}" alt="" style="max-height:70px;max-width:120px;border-radius:8px;border:1px solid var(--border);">`;
+    }
+
     function renderSections(content) {
         const html = SECTIONS.map((sec, si) => {
             const fields = sec.fields.map(f => {
                 const cur = (content && typeof content[f.key] === 'string') ? content[f.key] : '';
+                const id = inputId(f.key);
+                if (f.type === 'image') {
+                    return `<div class="field">
+                        <label>${esc(f.label)}</label>
+                        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                            <div id="prev_${id}">${previewHtml(id, cur)}</div>
+                            <input type="hidden" id="${id}" value="${esc(cur)}">
+                            <label class="btn btn-ghost" style="text-transform:none;font-weight:600;cursor:pointer;margin:0;">
+                                <i class="fas fa-upload"></i> Завантажити
+                                <input type="file" accept="image/*,application/pdf" data-imgkey="${esc(f.key)}" style="display:none;">
+                            </label>
+                            <span id="up_${id}" style="font-size:0.8rem;font-weight:700;"></span>
+                            ${cur ? `<button type="button" class="btn btn-ghost" style="text-transform:none;font-weight:600;padding:8px 14px;" data-imgclear="${id}">Прибрати</button>` : ''}
+                        </div>
+                    </div>`;
+                }
                 const ph = esc(f.def);
                 const control = f.area
-                    ? `<textarea id="${inputId(f.key)}" placeholder="${ph}">${esc(cur)}</textarea>`
-                    : `<input type="text" id="${inputId(f.key)}" placeholder="${ph}" value="${esc(cur)}">`;
+                    ? `<textarea id="${id}" placeholder="${ph}">${esc(cur)}</textarea>`
+                    : `<input type="text" id="${id}" placeholder="${ph}" value="${esc(cur)}">`;
                 return `<div class="field"><label>${esc(f.label)}</label>${control}</div>`;
             }).join('');
             return `
@@ -223,6 +274,49 @@
         document.querySelectorAll('[data-toggle]').forEach(h => {
             h.addEventListener('click', () => h.closest('.section').classList.toggle('collapsed'));
         });
+        document.querySelectorAll('input[type=file][data-imgkey]').forEach(inp => {
+            inp.addEventListener('change', () => uploadImage(inp));
+        });
+        document.querySelectorAll('[data-imgclear]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-imgclear');
+                $(id).value = '';
+                $('prev_' + id).innerHTML = previewHtml(id, '');
+                btn.remove();
+            });
+        });
+    }
+
+    async function uploadImage(inp) {
+        const key = inp.getAttribute('data-imgkey');
+        const id = inputId(key);
+        const file = inp.files && inp.files[0];
+        if (!file) return;
+        const st = $('up_' + id);
+        if (file.size > 5 * 1024 * 1024) { st.style.color = '#ff6b6b'; st.innerText = 'Файл завеликий (макс 5 МБ)'; return; }
+        st.style.color = 'var(--muted)'; st.innerText = 'Завантаження...';
+        try {
+            const dataUrl = await new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+            const res = await fetch(`${API}/api/admin/upload`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login: creds.login, password: creds.password, dataUrl, key })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.url) {
+                $(id).value = data.url;
+                $('prev_' + id).innerHTML = previewHtml(id, data.url);
+                st.style.color = 'var(--accent)'; st.innerText = '✅ Завантажено. Не забудьте «Зберегти».';
+            } else {
+                st.style.color = '#ff6b6b'; st.innerText = data.error || 'Помилка завантаження';
+            }
+        } catch (e) {
+            st.style.color = '#ff6b6b'; st.innerText = 'Помилка з\'єднання';
+        }
     }
 
     function collect() {
@@ -298,6 +392,7 @@
             const data = await res.json().catch(() => ({}));
             if (res.ok && data.success) {
                 msg.className = 'msg ok'; msg.innerText = '✅ Збережено! Зміни з\'являться на сайті протягом хвилини.';
+                setTimeout(reloadPreview, 1500);
             } else if (res.status === 403) {
                 msg.className = 'msg err'; msg.innerText = 'Сесія недійсна — увійдіть знову.';
                 setTimeout(() => { sessionStorage.removeItem('nadiya_admin_creds'); showLogin(); }, 1500);
@@ -310,6 +405,13 @@
             btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Зберегти';
         }
     });
+
+    function reloadPreview() {
+        const f = $('sitePreview');
+        if (f) f.src = 'index.html?t=' + Date.now();
+    }
+    const previewReloadBtn = $('previewReload');
+    if (previewReloadBtn) previewReloadBtn.addEventListener('click', reloadPreview);
 
     if (creds) showPanel(); else showLogin();
 </script>
