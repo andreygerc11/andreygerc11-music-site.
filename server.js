@@ -63,6 +63,13 @@ let reviewsSha = '';
 let siteContent = {};
 let siteContentSha = '';
 
+// Записи на прийом (календар). Чутливі дані (пацієнт+лікар+час) — зберігаємо у
+// ПРИВАТНОМУ репо одним файлом appointments.json, щоб легко перевіряти зайняті слоти.
+let appointments = [];
+let appointmentsSha = '';
+// Робочі години: слоти по 60 хв, 09:00–18:00 (останній прийом 17:00). Пн–Пт.
+const SLOT_TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
 // ==========================================
 // 1. ТЕЛЕГРАМ БОТ ТА АДМІН-ФУНКЦІЇ
 // ==========================================
@@ -411,6 +418,42 @@ async function saveSiteContentToGitHub() {
             sha: sha || undefined
         }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
         siteContentSha = res.data.content.sha;
+        return true;
+    } catch (e) { return false; }
+}
+
+async function syncAppointmentsFromGitHub() {
+    if (!GITHUB_TOKEN || !PATIENTS_REPO) return;
+    try {
+        const res = await axios.get(`https://api.github.com/repos/${PATIENTS_REPO}/contents/appointments.json`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        appointments = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
+        appointmentsSha = res.data.sha;
+        console.log(`📅 Завантажено записів на прийом: ${appointments.length}`);
+    } catch (e) {
+        appointments = [];
+    }
+}
+
+async function saveAppointmentsToGitHub() {
+    if (!GITHUB_TOKEN || !PATIENTS_REPO) return false;
+    try {
+        const url = `https://api.github.com/repos/${PATIENTS_REPO}/contents/appointments.json`;
+        let sha = appointmentsSha;
+        if (!sha) {
+            try {
+                const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+                sha = getRes.data.sha;
+            } catch (e) {}
+        }
+        const contentEncoded = Buffer.from(JSON.stringify(appointments, null, 2), 'utf8').toString('base64');
+        const res = await axios.put(url, {
+            message: `Оновлення записів на прийом`,
+            content: contentEncoded,
+            sha: sha || undefined
+        }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        appointmentsSha = res.data.content.sha;
         return true;
     } catch (e) { return false; }
 }
@@ -1166,8 +1209,8 @@ function getDoctorAuth(login, password) {
     const l = (login || '').trim();
     const p = password || '';
     const doc = doctorsList.find(d => d && typeof d.login === 'string' && d.login.toLowerCase() === l.toLowerCase() && d.password === p);
-    if (doc) return { name: (doc.name || l), isAdmin: false };
-    if (isValidWifeAuth(l, p)) return { name: 'Адміністратор', isAdmin: true };
+    if (doc) return { name: (doc.name || l), login: doc.login, isAdmin: false };
+    if (isValidWifeAuth(l, p)) return { name: 'Адміністратор', login: 'admin', isAdmin: true };
     return null;
 }
 
@@ -1351,6 +1394,108 @@ app.post('/api/admin/site-content', authRateLimiter, async (req, res) => {
 });
 
 // ==========================================
+// КАЛЕНДАР ЗАПИСУ ДО ЛІКАРЯ (слоти по 60 хв, Пн–Пт 09:00–18:00)
+// ==========================================
+function publicDoctorsList() {
+    return doctorsList.map(d => ({ login: d.login, name: d.name || d.login }));
+}
+function isWeekday(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const day = d.getDay(); // 0=нд, 6=сб
+    return day >= 1 && day <= 5;
+}
+
+// Список лікарів для вибору пацієнтом (без паролів)
+app.get('/api/doctors', (req, res) => {
+    res.json(publicDoctorsList());
+});
+
+// Вільні/зайняті слоти лікаря на конкретну дату
+app.post('/api/appointments/slots', authRateLimiter, (req, res) => {
+    const { doctorLogin, date } = req.body;
+    if (!doctorLogin || !date) return res.status(400).json({ error: "Оберіть лікаря та дату" });
+    const taken = appointments
+        .filter(a => a.doctorLogin === doctorLogin && a.date === date && a.status !== 'cancelled')
+        .map(a => a.time);
+    const slots = SLOT_TIMES.map(t => ({ time: t, taken: taken.includes(t) }));
+    res.json({ date, weekday: isWeekday(date), slots });
+});
+
+// Бронювання слоту — лише зареєстрований пацієнт
+app.post('/api/appointments/book', authRateLimiter, async (req, res) => {
+    const { email, doctorLogin, date, time } = req.body;
+    if (!email || !doctorLogin || !date || !time) return res.status(400).json({ error: "Заповніть усі поля" });
+
+    const normEmail = String(email).trim().toLowerCase();
+    const user = usersDB.find(u => (u.email || '').trim().toLowerCase() === normEmail);
+    if (!user) return res.status(403).json({ error: "Записатися може лише зареєстрований пацієнт" });
+
+    const doctor = doctorsList.find(d => d.login === doctorLogin);
+    if (!doctor) return res.status(400).json({ error: "Такого лікаря немає" });
+    if (!SLOT_TIMES.includes(time)) return res.status(400).json({ error: "Некоректний час" });
+    if (!isWeekday(date)) return res.status(400).json({ error: "Прийом лише у робочі дні (Пн–Пт)" });
+
+    const slotDate = new Date(`${date}T${time}:00`);
+    if (isNaN(slotDate.getTime()) || slotDate.getTime() < Date.now()) {
+        return res.status(400).json({ error: "Оберіть майбутню дату й час" });
+    }
+
+    await syncAppointmentsFromGitHub(); // свіжий стан перед перевіркою накладок
+    const clash = appointments.find(a => a.doctorLogin === doctorLogin && a.date === date && a.time === time && a.status !== 'cancelled');
+    if (clash) return res.status(409).json({ error: "Цей час уже зайнятий, оберіть інший" });
+
+    const appt = {
+        id: Date.now(),
+        doctorLogin,
+        doctorName: doctor.name || doctorLogin,
+        patientEmail: user.email,
+        patientName: user.name || '',
+        date, time,
+        status: 'booked',
+        createdAt: new Date().toISOString()
+    };
+    appointments.push(appt);
+    const saved = await saveAppointmentsToGitHub();
+    if (!saved) return res.status(500).json({ error: "Не вдалося зберегти запис" });
+
+    await sendTelegramMessage(`📅 Новий запис на прийом\nЛікар: ${appt.doctorName}\nДата: ${date} ${time}\nПацієнт: ${user.email}`);
+    res.json({ success: true, appointment: appt });
+});
+
+// Записи конкретного пацієнта
+app.post('/api/appointments/my', authRateLimiter, (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email обов'язковий" });
+    const normEmail = String(email).trim().toLowerCase();
+    const list = appointments
+        .filter(a => (a.patientEmail || '').toLowerCase() === normEmail)
+        .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    res.json(list);
+});
+
+// Скасувати свій запис
+app.post('/api/appointments/cancel', authRateLimiter, async (req, res) => {
+    const { email, id } = req.body;
+    const normEmail = String(email || '').trim().toLowerCase();
+    const appt = appointments.find(a => a.id === id && (a.patientEmail || '').toLowerCase() === normEmail);
+    if (!appt) return res.status(404).json({ error: "Запис не знайдено" });
+    appt.status = 'cancelled';
+    await saveAppointmentsToGitHub();
+    res.json({ success: true });
+});
+
+// Записи для кабінету лікаря (свої; адмін бачить усі)
+app.post('/api/doctor/appointments', authRateLimiter, (req, res) => {
+    const { login, password } = req.body;
+    const auth = getDoctorAuth(login, password);
+    if (!auth) return res.status(403).json({ error: "Невірний логін або пароль" });
+    let list = appointments.filter(a => a.status !== 'cancelled');
+    if (!auth.isAdmin) list = list.filter(a => a.doctorLogin === auth.login);
+    list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    res.json(list);
+});
+
+// ==========================================
 // КАБІНЕТ ЛІКАРЯ (доступ мають усі лікарі — спільний пароль, як і для блогу)
 // ==========================================
 app.post('/api/doctor/patients', authRateLimiter, async (req, res) => {
@@ -1459,7 +1604,7 @@ app.post('/api/wife-blog/delete', async (req, res) => {
 // ==========================================
 const PORT = process.env.PORT || 10000;
 
-Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(), syncReviewsFromGitHub(), syncSiteContentFromGitHub()]).then(() => {
+Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(), syncReviewsFromGitHub(), syncSiteContentFromGitHub(), syncAppointmentsFromGitHub()]).then(() => {
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
 
