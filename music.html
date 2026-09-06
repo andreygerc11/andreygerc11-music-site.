@@ -111,7 +111,7 @@
         .ap-share-btn h4 { font-size: 0.7rem; margin: 0 0 2px 0; font-weight: 700; color: #fff;}
         .ap-share-btn p { font-size: 0.55rem; margin: 0; color: #888;}
         .ap-cover { width: 100%; padding: 0; background: #000; overflow: hidden; }
-        .ap-cover img { width: 100%; aspect-ratio: 1/1; object-fit: cover; filter: grayscale(80%) contrast(1.2); transition: 0.5s; }
+        .ap-cover img { width: 100%; aspect-ratio: 1/1; object-fit: cover; filter: none; transition: 0.5s; }
         .ap-info { padding: 20px 20px 10px; background: #000; }
         .ap-info h3 { font-size: 1.4rem; margin-bottom: 5px; color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;}
         .ap-info p { color: var(--accent); font-size: 0.9rem; font-weight: 600; margin: 0; text-align: left;}
@@ -281,7 +281,7 @@
                     </div>
 
                     <div class="ap-cover">
-                        <img src="avatar_main.jpg" alt="Cover" id="apCoverImg" loading="lazy" decoding="async">
+                        <img src="obkladunka.png" alt="Hertz Andriy — Of Tomorrow" id="apCoverImg" loading="lazy" decoding="async">
                     </div>
                     <div class="ap-info">
                         <h3 id="apTitle">Оберіть трек зі списку</h3>
@@ -514,7 +514,7 @@
       document.querySelectorAll('.ap-track').forEach(el => el.classList.remove('active'));
       tracklistEl.children[i].classList.add('active');
       titleEl.innerText = song.name;
-      coverImg.style.filter = 'grayscale(0%) contrast(1.2)';
+      coverImg.style.filter = 'none';
 
       audio.src = streamURL + song.fullId;
       const playPromise = audio.play();
