@@ -510,7 +510,9 @@
           if (!content || typeof content !== 'object') return;
           document.querySelectorAll('[data-cms]').forEach(el => {
               const val = content[el.getAttribute('data-cms')];
-              if (typeof val === 'string' && val.trim() !== '') el.textContent = val;
+              // Застосовуємо і порожній рядок — щоб адмін міг ПРИБРАТИ текст (порожнє = приховати).
+              // Якщо ключа немає взагалі — лишається дефолт зі сторінки.
+              if (typeof val === 'string') el.textContent = val;
           });
           // Зображення (банер, фото «Про центр» тощо)
           document.querySelectorAll('[data-cms-img]').forEach(el => {

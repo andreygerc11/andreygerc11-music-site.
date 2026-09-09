@@ -105,7 +105,9 @@
         document.querySelectorAll('[data-cms]').forEach(el => {
             const k = el.getAttribute('data-cms');
             const v = (el.textContent || '').replace(/\s+/g, ' ').trim();
-            if (v) pageContent[k] = v;
+            // Зберігаємо значення завжди, навіть порожнє — щоб можна було ПРИБРАТИ текст із сайту
+            // (порожнє = приховати; без цього очищене поле поверталося до дефолту).
+            pageContent[k] = v;
         });
         Object.assign(pageContent, editedImages);
         try {
