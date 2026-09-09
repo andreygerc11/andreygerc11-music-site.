@@ -264,7 +264,7 @@
 
         /* ===== ІНТРО-ЗАСТАВКА (ролик бігуна → логотип), грає 1 раз ===== */
         #introOverlay {
-            position: fixed; inset: 0; z-index: 100000; background: #05100e;
+            position: absolute; inset: 0; z-index: 5; background: #05100e;
             display: flex; align-items: center; justify-content: center; overflow: hidden;
         }
         #introOverlay .intro-video {
@@ -301,50 +301,6 @@
 </head>
 <body>
 
-<!-- Інтро-заставка: показуємо 1 раз за сесію -->
-<div id="introOverlay" hidden>
-    <video class="intro-video" id="introVideo" src="run2.mp4" muted playsinline preload="auto"></video>
-    <div class="intro-vignette"></div>
-    <div class="intro-glow"></div>
-    <img class="intro-logo" src="logo.png" alt="Логотип центру «Надія»">
-    <button class="intro-skip" id="introSkip" type="button">Пропустити ▸</button>
-</div>
-<script>
-(function () {
-    // Показуємо заставку лише раз за сесію (щоб не набридала при переходах/оновленні).
-    var KEY = 'nadiya_intro_shown';
-    var overlay = document.getElementById('introOverlay');
-    var seen; try { seen = sessionStorage.getItem(KEY); } catch (e) { seen = null; }
-    if (seen) { if (overlay) overlay.remove(); return; }
-    try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
-
-    var video = document.getElementById('introVideo');
-    var skip = document.getElementById('introSkip');
-    overlay.hidden = false;
-    document.body.classList.add('intro-lock');
-
-    var MORPH_AT = 3400;   // ролик грає ~3.4с, потім перетворення на логотип
-    var LOGO_HOLD = 5000;  // логотип висить 5с
-    var t1, t2, done = false;
-
-    function toLogo() { overlay.classList.add('to-logo'); t2 = setTimeout(finish, LOGO_HOLD + 1100); }
-    function finish() {
-        if (done) return; done = true;
-        overlay.classList.add('hide');
-        document.body.classList.remove('intro-lock');
-        setTimeout(function () { if (overlay) overlay.remove(); }, 1100);
-    }
-    function skipNow() { clearTimeout(t1); clearTimeout(t2); try { video.pause(); } catch (e) {} finish(); }
-
-    // Старт відео (без звуку — щоб дозволявся автозапуск)
-    try { video.play().catch(function(){}); } catch (e) {}
-    t1 = setTimeout(toLogo, MORPH_AT);
-    if (skip) skip.addEventListener('click', skipNow);
-    // Підстраховка: якщо відео так і не завантажилось — не тримаємо користувача
-    video.addEventListener('error', function () { clearTimeout(t1); toLogo(); });
-})();
-</script>
-
 <nav class="header-nav">
     <div class="nav-container">
         <a href="index.html" class="logo">Надія<span>.</span></a>
@@ -364,6 +320,38 @@
 </nav>
 
 <header class="hero">
+    <!-- Інтро-заставка в межах банера: ролик бігунів → логотип → банер. Грає при кожному завантаженні. -->
+    <div id="introOverlay">
+        <video class="intro-video" id="introVideo" src="run2.mp4" muted playsinline preload="auto"></video>
+        <div class="intro-vignette"></div>
+        <div class="intro-glow"></div>
+        <img class="intro-logo" src="logo.png" alt="Логотип центру «Надія»">
+        <button class="intro-skip" id="introSkip" type="button">Пропустити ▸</button>
+    </div>
+    <script>
+    (function () {
+        var overlay = document.getElementById('introOverlay');
+        if (!overlay) return;
+        var video = document.getElementById('introVideo');
+        var skip = document.getElementById('introSkip');
+        var MORPH_AT = 3400;   // ролик грає ~3.4с, потім перетворення на логотип
+        var LOGO_HOLD = 5000;  // логотип висить 5с
+        var t1, t2, done = false;
+
+        function toLogo() { overlay.classList.add('to-logo'); t2 = setTimeout(finish, LOGO_HOLD + 1100); }
+        function finish() {
+            if (done) return; done = true;
+            overlay.classList.add('hide');
+            setTimeout(function () { if (overlay) overlay.remove(); }, 1100);
+        }
+        function skipNow() { clearTimeout(t1); clearTimeout(t2); try { video.pause(); } catch (e) {} finish(); }
+
+        try { video.play().catch(function(){}); } catch (e) {}
+        t1 = setTimeout(toLogo, MORPH_AT);
+        if (skip) skip.addEventListener('click', skipNow);
+        video.addEventListener('error', function () { clearTimeout(t1); toLogo(); });
+    })();
+    </script>
     <img src="article_rehab.png" alt="Реабілітаційний центр Надія" class="hero-bg" data-cms-img="hero.bg">
     <div class="hero-overlay"></div>
     <div class="hero-inner" data-aos="fade-up">
