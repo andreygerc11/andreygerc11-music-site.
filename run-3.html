@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Анімація: бігун → логотип | Надія</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    :root { --teal: #0f7d7d; --glow: rgba(24,170,155,0.6); }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+        font-family: 'Montserrat', sans-serif;
+        background: radial-gradient(circle at 50% 42%, #0e211e 0%, #08090b 74%);
+        color: #eaf2ef;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        min-height: 100vh; gap: 22px; overflow: hidden;
+    }
+    .stage {
+        position: relative; width: 330px; height: 400px; border-radius: 22px; overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.07);
+        background: #05100e;
+    }
+    .stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        transition: opacity .9s ease, filter .9s ease, transform 1.1s ease; }
+    .vignette { position: absolute; inset: 0; pointer-events: none;
+        background: radial-gradient(circle at 50% 45%, transparent 55%, rgba(0,0,0,.45) 100%); }
+    .flash { position: absolute; inset: 0; pointer-events: none; opacity: 0;
+        background: radial-gradient(circle at 50% 50%, var(--glow) 0%, transparent 62%); }
+    .logo { position: absolute; inset: 0; margin: auto; width: 74%; height: 74%; object-fit: contain;
+        opacity: 0; transform: scale(.8) rotate(-6deg); transform-origin: 50% 50%;
+        filter: drop-shadow(0 6px 26px rgba(0,0,0,.6));
+        transition: opacity 1s ease, transform 1.15s cubic-bezier(.22,.9,.3,1); }
+
+    /* Стан після переходу */
+    body.morph .stage video { opacity: 0; filter: blur(7px) brightness(1.4); transform: scale(1.14); }
+    body.morph .flash { animation: flash 1.1s ease-out forwards; }
+    body.morph .logo { opacity: 1; transform: scale(1) rotate(0); }
+
+    .caption { text-align: center; }
+    .wordmark { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 2.5rem; letter-spacing: 2px;
+        opacity: 0; transform: translateY(12px); transition: opacity .8s ease .35s, transform .8s ease .35s; }
+    .wordmark span { color: var(--teal); }
+    .tagline { font-size: .72rem; letter-spacing: 4px; text-transform: uppercase; color: #6fb9b0;
+        opacity: 0; transition: opacity .8s ease .6s; }
+    body.morph .wordmark { opacity: 1; transform: translateY(0); }
+    body.morph .tagline { opacity: 1; }
+
+    .replay { background: transparent; border: 1px solid var(--teal); color: #9fe4dc;
+        font-family: inherit; font-weight: 700; font-size: .8rem; padding: 10px 22px; border-radius: 30px;
+        cursor: pointer; transition: .25s; }
+    .replay:hover { background: var(--teal); color: #04140f; }
+
+    @keyframes flash { 0% { opacity: 0; } 35% { opacity: .95; } 100% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+    <div class="stage">
+        <video id="vid" src="run3.mp4" muted playsinline autoplay preload="auto"></video>
+        <div class="vignette"></div>
+        <div class="flash"></div>
+        <img class="logo" src="logo.png" alt="Логотип Надія">
+    </div>
+
+    <div class="caption">
+        <div class="wordmark">Наді<span>я</span></div>
+        <div class="tagline">Реабілітаційний центр</div>
+    </div>
+    <button class="replay" onclick="play()">↻ Відтворити знову</button>
+
+<script>
+    const MORPH_AT = 3400;   // коли бігун перетворюється на логотип (мс)
+    let timer = null;
+    const vid = document.getElementById('vid');
+
+    function play() {
+        clearTimeout(timer);
+        document.body.classList.remove('morph');
+        try { vid.currentTime = 0; vid.play().catch(()=>{}); } catch(e){}
+        // перехід за таймером (не залежить від довжини відео)
+        timer = setTimeout(() => document.body.classList.add('morph'), MORPH_AT);
+    }
+    window.addEventListener('load', play);
+</script>
+</body>
+</html>
