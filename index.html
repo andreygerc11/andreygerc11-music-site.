@@ -37,7 +37,7 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; overflow-x: hidden; }
 
         body {
             font-family: 'Montserrat', sans-serif;
@@ -236,7 +236,10 @@
             .contacts-wrap { grid-template-columns: 1fr; }
         }
         @media (max-width: 768px) {
-            .nav-toggle { display: block; }
+            /* Бургер закріплюємо в кутку шапки (fixed-nav), щоб жодне переповнення
+               не могло зсунути його вправо чи сховати за краєм екрана. */
+            .nav-container { position: relative; }
+            .nav-toggle { display: block; position: absolute; right: 12px; top: 10px; z-index: 3; padding: 6px 10px; }
             .nav-links {
                 display: none;
                 flex-direction: column;
