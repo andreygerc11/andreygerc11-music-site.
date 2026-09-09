@@ -229,8 +229,9 @@
                 <button class="btn-outline" id="connectDriveBtn" style="margin-bottom: 20px;"><i class="fab fa-google-drive" style="color: #34a853;"></i> Підключити Google Диск</button>
                 <div id="uploadDocRow" style="display:none; margin-bottom: 20px;">
                     <div class="form-group">
-                        <label>Завантажити документ (фото або PDF)</label>
-                        <input type="file" id="docFileInput" accept="image/*,application/pdf">
+                        <label>Завантажити документи (фото або PDF — можна кілька одразу)</label>
+                        <input type="file" id="docFileInput" accept="image/*,application/pdf" multiple>
+                        <small style="display:block; color: var(--text-muted); margin-top: 6px; font-size: 0.8rem;">Можна вибрати кілька файлів чи фото одразу — з памʼяті телефона, галереї або Google Фото.</small>
                     </div>
                     <button class="btn-action" id="uploadDocBtn"><i class="fas fa-upload"></i> Завантажити на Диск</button>
                     <div id="uploadStatus" style="margin-top: 10px; font-size: 0.85rem; font-weight: 700;"></div>
@@ -530,59 +531,73 @@
             client.requestAccessToken();
         });
 
+        // Завантаження ОДНОГО файлу на Google Диск + запис у профіль. Повертає true/false.
+        async function uploadOneDocument(file) {
+            const metadata = { name: file.name, parents: [driveFolderId] };
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', file);
+
+            const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,mimeType', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + driveAccessToken },
+                body: form
+            });
+            const uploadData = await uploadRes.json();
+            if (!uploadData.id) return false;
+
+            // Надаємо перегляд лікарю на цей конкретний файл (лише для нього, не для всього Диска).
+            try {
+                await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: 'reader', type: 'user', emailAddress: DOCTOR_SHARE_EMAIL })
+                });
+            } catch (shareErr) { /* документ усе одно збережеться, поділимось пізніше вручну за потреби */ }
+
+            await fetch(`${API}/api/patient/documents`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: currentUser.email,
+                    name: file.name,
+                    driveFileId: uploadData.id,
+                    webViewLink: uploadData.webViewLink,
+                    mimeType: uploadData.mimeType
+                })
+            });
+            return true;
+        }
+
         document.getElementById('uploadDocBtn').addEventListener('click', async function() {
             const fileInput = document.getElementById('docFileInput');
             const statusEl = document.getElementById('uploadStatus');
-            const file = fileInput.files[0];
-            if (!file) { statusEl.style.color = '#ff4d4d'; statusEl.innerText = 'Оберіть файл'; return; }
+            const files = Array.from(fileInput.files || []);
+            if (files.length === 0) { statusEl.style.color = '#ff4d4d'; statusEl.innerText = 'Оберіть файл (можна кілька)'; return; }
             if (!driveAccessToken || !driveFolderId) { statusEl.style.color = '#ff4d4d'; statusEl.innerText = 'Спочатку підключіть Google Диск'; return; }
 
             const btn = this;
-            btn.disabled = true; statusEl.style.color = 'var(--text-muted)'; statusEl.innerText = 'Завантаження на Диск...';
-
-            try {
-                const metadata = { name: file.name, parents: [driveFolderId] };
-                const form = new FormData();
-                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-                form.append('file', file);
-
-                const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,mimeType', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + driveAccessToken },
-                    body: form
-                });
-                const uploadData = await uploadRes.json();
-                if (!uploadData.id) throw new Error();
-
-                // Надаємо перегляд лікарю на цей конкретний файл (лише для нього, не для всього Диска).
+            btn.disabled = true;
+            let ok = 0; const failed = [];
+            // Завантажуємо файли по черзі — це надійніше на мобільних мережах.
+            for (let i = 0; i < files.length; i++) {
+                statusEl.style.color = 'var(--text-muted)';
+                statusEl.innerText = `Завантаження ${i + 1} із ${files.length}: ${files[i].name}...`;
                 try {
-                    await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions`, {
-                        method: 'POST',
-                        headers: { 'Authorization': 'Bearer ' + driveAccessToken, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ role: 'reader', type: 'user', emailAddress: DOCTOR_SHARE_EMAIL })
-                    });
-                } catch (shareErr) { /* документ усе одно збережеться, поділимось пізніше вручну за потреби */ }
-
-                await fetch(`${API}/api/patient/documents`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: currentUser.email,
-                        name: file.name,
-                        driveFileId: uploadData.id,
-                        webViewLink: uploadData.webViewLink,
-                        mimeType: uploadData.mimeType
-                    })
-                });
-
-                statusEl.style.color = '#4CAF50'; statusEl.innerText = '✅ Документ завантажено';
-                fileInput.value = '';
-                fetchPatientProfile();
-            } catch (e) {
-                statusEl.style.color = '#ff4d4d'; statusEl.innerText = '❌ Помилка завантаження';
-            } finally {
-                btn.disabled = false;
+                    if (await uploadOneDocument(files[i])) ok++; else failed.push(files[i].name);
+                } catch (e) { failed.push(files[i].name); }
             }
+
+            if (failed.length === 0) {
+                statusEl.style.color = '#4CAF50';
+                statusEl.innerText = files.length === 1 ? '✅ Документ завантажено' : `✅ Завантажено файлів: ${ok}`;
+            } else {
+                statusEl.style.color = '#ff4d4d';
+                statusEl.innerText = `Завантажено ${ok} із ${files.length}. Не вдалося: ${failed.join(', ')}`;
+            }
+            fileInput.value = '';
+            fetchPatientProfile();
+            btn.disabled = false;
         });
 
         document.getElementById('submitReviewBtn').addEventListener('click', async function() {
