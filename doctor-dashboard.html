@@ -594,7 +594,10 @@
                     @media print { body { padding: 10px; } }
                 </style></head><body>
                     <div class="header">
-                        <div><h1>Реабілітаційний центр «Надія»</h1><div style="font-size:0.8rem;">ФОП Герц Андрій Костянтинович</div></div>
+                        <div style="display:flex; align-items:center; gap:14px;">
+                            <img src="${location.origin}/logo.png" alt="Надія" style="height:58px; width:auto;">
+                            <div><h1>Реабілітаційний центр «Надія»</h1><div style="font-size:0.8rem;">ФОП Герц Андрій Костянтинович</div></div>
+                        </div>
                         <div class="right">КАРТКА КОНСУЛЬТАЦІЇ<br>Дата: ${formatDate(c.createdAt)}</div>
                     </div>
                     <h2 class="title">Картка консультації пацієнта</h2>
@@ -610,10 +613,7 @@
 
                     <div class="sign-row">
                         <div>Підпис лікаря</div>
-                        <div>Підпис пацієнта</div>
                     </div>
-
-                    <p style="font-size:0.72rem; color:#444; margin-top:30px;">Цей документ сформований центром «Надія» на основі даних консультації і не є офіційною формою первинної облікової документації МОЗ України.</p>
                 </body></html>
             `);
             win.document.close();
