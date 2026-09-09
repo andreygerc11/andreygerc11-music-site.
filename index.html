@@ -70,6 +70,8 @@
         .auth-btn-nav { border: 1px solid var(--accent); padding: 6px 18px; border-radius: 30px; color: #fff !important; }
         .auth-btn-nav:hover { background: var(--accent); color: #04140f !important; }
         .btn-book-nav { background: var(--accent); color: #04140f !important; padding: 8px 20px; border-radius: 30px; font-weight: 900 !important; }
+        /* Кнопка-бургер (видима лише на мобільному) */
+        .nav-toggle { display: none; background: none; border: none; color: #fff; font-size: 1.6rem; line-height: 1; cursor: pointer; padding: 4px 8px; }
         .btn-book-nav:hover { background: #fff; }
 
         /* ==== HERO ==== */
@@ -234,7 +236,19 @@
             .contacts-wrap { grid-template-columns: 1fr; }
         }
         @media (max-width: 768px) {
-            .nav-links { display: none; }
+            .nav-toggle { display: block; }
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+                gap: 2px;
+                margin-top: 12px;
+            }
+            .nav-links.open { display: flex; }
+            .nav-links li { width: 100%; }
+            .nav-links a { display: block; padding: 13px 8px; font-size: 0.95rem; border-radius: 10px; }
+            .nav-links .auth-btn-nav, .nav-links .btn-book-nav { text-align: center; }
             .about-wrap { grid-template-columns: 1fr; }
             .about-stats { grid-template-columns: 1fr; gap: 15px; }
             .services-grid { grid-template-columns: 1fr; }
@@ -249,7 +263,8 @@
 <nav class="header-nav">
     <div class="nav-container">
         <a href="index.html" class="logo">Надія<span>.</span></a>
-        <ul class="nav-links">
+        <button class="nav-toggle" id="navToggle" aria-label="Меню" aria-expanded="false"><i class="fas fa-bars"></i></button>
+        <ul class="nav-links" id="navLinks">
             <li><a href="#about">Про центр</a></li>
             <li><a href="#services">Послуги</a></li>
             <li><a href="#team">Лікарі</a></li>
@@ -489,6 +504,22 @@
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
   AOS.init({ duration: 900, once: true });
+
+  // Мобільне меню (бургер): показуємо/ховаємо навігацію, зокрема кнопку входу
+  (function () {
+      const toggle = document.getElementById('navToggle');
+      const links = document.getElementById('navLinks');
+      if (!toggle || !links) return;
+      toggle.addEventListener('click', () => {
+          const open = links.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      // Закриваємо меню після кліку по пункту
+      links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+          links.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+      }));
+  })();
 
   // Показуємо "Кабінет" замість "Увійти", якщо користувач уже авторизований
   let currentUser = null;
