@@ -524,7 +524,8 @@
                         </div>
 
                         <h2 class="post-title">${(post.title || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}</h2>
-                        
+                        ${post.author ? `<div style="color:var(--accent); font-size:0.82rem; font-weight:700; margin-bottom:6px;"><i class="fas fa-user-md"></i> ${String(post.author).replace(/</g,'&lt;')}</div>` : ''}
+
                         <div class="post-text-wrapper" id="wrapper-${post.id}">
                             <p class="post-excerpt">${cleanText}</p>
                         </div>

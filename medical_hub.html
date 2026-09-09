@@ -224,7 +224,6 @@
             <li><a href="login.html" id="authBtn" class="auth-btn-nav"><i class="fas fa-sign-in-alt"></i> Увійти</a></li>
             <li><a href="profile.html" id="userProfileBtn" class="auth-btn-nav" style="display:none;"><i class="fas fa-user"></i> Кабінет</a></li>
             <li><a href="doctor-dashboard.html" class="btn-home btn-doctor-login"><i class="fas fa-user-md"></i> Кабінет лікаря</a></li>
-            <li><button id="doctorLoginBtn" class="btn-home btn-doctor-login" onclick="openAuthorAuth()"><i class="fas fa-pen"></i> Редагувати блог</button></li>
             <li><button id="doctorLogoutBtn" class="btn-home btn-doctor-logout" style="display:none;" onclick="logoutAuthor()"><i class="fas fa-sign-out-alt"></i> Вийти</button></li>
         </ul>
     </div>
@@ -539,10 +538,11 @@
             if (post.isWifeTip || post.category === 'rehab_wife') {
                 cardClass += ' author-marina';
                 badgeHtml = '<span class="rehab-badge" style="background: gold; color: #000;">Порада Реабілітолога</span>';
+                const tipAuthor = post.author ? String(post.author).replace(/</g, '&lt;') : 'Фахівець центру «Надія»';
                 authorHtml = `
                     <div class="author-info">
                         <i class="fas fa-user-md"></i>
-                        <span>Автор: <b>Герц Марина Віталіївна</b>, лікар-реабілітолог</span>
+                        <span>Автор: <b>${tipAuthor}</b></span>
                     </div>
                 `;
 

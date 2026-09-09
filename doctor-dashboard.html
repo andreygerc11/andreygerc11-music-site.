@@ -153,6 +153,7 @@
                 <button class="view-tab active" id="tabPatients" onclick="switchTab('patients')">Пацієнти</button>
                 <button class="view-tab" id="tabSchedule" onclick="switchTab('schedule')">Розклад</button>
                 <button class="view-tab" id="tabReviews" onclick="switchTab('reviews')">Відгуки</button>
+                <button class="view-tab" id="tabBlog" onclick="switchTab('blog')">Блог / Поради</button>
             </div>
 
             <div id="patientsPane">
@@ -173,6 +174,29 @@
 
             <div id="reviewsPane" style="display:none;">
                 <div id="reviewsList"><div class="empty-state">Завантаження...</div></div>
+            </div>
+
+            <div id="blogPane" style="display:none;">
+                <div style="background:var(--card-bg,rgba(20,25,23,0.6)); border:1px solid var(--border-color); border-radius:14px; padding:20px; margin-bottom:24px;">
+                    <h3 style="margin-bottom:6px;">Нова публікація</h3>
+                    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:16px;">Публікуватиметься під вашим іменем: <b id="blogAuthorName" style="color:var(--accent);"></b></p>
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <input type="text" id="blogTitle" placeholder="Заголовок" style="width:100%; padding:12px 14px; background:var(--bg-input,#0c1512); border:1px solid var(--border-color); color:#fff; border-radius:10px; font-family:inherit; font-size:0.95rem; outline:none;">
+                        <select id="blogCategory" style="width:100%; padding:12px 14px; background:var(--bg-input,#0c1512); border:1px solid var(--border-color); color:#fff; border-radius:10px; font-family:inherit; font-size:0.95rem; outline:none;">
+                            <option value="rehab_wife">Порада (Медичний хаб)</option>
+                            <option value="rehab">Блог: Реабілітація</option>
+                            <option value="psychology">Блог: Психологія</option>
+                            <option value="news">Блог: Новини</option>
+                        </select>
+                        <textarea id="blogContent" placeholder="Текст публікації..." style="width:100%; min-height:160px; padding:12px 14px; background:var(--bg-input,#0c1512); border:1px solid var(--border-color); color:#fff; border-radius:10px; font-family:inherit; font-size:0.95rem; outline:none; resize:vertical;"></textarea>
+                        <div style="display:flex; align-items:center; gap:14px;">
+                            <button id="blogPublishBtn" class="view-tab active" style="cursor:pointer;" onclick="publishArticle()">Опублікувати</button>
+                            <span id="blogStatus" style="font-size:0.85rem; font-weight:700;"></span>
+                        </div>
+                    </div>
+                </div>
+                <h3 style="margin-bottom:12px;">Публікації (можна видаляти)</h3>
+                <div id="blogList"><div class="empty-state">Завантаження...</div></div>
             </div>
         </div>
 
@@ -233,11 +257,78 @@
             document.getElementById('tabPatients').classList.toggle('active', tab === 'patients');
             document.getElementById('tabSchedule').classList.toggle('active', tab === 'schedule');
             document.getElementById('tabReviews').classList.toggle('active', tab === 'reviews');
+            document.getElementById('tabBlog').classList.toggle('active', tab === 'blog');
             document.getElementById('patientsPane').style.display = tab === 'patients' ? 'block' : 'none';
             document.getElementById('schedulePane').style.display = tab === 'schedule' ? 'block' : 'none';
             document.getElementById('reviewsPane').style.display = tab === 'reviews' ? 'block' : 'none';
+            document.getElementById('blogPane').style.display = tab === 'blog' ? 'block' : 'none';
             if (tab === 'reviews') loadReviews();
             if (tab === 'schedule') loadSchedule();
+            if (tab === 'blog') loadBlogEditor();
+        }
+
+        const BLOG_CAT_LABELS = { rehab_wife: 'Порада (медхаб)', rehab: 'Реабілітація', psychology: 'Психологія', news: 'Новини' };
+
+        function loadBlogEditor() {
+            document.getElementById('blogAuthorName').innerText = (doctorCreds && doctorCreds.doctorName) || 'Лікар';
+            loadBlogPosts();
+        }
+
+        async function publishArticle() {
+            const btn = document.getElementById('blogPublishBtn');
+            const st = document.getElementById('blogStatus');
+            const title = document.getElementById('blogTitle').value.trim();
+            const content = document.getElementById('blogContent').value.trim();
+            const category = document.getElementById('blogCategory').value;
+            if (!title || !content) { st.style.color = '#ff6b6b'; st.innerText = 'Заповніть заголовок і текст'; return; }
+            btn.disabled = true; st.style.color = 'var(--text-muted)'; st.innerText = 'Публікація...';
+            try {
+                const res = await doctorApi('/api/wife-blog', { title, content, category });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    document.getElementById('blogTitle').value = '';
+                    document.getElementById('blogContent').value = '';
+                    st.style.color = 'var(--accent)'; st.innerText = '✅ Опубліковано під вашим іменем!';
+                    loadBlogPosts();
+                } else if (res.status === 403) {
+                    st.style.color = '#ff6b6b'; st.innerText = 'Сесія недійсна — увійдіть знову.';
+                } else {
+                    st.style.color = '#ff6b6b'; st.innerText = data.error || 'Не вдалося опублікувати';
+                }
+            } catch (e) { st.style.color = '#ff6b6b'; st.innerText = 'Помилка з\'єднання'; }
+            finally { btn.disabled = false; }
+        }
+
+        async function loadBlogPosts() {
+            const list = document.getElementById('blogList');
+            list.innerHTML = '<div class="empty-state">Завантаження...</div>';
+            try {
+                const res = await fetch(`${API}/api/blog?t=` + Date.now());
+                const posts = await res.json();
+                // Показуємо все, що редаговане лікарями (мають автора або це поради медхабу), найновіші зверху
+                const editable = (posts || []).filter(p => p.author || p.isWifeTip).sort((a, b) => (b.id || 0) - (a.id || 0));
+                if (editable.length === 0) { list.innerHTML = '<div class="empty-state">Публікацій лікарів ще немає. Створіть першу вище.</div>'; return; }
+                list.innerHTML = editable.map(p => `
+                    <div style="background:var(--bg-input,#0c1512); border:1px solid var(--border-color); border-radius:12px; padding:14px 16px; margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+                            <div style="flex:1;">
+                                <span style="font-size:0.72rem; font-weight:800; color:var(--accent); text-transform:uppercase;">${escapeHtml(BLOG_CAT_LABELS[p.category] || p.category || '')}</span>
+                                <div style="font-weight:700; margin:4px 0;">${escapeHtml((p.title || '').replace(/<[^>]*>/g, ' '))}</div>
+                                <div style="color:var(--text-muted); font-size:0.78rem;">${p.author ? '✍️ ' + escapeHtml(p.author) + ' · ' : ''}${escapeHtml(p.date || '')}</div>
+                            </div>
+                            <button onclick="deleteBlogPost(${p.id})" style="background:transparent; border:1px solid #ff6b6b55; color:#ff6b6b; border-radius:8px; padding:6px 10px; font-size:0.78rem; font-weight:700; cursor:pointer; white-space:nowrap;">Видалити</button>
+                        </div>
+                    </div>`).join('');
+            } catch (e) { list.innerHTML = '<div class="empty-state">Помилка завантаження.</div>'; }
+        }
+
+        async function deleteBlogPost(id) {
+            if (!confirm('Видалити цю публікацію назавжди?')) return;
+            try {
+                const res = await doctorApi('/api/wife-blog/delete', { id });
+                if (res.ok) loadBlogPosts();
+                else alert('Не вдалося видалити (перевірте вхід).');
+            } catch (e) { alert('Помилка сервера.'); }
         }
 
         async function loadSchedule() {
