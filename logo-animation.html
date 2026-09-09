@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Анімація логотипа | Надія</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    :root { --teal: #0f7d7d; --teal-glow: rgba(20,150,150,0.55); }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+        font-family: 'Montserrat', sans-serif;
+        background: radial-gradient(circle at center, #0e1e1c 0%, #08090b 70%);
+        color: #eaf2ef;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        min-height: 100vh; gap: 26px; overflow: hidden;
+    }
+
+    .stage { position: relative; width: 320px; height: 320px; }
+    .stage svg, .stage img { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    /* Ґрунт */
+    .ground { transform-origin: center; }
+    .ground line { stroke: var(--teal); stroke-width: 3; stroke-linecap: round; opacity: 0;
+        animation: groundIn .5s ease forwards; }
+
+    /* Стебло/гілки — «дерево», що проростає (промальовування) */
+    .sprout path {
+        fill: none; stroke: var(--teal); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round;
+        filter: drop-shadow(0 0 6px var(--teal-glow));
+    }
+    .trunk { stroke-dasharray: 240; stroke-dashoffset: 240; animation: draw 1.2s .35s ease forwards; }
+    .branchL { stroke-dasharray: 120; stroke-dashoffset: 120; animation: draw .7s 1.1s ease forwards; }
+    .branchR { stroke-dasharray: 120; stroke-dashoffset: 120; animation: draw .7s 1.25s ease forwards; }
+
+    /* Листочки, що розпускаються */
+    .leaf { fill: var(--teal); transform-origin: center; transform: scale(0);
+        filter: drop-shadow(0 0 5px var(--teal-glow)); }
+    .leaf.l1 { animation: pop .5s 1.5s cubic-bezier(.2,1.4,.4,1) forwards; }
+    .leaf.l2 { animation: pop .5s 1.7s cubic-bezier(.2,1.4,.4,1) forwards; }
+    .leaf.l3 { animation: pop .5s 1.9s cubic-bezier(.2,1.4,.4,1) forwards; }
+
+    /* Проросток зникає, коли зʼявляється справжній логотип */
+    .sprout, .leaves { animation: fadeSprout .7s 2.5s ease forwards; }
+
+    /* Справжній логотип: проявляється знизу вгору + легке підростання */
+    .logo {
+        clip-path: inset(100% 0 0 0);
+        transform: scale(.9); transform-origin: 50% 100%;
+        opacity: 0;
+        animation: reveal 1.2s 2.35s cubic-bezier(.22,.9,.3,1) forwards,
+                   settle 1.6s 3.55s ease-in-out forwards;
+        filter: drop-shadow(0 6px 26px rgba(0,0,0,.5));
+    }
+
+    /* Напис */
+    .wordmark {
+        font-family: 'Playfair Display', serif; font-weight: 900; font-size: 2.6rem;
+        letter-spacing: 2px; opacity: 0; transform: translateY(14px);
+        animation: wordIn .8s 3.5s ease forwards;
+    }
+    .wordmark span { color: var(--teal); }
+    .tagline {
+        font-size: .72rem; letter-spacing: 4px; text-transform: uppercase; color: #6fb9b0;
+        opacity: 0; animation: wordIn .8s 3.9s ease forwards;
+    }
+
+    .replay {
+        margin-top: 6px; background: transparent; border: 1px solid var(--teal);
+        color: #9fe4dc; font-family: inherit; font-weight: 700; font-size: .8rem;
+        padding: 10px 22px; border-radius: 30px; cursor: pointer; transition: .25s;
+        opacity: 0; animation: wordIn .6s 4.3s ease forwards;
+    }
+    .replay:hover { background: var(--teal); color: #04140f; }
+
+    @keyframes groundIn { to { opacity: .5; } }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    @keyframes pop { to { transform: scale(1); } }
+    @keyframes fadeSprout { to { opacity: 0; } }
+    @keyframes reveal { 0% { clip-path: inset(100% 0 0 0); opacity: 0; transform: scale(.9); }
+                        15% { opacity: 1; } 100% { clip-path: inset(0 0 0 0); opacity: 1; transform: scale(1); } }
+    @keyframes settle { 0%,100% { transform: scale(1); } 40% { transform: scale(1.04); } }
+    @keyframes wordIn { to { opacity: 1; transform: translateY(0); } }
+
+    /* Перезапуск: клас .run вмикає анімацію заново */
+    body:not(.run) .stage *, body:not(.run) .wordmark, body:not(.run) .tagline, body:not(.run) .replay { animation: none; }
+</style>
+</head>
+<body class="run">
+
+    <div class="stage">
+        <!-- Ґрунт + проросток (моя векторна графіка) -->
+        <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+            <g class="ground"><line x1="70" y1="286" x2="230" y2="286"/></g>
+            <g class="sprout">
+                <path class="trunk" d="M150,288 C150,240 138,205 150,165 C156,145 150,120 150,96"/>
+                <path class="branchL" d="M150,175 C126,158 108,150 96,120"/>
+                <path class="branchR" d="M150,150 C176,138 196,132 206,104"/>
+            </g>
+            <g class="leaves">
+                <g transform="translate(92,112) rotate(-42)"><path class="leaf l1" d="M0,-14 Q10,-2 0,14 Q-10,-2 0,-14 Z"/></g>
+                <g transform="translate(210,98) rotate(42)"><path class="leaf l2" d="M0,-14 Q10,-2 0,14 Q-10,-2 0,-14 Z"/></g>
+                <g transform="translate(150,84) rotate(0)"><path class="leaf l3" d="M0,-12 Q8,-2 0,12 Q-8,-2 0,-12 Z"/></g>
+            </g>
+        </svg>
+        <!-- Справжній логотип -->
+        <img class="logo" src="logo.png" alt="Логотип Надія">
+    </div>
+
+    <div class="wordmark">Наді<span>я</span></div>
+    <div class="tagline">Реабілітаційний центр</div>
+    <button class="replay" onclick="restart()">↻ Відтворити знову</button>
+
+<script>
+    function restart() {
+        const b = document.body;
+        b.classList.remove('run');
+        // форсуємо reflow, щоб анімації почалися спочатку
+        void b.offsetWidth;
+        b.classList.add('run');
+    }
+</script>
+</body>
+</html>
