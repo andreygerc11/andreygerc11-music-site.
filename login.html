@@ -135,11 +135,12 @@
     <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
     
     <div class="logo">ВХІД У <span>КАБІНЕТ</span></div>
-    
+    <p style="text-align:center; color:#aaa; font-size:0.82rem; margin:-18px 0 22px;">Єдиний вхід для пацієнтів і лікарів</p>
+
     <form id="loginForm">
         <div class="input-group">
-            <label>Електронна пошта</label>
-            <input type="email" id="email" placeholder="example@mail.com" required>
+            <label>Email або логін</label>
+            <input type="text" id="email" placeholder="email (пацієнт) або логін (лікар)" required autocomplete="username">
         </div>
         <div class="input-group">
             <label>Пароль</label>
@@ -184,10 +185,17 @@
                 body: JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('password').value })
             });
             const data = await res.json();
-            if (data.success) {
-                localStorage.setItem('hz_user', JSON.stringify({ email: document.getElementById('email').value, status: data.status }));
+            const idVal = document.getElementById('email').value.trim();
+            const passVal = document.getElementById('password').value;
+            if (data.success && (data.role === 'doctor' || data.role === 'admin')) {
+                // Лікар/адмін → кабінет лікаря
+                sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify({ login: idVal, password: passVal, doctorName: data.doctorName || '' }));
+                window.location.href = 'doctor-dashboard.html';
+            } else if (data.success) {
+                // Пацієнт → особистий кабінет
+                localStorage.setItem('hz_user', JSON.stringify({ email: idVal, name: (data.user && data.user.name) || '', status: (data.user && data.user.status) || 'free' }));
                 window.location.href = 'profile.html';
-            } else { alert(data.error); btn.innerText = 'УВІЙТИ'; btn.disabled = false; }
+            } else { alert(data.error || 'Невірний логін або пароль'); btn.innerText = 'УВІЙТИ'; btn.disabled = false; }
         } catch (err) { alert('Помилка сервера. Спробуйте пізніше.'); btn.innerText = 'УВІЙТИ'; btn.disabled = false; }
     });
 

@@ -760,37 +760,67 @@ app.post('/api/gemini/image', async (req, res) => {
 
 app.post('/api/register', authRateLimiter, async (req, res) => {
     try {
-        const { email, password, name } = req.body;
-        if (!email || !password) return res.json({ error: "Всі поля обов'язкові" });
-        
-        if (usersDB.find(u => u.email === email)) {
+        const { email, password, name, fullName, birthDate, phone, website, elapsedMs, human } = req.body;
+
+        // --- Захист від ботів/спаму ---
+        if (website) return res.json({ error: "Реєстрацію відхилено." });                    // honeypot заповнений = бот
+        if (human !== true) return res.json({ error: "Підтвердіть, що ви не робот." });        // чекбокс «я не робот»
+        if (typeof elapsedMs === 'number' && elapsedMs < 2500) {                                // форму заповнено миттєво = бот
+            return res.json({ error: "Занадто швидко. Заповніть форму й спробуйте ще раз." });
+        }
+
+        // --- Валідація ---
+        const em = String(email || '').trim().toLowerCase();
+        const displayName = String(fullName || name || '').trim();
+        if (!em || !password || !displayName) return res.json({ error: "Заповніть ПІБ, email і пароль." });
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return res.json({ error: "Некоректний email." });
+        if (String(password).length < 6) return res.json({ error: "Пароль має бути мінімум 6 символів." });
+        if (phone && !/^[+()\d\s-]{7,20}$/.test(String(phone))) return res.json({ error: "Некоректний номер телефону." });
+        if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(String(birthDate))) return res.json({ error: "Некоректна дата народження." });
+        if (usersDB.find(u => (u.email || '').toLowerCase() === em)) {
             return res.json({ error: "Користувач з таким email вже існує" });
         }
-        
+
+        // Публічний users.json тримаємо мінімальним (без телефону/дати — це PII).
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = { email, password: hashedPassword, name, status: "free", clips_left: 1 };
+        const newUser = { email: em, password: hashedPassword, name: displayName.slice(0, 150), status: "free", clips_left: 1, createdAt: new Date().toISOString() };
         usersDB.push(newUser);
         await saveUsersToGitHub();
+
+        // ПІБ/телефон/дату народження зберігаємо у ПРИВАТНІЙ медкартці (не в публічному репо).
+        try {
+            let rec = await getPatientRecord(em);
+            if (!rec) rec = { email: em, fullName: '', phone: '', birthDate: '', medicalHistory: '', consultations: [] };
+            rec.fullName = displayName.slice(0, 150);
+            if (phone) rec.phone = String(phone).trim().slice(0, 20);
+            if (birthDate) rec.birthDate = String(birthDate).slice(0, 10);
+            await savePatientRecord(em, rec);
+        } catch (e) { /* профіль можна дозаповнити пізніше в кабінеті */ }
+
         res.json({ success: true, user: sanitizeUser(newUser) });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Універсальний вхід: лікар / адмін / пацієнт. Повертає role для маршрутизації.
 app.post('/api/login', authRateLimiter, async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password } = req.body; // "email" — це або логін лікаря, або email пацієнта
+        const id = String(email || '').trim();
 
-        // Перевірка, чи це адмін
-        if ((email === 'admin@dev.com' || email === 'administration@dev.com') && ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
-            return res.json({ success: true, user: { email, name: "Адміністратор", status: "premium" } });
+        // 1) Лікар або адміністратор (логіни з DOCTORS_JSON / administration@dev.com)
+        const dAuth = getDoctorAuth(id, password);
+        if (dAuth) {
+            return res.json({ success: true, role: dAuth.isAdmin ? 'admin' : 'doctor', doctorName: dAuth.name, login: id });
         }
 
-        const user = usersDB.find(u => u.email === email);
+        // 2) Пацієнт (email + пароль)
+        const user = usersDB.find(u => (u.email || '').toLowerCase() === id.toLowerCase());
         const passwordMatches = user && user.password && await bcrypt.compare(password || '', user.password);
         if (passwordMatches) {
-            res.json({ success: true, user: sanitizeUser(user) });
-        } else {
-            res.json({ error: "Невірний email або пароль" });
+            return res.json({ success: true, role: 'patient', user: sanitizeUser(user) });
         }
+
+        res.json({ error: "Невірний логін або пароль" });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
