@@ -136,20 +136,37 @@
     
     <div class="logo">НАДІ<span>Я</span></div>
     
-    <form id="regForm">
+    <form id="regForm" autocomplete="on">
         <div class="input-group">
-            <label>Ваше ім'я</label>
-            <input type="text" id="regName" placeholder="Як вас звати?" required>
+            <label>Прізвище, ім'я, по батькові</label>
+            <input type="text" id="regName" placeholder="Іваненко Іван Іванович" required autocomplete="name">
+        </div>
+        <div class="input-group">
+            <label>Дата народження</label>
+            <input type="date" id="regBirth" required>
+        </div>
+        <div class="input-group">
+            <label>Номер телефону</label>
+            <input type="tel" id="regPhone" placeholder="+380..." required autocomplete="tel">
         </div>
         <div class="input-group">
             <label>Електронна пошта</label>
-            <input type="email" id="regEmail" placeholder="example@mail.com" required>
+            <input type="email" id="regEmail" placeholder="example@mail.com" required autocomplete="email">
         </div>
         <div class="input-group">
-            <label>Пароль</label>
-            <input type="password" id="regPass" placeholder="••••••••" required>
+            <label>Пароль (мінімум 6 символів)</label>
+            <input type="password" id="regPass" placeholder="••••••••" minlength="6" required autocomplete="new-password">
         </div>
-        
+
+        <!-- honeypot: приховане поле, яке заповнюють лише боти -->
+        <input type="text" id="regWebsite" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"
+               style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
+
+        <label style="display:flex; align-items:center; gap:10px; margin:6px 0 18px; color:#ccc; font-size:0.9rem; cursor:pointer;">
+            <input type="checkbox" id="regHuman" required style="width:18px; height:18px; accent-color:var(--accent);">
+            Я не робот
+        </label>
+
         <button type="submit" class="btn-submit" id="submitBtn">Створити акаунт</button>
     </form>
 
@@ -169,27 +186,39 @@
 <script>
     const form = document.getElementById('regForm');
     const btn = document.getElementById('submitBtn');
+    const pageLoadedAt = Date.now(); // для перевірки «занадто швидко» (бот)
 
     // Звичайна реєстрація
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        const fullName = document.getElementById('regName').value.trim();
+        const birthDate = document.getElementById('regBirth').value;
+        const phone = document.getElementById('regPhone').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const pass = document.getElementById('regPass').value;
+        const website = document.getElementById('regWebsite').value; // honeypot
+        const human = document.getElementById('regHuman').checked;
+
+        if (!human) { alert('Підтвердіть, що ви не робот.'); return; }
+        if (pass.length < 6) { alert('Пароль має бути мінімум 6 символів.'); return; }
+
         btn.innerText = 'ОБРОБКА...';
         btn.disabled = true;
-
-        const name = document.getElementById('regName').value;
-        const email = document.getElementById('regEmail').value;
-        const pass = document.getElementById('regPass').value;
 
         try {
             const res = await fetch('https://andreygerc11-music-site.onrender.com/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password: pass })
+                body: JSON.stringify({
+                    fullName, name: fullName, birthDate, phone, email, password: pass,
+                    website, human, elapsedMs: Date.now() - pageLoadedAt
+                })
             });
             const data = await res.json();
 
             if (data.success) {
-                alert('Акаунт успішно створено!');
+                alert('Акаунт успішно створено! Тепер увійдіть.');
                 window.location.href = 'login.html';
             } else {
                 alert(data.error || 'Помилка реєстрації');
