@@ -1760,19 +1760,39 @@ app.post('/api/doctor/verify', authRateLimiter, (req, res) => {
     res.json({ success: true, doctorName: auth.name });
 });
 
+// Редагування блогу / медхабу — доступне КОЖНОМУ лікарю (getDoctorAuth); публікація
+// підписується його іменем. Категорії: rehab_wife (порада медхабу) або блог news/psychology/rehab.
 app.post('/api/wife-blog/verify', (req, res) => {
     const { login, password } = req.body;
-    if (isValidWifeAuth(login, password)) {
-        return res.json({ success: true });
-    }
+    const auth = getDoctorAuth(login, password);
+    if (auth) return res.json({ success: true, doctorName: auth.name });
     res.status(403).json({ error: "Невірний логін або пароль" });
 });
 
 app.post('/api/wife-blog', async (req, res) => {
-    const { login, password, article } = req.body;
-    if (!isValidWifeAuth(login, password)) {
-        return res.status(403).json({ error: "Невірний логін або пароль" });
+    const { login, password, title, content, category } = req.body;
+    const auth = getDoctorAuth(login, password);
+    if (!auth) return res.status(403).json({ error: "Доступ лише для лікаря або адміністратора" });
+    if (!title || !title.trim() || !content || !content.trim()) {
+        return res.status(400).json({ error: "Заголовок і текст обов'язкові" });
     }
+    const cat = ['rehab_wife', 'news', 'psychology', 'rehab'].includes(category) ? category : 'rehab_wife';
+    const bannerByCat = {
+        rehab_wife: 'banner_medhub_1.svg',
+        news: randomFrom(NEWS_BANNERS),
+        psychology: randomFrom(PSY_BANNERS),
+        rehab: randomFrom(REHAB_BANNERS)
+    };
+    const article = {
+        id: Date.now(),
+        isWifeTip: cat === 'rehab_wife',
+        category: cat,
+        title: String(title).trim().slice(0, 300),
+        content: String(content).trim().slice(0, 20000),
+        author: auth.name,
+        date: new Date().toLocaleDateString('uk-UA'),
+        imageUrl: bannerByCat[cat] || 'banner_medhub_1.svg'
+    };
     aiBlogPosts.unshift(article);
     await saveBlogToGitHub();
     res.json({ success: true });
@@ -1780,8 +1800,8 @@ app.post('/api/wife-blog', async (req, res) => {
 
 app.post('/api/wife-blog/delete', async (req, res) => {
     const { login, password, id } = req.body;
-    if (!isValidWifeAuth(login, password)) {
-        return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!getDoctorAuth(login, password)) {
+        return res.status(403).json({ error: "Доступ лише для лікаря або адміністратора" });
     }
     aiBlogPosts = aiBlogPosts.filter(p => p.id !== id);
     await saveBlogToGitHub();
