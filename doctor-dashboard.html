@@ -576,7 +576,7 @@
 
             const win = window.open('', '_blank');
             win.document.write(`
-                <!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><title>Картка консультації</title>
+                <!DOCTYPE html><html lang="uk"><head><meta charset="UTF-8"><title>Консультативний висновок</title>
                 <style>
                     body { font-family: 'Times New Roman', serif; padding: 30px; color: #000; }
                     .header { display: flex; justify-content: space-between; border: 1px solid #000; padding: 12px; margin-bottom: 0; }
@@ -598,9 +598,9 @@
                             <img src="${location.origin}/logo.png" alt="Надія" style="height:58px; width:auto;">
                             <div><h1>Реабілітаційний центр «Надія»</h1><div style="font-size:0.8rem;">ФОП Герц Андрій Костянтинович</div></div>
                         </div>
-                        <div class="right">КАРТКА КОНСУЛЬТАЦІЇ<br>Дата: ${formatDate(c.createdAt)}</div>
+                        <div class="right">КОНСУЛЬТАТИВНИЙ ВИСНОВОК<br>Дата: ${formatDate(c.createdAt)}</div>
                     </div>
-                    <h2 class="title">Картка консультації пацієнта</h2>
+                    <h2 class="title">Консультативний висновок</h2>
 
                     <div class="row"><div class="label">Прізвище, ім'я, по батькові:</div><div class="value">${escapeHtml(currentPatient.fullName) || ''}</div></div>
                     <div class="row"><div class="label">Дата народження:</div><div class="value">${escapeHtml(currentPatient.birthDate) || ''}</div></div>
