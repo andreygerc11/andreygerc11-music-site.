@@ -327,16 +327,15 @@
     // ЛОГІКА АВТОРИЗАЦІЇ ЛІКАРЯ
     // ==========================================
     function checkAuthState() {
+        // Редагування перенесено в кабінет лікаря — тут кнопок може вже не бути,
+        // тому кожне звернення робимо null-safe (інакше падав увесь скрипт і статті не вантажились).
         const isAuth = localStorage.getItem('hz_wife_auth') === 'true';
-        if (isAuth) {
-            document.getElementById('doctorLoginBtn').style.display = 'none';
-            document.getElementById('doctorLogoutBtn').style.display = 'inline-flex';
-            document.getElementById('writeTipBtn').style.display = 'flex';
-        } else {
-            document.getElementById('doctorLoginBtn').style.display = 'inline-flex';
-            document.getElementById('doctorLogoutBtn').style.display = 'none';
-            document.getElementById('writeTipBtn').style.display = 'none';
-        }
+        const loginBtn = document.getElementById('doctorLoginBtn');
+        const logoutBtn = document.getElementById('doctorLogoutBtn');
+        const writeBtn = document.getElementById('writeTipBtn');
+        if (loginBtn) loginBtn.style.display = isAuth ? 'none' : 'inline-flex';
+        if (logoutBtn) logoutBtn.style.display = isAuth ? 'inline-flex' : 'none';
+        if (writeBtn) writeBtn.style.display = isAuth ? 'flex' : 'none';
     }
 
     function openAuthorAuth() {
