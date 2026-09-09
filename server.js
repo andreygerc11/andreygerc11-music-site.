@@ -45,6 +45,9 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "5853625377";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+// Email-сповіщення (Resend API). EMAIL_FROM напр. "Надія <no-reply@golos-proty-raku.pp.ua>".
+const EMAIL_API_KEY = process.env.EMAIL_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM;
 
 // === ТВІЙ ID ПАПКИ GOOGLE DRIVE З ПОВНИМИ ТРЕКАМИ ===
 const FULL_FOLDER_ID = "1FGNuLTq9mFHqoUSqp-7PSKHixZHq3W2j";
@@ -1725,6 +1728,20 @@ app.post('/api/doctor/appointments', authRateLimiter, (req, res) => {
     res.json(list);
 });
 
+// Надіслати email пацієнту (через Resend API). Потрібні env EMAIL_API_KEY + EMAIL_FROM.
+async function sendEmail(to, subject, html) {
+    if (!EMAIL_API_KEY || !EMAIL_FROM || !to) return false;
+    try {
+        await axios.post('https://api.resend.com/emails',
+            { from: EMAIL_FROM, to: [to], subject, html },
+            { headers: { 'Authorization': `Bearer ${EMAIL_API_KEY}`, 'Content-Type': 'application/json' } });
+        return true;
+    } catch (e) {
+        console.error('❌ Email не надіслано:', (e.response && e.response.data) || e.message);
+        return false;
+    }
+}
+
 // Надіслати пацієнту повідомлення в Telegram про його запис (якщо знаємо його chatId).
 // chatId беремо із запису або з медкартки пацієнта (де він осідає після взаємодії з ботом).
 async function notifyPatientTelegram(appt, text) {
@@ -1759,10 +1776,18 @@ app.post('/api/doctor/appointment/update', authRateLimiter, async (req, res) => 
     const saved = await saveAppointmentsToGitHub();
     if (!saved) return res.status(500).json({ error: "Не вдалося зберегти" });
 
+    const emailed = await sendEmail(appt.patientEmail, 'Зміна запису на прийом — центр «Надія»',
+        `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111;line-height:1.6;">
+            <h2 style="color:#14997a;">Зміна запису на прийом</h2>
+            <p>Ваш запис у реабілітаційному центрі «Надія» перенесено:</p>
+            <p><b>Лікар:</b> ${appt.doctorName}<br><b>Було:</b> ${oldDate} о ${oldTime}<br><b>Стало:</b> ${date} о ${time}</p>
+            <p>Якщо новий час не підходить — зайдіть у свій кабінет на сайті або напишіть нам.</p>
+            <p style="color:#888;font-size:13px;">golos-proty-raku.pp.ua</p>
+        </div>`);
     const notified = await notifyPatientTelegram(appt,
         `🔔 <b>Зміна запису на прийом — центр «Надія»</b>\n\nЛікар: <b>${appt.doctorName}</b>\nБуло: ${oldDate} о ${oldTime}\n<b>Стало: ${date} о ${time}</b>\n\nЯкщо час не підходить — напишіть нам.`);
-    if (!notified) await sendTelegramMessage(`ℹ️ Перенесено запис (${appt.doctorName}) на ${date} ${time}\nПацієнт: ${appt.patientEmail}\n⚠️ Telegram пацієнта невідомий — попередьте вручну.`);
-    res.json({ success: true, notified });
+    if (!emailed && !notified) await sendTelegramMessage(`ℹ️ Перенесено запис (${appt.doctorName}) на ${date} ${time}\nПацієнт: ${appt.patientEmail}\n⚠️ Ні email, ні Telegram не надіслано — попередьте вручну.`);
+    res.json({ success: true, emailed, notified });
 });
 
 // Лікар скасовує СВІЙ запис. Пацієнту йде сповіщення в Telegram.
@@ -1778,10 +1803,18 @@ app.post('/api/doctor/appointment/cancel', authRateLimiter, async (req, res) => 
     const saved = await saveAppointmentsToGitHub();
     if (!saved) return res.status(500).json({ error: "Не вдалося зберегти" });
 
+    const emailed = await sendEmail(appt.patientEmail, 'Запис скасовано — центр «Надія»',
+        `<div style="font-family:Arial,sans-serif;font-size:15px;color:#111;line-height:1.6;">
+            <h2 style="color:#c0392b;">Ваш запис скасовано</h2>
+            <p>На жаль, ваш запис у центрі «Надія» скасовано:</p>
+            <p><b>Лікар:</b> ${appt.doctorName}<br><b>Було:</b> ${appt.date} о ${appt.time}</p>
+            <p>Ви можете записатися на інший зручний час у боті або на сайті.</p>
+            <p style="color:#888;font-size:13px;">golos-proty-raku.pp.ua</p>
+        </div>`);
     const notified = await notifyPatientTelegram(appt,
         `🔕 <b>Ваш запис скасовано — центр «Надія»</b>\n\nЛікар: <b>${appt.doctorName}</b>\nБуло: ${appt.date} о ${appt.time}\n\nЗапишіться на інший зручний час у боті або на сайті.`);
-    if (!notified) await sendTelegramMessage(`ℹ️ Скасовано запис (${appt.doctorName}) ${appt.date} ${appt.time}\nПацієнт: ${appt.patientEmail}\n⚠️ Telegram пацієнта невідомий.`);
-    res.json({ success: true, notified });
+    if (!emailed && !notified) await sendTelegramMessage(`ℹ️ Скасовано запис (${appt.doctorName}) ${appt.date} ${appt.time}\nПацієнт: ${appt.patientEmail}\n⚠️ Ні email, ні Telegram не надіслано.`);
+    res.json({ success: true, emailed, notified });
 });
 
 // ==========================================

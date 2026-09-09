@@ -381,7 +381,8 @@
                 const data = await res.json().catch(() => ({}));
                 if (res.ok && data.success) {
                     st.style.color = 'var(--accent)';
-                    st.innerText = data.notified ? '✅ Перенесено, пацієнта сповіщено' : '✅ Перенесено (Telegram пацієнта невідомий)';
+                    const ch = []; if (data.emailed) ch.push('email'); if (data.notified) ch.push('Telegram');
+                    st.innerText = ch.length ? ('✅ Перенесено, сповіщено (' + ch.join(' + ') + ')') : '✅ Перенесено (сповіщення не надіслано)';
                     loadSchedule();
                 } else { st.style.color = '#ff6b6b'; st.innerText = data.error || 'Помилка'; }
             } catch (e) { st.style.color = '#ff6b6b'; st.innerText = 'Помилка з\'єднання'; }
