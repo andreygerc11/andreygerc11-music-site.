@@ -187,8 +187,14 @@
             const data = await res.json();
             const idVal = document.getElementById('email').value.trim();
             const passVal = document.getElementById('password').value;
-            if (data.success && (data.role === 'doctor' || data.role === 'admin')) {
-                // Лікар/адмін → кабінет лікаря
+            if (data.success && data.role === 'admin') {
+                // Адміністратор сайту → редактор сайту (жива панель на головній).
+                // Даємо доступ і до кабінету лікаря (адмін може все).
+                sessionStorage.setItem('nadiya_admin_creds', JSON.stringify({ login: idVal, password: passVal }));
+                sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify({ login: idVal, password: passVal, doctorName: data.doctorName || 'Адміністратор' }));
+                window.location.href = 'index.html#admin';
+            } else if (data.success && data.role === 'doctor') {
+                // Лікар → кабінет лікаря
                 sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify({ login: idVal, password: passVal, doctorName: data.doctorName || '' }));
                 window.location.href = 'doctor-dashboard.html';
             } else if (data.success) {
