@@ -26,5 +26,13 @@
     "name": "Яна Деморецкая",
     "status": "free",
     "clips_left": 1
+  },
+  {
+    "email": "claude.test.1788944959@example.com",
+    "password": "$2a$10$qJcQlBR4LTnFFL.s4ZbunOPT4LJKT6d10OdkWZTMhQrYEh0YmeoDC",
+    "name": "���� ������� ��������",
+    "status": "free",
+    "clips_left": 1,
+    "createdAt": "2026-09-09T09:09:22.265Z"
   }
 ]
