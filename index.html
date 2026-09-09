@@ -216,6 +216,8 @@
             display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; color: #666; text-align: center; padding: 30px;
         }
         .map-placeholder i { font-size: 2rem; color: var(--accent); }
+        .map-box { min-height: 320px; }
+        .map-frame { width: 100%; height: 100%; min-height: 320px; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; display: block; }
 
         /* ==== FOOTER ==== */
         footer { text-align: center; padding: 70px 20px 40px; border-top: 1px solid rgba(255,255,255,0.06); }
@@ -481,9 +483,12 @@
                     </div>
                 </div>
             </div>
-            <div class="map-placeholder" data-aos="fade-left">
-                <i class="fas fa-map-marked-alt"></i>
-                <span>Мапа з'явиться, коли буде додано адресу центру</span>
+            <div class="map-box" id="mapBox" data-aos="fade-left">
+                <div class="map-placeholder" id="mapPlaceholder">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Мапа з'явиться, коли буде додано адресу центру</span>
+                </div>
+                <iframe id="mapFrame" class="map-frame" style="display:none" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen title="Мапа центру «Надія»"></iframe>
             </div>
         </div>
     </section>
@@ -535,6 +540,23 @@
       document.getElementById('authBtn').style.display = 'inline-block';
   }
 
+  // Показати/сховати мапу залежно від адреси (порожня або дефолтний текст = лишаємо заглушку)
+  function updateMap(address) {
+      const frame = document.getElementById('mapFrame');
+      const ph = document.getElementById('mapPlaceholder');
+      if (!frame || !ph) return;
+      const addr = (typeof address === 'string' ? address : '').trim();
+      const isPlaceholder = !addr || /найближчим часом/i.test(addr);
+      if (isPlaceholder) {
+          frame.style.display = 'none'; frame.removeAttribute('src');
+          ph.style.display = 'flex';
+      } else {
+          frame.src = 'https://www.google.com/maps?q=' + encodeURIComponent(addr) + '&z=16&hl=uk&output=embed';
+          frame.style.display = 'block';
+          ph.style.display = 'none';
+      }
+  }
+
   // CMS: підставляємо тексти з адмін-панелі поверх дефолтів (порожні — лишають дефолт)
   async function loadSiteContent() {
       try {
@@ -548,6 +570,8 @@
               // Якщо ключа немає взагалі — лишається дефолт зі сторінки.
               if (typeof val === 'string') el.textContent = val;
           });
+          // Мапа: будуємо з адреси (Google Maps embed, без API-ключа)
+          updateMap(content['contacts.address']);
           // Зображення (банер, фото «Про центр» тощо)
           document.querySelectorAll('[data-cms-img]').forEach(el => {
               const val = content[el.getAttribute('data-cms-img')];
