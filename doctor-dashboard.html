@@ -331,6 +331,8 @@
             } catch (e) { alert('Помилка сервера.'); }
         }
 
+        const APPT_SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+
         async function loadSchedule() {
             const list = document.getElementById('scheduleList');
             list.innerHTML = '<div class="empty-state">Завантаження...</div>';
@@ -339,22 +341,62 @@
                 if (!res.ok) throw new Error();
                 const items = await res.json();
                 if (!items || items.length === 0) { list.innerHTML = '<div class="empty-state">Записів на прийом ще немає.</div>'; return; }
-                // Групуємо за датою
+                const today = new Date().toISOString().slice(0,10);
                 const byDate = {};
                 items.forEach(a => { (byDate[a.date] = byDate[a.date] || []).push(a); });
-                list.innerHTML = Object.keys(byDate).sort().map(date => `
+                list.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:14px;">Можете перенести час/дату або скасувати запис — пацієнту автоматично прийде повідомлення в Telegram (якщо він писав боту).</p>' +
+                    Object.keys(byDate).sort().map(date => `
                     <div style="margin-bottom:18px;">
                         <div style="font-weight:800;color:var(--accent);margin-bottom:8px;"><i class="fas fa-calendar-day"></i> ${escapeHtml(date)}</div>
                         ${byDate[date].sort((x,y)=>x.time.localeCompare(y.time)).map(a => `
-                            <div style="display:flex;gap:14px;align-items:center;padding:10px 14px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:10px;margin-bottom:8px;">
-                                <span style="font-weight:800;min-width:52px;">${escapeHtml(a.time)}</span>
-                                <span style="flex:1;">${escapeHtml(a.patientName || a.patientEmail)}<br><span style="color:var(--text-muted);font-size:0.82rem;">${escapeHtml(a.patientEmail)}</span></span>
-                                <span style="color:var(--text-muted);font-size:0.82rem;">${escapeHtml(a.doctorName)}</span>
+                            <div style="padding:12px 14px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:10px;margin-bottom:10px;">
+                                <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+                                    <span style="font-weight:800;min-width:52px;">${escapeHtml(a.time)}</span>
+                                    <span style="flex:1;min-width:160px;">${escapeHtml(a.patientName || a.patientEmail)}<br><span style="color:var(--text-muted);font-size:0.82rem;">${escapeHtml(a.patientEmail)}</span></span>
+                                    <span style="color:var(--text-muted);font-size:0.82rem;">${escapeHtml(a.doctorName)}</span>
+                                </div>
+                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;">
+                                    <input type="date" id="apd_${a.id}" value="${escapeHtml(a.date)}" min="${today}" style="padding:8px 10px;background:var(--bg-panel,#141417);border:1px solid var(--border-color);color:#fff;border-radius:8px;font-family:inherit;font-size:0.85rem;">
+                                    <select id="apt_${a.id}" style="padding:8px 10px;background:var(--bg-panel,#141417);border:1px solid var(--border-color);color:#fff;border-radius:8px;font-family:inherit;font-size:0.85rem;">
+                                        ${APPT_SLOTS.map(t => `<option value="${t}" ${t===a.time?'selected':''}>${t}</option>`).join('')}
+                                    </select>
+                                    <button onclick="rescheduleAppt(${a.id})" style="background:var(--accent);color:#04140f;border:none;border-radius:8px;padding:8px 14px;font-weight:800;font-size:0.82rem;cursor:pointer;">Перенести</button>
+                                    <button onclick="cancelApptDoctor(${a.id})" style="background:transparent;color:#ff6b6b;border:1px solid #ff6b6b55;border-radius:8px;padding:8px 12px;font-weight:700;font-size:0.82rem;cursor:pointer;">Скасувати</button>
+                                    <span id="aps_${a.id}" style="font-size:0.8rem;font-weight:700;"></span>
+                                </div>
                             </div>`).join('')}
                     </div>`).join('');
             } catch (e) {
                 list.innerHTML = '<div class="empty-state">Помилка завантаження розкладу.</div>';
             }
+        }
+
+        async function rescheduleAppt(id) {
+            const date = document.getElementById('apd_' + id).value;
+            const time = document.getElementById('apt_' + id).value;
+            const st = document.getElementById('aps_' + id);
+            st.style.color = 'var(--text-muted)'; st.innerText = 'Збереження...';
+            try {
+                const res = await doctorApi('/api/doctor/appointment/update', { id, date, time });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    st.style.color = 'var(--accent)';
+                    st.innerText = data.notified ? '✅ Перенесено, пацієнта сповіщено' : '✅ Перенесено (Telegram пацієнта невідомий)';
+                    loadSchedule();
+                } else { st.style.color = '#ff6b6b'; st.innerText = data.error || 'Помилка'; }
+            } catch (e) { st.style.color = '#ff6b6b'; st.innerText = 'Помилка з\'єднання'; }
+        }
+
+        async function cancelApptDoctor(id) {
+            if (!confirm('Скасувати цей запис? Пацієнту прийде повідомлення.')) return;
+            const st = document.getElementById('aps_' + id);
+            st.style.color = 'var(--text-muted)'; st.innerText = 'Скасування...';
+            try {
+                const res = await doctorApi('/api/doctor/appointment/cancel', { id });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) { loadSchedule(); }
+                else { st.style.color = '#ff6b6b'; st.innerText = data.error || 'Помилка'; }
+            } catch (e) { st.style.color = '#ff6b6b'; st.innerText = 'Помилка з\'єднання'; }
         }
 
         const REVIEW_STATUS_LABELS = { pending: 'На перевірці', approved: 'Опубліковано', rejected: 'Відхилено' };

@@ -1435,6 +1435,8 @@ async function createConsultationInvoiceForEmail(email, telegramChatId = null) {
     let record = await getPatientRecord(email);
     if (!record) record = { email, fullName: '', phone: '', birthDate: '', medicalHistory: '', consultations: [] };
     if (!record.consultations) record.consultations = [];
+    // Запам'ятовуємо Telegram пацієнта — для майбутніх сповіщень про зміни прийому.
+    if (telegramChatId) record.telegramChatId = String(telegramChatId);
 
     const consultationId = Date.now();
     record.consultations.push({
@@ -1654,6 +1656,15 @@ async function bookAppointmentCore(email, doctorLogin, date, time, telegramChatI
     const saved = await saveAppointmentsToGitHub();
     if (!saved) throw fail('SAVE_FAILED');
 
+    // Запам'ятовуємо Telegram пацієнта в медкартці — щоб потім слати сповіщення про зміни.
+    if (telegramChatId) {
+        try {
+            let rec = await getPatientRecord(user.email);
+            if (!rec) rec = { email: user.email, fullName: user.name || '', phone: '', birthDate: '', medicalHistory: '', consultations: [] };
+            if (rec.telegramChatId !== String(telegramChatId)) { rec.telegramChatId = String(telegramChatId); await savePatientRecord(user.email, rec); }
+        } catch (e) {}
+    }
+
     await sendTelegramMessage(`📅 Новий запис на прийом\nЛікар: ${appt.doctorName}\nДата: ${date} ${time}\nПацієнт: ${user.email}`);
     return appt;
 }
@@ -1712,6 +1723,65 @@ app.post('/api/doctor/appointments', authRateLimiter, (req, res) => {
     if (!auth.isAdmin) list = list.filter(a => a.doctorLogin === auth.login);
     list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     res.json(list);
+});
+
+// Надіслати пацієнту повідомлення в Telegram про його запис (якщо знаємо його chatId).
+// chatId беремо із запису або з медкартки пацієнта (де він осідає після взаємодії з ботом).
+async function notifyPatientTelegram(appt, text) {
+    if (!bot) return false;
+    let chatId = appt.telegramChatId;
+    if (!chatId && appt.patientEmail) {
+        try { const rec = await getPatientRecord(appt.patientEmail); if (rec && rec.telegramChatId) chatId = rec.telegramChatId; } catch (e) {}
+    }
+    if (!chatId) return false;
+    try { await bot.sendMessage(String(chatId), text, { parse_mode: 'HTML' }); return true; }
+    catch (e) { console.error('❌ Не вдалося сповістити пацієнта:', e.message); return false; }
+}
+
+// Лікар переносить/редагує СВІЙ запис (адмін — будь-який). Пацієнту йде сповіщення в Telegram.
+app.post('/api/doctor/appointment/update', authRateLimiter, async (req, res) => {
+    const { login, password, id, date, time } = req.body;
+    const auth = getDoctorAuth(login, password);
+    if (!auth) return res.status(403).json({ error: "Невірний логін або пароль" });
+    await syncAppointmentsFromGitHub();
+    const appt = appointments.find(a => a.id === id && a.status !== 'cancelled');
+    if (!appt) return res.status(404).json({ error: "Запис не знайдено" });
+    if (!auth.isAdmin && appt.doctorLogin !== auth.login) return res.status(403).json({ error: "Це не ваш запис" });
+    if (!SLOT_TIMES.includes(time)) return res.status(400).json({ error: "Некоректний час" });
+    if (!isWeekday(date)) return res.status(400).json({ error: "Прийом лише у робочі дні (Пн–Пт)" });
+    const slotDate = new Date(`${date}T${time}:00`);
+    if (isNaN(slotDate.getTime()) || slotDate.getTime() < Date.now()) return res.status(400).json({ error: "Оберіть майбутню дату й час" });
+    const clash = appointments.find(a => a.id !== id && a.doctorLogin === appt.doctorLogin && a.date === date && a.time === time && a.status !== 'cancelled');
+    if (clash) return res.status(409).json({ error: "Цей час уже зайнятий, оберіть інший" });
+
+    const oldDate = appt.date, oldTime = appt.time;
+    appt.date = date; appt.time = time; appt.updatedAt = new Date().toISOString();
+    const saved = await saveAppointmentsToGitHub();
+    if (!saved) return res.status(500).json({ error: "Не вдалося зберегти" });
+
+    const notified = await notifyPatientTelegram(appt,
+        `🔔 <b>Зміна запису на прийом — центр «Надія»</b>\n\nЛікар: <b>${appt.doctorName}</b>\nБуло: ${oldDate} о ${oldTime}\n<b>Стало: ${date} о ${time}</b>\n\nЯкщо час не підходить — напишіть нам.`);
+    if (!notified) await sendTelegramMessage(`ℹ️ Перенесено запис (${appt.doctorName}) на ${date} ${time}\nПацієнт: ${appt.patientEmail}\n⚠️ Telegram пацієнта невідомий — попередьте вручну.`);
+    res.json({ success: true, notified });
+});
+
+// Лікар скасовує СВІЙ запис. Пацієнту йде сповіщення в Telegram.
+app.post('/api/doctor/appointment/cancel', authRateLimiter, async (req, res) => {
+    const { login, password, id } = req.body;
+    const auth = getDoctorAuth(login, password);
+    if (!auth) return res.status(403).json({ error: "Невірний логін або пароль" });
+    await syncAppointmentsFromGitHub();
+    const appt = appointments.find(a => a.id === id);
+    if (!appt) return res.status(404).json({ error: "Запис не знайдено" });
+    if (!auth.isAdmin && appt.doctorLogin !== auth.login) return res.status(403).json({ error: "Це не ваш запис" });
+    appt.status = 'cancelled'; appt.updatedAt = new Date().toISOString();
+    const saved = await saveAppointmentsToGitHub();
+    if (!saved) return res.status(500).json({ error: "Не вдалося зберегти" });
+
+    const notified = await notifyPatientTelegram(appt,
+        `🔕 <b>Ваш запис скасовано — центр «Надія»</b>\n\nЛікар: <b>${appt.doctorName}</b>\nБуло: ${appt.date} о ${appt.time}\n\nЗапишіться на інший зручний час у боті або на сайті.`);
+    if (!notified) await sendTelegramMessage(`ℹ️ Скасовано запис (${appt.doctorName}) ${appt.date} ${appt.time}\nПацієнт: ${appt.patientEmail}\n⚠️ Telegram пацієнта невідомий.`);
+    res.json({ success: true, notified });
 });
 
 // ==========================================
