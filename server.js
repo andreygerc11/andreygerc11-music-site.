@@ -1787,7 +1787,12 @@ app.post('/api/doctor/appointment/update', authRateLimiter, async (req, res) => 
     const msg = `🔔 <b>Зміна запису на прийом — центр «Надія»</b>\n\nЛікар: <b>${appt.doctorName}</b>\nБуло: ${oldDate} о ${oldTime}\n<b>Стало: ${date} о ${time}</b>\n\nЯкщо час не підходить — напишіть нам.`;
     const notified = await notifyPatientTelegram(appt, msg);
     const emailed = await sendEmail(appt.patientEmail, 'Зміна запису на прийом — центр «Надія»', appointmentEmailHtml(msg));
-    if (!notified && !emailed) await sendTelegramMessage(`ℹ️ Перенесено запис (${appt.doctorName}) на ${date} ${time}\nПацієнт: ${appt.patientEmail}\n⚠️ Не вдалося сповістити пацієнта (ні Telegram, ні email) — попередьте вручну.`);
+    // Якщо пряме сповіщення пацієнту в Telegram не пройшло (не привʼязаний/заблокував бота) —
+    // шлемо копію адміну в бот, щоб він завжди був у курсі (незалежно від того, чи пішов email).
+    if (!notified) {
+        const emailNote = emailed ? `✉️ Пацієнту надіслано email: ${appt.patientEmail}` : `⚠️ Пацієнта не сповіщено (ні Telegram, ні email) — попередьте вручну.`;
+        await sendTelegramMessage(`ℹ️ Перенесено запис (${appt.doctorName}) на ${date} ${time}\nПацієнт: ${appt.patientEmail}\n${emailNote}`);
+    }
     res.json({ success: true, notified, emailed });
 });
 
@@ -1807,7 +1812,10 @@ app.post('/api/doctor/appointment/cancel', authRateLimiter, async (req, res) => 
     const msg = `🔕 <b>Ваш запис скасовано — центр «Надія»</b>\n\nЛікар: <b>${appt.doctorName}</b>\nБуло: ${appt.date} о ${appt.time}\n\nЗапишіться на інший зручний час у боті або на сайті.`;
     const notified = await notifyPatientTelegram(appt, msg);
     const emailed = await sendEmail(appt.patientEmail, 'Ваш запис скасовано — центр «Надія»', appointmentEmailHtml(msg));
-    if (!notified && !emailed) await sendTelegramMessage(`ℹ️ Скасовано запис (${appt.doctorName}) ${appt.date} ${appt.time}\nПацієнт: ${appt.patientEmail}\n⚠️ Не вдалося сповістити пацієнта (ні Telegram, ні email).`);
+    if (!notified) {
+        const emailNote = emailed ? `✉️ Пацієнту надіслано email: ${appt.patientEmail}` : `⚠️ Пацієнта не сповіщено (ні Telegram, ні email).`;
+        await sendTelegramMessage(`ℹ️ Скасовано запис (${appt.doctorName}) ${appt.date} ${appt.time}\nПацієнт: ${appt.patientEmail}\n${emailNote}`);
+    }
     res.json({ success: true, notified, emailed });
 });
 
