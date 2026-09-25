@@ -131,11 +131,17 @@
             <button class="ghost" id="ab_save" style="display:none">💾 Зберегти</button>
             <span class="msg" id="ab_msg">Тексти редагуються прямо на сторінці. Фото/аватари/дипломи — кнопкою на елементі.</span>
             <span class="sp"></span>
+            <button class="ghost" id="ab_doctor">👩‍⚕️ Кабінет лікаря</button>
             <button class="ghost" id="ab_exit">Вийти</button>`;
         document.body.appendChild(bar);
         document.body.style.paddingBottom = '72px';
         document.getElementById('ab_toggle').onclick = () => setEditing(!editing);
         document.getElementById('ab_save').onclick = save;
+        // Адмін заходить у кабінет лікаря тими самими даними (авто-вхід)
+        document.getElementById('ab_doctor').onclick = () => {
+            try { sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify({ login: creds.login, password: creds.password, doctorName: 'Адміністратор' })); } catch (e) {}
+            location.href = 'doctor-dashboard.html';
+        };
         document.getElementById('ab_exit').onclick = () => { sessionStorage.removeItem(KEY); location.hash = ''; location.reload(); };
     }
 

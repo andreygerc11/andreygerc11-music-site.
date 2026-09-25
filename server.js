@@ -1867,6 +1867,52 @@ app.post('/api/doctor/patient/note', authRateLimiter, async (req, res) => {
     res.json({ success: true });
 });
 
+// Адміністратор повністю видаляє пацієнта: приватна медкартка + акаунт + його записи.
+// Доступ лише для адміністратора (isAdmin), бо дія незворотна.
+app.post('/api/doctor/patient/delete', authRateLimiter, async (req, res) => {
+    const { login, password, email } = req.body;
+    const auth = getDoctorAuth(login, password);
+    if (!auth) return res.status(403).json({ error: "Невірний логін або пароль" });
+    if (!auth.isAdmin) return res.status(403).json({ error: "Видаляти пацієнта може лише адміністратор" });
+    if (!email) return res.status(400).json({ error: "Email обов'язковий" });
+
+    const removed = { record: false, account: false, appointments: 0 };
+    const emailLc = String(email).trim().toLowerCase();
+
+    // 1) Приватна медична картка (PATIENTS_REPO/patients/<key>.json)
+    if (GITHUB_TOKEN && PATIENTS_REPO) {
+        try {
+            const key = patientFileKey(email);
+            const url = `https://api.github.com/repos/${PATIENTS_REPO}/contents/patients/${key}.json`;
+            const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+            await axios.delete(url, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+                data: { message: `Видалення картки пацієнта (адмін)`, sha: getRes.data.sha }
+            });
+            removed.record = true;
+        } catch (e) { /* картки могло не бути */ }
+    }
+
+    // 2) Акаунт у публічному users.json
+    try {
+        await syncUsersFromGitHub();
+        const before = usersDB.length;
+        usersDB = usersDB.filter(u => (u.email || '').toLowerCase() !== emailLc);
+        if (usersDB.length !== before) { await saveUsersToGitHub(); removed.account = true; }
+    } catch (e) {}
+
+    // 3) Його записи на прийом
+    try {
+        await syncAppointmentsFromGitHub();
+        const before = appointments.length;
+        appointments = appointments.filter(a => (a.patientEmail || '').toLowerCase() !== emailLc);
+        removed.appointments = before - appointments.length;
+        if (removed.appointments > 0) await saveAppointmentsToGitHub();
+    } catch (e) {}
+
+    res.json({ success: true, removed });
+});
+
 app.post('/api/doctor/reviews', authRateLimiter, async (req, res) => {
     const { login, password } = req.body;
     if (!getDoctorAuth(login, password)) return res.status(403).json({ error: "Невірний логін або пароль" });

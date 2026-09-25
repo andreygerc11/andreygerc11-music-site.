@@ -506,15 +506,36 @@
 
         let currentPatient = null;
 
+        // Видалення пацієнта (лише адміністратор). Незворотна дія.
+        async function deletePatient() {
+            if (!currentPatient) return;
+            const email = currentPatient.email;
+            const name = currentPatient.fullName || email;
+            if (!confirm(`Видалити пацієнта «${name}» назавжди?\n\nБуде прибрано медичну картку, акаунт і всі його записи на прийом. Скасувати неможливо.`)) return;
+            try {
+                const res = await doctorApi('/api/doctor/patient/delete', { email });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    const r = data.removed || {};
+                    alert(`Пацієнта «${name}» видалено.\nКартка: ${r.record ? 'видалено' : 'не було'} · Акаунт: ${r.account ? 'видалено' : 'не було'} · Записів прибрано: ${r.appointments || 0}`);
+                    showListView();
+                } else {
+                    alert(data.error || 'Не вдалося видалити пацієнта.');
+                }
+            } catch (e) { alert('Помилка звʼязку із сервером.'); }
+        }
+
         function renderPatientDetail(patient) {
             currentPatient = patient;
             const content = document.getElementById('patientDetailContent');
             const consultations = (patient.consultations || []).slice().reverse();
             const documents = patient.documents || [];
+            const isAdmin = doctorCreds && (doctorCreds.login || '').toLowerCase() === 'administration@dev.com';
 
             content.innerHTML = `
                 <h2>${escapeHtml(patient.fullName) || 'Без імені'}</h2>
                 <div class="sub">${escapeHtml(patient.email)} ${patient.phone ? '· ' + escapeHtml(patient.phone) : ''} ${patient.birthDate ? '· ' + escapeHtml(patient.birthDate) : ''}</div>
+                ${isAdmin ? `<button onclick="deletePatient()" style="margin-top:10px;background:transparent;border:1px solid #ff5a5a;color:#ff7b7b;font-family:inherit;font-weight:700;font-size:0.8rem;padding:8px 16px;border-radius:8px;cursor:pointer;"><i class="fas fa-trash"></i> Видалити пацієнта</button>` : ''}
 
                 <div class="field-block">
                     <div class="field-label">Історія хвороби / скарги</div>
