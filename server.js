@@ -19,7 +19,7 @@ const app = express();
 // ERR_ERL_UNEXPECTED_X_FORWARDED_FOR і ламає захищені роути (логін, реєстрація,
 // запис на консультацію, кабінет лікаря). Довіряємо одному проксі Render.
 app.set('trust proxy', 1);
-app.use(cors({ origin: ['https://golos-proty-raku.pp.ua', 'https://www.golos-proty-raku.pp.ua'] }));
+app.use(cors({ origin: ['https://nadiya.pp.ua', 'https://www.nadiya.pp.ua', 'https://golos-proty-raku.pp.ua', 'https://www.golos-proty-raku.pp.ua'] }));
 app.use(express.json({ limit: '50mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
@@ -107,11 +107,11 @@ if (BOT_TOKEN) {
                 inline_keyboard: [
                     [{ text: "📅 Записатися на прийом до лікаря", callback_data: "appt_start" }],
                     [{ text: "🏥 Онлайн-консультація (400 грн)", callback_data: "book_consultation" }],
-                    [{ text: "👤 Особистий кабінет", url: "https://golos-proty-raku.pp.ua/login.html" }, { text: "📝 Реєстрація", url: "https://golos-proty-raku.pp.ua/register.html" }],
+                    [{ text: "👤 Особистий кабінет", url: "https://nadiya.pp.ua/login.html" }, { text: "📝 Реєстрація", url: "https://nadiya.pp.ua/register.html" }],
                     [{ text: "ℹ️ Про центр «Надія»", callback_data: "about_project" }],
                     [{ text: "🎵 Каталог пісень (37,36 грн)", callback_data: "show_menu" }],
                     [{ text: "🗣 Об'єднані голоси", callback_data: "united_voices" }],
-                    [{ text: "📰 Читати блог", url: "https://golos-proty-raku.pp.ua/blog.html" }, { text: "🌐 Наш сайт", url: "https://golos-proty-raku.pp.ua" }],
+                    [{ text: "📰 Читати блог", url: "https://nadiya.pp.ua/blog.html" }, { text: "🌐 Наш сайт", url: "https://nadiya.pp.ua" }],
                     [{ text: "🤝 Підтримати (Офіційно)", callback_data: "support_project" }]
                 ]
             }
@@ -262,7 +262,7 @@ if (BOT_TOKEN) {
                 try {
                     const appt = await bookAppointmentCore(sess.email, sess.doctorLogin, sess.date, time, chatId);
                     delete botApptSession[chatId];
-                    await bot.editMessageText(`✅ <b>Вас записано!</b>\n\nЛікар: <b>${appt.doctorName}</b>\nДата: <b>${appt.date}</b> о <b>${appt.time}</b>\n\nІсторію записів і призначення дивіться в особистому кабінеті на сайті.`, { chat_id: chatId, message_id: messageId, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🌐 Відкрити кабінет", url: "https://golos-proty-raku.pp.ua/login.html" }], [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]] } });
+                    await bot.editMessageText(`✅ <b>Вас записано!</b>\n\nЛікар: <b>${appt.doctorName}</b>\nДата: <b>${appt.date}</b> о <b>${appt.time}</b>\n\nІсторію записів і призначення дивіться в особистому кабінеті на сайті.`, { chat_id: chatId, message_id: messageId, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🌐 Відкрити кабінет", url: "https://nadiya.pp.ua/login.html" }], [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]] } });
                 } catch (e) {
                     const msgMap = { TAKEN: "Цей час щойно зайняли. Оберіть інший.", PAST: "Цей час уже минув. Оберіть інший.", NOT_REGISTERED: "Email не зареєстрований на сайті." };
                     const kb = apptSlotButtons(sess.doctorLogin, sess.date);
@@ -335,7 +335,7 @@ if (BOT_TOKEN) {
                 await bot.sendMessage(msg.chat.id,
                     `❌ Email <b>${email}</b> не зареєстрований на сайті. Записатися на прийом можуть лише зареєстровані пацієнти.`,
                     { parse_mode: "HTML", reply_markup: { inline_keyboard: [
-                        [{ text: "📝 Зареєструватися на сайті", url: "https://golos-proty-raku.pp.ua/register.html" }],
+                        [{ text: "📝 Зареєструватися на сайті", url: "https://nadiya.pp.ua/register.html" }],
                         [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
                     ] } });
                 return;
@@ -367,7 +367,7 @@ if (BOT_TOKEN) {
                     await bot.sendMessage(msg.chat.id,
                         `❌ Email <b>${email}</b> не зареєстрований на сайті.\n\nЗаписатися на консультацію можуть лише зареєстровані пацієнти. Будь ласка, спочатку створіть акаунт на сайті (за цим самим email), а потім поверніться сюди й натисніть «Записатися на консультацію».`,
                         { parse_mode: "HTML", reply_markup: { inline_keyboard: [
-                            [{ text: "📝 Зареєструватися на сайті", url: "https://golos-proty-raku.pp.ua/register.html" }],
+                            [{ text: "📝 Зареєструватися на сайті", url: "https://nadiya.pp.ua/register.html" }],
                             [{ text: "⬅️ До головного меню", callback_data: "back_to_main" }]
                         ] } }
                     );
@@ -909,7 +909,7 @@ app.post('/api/pay', async (req, res) => {
         if (!MONO_TOKEN) return res.json({ url: "https://send.monobank.ua/" });
         const monoRes = await axios.post('https://api.monobank.ua/api/merchant/invoice/create', {
             amount: 3736, ccy: 980, merchantPaymInfo: { destination: `Трек: ${songName}`, reference: songId },
-            redirectUrl: "https://golos-proty-raku.pp.ua/success.html", webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
+            redirectUrl: "https://nadiya.pp.ua/success.html", webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: monoRes.data.pageUrl });
     } catch (error) { res.status(500).json({ error: "Помилка оплати" }); }
@@ -923,7 +923,7 @@ app.post('/api/pay-subscription', async (req, res) => {
             amount: 34900, 
             ccy: 980, 
             merchantPaymInfo: { destination: "Пакет PRO: 10 Генерацій Кліпу", reference: email },
-            redirectUrl: "https://golos-proty-raku.pp.ua/success.html", 
+            redirectUrl: "https://nadiya.pp.ua/success.html", 
             webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
         }, { headers: { 'X-Token': MONO_TOKEN } });
         res.json({ url: monoRes.data.pageUrl });
@@ -1011,7 +1011,7 @@ app.post('/api/webhook', async (req, res) => {
                                 try {
                                     await bot.sendMessage(consultation.telegramChatId,
                                         `🎉 <b>Оплату отримано! Дякуємо.</b>\n\nВаш запис на онлайн-консультацію з фізичної реабілітації підтверджено. Наш фахівець зв'яжеться з вами найближчим часом.\n\nІсторію консультацій, нотатки та призначення лікаря ви завжди знайдете в особистому кабінеті на сайті (вхід за email <b>${record.email}</b>).`,
-                                        { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "🌐 Відкрити кабінет", url: "https://golos-proty-raku.pp.ua/login.html" }]] } }
+                                        { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "🌐 Відкрити кабінет", url: "https://nadiya.pp.ua/login.html" }]] } }
                                     );
                                 } catch (notifyErr) {
                                     console.error('❌ Не вдалося надіслати підтвердження консультації в бот:', notifyErr.message);
@@ -1227,7 +1227,7 @@ async function fetchAndRewriteBlog() {
                 if (bot && CHANNEL_ID) {
                     try {
                         const shortText = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '').substring(0, 280).replace(/\n/g, ' ');
-                        await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://golos-proty-raku.pp.ua/blog.html">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
+                        await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://nadiya.pp.ua/blog.html">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
                     } catch (e) {}
                 }
                 await new Promise(r => setTimeout(r, 6000)); 
@@ -1464,7 +1464,7 @@ async function createConsultationInvoiceForEmail(email, telegramChatId = null) {
         amount: CONSULTATION_PRICE_UAH * 100,
         ccy: 980,
         merchantPaymInfo: { destination: "Онлайн-консультація «Надія»", reference: `consult_${key}_${consultationId}` },
-        redirectUrl: "https://golos-proty-raku.pp.ua/profile.html",
+        redirectUrl: "https://nadiya.pp.ua/profile.html",
         webHookUrl: "https://andreygerc11-music-site.onrender.com/api/webhook"
     }, { headers: { 'X-Token': MONO_TOKEN } });
 
@@ -1584,7 +1584,7 @@ app.post('/api/admin/upload', authRateLimiter, async (req, res) => {
             message: `Завантаження ${path} (адмін-панель)`,
             content: b64
         }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-        res.json({ success: true, url: `https://golos-proty-raku.pp.ua/${path}` });
+        res.json({ success: true, url: `https://nadiya.pp.ua/${path}` });
     } catch (e) {
         res.status(500).json({ error: "Не вдалося завантажити файл" });
     }

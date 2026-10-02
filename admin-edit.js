@@ -1,6 +1,6 @@
 /* Живе редагування сайту прямо на сторінці — тільки для адміністратора.
    Гість нічого не бачить. Щоб увійти: відкрити сторінку з #admin у кінці адреси
-   (напр. golos-proty-raku.pp.ua/#admin) і ввести логін/пароль адміна. */
+   (напр. nadiya.pp.ua/#admin) і ввести логін/пароль адміна. */
 (function () {
     const API = 'https://andreygerc11-music-site.onrender.com';
     const KEY = 'nadiya_admin_creds';
