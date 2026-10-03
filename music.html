@@ -508,34 +508,50 @@
       });
   }
 
+  let loadRetries = 0;
   function loadAndPlayTrack(i) {
       currentIndex = i;
+      loadRetries = 0;
       const song = songsData[i];
       document.querySelectorAll('.ap-track').forEach(el => el.classList.remove('active'));
       tracklistEl.children[i].classList.add('active');
       titleEl.innerText = song.name;
       coverImg.style.filter = 'none';
+      startCurrentSrc();
+  }
 
-      audio.src = streamURL + song.fullId;
+  function startCurrentSrc() {
+      const song = songsData[currentIndex];
+      // Параметр ?r= при повторі — щоб браузер точно перезапитав (сервер його ігнорує)
+      audio.src = streamURL + song.fullId + (loadRetries ? ('?r=' + loadRetries) : '');
       const playPromise = audio.play();
-      if (playPromise && playPromise.catch) {
-          playPromise.catch(() => { /* реальні збої ловить подія 'error' нижче */ });
-      }
+      if (playPromise && playPromise.catch) playPromise.catch(() => {});
       playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
 
       clearTimeout(stallWatchdog);
+      // Render free може «прокидатися» ~30–50с — даємо час; скидаємо на loadeddata/canplay/playing
       stallWatchdog = setTimeout(() => {
-          if (currentIndex === i && audio.currentTime === 0) skipToNextOnFailure();
-      }, 12000);
+          if (audio.currentTime === 0 && audio.readyState < 2) handleLoadFailure();
+      }, 25000);
   }
 
-  function skipToNextOnFailure() {
+  // Трек не завантажився (помилка/застряг) — найчастіше сервер спав і прокидається.
+  // Спершу пробуємо ТОЙ САМИЙ трек ще раз, і лише після кількох спроб — наступний.
+  function handleLoadFailure() {
+      clearTimeout(stallWatchdog);
       if (currentIndex === -1 || songsData.length === 0) return;
+      if (loadRetries < 3) {
+          loadRetries++;
+          titleEl.innerText = (songsData[currentIndex].name || '') + ' — зʼєднання…';
+          setTimeout(startCurrentSrc, 3000);
+          return;
+      }
+      loadRetries = 0;
       skipAttempts++;
       if (skipAttempts >= songsData.length) { skipAttempts = 0; return; }
-      const nextIndex = (currentIndex + 1) % songsData.length;
-      loadAndPlayTrack(nextIndex);
+      loadAndPlayTrack((currentIndex + 1) % songsData.length);
   }
+  function skipToNextOnFailure() { handleLoadFailure(); }
 
   playPauseBtn.addEventListener('click', () => {
       if (currentIndex === -1 && songsData.length > 0) loadAndPlayTrack(0);
@@ -583,10 +599,18 @@
   audio.addEventListener('playing', () => {
       clearTimeout(stallWatchdog);
       skipAttempts = 0;
+      loadRetries = 0;
+      if (currentIndex >= 0 && songsData[currentIndex]) titleEl.innerText = songsData[currentIndex].name;
   });
 
+  // Дані вже завантажуються/готові — трек точно не «мертвий», знімаємо сторожовий таймер
+  audio.addEventListener('loadeddata', () => clearTimeout(stallWatchdog));
+  audio.addEventListener('canplay', () => clearTimeout(stallWatchdog));
+
   audio.addEventListener('error', () => {
-      skipToNextOnFailure();
+      // Ігноруємо "abort" (код 1), що буває при зміні треку
+      if (audio.error && audio.error.code === 1) return;
+      handleLoadFailure();
   });
 
   function closeLimitModal() {
