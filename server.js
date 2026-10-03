@@ -33,8 +33,40 @@ const authRateLimiter = rateLimit({
 });
 
 // === ЗМІННІ З RENDER ===
-const GROQ_API_KEY = process.env.GROQ_API_KEY; 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+// Моделі Groq із запасними — Groq періодично знімає моделі з експлуатації.
+// Якщо поточна недоступна (model_not_found/400), автоматично пробуємо наступну.
+const GROQ_MODELS = [
+    "llama-3.3-70b-versatile",
+    "openai/gpt-oss-120b",
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "llama-3.1-8b-instant"
+];
+let groqModelOk = null; // перша робоча модель (запамʼятовуємо, щоб не перебирати щоразу)
+async function groqChat(messages, maxTokens = 2000, temperature = 0.3) {
+    const order = groqModelOk ? [groqModelOk, ...GROQ_MODELS.filter(m => m !== groqModelOk)] : GROQ_MODELS;
+    let lastErr;
+    for (const model of order) {
+        try {
+            const res = await axios.post('https://api.groq.com/openai/v1/chat/completions',
+                { model, messages, max_tokens: maxTokens, temperature },
+                { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
+            if (groqModelOk !== model) { groqModelOk = model; console.log(`🤖 Groq модель: ${model}`); }
+            return res.data.choices[0].message.content.trim();
+        } catch (e) {
+            lastErr = e;
+            const code = e.response && e.response.data && e.response.data.error && e.response.data.error.code;
+            const status = e.response && e.response.status;
+            // модель недоступна -> пробуємо наступну; інші помилки (ключ/ліміт) -> припиняємо
+            if (code === 'model_not_found' || code === 'model_decommissioned' || status === 400 || status === 404) continue;
+            throw e;
+        }
+    }
+    throw lastErr || new Error('Жодна модель Groq недоступна');
+}
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO;
@@ -1203,16 +1235,10 @@ async function fetchAndRewriteBlog() {
                 console.log(`✍️ Генерую новину: ${cleanTitle}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: "llama-3.3-70b-versatile",
-                    messages: [
-                        { role: "system", content: "Ти — професійний український журналіст. Переклади англійську новину та напиши аналітичну статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, далі текст." }, 
-                        { role: "user", content: `Новина: ${rawTitle}` }
-                    ],
-                    max_tokens: 2000, temperature: 0.3 
-                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
-
-                const fullResponse = groqRes.data.choices[0].message.content.trim();
+                const fullResponse = await groqChat([
+                    { role: "system", content: "Ти — професійний український журналіст. Переклади англійську новину та напиши аналітичну статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, далі текст." },
+                    { role: "user", content: `Новина: ${rawTitle}` }
+                ], 2000, 0.3);
                 const lines = fullResponse.split('\n');
                 const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
                 const articleContent = lines.slice(1).join('\n').trim(); 
@@ -1260,16 +1286,10 @@ async function fetchAndRewriteBlog() {
                 console.log(`🫂 Генерую статтю підтримки: ${cleanTitle}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: "llama-3.3-70b-versatile",
-                    messages: [
-                        { role: "system", content: "Ти психолог проєкту 'Голос проти раку'. Адаптуй статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, потім текст. В кінці: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію лікаря'." }, 
-                        { role: "user", content: `Матеріал: ${rawTitle}` }
-                    ],
-                    max_tokens: 2200, temperature: 0.3
-                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
-
-                const fullResponse = groqRes.data.choices[0].message.content.trim();
+                const fullResponse = await groqChat([
+                    { role: "system", content: "Ти психолог проєкту 'Голос проти раку'. Адаптуй статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, потім текст. В кінці: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію лікаря'." },
+                    { role: "user", content: `Матеріал: ${rawTitle}` }
+                ], 2200, 0.3);
                 const lines = fullResponse.split('\n');
                 const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
                 const articleContent = lines.slice(1).join('\n').trim(); 
@@ -1310,16 +1330,10 @@ async function fetchAndRewriteBlog() {
                 console.log(`💪 Генерую статтю реабілітації: ${rawTitle.split(" - ")[0]}`);
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
-                const groqRes = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: "llama-3.3-70b-versatile",
-                    messages: [
-                        { role: "system", content: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Твоє завдання: адаптувати статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. КАТЕГОРИЧНО ЗАБОРОНЕНО згадувати слова 'рак', 'онкологія' чи 'пухлина'. Пиши про загальну реабілітацію, відновлення руху, ерготерапію, сучасні інструменти (тейпування тощо) та психологічну опору після травм. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК, а потім сам текст. Додай секцію 'Як це працює'. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням обов’язково проконсультуйтеся з фізичним терапевтом'." }, 
-                        { role: "user", content: `Новина для адаптації: ${rawTitle}` }
-                    ],
-                    max_tokens: 2200, temperature: 0.3
-                }, { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` } });
-
-                const fullResponse = groqRes.data.choices[0].message.content.trim();
+                const fullResponse = await groqChat([
+                    { role: "system", content: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Твоє завдання: адаптувати статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. КАТЕГОРИЧНО ЗАБОРОНЕНО згадувати слова 'рак', 'онкологія' чи 'пухлина'. Пиши про загальну реабілітацію, відновлення руху, ерготерапію, сучасні інструменти (тейпування тощо) та психологічну опору після травм. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК, а потім сам текст. Додай секцію 'Як це працює'. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням обовʼязково проконсультуйтеся з фізичним терапевтом'." },
+                    { role: "user", content: `Новина для адаптації: ${rawTitle}` }
+                ], 2200, 0.3);
                 const lines = fullResponse.split('\n');
                 const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
                 const articleContent = lines.slice(1).join('\n').trim(); 
