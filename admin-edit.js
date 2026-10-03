@@ -140,7 +140,7 @@
         // Адмін заходить у кабінет лікаря тими самими даними (авто-вхід)
         document.getElementById('ab_doctor').onclick = () => {
             try { sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify({ login: creds.login, password: creds.password, doctorName: 'Адміністратор' })); } catch (e) {}
-            location.href = 'doctor-dashboard.html';
+            location.href = 'doctor-dashboard';
         };
         document.getElementById('ab_exit').onclick = () => { sessionStorage.removeItem(KEY); location.hash = ''; location.reload(); };
     }
