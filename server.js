@@ -936,7 +936,11 @@ app.get('/api/stream/:fileId', async (req, res) => {
         if (response.headers['content-length']) res.setHeader('Content-Length', response.headers['content-length']);
 
         response.data.pipe(res);
-    } catch (error) { res.status(500).send("Помилка відтворення"); }
+    } catch (error) {
+        const gstatus = error.response ? error.response.status : '-';
+        console.error(`❌ /api/stream ${req.params.fileId} | Google статус: ${gstatus} | ${error.message}`);
+        res.status(500).send("Помилка відтворення");
+    }
 });
 
 app.post('/api/pay', async (req, res) => {
