@@ -451,6 +451,9 @@
   const apiURL = "https://andreygerc11-music-site.onrender.com/api/music";
   const payURL = "https://andreygerc11-music-site.onrender.com/api/pay";
   const streamURL = "https://andreygerc11-music-site.onrender.com/api/stream/";
+  const pingURL = "https://andreygerc11-music-site.onrender.com/ping";
+  let playerReady = false;
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
   let songsData = [];
   let currentIndex = -1;
@@ -469,14 +472,38 @@
   const coverImg = document.getElementById('apCoverImg');
 
   async function initMusicPlayer() {
-      try {
-          const res = await fetch(apiURL);
-          songsData = await res.json();
-          if (!songsData || songsData.length === 0 || songsData.error) {
-              tracklistEl.innerHTML = "<div class='ap-loading'>Пісень поки немає.</div>"; return;
-          }
-          renderTracklist();
-      } catch (e) { tracklistEl.innerHTML = "<div class='ap-loading'>Помилка з'єднання з сервером.</div>"; }
+      // Показуємо повідомлення й СПОЧАТКУ будимо сервер (Render free засинає),
+      // і лише коли він відповість — активуємо плеєр. Так треки не перескакують.
+      playerReady = false;
+      playPauseBtn.disabled = true;
+      titleEl.innerText = 'Зачекайте, іде завантаження пісень…';
+      tracklistEl.innerHTML = "<div class='ap-loading'>⏳ Зачекайте, іде завантаження пісень…<br><span style='opacity:.7;font-size:.85em'>сервер прокидається, це може зайняти до ~1 хвилини</span></div>";
+
+      // 1) Будимо сервер: будь-яка відповідь = він прокинувся; мережеву помилку — повторюємо
+      for (let i = 0; i < 8; i++) {
+          try { await fetch(pingURL, { cache: 'no-store' }); break; }
+          catch (e) { await wait(3000); }
+      }
+
+      // 2) Вантажимо список пісень із повторами (поки сервер остаточно «розігріється»)
+      for (let i = 0; i < 10; i++) {
+          try {
+              const res = await fetch(apiURL, { cache: 'no-store' });
+              const data = await res.json();
+              if (Array.isArray(data) && data.length > 0) {
+                  songsData = data;
+                  renderTracklist();
+                  playerReady = true;
+                  playPauseBtn.disabled = false;
+                  titleEl.innerText = 'Оберіть трек';
+                  return;
+              }
+              if (data && (data.length === 0)) { tracklistEl.innerHTML = "<div class='ap-loading'>Пісень поки немає.</div>"; return; }
+          } catch (e) {}
+          await wait(3000);
+      }
+      tracklistEl.innerHTML = "<div class='ap-loading'>Не вдалося завантажити пісні. Онови сторінку за хвилину.</div>";
+      titleEl.innerText = 'Помилка завантаження';
   }
 
   function renderTracklist() {
