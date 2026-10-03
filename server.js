@@ -20,6 +20,10 @@ const app = express();
 // запис на консультацію, кабінет лікаря). Довіряємо одному проксі Render.
 app.set('trust proxy', 1);
 app.use(cors({ origin: ['https://nadiya.pp.ua', 'https://www.nadiya.pp.ua', 'https://golos-proty-raku.pp.ua', 'https://www.golos-proty-raku.pp.ua'] }));
+
+// Легкий keep-alive: будь-який пінг на /ping будить сервер (Render free засинає).
+// Пінгувати треба САМЕ цю onrender-адресу, а не сторінки сайту (вони на GitHub Pages).
+app.get('/ping', (req, res) => res.status(200).send('ok'));
 app.use(express.json({ limit: '50mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
@@ -39,11 +43,11 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // Моделі Groq із запасними — Groq періодично знімає моделі з експлуатації.
 // Якщо поточна недоступна (model_not_found/400), автоматично пробуємо наступну.
 const GROQ_MODELS = [
-    "llama-3.3-70b-versatile",
-    "openai/gpt-oss-120b",
-    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "llama-3.1-8b-instant",                          // найщедріші безкоштовні ліміти — пріоритет
+    "openai/gpt-oss-20b",
     "meta-llama/llama-4-scout-17b-16e-instruct",
-    "llama-3.1-8b-instant"
+    "openai/gpt-oss-120b",
+    "meta-llama/llama-4-maverick-17b-128e-instruct"
 ];
 let groqModelOk = null; // перша робоча модель (запамʼятовуємо, щоб не перебирати щоразу)
 async function groqChat(messages, maxTokens = 2000, temperature = 0.3) {
