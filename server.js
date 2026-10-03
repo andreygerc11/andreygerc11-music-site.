@@ -1230,9 +1230,9 @@ async function fetchAndRewriteBlog() {
                         await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://nadiya.pp.ua/blog">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
                     } catch (e) {}
                 }
-                await new Promise(r => setTimeout(r, 6000)); 
+                await new Promise(r => setTimeout(r, 6000));
             }
-        } catch (e) {}
+        } catch (e) { console.error('❌ Новини (RSS/Groq):', e.response && e.response.data ? JSON.stringify(e.response.data).slice(0,400) : e.message); }
     }
 
     // === ПСИХОЛОГІЯ ===
@@ -1283,7 +1283,7 @@ async function fetchAndRewriteBlog() {
 
                 await new Promise(r => setTimeout(r, 6000));
             }
-        } catch (e) {}
+        } catch (e) { console.error('❌ Психологія (RSS/Groq):', e.response && e.response.data ? JSON.stringify(e.response.data).slice(0,400) : e.message); }
     }
 
     // === РЕАБІЛІТАЦІЯ ===
@@ -1333,7 +1333,7 @@ async function fetchAndRewriteBlog() {
 
                 await new Promise(r => setTimeout(r, 6000));
             }
-        } catch (e) {}
+        } catch (e) { console.error('❌ Реабілітація (RSS/Groq):', e.response && e.response.data ? JSON.stringify(e.response.data).slice(0,400) : e.message); }
     }
     
     if (addedCount > 0) {
