@@ -132,7 +132,7 @@
 </div>
 
 <div class="login-card">
-    <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
+    <a href="/" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
     
     <div class="logo">НАДІ<span>Я</span></div>
     
@@ -180,7 +180,7 @@
         <div class="g_id_signin" data-type="standard"></div>
     </div>
 
-    <p class="footer-text">Вже є акаунт? <a href="login.html">Увійти</a></p>
+    <p class="footer-text">Вже є акаунт? <a href="login">Увійти</a></p>
 </div>
 
 <script>
@@ -219,7 +219,7 @@
 
             if (data.success) {
                 alert('Акаунт успішно створено! Тепер увійдіть.');
-                window.location.href = 'login.html';
+                window.location.href = 'login';
             } else {
                 alert(data.error || 'Помилка реєстрації');
                 btn.innerText = 'СТВОРИТИ АКАУНТ';
@@ -253,7 +253,7 @@
             const data = await res.json();
             if (data.success) {
                 localStorage.setItem('hz_user', JSON.stringify({ email: payload.email, name: payload.name }));
-                window.location.href = 'profile.html';
+                window.location.href = 'profile';
             }
         } catch (err) {
             console.error('Google Auth Error:', err);

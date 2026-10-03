@@ -16,7 +16,7 @@
     <meta property="og:title" content="Голос проти раку | Благодійна ініціатива">
     <meta property="og:description" content="Благодійна музична платформа для підтримки онкохворих. Разом до перемоги над хворобою.">
     <meta property="og:image" content="https://nadiya.pp.ua/obkladunka.png">
-    <meta property="og:url" content="https://nadiya.pp.ua/music.html">
+    <meta property="og:url" content="https://nadiya.pp.ua/music">
     <meta property="og:type" content="website">
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8156708104768404" crossorigin="anonymous"></script>
@@ -234,11 +234,11 @@
 
 <nav class="header-nav">
     <div class="nav-container">
-        <a href="index.html" class="logo cursive-text">Golos <span>Proty Raku</span></a>
+        <a href="/" class="logo cursive-text">Golos <span>Proty Raku</span></a>
         <div class="nav-actions">
-            <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну «Надія»</a>
-            <a href="login.html" id="authBtn" class="auth-btn-nav"><i class="fas fa-sign-in-alt"></i> Увійти</a>
-            <a href="profile.html" id="userProfileBtn" class="auth-btn-nav" style="display:none;"><i class="fas fa-user"></i> Кабінет</a>
+            <a href="/" class="btn-back"><i class="fas fa-arrow-left"></i> На головну «Надія»</a>
+            <a href="login" id="authBtn" class="auth-btn-nav"><i class="fas fa-sign-in-alt"></i> Увійти</a>
+            <a href="profile" id="userProfileBtn" class="auth-btn-nav" style="display:none;"><i class="fas fa-user"></i> Кабінет</a>
         </div>
     </div>
 </nav>
@@ -390,13 +390,13 @@
 </div>
 
 <footer>
-    <a href="index.html" class="footer-logo-text"><img src="logo.png" alt="Надія" class="footer-logo-img">НАДІ<span>Я</span></a>
+    <a href="/" class="footer-logo-text"><img src="logo.png" alt="Надія" class="footer-logo-img">НАДІ<span>Я</span></a>
     <div class="footer-copy">© 2026 ФОП Герц Андрій Костянтинович. Всі права захищені.</div>
     <div class="footer-links">
-        <a href="index.html">Реабілітаційний центр «Надія»</a>
+        <a href="/">Реабілітаційний центр «Надія»</a>
         <a href="privacy_policy.html">Політика конфіденційності</a>
         <a href="public_offer.html">Публічна оферта</a>
-        <a href="contacts.html">Контакти</a>
+        <a href="contacts">Контакти</a>
     </div>
     <div class="footer-bottom-disclaimer">
         <strong>Відмова від відповідальності:</strong> Матеріали на сайті «Голос проти раку» публікуються виключно з інформаційною метою. Ми не ставимо діагнози та не призначаємо лікування. З будь-якими питаннями щодо вашого здоров'я обов'язково звертайтеся до кваліфікованого лікаря-онколога.
@@ -421,7 +421,7 @@
   async function processSubscription(btnElement) {
       if (!currentUser) {
           alert("Будь ласка, спочатку увійдіть або зареєструйтесь для оформлення підписки.");
-          window.location.href = "login.html";
+          window.location.href = "login";
           return;
       }
       const originalText = btnElement.innerText;

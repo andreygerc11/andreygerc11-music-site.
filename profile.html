@@ -149,10 +149,10 @@
 <body>
 
     <header class="top-bar">
-        <a href="index.html" class="logo">НАДІ<span>Я</span></a>
+        <a href="/" class="logo">НАДІ<span>Я</span></a>
         <div style="display: flex; gap: 20px;">
-            <a href="index.html" class="btn-back"><i class="fas fa-home"></i> На головну</a>
-            <a href="music.html" class="btn-back"><i class="fas fa-music"></i> Музика</a>
+            <a href="/" class="btn-back"><i class="fas fa-home"></i> На головну</a>
+            <a href="music" class="btn-back"><i class="fas fa-music"></i> Музика</a>
         </div>
     </header>
 
@@ -278,7 +278,7 @@
         try { currentUser = JSON.parse(localStorage.getItem('hz_user')); } catch(e) {}
 
         if (!currentUser) {
-            safeRedirect("login.html");
+            safeRedirect("login");
         } else {
             document.getElementById('userEmail').innerText = currentUser.email;
             document.getElementById('userInitial').innerText = currentUser.email.charAt(0).toUpperCase();
@@ -690,7 +690,7 @@
             if(confirm("Ви дійсно хочете вийти з акаунта?")) {
                 localStorage.removeItem('hz_user');
                 try { google.accounts.id.disableAutoSelect(); } catch(e) {}
-                safeRedirect("login.html");
+                safeRedirect("login");
             }
         });
     </script>

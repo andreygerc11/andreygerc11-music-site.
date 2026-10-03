@@ -132,7 +132,7 @@
 </div>
 
 <div class="login-card">
-    <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
+    <a href="/" class="btn-back"><i class="fas fa-arrow-left"></i> На головну</a>
     
     <div class="logo">ВХІД У <span>КАБІНЕТ</span></div>
     <p style="text-align:center; color:#aaa; font-size:0.82rem; margin:-18px 0 22px;">Єдиний вхід для пацієнтів і лікарів</p>
@@ -170,7 +170,7 @@
         </div>
     </div>
 
-    <p class="footer-text">Немає акаунту? <a href="register.html">Зареєструватися</a></p>
+    <p class="footer-text">Немає акаунту? <a href="register">Зареєструватися</a></p>
 </div>
 
 <script>
@@ -192,15 +192,15 @@
                 // Даємо доступ і до кабінету лікаря (адмін може все).
                 sessionStorage.setItem('nadiya_admin_creds', JSON.stringify({ login: idVal, password: passVal }));
                 sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify({ login: idVal, password: passVal, doctorName: data.doctorName || 'Адміністратор' }));
-                window.location.href = 'index.html#admin';
+                window.location.href = '/#admin';
             } else if (data.success && data.role === 'doctor') {
                 // Лікар → кабінет лікаря
                 sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify({ login: idVal, password: passVal, doctorName: data.doctorName || '' }));
-                window.location.href = 'doctor-dashboard.html';
+                window.location.href = 'doctor-dashboard';
             } else if (data.success) {
                 // Пацієнт → особистий кабінет
                 localStorage.setItem('hz_user', JSON.stringify({ email: idVal, name: (data.user && data.user.name) || '', status: (data.user && data.user.status) || 'free' }));
-                window.location.href = 'profile.html';
+                window.location.href = 'profile';
             } else { alert(data.error || 'Невірний логін або пароль'); btn.innerText = 'УВІЙТИ'; btn.disabled = false; }
         } catch (err) { alert('Помилка сервера. Спробуйте пізніше.'); btn.innerText = 'УВІЙТИ'; btn.disabled = false; }
     });
@@ -226,7 +226,7 @@
             const data = await res.json();
             if (data.success) {
                 localStorage.setItem('hz_user', JSON.stringify({ email: payload.email, status: data.status }));
-                window.location.href = 'profile.html';
+                window.location.href = 'profile';
             } else { alert('Помилка: ' + data.error); }
         } catch (err) { alert('Помилка зв\'язку з сервером.'); }
     }
