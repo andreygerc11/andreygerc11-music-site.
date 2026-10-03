@@ -11,6 +11,27 @@ const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const TelegramBot = require('node-telegram-bot-api');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
+const { JWT } = require('google-auth-library');
+
+// Сервісний акаунт Google для стріму з Drive (автентифікований доступ оминає
+// публічну квоту завантажень "downloadQuotaExceeded"). Ключ — у GOOGLE_SA_JSON.
+let _saClient = null; // null = ще не ініціалізовано, false = немає/помилка
+function getSaClient() {
+    if (_saClient !== null) return _saClient;
+    try {
+        if (!process.env.GOOGLE_SA_JSON) { _saClient = false; return false; }
+        const sa = JSON.parse(process.env.GOOGLE_SA_JSON);
+        _saClient = new JWT({ email: sa.client_email, key: sa.private_key, scopes: ['https://www.googleapis.com/auth/drive.readonly'] });
+        console.log('🔑 Сервісний акаунт для стріму активовано:', sa.client_email);
+    } catch (e) { console.error('❌ GOOGLE_SA_JSON некоректний:', e.message); _saClient = false; }
+    return _saClient;
+}
+async function getSaToken() {
+    const c = getSaClient();
+    if (!c) return null;
+    try { const t = await c.getAccessToken(); return (t && t.token) || null; }
+    catch (e) { console.error('❌ Токен сервісного акаунта:', e.message); return null; }
+}
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
@@ -913,17 +934,26 @@ app.get('/api/music', async (req, res) => {
 
 app.get('/api/stream/:fileId', async (req, res) => {
     try {
-        if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
-
         // Проксіюємо Range-заголовок до Google Drive, щоб браузер міг
-        // коректно перемотувати та буферизувати потік, а не отримувати
-        // щоразу весь файл наново під виглядом часткової відповіді.
+        // коректно перемотувати та буферизувати потік.
         const headers = {};
         if (req.headers.range) headers.Range = req.headers.range;
 
+        // Пріоритет — сервісний акаунт (оминає публічну квоту завантажень).
+        // Якщо його нема — запасний варіант через API-ключ.
+        const saToken = await getSaToken();
+        let driveUrl;
+        if (saToken) {
+            driveUrl = `https://www.googleapis.com/drive/v3/files/${req.params.fileId}?alt=media`;
+            headers.Authorization = `Bearer ${saToken}`;
+        } else {
+            if (!GOOGLE_API_KEY) throw new Error("Немає GOOGLE_API_KEY");
+            driveUrl = `https://www.googleapis.com/drive/v3/files/${req.params.fileId}?alt=media&key=${GOOGLE_API_KEY}`;
+        }
+
         const response = await axios({
             method: 'get',
-            url: `https://www.googleapis.com/drive/v3/files/${req.params.fileId}?alt=media&key=${GOOGLE_API_KEY}`,
+            url: driveUrl,
             responseType: 'stream',
             headers,
             validateStatus: s => s === 200 || s === 206
