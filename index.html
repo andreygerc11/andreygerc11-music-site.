@@ -717,16 +717,18 @@
           // Показуємо статті хабу (реабілітація + поради терапевтів), як на сторінці medical_hub,
           // без згадок раку (межа слова, щоб не чіпати "характер"/"практика").
           const cancerRe = /(^|[^а-яіїєґ’'ʼ])(рак|онко)/;
+          // Поради терапевтів (rehab_wife) — завжди; реабілітація — без згадок раку.
           const hubPosts = posts.filter(p => {
-              if (p.category !== 'rehab' && p.category !== 'rehab_wife') return false;
+              if (p.category === 'rehab_wife') return true;
+              if (p.category !== 'rehab') return false;
               const t = (p.title || '').toLowerCase(), c = (p.content || '').toLowerCase();
               return !(cancerRe.test(t) || cancerRe.test(c));
           });
-          // Спершу статті з автором (написані фахівцями), потім решта — усі найновіші зверху.
+          // Спершу статті терапевтів (rehab_wife, підписані), потім реабілітація — найновіші зверху.
           const byNew = (a, b) => (b.id || 0) - (a.id || 0);
-          const authored = hubPosts.filter(p => p.author).sort(byNew);
-          const rest = hubPosts.filter(p => !p.author).sort(byNew);
-          const latest = [...authored, ...rest].slice(0, 3);
+          const tips = hubPosts.filter(p => p.category === 'rehab_wife').sort(byNew);
+          const rest = hubPosts.filter(p => p.category !== 'rehab_wife').sort(byNew);
+          const latest = [...tips, ...rest].slice(0, 3);
           if (latest.length === 0) {
               grid.innerHTML = '<div style="color:#777; grid-column:1/-1;">Статті скоро з\'являться.</div>';
               return;
@@ -735,7 +737,7 @@
               const img = p.imageUrl ? p.imageUrl : ('banner_rehab_' + (((p.id || 0) % 3) + 1) + '.svg');
               const text = esc(stripHtml(p.title) || stripHtml(p.content).slice(0, 90));
               const dateStr = fmtDate(p.id);
-              const author = esc(p.author || 'Команда «Надія»');
+              const author = esc(p.author || (p.category === 'rehab_wife' ? 'Реабілітолог «Надія»' : 'Команда «Надія»'));
               const initial = (author.trim()[0] || 'Н').toUpperCase();
               return `
                   <a href="medical_hub" class="news-card">
