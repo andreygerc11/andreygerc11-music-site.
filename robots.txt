@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /doctor-dashboard
+Disallow: /doctor-dashboard.html
+Disallow: /profile
+Disallow: /success
+
+Sitemap: https://nadiya.pp.ua/sitemap.xml
