@@ -1290,7 +1290,8 @@ async function fetchAndRewriteBlog() {
 
                 if (bot && CHANNEL_ID) {
                     try {
-                        const shortText = articleContent.replace(/\*/g, '').replace(/</g, '').replace(/>/g, '').substring(0, 280).replace(/\n/g, ' ');
+                        // Прибираємо ЦІЛІ HTML-теги (щоб <h2>…</h2> не перетворювалось на "h2…/h2"), markdown і зайві пробіли.
+                        const shortText = articleContent.replace(/<[^>]+>/g, ' ').replace(/[*#]/g, '').replace(/\s+/g, ' ').trim().substring(0, 280);
                         await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://nadiya.pp.ua/blog">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
                     } catch (e) {}
                 }
