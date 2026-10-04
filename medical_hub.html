@@ -487,13 +487,15 @@
             if (response.ok) {
                 const allPosts = await response.json();
                 
-                // Фільтруємо: тільки rehab або rehab_wife, і БЕЗ слова "рак"
+                // Фільтруємо: тільки rehab або rehab_wife, і БЕЗ згадок раку/онкології.
+                // Важливо: "рак"/"онко" шукаємо лише НА ПОЧАТКУ слова (межа слова),
+                // щоб не ховати статті через "хаРАКтер", "пРАКтика", "інтеРАКтивний" тощо.
+                const cancerRe = /(^|[^а-яіїєґ’'ʼ])(рак|онко)/;
                 allRehabPosts = allPosts.filter(p => {
                     if (p.category !== 'rehab' && p.category !== 'rehab_wife') return false;
                     const titleText = (p.title || "").toLowerCase();
                     const contentText = (p.content || "").toLowerCase();
-                    if (titleText.includes('рак') || titleText.includes('онко')) return false;
-                    if (contentText.includes('рак') || contentText.includes('онко')) return false;
+                    if (cancerRe.test(titleText) || cancerRe.test(contentText)) return false;
                     return true;
                 });
             }
