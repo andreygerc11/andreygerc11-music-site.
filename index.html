@@ -182,6 +182,11 @@
         .news-body { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 10px; }
         .news-date { font-size: 0.75rem; color: var(--accent, #20c997); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
         .news-card h4 { font-size: 1.02rem; line-height: 1.4; font-weight: 700; }
+        .news-author { display: flex; align-items: center; gap: 10px; }
+        .news-author-ava { width: 34px; height: 34px; border-radius: 50%; flex: 0 0 34px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; color: #04221a; background: var(--accent, #20c997); }
+        .news-author-name { font-size: 0.82rem; font-weight: 700; color: #cfd8d5; }
+        .news-read { font-size: 0.82rem; color: var(--accent, #20c997); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+        .news-card:hover .news-read i { transform: translateX(3px); transition: transform .2s; }
         @media (max-width: 860px) { .news-grid { grid-template-columns: 1fr; } }
         .resource-card {
             position: relative; border-radius: 4px; overflow: hidden; text-decoration: none; color: #fff;
@@ -506,11 +511,11 @@
 
         <div class="home-news" data-aos="fade-up">
             <div class="home-news-head">
-                <h3>Останні новини</h3>
-                <a href="blog" class="home-news-all">Усі новини <i class="fas fa-arrow-right"></i></a>
+                <h3>Статті та поради наших фахівців</h3>
+                <a href="medical_hub" class="home-news-all">Усі статті на хабі <i class="fas fa-arrow-right"></i></a>
             </div>
             <div class="news-grid" id="homeNewsGrid">
-                <div style="color:#777; grid-column:1/-1;">Завантаження новин...</div>
+                <div style="color:#777; grid-column:1/-1;">Завантаження статей...</div>
             </div>
         </div>
     </section>
@@ -703,29 +708,51 @@
           const res = await fetch('https://andreygerc11-music-site.onrender.com/api/blog?t=' + Date.now());
           const posts = await res.json();
           if (!posts || posts.length === 0) {
-              grid.innerHTML = '<div style="color:#777; grid-column:1/-1;">Новини скоро з\'являться.</div>';
+              grid.innerHTML = '<div style="color:#777; grid-column:1/-1;">Статті скоро з\'являться.</div>';
               return;
           }
           const esc = s => (s || '').replace(/</g, '&lt;');
           const stripHtml = s => (s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
           const fmtDate = ms => { const d = new Date(ms); return isNaN(d) ? '' : d.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
-          // Найновіші зверху — за id (це час публікації), а не за датою джерела
-          const latest = posts.slice().sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 3);
+          // Показуємо статті хабу (реабілітація + поради терапевтів), як на сторінці medical_hub,
+          // без згадок раку (межа слова, щоб не чіпати "характер"/"практика").
+          const cancerRe = /(^|[^а-яіїєґ’'ʼ])(рак|онко)/;
+          const hubPosts = posts.filter(p => {
+              if (p.category !== 'rehab' && p.category !== 'rehab_wife') return false;
+              const t = (p.title || '').toLowerCase(), c = (p.content || '').toLowerCase();
+              return !(cancerRe.test(t) || cancerRe.test(c));
+          });
+          // Спершу статті з автором (написані фахівцями), потім решта — усі найновіші зверху.
+          const byNew = (a, b) => (b.id || 0) - (a.id || 0);
+          const authored = hubPosts.filter(p => p.author).sort(byNew);
+          const rest = hubPosts.filter(p => !p.author).sort(byNew);
+          const latest = [...authored, ...rest].slice(0, 3);
+          if (latest.length === 0) {
+              grid.innerHTML = '<div style="color:#777; grid-column:1/-1;">Статті скоро з\'являться.</div>';
+              return;
+          }
           grid.innerHTML = latest.map(p => {
-              const img = p.imageUrl ? p.imageUrl : ('banner_news_' + (((p.id || 0) % 3) + 1) + '.svg');
+              const img = p.imageUrl ? p.imageUrl : ('banner_rehab_' + (((p.id || 0) % 3) + 1) + '.svg');
               const text = esc(stripHtml(p.title) || stripHtml(p.content).slice(0, 90));
               const dateStr = fmtDate(p.id);
+              const author = esc(p.author || 'Команда «Надія»');
+              const initial = (author.trim()[0] || 'Н').toUpperCase();
               return `
-                  <a href="blog" class="news-card">
+                  <a href="medical_hub" class="news-card">
                       <div class="news-img" style="background-image:url('${(img || '').replace(/'/g, '')}')"></div>
                       <div class="news-body">
-                          ${dateStr ? `<span class="news-date">${dateStr}</span>` : ''}
+                          <div class="news-author">
+                              <span class="news-author-ava">${initial}</span>
+                              <span class="news-author-name">${author}</span>
+                          </div>
                           <h4>${text}</h4>
+                          <span class="news-read">Читати на хабі <i class="fas fa-arrow-right"></i></span>
+                          ${dateStr ? `<span class="news-date">${dateStr}</span>` : ''}
                       </div>
                   </a>`;
           }).join('');
       } catch (e) {
-          grid.innerHTML = '<div style="color:#777; grid-column:1/-1;">Не вдалося завантажити новини.</div>';
+          grid.innerHTML = '<div style="color:#777; grid-column:1/-1;">Не вдалося завантажити статті.</div>';
       }
   }
   loadHomeNews();
