@@ -1184,8 +1184,9 @@ function pickBanner(category, title, content) {
 async function migrateCategoryBanners() {
     let changed = 0;
     aiBlogPosts.forEach((p, i) => {
-        if (!p) return;
-        const set = BANNERS_BY_CATEGORY[p.category];
+        if (!p || p.category === 'rehab_wife') return; // поради терапевта мають свій банер медхабу
+        // Стаття про рак → набір «Голос проти раку»; інакше — набір категорії «Надія».
+        const set = isCancerTopic(p.title, p.content) ? CANCER_BANNERS : BANNERS_BY_CATEGORY[p.category];
         if (set && !set.includes(p.imageUrl)) {
             p.imageUrl = set[i % set.length];
             changed++;
@@ -1193,7 +1194,7 @@ async function migrateCategoryBanners() {
     });
     if (changed > 0) {
         await saveBlogToGitHub();
-        console.log(`🎨 Оновлено банери у ${changed} постах (свій набір на кожну категорію).`);
+        console.log(`🎨 Оновлено банери у ${changed} постах (рак→Голос проти раку, решта→категорія).`);
     }
 }
 
