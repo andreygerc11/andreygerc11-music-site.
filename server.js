@@ -1162,8 +1162,22 @@ const NEWS_BANNERS = ['banner_news_1.svg', 'banner_news_2.svg', 'banner_news_3.s
 const PSY_BANNERS = ['banner_psy_1.svg', 'banner_psy_2.svg', 'banner_psy_3.svg'];
 const REHAB_BANNERS = ['banner_rehab_1.svg', 'banner_rehab_2.svg', 'banner_rehab_3.svg'];
 const BANNERS_BY_CATEGORY = { news: NEWS_BANNERS, psychology: PSY_BANNERS, rehab: REHAB_BANNERS };
+// Банери для статей про рак/онкологію — зі старим брендом «Голос проти раку».
+const CANCER_BANNERS = ['banner_cancer_1.svg', 'banner_cancer_2.svg', 'banner_cancer_3.svg'];
 function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function randomNewsBanner() { return randomFrom(NEWS_BANNERS); }
+
+// Чи стаття про рак/онкологію. "рак"/"онко" шукаємо лише на межі слова,
+// щоб не чіпляти "хаРАКтер", "пРАКтика", "інтеРАКтивний" тощо.
+function isCancerTopic(...texts) {
+    const re = /(^|[^а-яіїєґ’'ʼ])(рак|онко)/;
+    return texts.some(t => re.test((t || '').toLowerCase()));
+}
+// Вибір банера: стаття про рак → банер «Голос проти раку»; інакше — банер категорії («Надія»).
+function pickBanner(category, title, content) {
+    if (isCancerTopic(title, content)) return randomFrom(CANCER_BANNERS);
+    return randomFrom(BANNERS_BY_CATEGORY[category] || NEWS_BANNERS);
+}
 
 // Одноразова міграція: кожній категорії — свій набір банерів (стабільно за індексом).
 // Замінює старі однакові фото/банери. Сервер володіє blog_posts.json → durable.
@@ -1292,7 +1306,7 @@ async function fetchAndRewriteBlog() {
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     date: pubDate, category: "news", originalTitle: rawTitle,
-                    title: translatedTitle, content: articleContent, imageUrl: randomNewsBanner()
+                    title: translatedTitle, content: articleContent, imageUrl: pickBanner('news', translatedTitle, articleContent)
                 });
                 addedCount++; newsAddedThisRun++;
 
@@ -1344,7 +1358,7 @@ async function fetchAndRewriteBlog() {
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     date: pubDate, category: "psychology", originalTitle: rawTitle, 
-                    title: translatedTitle || cleanTitle, content: articleContent, imageUrl: randomFrom(PSY_BANNERS)
+                    title: translatedTitle || cleanTitle, content: articleContent, imageUrl: pickBanner('psychology', translatedTitle || cleanTitle, articleContent)
                 });
                 addedCount++; psychAddedThisRun++;
 
@@ -1388,7 +1402,7 @@ async function fetchAndRewriteBlog() {
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
                     date: pubDate, category: "rehab", originalTitle: rawTitle, 
-                    title: translatedTitle, content: articleContent, imageUrl: randomFrom(REHAB_BANNERS)
+                    title: translatedTitle, content: articleContent, imageUrl: pickBanner('rehab', translatedTitle, articleContent)
                 });
                 addedCount++; rehabAddedThisRun++;
 
@@ -2019,12 +2033,11 @@ app.post('/api/wife-blog', async (req, res) => {
         return res.status(400).json({ error: "Заголовок і текст обов'язкові" });
     }
     const cat = ['rehab_wife', 'news', 'psychology', 'rehab'].includes(category) ? category : 'rehab_wife';
-    const bannerByCat = {
-        rehab_wife: 'banner_medhub_1.svg',
-        news: randomFrom(NEWS_BANNERS),
-        psychology: randomFrom(PSY_BANNERS),
-        rehab: randomFrom(REHAB_BANNERS)
-    };
+    // Порада терапевта (rehab_wife) — свій банер медхабу; решта — через pickBanner
+    // (стаття про рак → банер «Голос проти раку», інакше — банер категорії «Надія»).
+    const bannerUrl = cat === 'rehab_wife'
+        ? 'banner_medhub_1.svg'
+        : pickBanner(cat, title, content);
     const article = {
         id: Date.now(),
         isWifeTip: cat === 'rehab_wife',
@@ -2033,7 +2046,7 @@ app.post('/api/wife-blog', async (req, res) => {
         content: String(content).trim().slice(0, 20000),
         author: auth.name,
         date: new Date().toLocaleDateString('uk-UA'),
-        imageUrl: bannerByCat[cat] || 'banner_medhub_1.svg'
+        imageUrl: bannerUrl
     };
     aiBlogPosts.unshift(article);
     await saveBlogToGitHub();
