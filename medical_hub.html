@@ -524,7 +524,7 @@
         const isWifeAuth = localStorage.getItem('hz_wife_auth') === 'true';
 
         allRehabPosts.forEach(post => {
-            let cleanText = (post.content || post.text || "").replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            let cleanText = (post.content || post.text || "").replace(/<[^>]*>/g, ' ').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
 
             let badgeHtml = '';
             let authorHtml = '';

@@ -1245,6 +1245,14 @@ const allBlogSources = [
 async function fetchAndRewriteBlog() {
     if (!GROQ_API_KEY) { console.log("❌ GROQ_API_KEY не налаштований"); return; }
     console.log("🔄 Запуск автоматичної генерації блогу (5 новин + 3 психологія)...");
+
+    // Зачистка статті: прибираємо БУДЬ-ЯКІ HTML-теги (щоб <h2> тощо ніколи не потрапляли в текст),
+    // markdown-заголовки (#) і зайві порожні рядки. Жирний **текст** лишаємо — сайт рендерить його як <b>.
+    const sanitizeArticle = (txt) => (txt || '')
+        .replace(/<[^>]+>/g, '')
+        .replace(/^\s*#{1,6}\s*/gm, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
     
     let addedCount = 0;
     
@@ -1274,12 +1282,12 @@ async function fetchAndRewriteBlog() {
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
                 const fullResponse = await groqChat([
-                    { role: "system", content: "Ти — професійний український журналіст. Переклади англійську новину та напиши аналітичну статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, далі текст." },
+                    { role: "system", content: "Ти — професійний український журналіст. Переклади англійську новину та напиши аналітичну статтю українською. НЕ використовуй HTML-теги (ніяких <h2>, <p> тощо). Підзаголовки виділяй жирним через **Підзаголовок** на окремому рядку. Абзаци розділяй порожнім рядком. Перший рядок — ЗАГОЛОВОК, далі текст." },
                     { role: "user", content: `Новина: ${rawTitle}` }
                 ], 2000, 0.3);
                 const lines = fullResponse.split('\n');
-                const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
-                const articleContent = lines.slice(1).join('\n').trim(); 
+                const translatedTitle = lines[0].replace(/[*#]/g, '').replace(/<[^>]+>/g, '').trim();
+                const articleContent = sanitizeArticle(lines.slice(1).join('\n'));
 
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
@@ -1326,12 +1334,12 @@ async function fetchAndRewriteBlog() {
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
                 const fullResponse = await groqChat([
-                    { role: "system", content: "Ти психолог проєкту 'Голос проти раку'. Адаптуй статтю українською. Використовуй <h2>. Перший рядок — ЗАГОЛОВОК, потім текст. В кінці: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію лікаря'." },
+                    { role: "system", content: "Ти психолог проєкту 'Голос проти раку'. Адаптуй статтю українською. НЕ використовуй HTML-теги (ніяких <h2>, <p> тощо). Підзаголовки виділяй жирним через **Підзаголовок** на окремому рядку. Абзаци розділяй порожнім рядком. Перший рядок — ЗАГОЛОВОК, потім текст. В кінці: 'Важливо: Цей матеріал створено для емоційної підтримки. Він не замінює консультацію лікаря'." },
                     { role: "user", content: `Матеріал: ${rawTitle}` }
                 ], 2200, 0.3);
                 const lines = fullResponse.split('\n');
-                const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
-                const articleContent = lines.slice(1).join('\n').trim(); 
+                const translatedTitle = lines[0].replace(/[*#]/g, '').replace(/<[^>]+>/g, '').trim();
+                const articleContent = sanitizeArticle(lines.slice(1).join('\n'));
 
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 
@@ -1370,12 +1378,12 @@ async function fetchAndRewriteBlog() {
                 let pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toLocaleDateString('uk-UA') : new Date().toLocaleDateString('uk-UA');
 
                 const fullResponse = await groqChat([
-                    { role: "system", content: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Твоє завдання: адаптувати статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. КАТЕГОРИЧНО ЗАБОРОНЕНО згадувати слова 'рак', 'онкологія' чи 'пухлина'. Пиши про загальну реабілітацію, відновлення руху, ерготерапію, сучасні інструменти (тейпування тощо) та психологічну опору після травм. Використовуй емоційні підзаголовки <h2>. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК, а потім сам текст. Додай секцію 'Як це працює'. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням обовʼязково проконсультуйтеся з фізичним терапевтом'." },
+                    { role: "system", content: "Ти — провідний експерт із фізичної реабілітації та ерготерапії. Твоє завдання: адаптувати статтю. ПИШИ ВИКЛЮЧНО УКРАЇНСЬКОЮ МОВОЮ. КАТЕГОРИЧНО ЗАБОРОНЕНО згадувати слова 'рак', 'онкологія' чи 'пухлина'. Пиши про загальну реабілітацію, відновлення руху, ерготерапію, сучасні інструменти (тейпування тощо) та психологічну опору після травм. НЕ використовуй HTML-теги (ніяких <h2>, <p> тощо). Емоційні підзаголовки виділяй жирним через **Підзаголовок** на окремому рядку, абзаци розділяй порожнім рядком. Першим рядком твоєї відповіді має бути СКОРЕГОВАНИЙ УКРАЇНСЬКИЙ ЗАГОЛОВОК, а потім сам текст. Додай секцію 'Як це працює'. Закінчуй дисклеймером: 'Важливо: Цей матеріал має ознайомчий характер. Перед застосуванням обовʼязково проконсультуйтеся з фізичним терапевтом'." },
                     { role: "user", content: `Новина для адаптації: ${rawTitle}` }
                 ], 2200, 0.3);
                 const lines = fullResponse.split('\n');
-                const translatedTitle = lines[0].replace(/[*#]/g, '').trim(); 
-                const articleContent = lines.slice(1).join('\n').trim(); 
+                const translatedTitle = lines[0].replace(/[*#]/g, '').replace(/<[^>]+>/g, '').trim();
+                const articleContent = sanitizeArticle(lines.slice(1).join('\n'));
 
                 aiBlogPosts.unshift({
                     id: Date.now() + Math.floor(Math.random() * 1000), 

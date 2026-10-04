@@ -504,7 +504,10 @@
                     </div>`;
             }
 
-            let cleanText = (post.content || "").replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            // Спершу прибираємо будь-які HTML-теги з тексту (щоб <h2> та подібне не виводилось у статтях,
+            // зокрема в старих постах, збережених до виправлення), потім уже самі робимо жирний текст і переноси.
+            let cleanText = (post.content || "").replace(/<[^>]*>/g, ' ');
+            cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
             cleanText = cleanText.replace(/\n/g, '<br>');
 
             const category = post.category || 'news';
