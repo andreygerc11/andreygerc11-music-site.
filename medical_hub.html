@@ -505,13 +505,15 @@
             console.error("Помилка завантаження бази", e);
         }
 
-        // Сортуємо: найновіші зверху за датою
+        // Сортуємо: СПОЧАТКУ поради реабілітолога (написані терапевтом), потім решта — найновіші зверху.
         allRehabPosts.sort((a, b) => {
             const parseDate = (d) => {
                 if (!d) return 0;
                 if (d.includes('.')) { let p = d.split('.'); return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime(); }
                 return new Date(d).getTime() || 0;
             };
+            const tip = p => (p.isWifeTip || p.category === 'rehab_wife') ? 1 : 0;
+            if (tip(a) !== tip(b)) return tip(b) - tip(a); // поради терапевта завжди вгорі
             return parseDate(b.date) - parseDate(a.date);
         });
 
@@ -540,7 +542,7 @@
             if (post.isWifeTip || post.category === 'rehab_wife') {
                 cardClass += ' author-marina';
                 badgeHtml = '<span class="rehab-badge" style="background: gold; color: #000;">Порада Реабілітолога</span>';
-                const tipAuthor = post.author ? String(post.author).replace(/</g, '&lt;') : 'Фахівець центру «Надія»';
+                const tipAuthor = post.author ? String(post.author).replace(/</g, '&lt;') : 'Герц Марина Віталіївна, фізичний терапевт';
                 authorHtml = `
                     <div class="author-info">
                         <i class="fas fa-user-md"></i>

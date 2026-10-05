@@ -783,7 +783,7 @@
               const img = p.imageUrl ? p.imageUrl : ('banner_rehab_' + (((p.id || 0) % 3) + 1) + '.svg');
               const text = esc(stripHtml(p.title) || stripHtml(p.content).slice(0, 90));
               const dateStr = fmtDate(p.id);
-              const author = esc(p.author || (p.category === 'rehab_wife' ? 'Реабілітолог «Надія»' : 'Команда «Надія»'));
+              const author = esc(p.author || (p.category === 'rehab_wife' ? 'Герц Марина Віталіївна' : 'Команда «Надія»'));
               const initial = (author.trim()[0] || 'Н').toUpperCase();
               return `
                   <a href="medical_hub" class="news-card">
