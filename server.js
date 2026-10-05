@@ -1179,6 +1179,19 @@ function pickBanner(category, title, content) {
     return randomFrom(BANNERS_BY_CATEGORY[category] || NEWS_BANNERS);
 }
 
+// Нормалізація заголовка для дедуплікації (без тегів/пунктуації/регістру).
+function normTitle(t) {
+    return (t || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/[^0-9a-zа-яіїєґ ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+// Чи така стаття вже є в блозі (за джерелом RSS або за нормалізованим заголовком).
+function articleAlreadyExists(rawTitle, translatedTitle) {
+    const nt = normTitle(translatedTitle);
+    return aiBlogPosts.some(p =>
+        (rawTitle && p.originalTitle === rawTitle) ||
+        (nt && normTitle(p.title) === nt)
+    );
+}
+
 // Одноразова міграція: кожній категорії — свій набір банерів (стабільно за індексом).
 // Замінює старі однакові фото/банери. Сервер володіє blog_posts.json → durable.
 async function migrateCategoryBanners() {
@@ -1304,8 +1317,9 @@ async function fetchAndRewriteBlog() {
                 const translatedTitle = lines[0].replace(/[*#]/g, '').replace(/<[^>]+>/g, '').trim();
                 const articleContent = sanitizeArticle(lines.slice(1).join('\n'));
 
+                if (articleAlreadyExists(rawTitle, translatedTitle)) { console.log(`↩️ Пропущено дубль: ${translatedTitle}`); continue; }
                 aiBlogPosts.unshift({
-                    id: Date.now() + Math.floor(Math.random() * 1000), 
+                    id: Date.now() + Math.floor(Math.random() * 1000),
                     date: pubDate, category: "news", originalTitle: rawTitle,
                     title: translatedTitle, content: articleContent, imageUrl: pickBanner('news', translatedTitle, articleContent)
                 });
@@ -1356,9 +1370,10 @@ async function fetchAndRewriteBlog() {
                 const translatedTitle = lines[0].replace(/[*#]/g, '').replace(/<[^>]+>/g, '').trim();
                 const articleContent = sanitizeArticle(lines.slice(1).join('\n'));
 
+                if (articleAlreadyExists(rawTitle, translatedTitle || cleanTitle)) { console.log(`↩️ Пропущено дубль: ${translatedTitle || cleanTitle}`); continue; }
                 aiBlogPosts.unshift({
-                    id: Date.now() + Math.floor(Math.random() * 1000), 
-                    date: pubDate, category: "psychology", originalTitle: rawTitle, 
+                    id: Date.now() + Math.floor(Math.random() * 1000),
+                    date: pubDate, category: "psychology", originalTitle: rawTitle,
                     title: translatedTitle || cleanTitle, content: articleContent, imageUrl: pickBanner('psychology', translatedTitle || cleanTitle, articleContent)
                 });
                 addedCount++; psychAddedThisRun++;
@@ -1400,9 +1415,10 @@ async function fetchAndRewriteBlog() {
                 const translatedTitle = lines[0].replace(/[*#]/g, '').replace(/<[^>]+>/g, '').trim();
                 const articleContent = sanitizeArticle(lines.slice(1).join('\n'));
 
+                if (articleAlreadyExists(rawTitle, translatedTitle)) { console.log(`↩️ Пропущено дубль: ${translatedTitle}`); continue; }
                 aiBlogPosts.unshift({
-                    id: Date.now() + Math.floor(Math.random() * 1000), 
-                    date: pubDate, category: "rehab", originalTitle: rawTitle, 
+                    id: Date.now() + Math.floor(Math.random() * 1000),
+                    date: pubDate, category: "rehab", originalTitle: rawTitle,
                     title: translatedTitle, content: articleContent, imageUrl: pickBanner('rehab', translatedTitle, articleContent)
                 });
                 addedCount++; rehabAddedThisRun++;
