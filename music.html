@@ -139,6 +139,19 @@
         .ap-track-title { flex-grow: 1; font-size: 0.95rem; font-weight: 600; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 15px; text-align: left;}
         .ap-track-price { font-size: 0.8rem; font-weight: 700; color: #888; transition: 0.2s;}
         .ap-track:hover .ap-track-price { color: var(--accent); }
+        .ap-track-share { font-size: 0.95rem; color: #888; margin-right: 14px; transition: 0.2s; cursor: pointer; flex: 0 0 auto; }
+        .ap-track-share:hover { color: var(--accent); transform: scale(1.15); }
+        /* Меню "поділитися треком" (для браузера) */
+        .share-sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999; display: flex; align-items: flex-end; justify-content: center; }
+        .share-sheet { background: #16181c; width: 100%; max-width: 460px; border-radius: 18px 18px 0 0; padding: 20px 18px 26px; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
+        @media (min-width: 560px){ .share-sheet-overlay { align-items: center; } .share-sheet { border-radius: 18px; } }
+        .share-sheet h4 { margin: 0 0 4px; font-size: 1rem; color: #fff; }
+        .share-sheet .ss-name { font-size: 0.82rem; color: #9aa; margin: 0 0 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ss-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .ss-item { display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: #ddd; font-size: 0.68rem; cursor: pointer; background: none; border: none; }
+        .ss-ic { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #fff; }
+        .ss-close { width: 100%; margin-top: 18px; padding: 12px; border-radius: 10px; background: #222; color: #ccc; border: none; font-weight: 700; cursor: pointer; }
+        .ss-close:hover { background: #2c2c2c; }
         .ap-loading { text-align: center; color: #888; font-size: 0.9rem; padding: 20px 0; }
         .new-badge { display: inline-block; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; text-transform: uppercase; vertical-align: middle; margin-left: 8px; position: relative; top: -1px; animation: pulse-badge 2s infinite; }
         @keyframes pulse-badge { 0% { box-shadow: 0 0 0 rgba(255, 77, 77, 0.4); } 50% { box-shadow: 0 0 8px rgba(255, 77, 77, 0.8); } 100% { box-shadow: 0 0 0 rgba(255, 77, 77, 0); } }
@@ -527,6 +540,7 @@
           div.innerHTML = `
               <div class="ap-track-num">${i + 1}</div>
               <div class="ap-track-title">${safeName} ${isNew ? '<span class="new-badge">NEW</span>' : ''}</div>
+              <div class="ap-track-share" title="Поділитися треком" onclick="event.stopPropagation(); shareTrack('${song.fullId}', '${safeName}')"><i class="fas fa-share-alt"></i></div>
               <div class="ap-track-price" onclick="event.stopPropagation(); buyTrackHandler('${song.fullId}', '${safeName}', this)">КУПИТИ</div>
           `;
           div.onclick = () => loadAndPlayTrack(i);
@@ -704,6 +718,83 @@
           navigator.clipboard.writeText(copyText).then(() => { alert(`Посилання скопійовано!`); });
       }
   }
+
+  // Поділитися посиланням на КОНКРЕТНИЙ трек.
+  // На телефоні — нативне меню (navigator.share) з месенджерами; у браузері — власне меню.
+  function shareTrack(fullId, name) {
+      const cleanName = String(name || 'трек').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+      const url = window.location.origin + '/music?t=' + encodeURIComponent(fullId);
+      const title = `Трек «${cleanName}» — Голос проти раку`;
+      const text = `Послухай трек «${cleanName}»: `;
+      if (navigator.share) {
+          navigator.share({ title, text, url }).catch(() => {});
+          return;
+      }
+      openShareMenu(url, text, cleanName);
+  }
+
+  function openShareMenu(url, text, name) {
+      const u = encodeURIComponent(url);
+      const t = encodeURIComponent(text);
+      const both = encodeURIComponent(text + url);
+      const items = [
+          ['Telegram', 'fab fa-telegram-plane', '#229ED9', `https://t.me/share/url?url=${u}&text=${t}`],
+          ['WhatsApp', 'fab fa-whatsapp', '#25D366', `https://api.whatsapp.com/send?text=${both}`],
+          ['Viber', 'fab fa-viber', '#7360F2', `viber://forward?text=${both}`],
+          ['Facebook', 'fab fa-facebook-f', '#1877F2', `https://www.facebook.com/sharer/sharer.php?u=${u}`],
+          ['Telegram Messenger', 'fab fa-telegram-plane', '#229ED9', `tg://msg_url?url=${u}&text=${t}`],
+          ['X / Twitter', 'fab fa-x-twitter', '#000', `https://twitter.com/intent/tweet?text=${t}&url=${u}`],
+          ['Email', 'fas fa-envelope', '#e67e22', `mailto:?subject=${t}&body=${both}`],
+      ];
+      const overlay = document.createElement('div');
+      overlay.className = 'share-sheet-overlay';
+      const links = items.map(([label, icon, color, href]) =>
+          `<a class="ss-item" href="${href}" target="_blank" rel="noopener" onclick="document.querySelector('.share-sheet-overlay')?.remove()"><span class="ss-ic" style="background:${color}"><i class="${icon}"></i></span><span>${label}</span></a>`
+      ).join('');
+      const safeName = name.replace(/</g, '&lt;');
+      overlay.innerHTML = `
+          <div class="share-sheet" onclick="event.stopPropagation()">
+              <h4>Поділитися треком</h4>
+              <p class="ss-name">«${safeName}»</p>
+              <div class="ss-grid">
+                  ${links}
+                  <button class="ss-item" id="ssCopyBtn" type="button"><span class="ss-ic" style="background:#555"><i class="fas fa-link"></i></span><span>Копіювати</span></button>
+              </div>
+              <button class="ss-close" type="button">Закрити</button>
+          </div>`;
+      overlay.addEventListener('click', () => overlay.remove());
+      document.body.appendChild(overlay);
+      overlay.querySelector('.ss-close').onclick = () => overlay.remove();
+      overlay.querySelector('#ssCopyBtn').onclick = () => {
+          navigator.clipboard.writeText(url).then(() => {
+              const b = overlay.querySelector('#ssCopyBtn span:last-child');
+              if (b) b.textContent = 'Скопійовано!';
+          }).catch(() => {});
+      };
+  }
+</script>
+<script>
+  // Глибоке посилання на трек: ?t=<fullId> — відкрити й прокрутити до треку після завантаження списку.
+  (function () {
+      const tId = new URLSearchParams(window.location.search).get('t');
+      if (!tId) return;
+      let tries = 0;
+      const timer = setInterval(() => {
+          tries++;
+          try {
+              if (typeof songsData !== 'undefined' && Array.isArray(songsData) && songsData.length) {
+                  const idx = songsData.findIndex(s => s.fullId === tId);
+                  if (idx >= 0 && typeof loadAndPlayTrack === 'function') {
+                      loadAndPlayTrack(idx);
+                      const list = document.querySelectorAll('.ap-track');
+                      if (list[idx]) list[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                  clearInterval(timer);
+              }
+          } catch (e) { clearInterval(timer); }
+          if (tries > 40) clearInterval(timer);
+      }, 300);
+  })();
 </script>
 
 <script src="bg.js"></script>
