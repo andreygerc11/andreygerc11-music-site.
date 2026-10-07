@@ -726,8 +726,10 @@
       const url = window.location.origin + '/music?t=' + encodeURIComponent(fullId);
       const title = `Трек «${cleanName}» — Голос проти раку`;
       const text = `Послухай трек «${cleanName}»: `;
-      if (navigator.share) {
-          navigator.share({ title, text, url }).catch(() => {});
+      // На ТЕЛЕФОНІ — нативне меню з месенджерами; у БРАУЗЕРІ (десктоп) — власне меню месенджерів.
+      const isMobile = /Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile/i.test(navigator.userAgent);
+      if (isMobile && navigator.share) {
+          navigator.share({ title, text, url }).catch(() => openShareMenu(url, text, cleanName));
           return;
       }
       openShareMenu(url, text, cleanName);
