@@ -272,7 +272,7 @@
 
                 <div style="margin-top: auto; padding-top: 20px;">
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Швидкий зв'язок у месенджері:</p>
-                    <a href="https://t.me/golosprotyraku" target="_blank" class="social-btn">
+                    <a href="https://t.me/golosprotyraku_bot" target="_blank" class="social-btn">
                         <i class="fab fa-telegram-plane"></i> Написати в Telegram
                     </a>
                 </div>
@@ -281,12 +281,37 @@
             <!-- Форма -->
             <div class="contact-card">
                 <h2><i class="fas fa-envelope-open-text"></i> Напишіть нам</h2>
-                <form action="https://formspree.io/f/xvgzbgvq" method="POST">
+                <form id="contactForm">
                     <input type="text" name="name" placeholder="Ваше ім'я" required>
                     <input type="email" name="email" placeholder="Ваш Email" required>
                     <textarea name="message" rows="6" placeholder="Ваше повідомлення..." required></textarea>
-                    <button type="submit">Надіслати повідомлення</button>
+                    <button type="submit" id="contactSubmit">Надіслати повідомлення</button>
+                    <p id="contactMsg" style="margin-top:12px; font-size:0.9rem; display:none;"></p>
                 </form>
+                <script>
+                (function () {
+                    const form = document.getElementById('contactForm');
+                    const btn = document.getElementById('contactSubmit');
+                    const msg = document.getElementById('contactMsg');
+                    const show = (t, ok) => { msg.textContent = t; msg.style.color = ok ? '#20c997' : '#ff6b6b'; msg.style.display = 'block'; };
+                    form.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const data = { name: form.name.value.trim(), email: form.email.value.trim(), message: form.message.value.trim() };
+                        if (!data.name || !data.email || !data.message) { show('Заповніть усі поля.', false); return; }
+                        btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Надсилання…';
+                        try {
+                            const r = await fetch('https://andreygerc11-music-site.onrender.com/api/contact', {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+                            });
+                            const j = await r.json().catch(() => ({}));
+                            if (r.ok && j.success) { show('Дякуємо! Повідомлення надіслано — ми зв\'яжемося з вами.', true); form.reset(); }
+                            else { show(j.error || 'Не вдалося надіслати. Спробуйте ще раз або напишіть у Telegram.', false); }
+                        } catch (err) {
+                            show('Сервер зараз недоступний (міг заснути). Зачекайте ~30с і спробуйте ще раз, або напишіть у Telegram.', false);
+                        } finally { btn.disabled = false; btn.textContent = orig; }
+                    });
+                })();
+                </script>
             </div>
         </div>
     </div>

@@ -474,6 +474,22 @@ async function sendTelegramMessage(text) {
     } catch (e) {}
 }
 
+// Контактна форма сайту → лист адміну (Resend) + повідомлення в Telegram адміну.
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, message } = req.body || {};
+        if (!name || !email || !message) return res.status(400).json({ error: "Заповніть усі поля." });
+        const clean = s => String(s).slice(0, 3000).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const n = clean(name), e = clean(email), m = clean(message);
+        const html = `<h3>Нове повідомлення з сайту (сторінка «Контакти»)</h3>
+            <p><b>Ім'я:</b> ${n}</p><p><b>Email:</b> ${e}</p>
+            <p><b>Повідомлення:</b></p><p>${m.replace(/\n/g, '<br>')}</p>`;
+        await sendEmail('andriyherts@gmail.com', `Повідомлення з сайту від ${n}`, html);
+        await sendTelegramMessage(`📩 <b>Повідомлення з сайту</b>\n<b>Ім'я:</b> ${n}\n<b>Email:</b> ${e}\n\n${m}`);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ==========================================
 // 2. СИНХРОНІЗАЦІЯ БАЗИ КОРИСТУВАЧІВ (GITHUB)
 // ==========================================
