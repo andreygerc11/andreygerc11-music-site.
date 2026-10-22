@@ -1,0 +1,27 @@
+{
+ "_": "Нова версія: файл на Гугл Диску (Керувати версіями — посилання те саме) + тут підняти code/name. Застосунки самі покажуть «Оновити».",
+ "antijam": {
+  "code": 19,
+  "name": "2.3",
+  "url": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t",
+  "notes": "Новий значок і оновлення прямо в застосунку"
+ },
+ "radar": {
+  "code": 185,
+  "name": "1.0.191",
+  "url": "https://drive.usercontent.google.com/download?id=1VyJuv2PykLXUiLytI8ZBPhpili4HgPs-&export=download&confirm=t",
+  "notes": "Нова назва «Радар» і новий значок"
+ },
+ "autosender": {
+  "code": 41,
+  "name": "5.0",
+  "url": "https://drive.usercontent.google.com/download?id=1jWaZ6Zj2lLzW3-EsjfzRyEnOOuy3Tk7z&export=download&confirm=t",
+  "notes": "Нова назва «Лінивець», новий значок і оновлення прямо в застосунку"
+ },
+ "adblock": {
+  "code": 4,
+  "name": "1.3",
+  "url": "https://drive.usercontent.google.com/download?id=1zVQZt7YKIYPhMEqz6WBlSq5T--Vx7c1n&export=download&confirm=t",
+  "notes": "Новий значок і банер для ТБ, оновлення прямо в застосунку"
+ }
+}

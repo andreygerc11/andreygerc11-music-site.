@@ -234,6 +234,29 @@ footer a:hover{color:var(--accent)}
 .rv{opacity:0;transform:translateY(34px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.8,.2,1)}
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+
+/* Скачати */
+.acts{display:inline-flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn-dl{color:#fff;border:1.5px solid var(--g1);padding:12.5px 18px;border-radius:12px;font-weight:800;text-decoration:none;
+  display:inline-flex;gap:9px;align-items:center;transition:background .25s,transform .25s;background:rgba(255,255,255,.03)}
+.btn-dl:hover{background:rgba(255,255,255,.09);transform:scale(1.04)}
+.btn-dl .v{font-size:.72rem;font-weight:700;color:var(--muted)}
+.btn-dl .v:empty{display:none}
+/* Бокова кнопка «Чат» (як на сторінці музики) */
+.support-widget{position:fixed;top:50%;right:-320px;transform:translateY(-50%);width:320px;background:rgba(10,10,11,.92);backdrop-filter:blur(20px);border:1px solid var(--accent);border-right:none;border-radius:20px 0 0 20px;padding:25px;transition:right .5s cubic-bezier(.4,0,.2,1);z-index:9999;box-shadow:-5px 0 20px rgba(0,0,0,.5)}
+.support-widget.open{right:0}
+.support-btn{position:absolute;left:-45px;top:50%;transform:translateY(-50%);background:var(--accent);color:#04120d;padding:20px 10px;border-radius:15px 0 0 15px;cursor:pointer;writing-mode:vertical-rl;text-orientation:upright;font-weight:900;font-size:.9rem;text-transform:uppercase;box-shadow:-5px 0 15px rgba(32,201,151,.4);animation:pulse-support 2s infinite;display:flex;align-items:center;gap:10px}
+@keyframes pulse-support{0%,100%{box-shadow:-5px 0 15px rgba(32,201,151,.4)}50%{box-shadow:-5px 0 25px rgba(32,201,151,.85)}}
+.support-widget h3{margin:0 0 15px;color:#fff;font-size:1.2rem}
+.support-widget input,.support-widget textarea{width:100%;box-sizing:border-box;padding:12px;margin-bottom:15px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;font-family:inherit;outline:none;transition:.3s}
+.support-widget input:focus,.support-widget textarea:focus{border-color:var(--accent);background:rgba(255,255,255,.1)}
+.support-widget textarea{resize:none;height:100px}
+.support-widget button[type=submit]{width:100%;background:var(--accent);color:#04120d;border:none;padding:12px;border-radius:8px;font-weight:900;text-transform:uppercase;cursor:pointer;transition:.3s}
+.support-widget button[type=submit]:hover{background:#fff}
+#support-status{margin-top:15px;font-size:.9rem;text-align:center;font-weight:bold}
+.gdpr-checkbox{display:flex;align-items:flex-start;gap:10px;margin-bottom:15px;font-size:.8rem;color:#ccc}
+.gdpr-checkbox input{width:auto;margin:3px 0 0}
+.gdpr-checkbox a{color:var(--accent);text-decoration:underline}
 </style>
 </head>
 <body>
@@ -311,7 +334,7 @@ footer a:hover{color:var(--accent)}
         <a class="more" href="#f-antijam">Усі можливості <i class="fas fa-arrow-down"></i></a>
         <div class="buy">
           <div class="price"><b>99 ₴</b><small>на місяць · до 2 пристроїв</small></div>
-          <a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_antijam" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a>
+          <span class="acts"><a class="btn-dl" data-app="antijam" href="dl?a=antijam" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_antijam" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span>
         </div>
       </div>
     </article>
@@ -333,7 +356,7 @@ footer a:hover{color:var(--accent)}
         <a class="more" href="#f-radar">Усі можливості <i class="fas fa-arrow-down"></i></a>
         <div class="buy">
           <div class="price"><b>149 ₴</b><small>на місяць · до 5 пристроїв</small></div>
-          <a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_radar" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a>
+          <span class="acts"><a class="btn-dl" data-app="radar" href="dl?a=radar" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_radar" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span>
         </div>
       </div>
     </article>
@@ -353,7 +376,7 @@ footer a:hover{color:var(--accent)}
         <a class="more" href="#f-sloth">Усі можливості <i class="fas fa-arrow-down"></i></a>
         <div class="buy">
           <div class="price"><b>99 ₴</b><small>на місяць · 1 пристрій</small></div>
-          <a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_autosender" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a>
+          <span class="acts"><a class="btn-dl" data-app="autosender" href="dl?a=autosender" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_autosender" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span>
         </div>
       </div>
     </article>
@@ -373,7 +396,7 @@ footer a:hover{color:var(--accent)}
         <a class="more" href="#f-adblock">Усі можливості <i class="fas fa-arrow-down"></i></a>
         <div class="buy">
           <div class="price"><b>79 ₴</b><small>на місяць · до 2 пристроїв</small></div>
-          <a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_adblock" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a>
+          <span class="acts"><a class="btn-dl" data-app="adblock" href="dl?a=adblock" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_adblock" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span>
         </div>
       </div>
     </article>
@@ -414,25 +437,25 @@ footer a:hover{color:var(--accent)}
       <div class="fx-head"><img src="icons/antijam.svg" alt=""><div><h3>Антиглушилка</h3><span class="sl">Навігація, яку не зламати</span><span class="pl">Телефон на Андроїді</span></div></div>
       <p class="fx-intro">Коли супутниковий сигнал глушать або підміняють і карти раптом «закидають» вас за тисячі кілометрів, Антиглушилка це помічає й підставляє для всього телефона справжнє місце.</p>
       <div class="fx-grid"><div class="fx-it"><i class="fas fa-magnifying-glass-location"></i><p>Розпізнає підміну сигналу: «телепорти», завмерлу точку й зсув часу в супутниковому сигналі</p></div><div class="fx-it"><i class="fas fa-tower-cell"></i><p>Звіряє супутники з вежами мобільного зв'язку та вайфаєм — і вирішує, кому вірити</p></div><div class="fx-it"><i class="fas fa-map"></i><p>Виправляє місце для всіх карт на телефоні: Гугл Карти, Вейз та інших</p></div><div class="fx-it"><i class="fas fa-car-side"></i><p>У дорозі під час підміни плавно веде точку за швидкістю й поворотами, показує швидкість</p></div><div class="fx-it"><i class="fas fa-satellite"></i><p>Щойно справжні супутники повернулись — за кілька секунд знову працює на них</p></div><div class="fx-it"><i class="fas fa-rotate"></i><p>Працює у фоні й сама вмикається після перезавантаження телефона</p></div><div class="fx-it"><i class="fas fa-list-check"></i><p>Журнал подій українською і звіт одним натисканням</p></div><div class="fx-it"><i class="fas fa-wand-magic-sparkles"></i><p>Майстер налаштування з кроками саме для вашої марки телефона</p></div></div><div class="fx-note"><i class="fas fa-circle-info"></i><span>Глушіння програмно не пробити: у цей час застосунок тримає приблизне місце за вежами та рухом. Година безкоштовно — щоб перевірити на своєму телефоні.</span></div>
-      <div class="fx-cta"><div><b>99 ₴</b> <small>на місяць · до 2 пристроїв</small></div><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_antijam" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></div>
+      <div class="fx-cta"><div><b>99 ₴</b> <small>на місяць · до 2 пристроїв</small></div><span class="acts"><a class="btn-dl" data-app="antijam" href="dl?a=antijam" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_antijam" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span></div>
     </article>
     <article class="fx-app c-radar rv" id="f-radar">
       <div class="fx-head"><img src="icons/radar.svg" alt=""><div><h3>Радар</h3><span class="sl">Рідні завжди поруч</span><span class="pl">Телефон + комп'ютер</span></div></div>
       <p class="fx-intro">Сімейний застосунок: бачите, де ваші близькі, отримуєте сповіщення та спілкуєтесь у захищеному месенджері — усе в одному місці.</p>
       <div class="fx-grid"><div class="fx-it"><i class="fas fa-location-dot"></i><p>Близькі на мапі в реальному часі — і заряд їхнього телефона</p></div><div class="fx-it"><i class="fas fa-house"></i><p>Сповіщення «прийшов / пішов» із дому, школи чи роботи — за розкладом</p></div><div class="fx-it"><i class="fas fa-user-shield"></i><p>Батьківський контроль: дитина не вимкне відстеження без вашого дозволу</p></div><div class="fx-it"><i class="fas fa-lock"></i><p>Месенджер із наскрізним шифруванням: текст, фото, голосові</p></div><div class="fx-it"><i class="fas fa-video"></i><p>Голосові та відеодзвінки — навіть на заблокованому екрані</p></div><div class="fx-it"><i class="fas fa-triangle-exclamation"></i><p>Кнопка тривоги: миттєвий сигнал усім близьким</p></div><div class="fx-it"><i class="fas fa-shield-halved"></i><p>Не передає рідним фальшиве місце під час підміни сигналу</p></div><div class="fx-it"><i class="fas fa-palette"></i><p>Понад 80 тем оформлення, 28 мов і версія для комп'ютера</p></div></div>
-      <div class="fx-cta"><div><b>149 ₴</b> <small>на місяць · до 5 пристроїв</small></div><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_radar" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></div>
+      <div class="fx-cta"><div><b>149 ₴</b> <small>на місяць · до 5 пристроїв</small></div><span class="acts"><a class="btn-dl" data-app="radar" href="dl?a=radar" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_radar" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span></div>
     </article>
     <article class="fx-app c-auto rv" id="f-sloth">
       <div class="fx-head"><img src="icons/sloth.svg" alt=""><div><h3>Лінивець</h3><span class="sl">Повідомлення вчасно — без вас</span><span class="pl">Телефон на Андроїді</span></div></div>
       <p class="fx-intro">Пишете повідомлення один раз — Лінивець сам надішле його в потрібний час: щоранку, щовечора чи в обрані дні. Поки ви спите або зайняті.</p>
       <div class="fx-grid"><div class="fx-it"><i class="fas fa-comments"></i><p>Ватсап, Телеграм, Вайбер і СМС, а також Сигнал, Месенджер, Інстаграм, Діскорд, Тімс і Гугл Чат</p></div><div class="fx-it"><i class="fas fa-users"></i><p>Контакту — за номером, у групу чи чат — за назвою</p></div><div class="fx-it"><i class="fas fa-repeat"></i><p>Повтор щодня або в обрані дні тижня</p></div><div class="fx-it"><i class="fas fa-calendar-xmark"></i><p>«Дні наряду»: позначте дати, коли надсилати не треба</p></div><div class="fx-it"><i class="fas fa-layer-group"></i><p>Кілька повідомлень на один час — надішле по черзі</p></div><div class="fx-it"><i class="fas fa-bell"></i><p>Будильник перед надсиланням: мелодія й нагадування розблокувати телефон</p></div><div class="fx-it"><i class="fas fa-mobile-screen"></i><p>Сам будить телефон і надсилає — навіть уночі</p></div><div class="fx-it"><i class="fas fa-wand-magic-sparkles"></i><p>Майстер налаштування й інструкція під вашу марку телефона</p></div></div><div class="fx-note"><i class="fas fa-circle-info"></i><span>Якщо на телефоні пароль чи відбиток — Лінивець розбудить вас будильником, щоб розблокувати й надіслати.</span></div>
-      <div class="fx-cta"><div><b>99 ₴</b> <small>на місяць · 1 пристрій</small></div><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_autosender" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></div>
+      <div class="fx-cta"><div><b>99 ₴</b> <small>на місяць · 1 пристрій</small></div><span class="acts"><a class="btn-dl" data-app="autosender" href="dl?a=autosender" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_autosender" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span></div>
     </article>
     <article class="fx-app c-tv rv" id="f-adblock">
       <div class="fx-head"><img src="icons/adblock.svg" alt=""><div><h3>Блокувальник реклами ТБ</h3><span class="sl">Телевізор без реклами</span><span class="pl">Андроїд ТБ і приставки</span></div></div>
       <p class="fx-intro">Прибирає рекламу на телевізорі чи приставці з Андроїдом — одразу для всіх застосунків і браузера.</p>
       <div class="fx-grid"><div class="fx-it"><i class="fas fa-ban"></i><p>Понад 80 000 рекламних і стежачих адрес у вбудованому списку</p></div><div class="fx-it"><i class="fas fa-cloud-arrow-down"></i><p>Оновлення списку з інтернету одним натисканням</p></div><div class="fx-it"><i class="fas fa-tv"></i><p>Працює для всіх застосунків і браузера на ТБ</p></div><div class="fx-it"><i class="fas fa-route"></i><p>Перехоплює навіть застосунки з власними налаштуваннями адрес</p></div><div class="fx-it"><i class="fas fa-key"></i><p>Без рут-прав і складних налаштувань — увімкнули й забули</p></div><div class="fx-it"><i class="fas fa-wifi"></i><p>Безпечний режим: якщо щось піде не так — інтернет не зламається</p></div></div><div class="fx-note"><i class="fas fa-circle-info"></i><span>Рекламу всередині відео на ЮТубі не прибирає — це обмеження всіх подібних блокувальників. Не працює одночасно з іншим ВПН.</span></div>
-      <div class="fx-cta"><div><b>79 ₴</b> <small>на місяць · до 2 пристроїв</small></div><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_adblock" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></div>
+      <div class="fx-cta"><div><b>79 ₴</b> <small>на місяць · до 2 пристроїв</small></div><span class="acts"><a class="btn-dl" data-app="adblock" href="dl?a=adblock" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_adblock" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span></div>
     </article>
   </div>
 </section>
@@ -461,6 +484,7 @@ footer a:hover{color:var(--accent)}
     <h2>Часті запитання</h2>
   </div>
   <div class="faq">
+    <details class="rv"><summary>Як встановити й оновлювати?</summary><p>Натисніть «Скачати», відкрийте файл і дозвольте встановлення. Нові версії застосунок знайде сам: прийде сповіщення, а в застосунку з'явиться кнопка «Оновити» — дані й налаштування збережуться.</p></details>
     <details class="rv"><summary>Як отримати застосунок після оплати?</summary><p>Бот одразу надішле ключ доступу та інструкцію з встановлення. Ключ вводиться в застосунку — і все працює.</p></details>
     <details class="rv"><summary>На скількох пристроях можна користуватись?</summary><p>Радар — до 5 пристроїв (на всю родину), Антиглушилка й Блокувальник реклами — до 2, Лінивець — 1 пристрій.</p></details>
     <details class="rv"><summary>Що буде, коли місяць закінчиться?</summary><p>Автоматичних списань немає. Бот нагадає за 3 дні, а продовжити можна в кілька натискань.</p></details>
@@ -477,6 +501,19 @@ footer a:hover{color:var(--accent)}
   </div>
 </section>
 
+<div class="support-widget" id="supportWidget">
+  <div class="support-btn" onclick="toggleSupport()"><i class="fas fa-envelope" style="transform:rotate(90deg)"></i> ЧАТ</div>
+  <h3>Написати мені</h3>
+  <form id="supportForm">
+    <input type="text" id="supName" placeholder="Ваше ім'я" required>
+    <input type="text" id="supContact" placeholder="Ваш Email, Telegram, Viber" required>
+    <textarea id="supMessage" placeholder="Питання про застосунки — пишіть сюди..." required></textarea>
+    <label class="gdpr-checkbox"><input type="checkbox" required><span>Згоден на обробку персональних даних згідно з <a href="privacy_policy">Політикою конфіденційності</a></span></label>
+    <button type="submit">Відправити</button>
+  </form>
+  <div id="support-status"></div>
+</div>
+
 <footer>
   <div style="margin-bottom:12px"><a href="/">Головна</a><a href="contacts">Контакти</a><a href="privacy_policy">Політика конфіденційності</a><a href="public_offer">Публічна оферта</a></div>
   © Реабілітаційний центр «Надія»
@@ -492,6 +529,33 @@ footer a:hover{color:var(--accent)}
     }), { threshold: 0.12 });
     els.forEach(e => io.observe(e));
   })();
+</script>
+<script>
+  // Кнопки «Скачати»: свіжі посилання й версії з updates.json (той самий файл читають застосунки для оновлень)
+  fetch('updates.json', { cache: 'no-store' }).then(r => r.json()).then(u => {
+    document.querySelectorAll('.btn-dl[data-app]').forEach(a => {
+      const x = u[a.dataset.app]; if (!x || !x.url) return;
+      a.href = x.url; a.querySelector('.v').textContent = 'версія ' + x.name;
+    });
+  }).catch(() => {});
+
+  // Бокова кнопка «Чат»
+  function toggleSupport() { document.getElementById('supportWidget').classList.toggle('open'); }
+  document.getElementById('supportForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const st = document.getElementById('support-status'), btn = this.querySelector('button');
+    btn.disabled = true; btn.innerText = 'Відправка...'; st.innerText = '';
+    try {
+      const res = await fetch('https://formspree.io/f/mnjgapgj', {
+        method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: supName.value, contact: supContact.value, message: '[Застосунки] ' + supMessage.value })
+      });
+      if (!res.ok) throw new Error();
+      st.innerText = '✅ Повідомлення відправлено!'; st.style.color = '#4CAF50'; this.reset();
+      setTimeout(() => { toggleSupport(); st.innerText = ''; }, 4000);
+    } catch (err) { st.innerText = '❌ Помилка. Спробуйте пізніше.'; st.style.color = '#ff6b6b'; }
+    finally { btn.disabled = false; btn.innerText = 'Відправити'; }
+  });
 </script>
 </body>
 </html>
