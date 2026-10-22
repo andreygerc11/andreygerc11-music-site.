@@ -1,27 +1,31 @@
 {
- "_": "Нова версія: файл на Гугл Диску (Керувати версіями — посилання те саме) + тут підняти code/name. Застосунки самі покажуть «Оновити».",
+ "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
  "antijam": {
   "code": 19,
   "name": "2.3",
-  "url": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t",
-  "notes": "Новий значок і оновлення прямо в застосунку"
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-23/Antyhlushylka.apk",
+  "notes": "Новий значок і оновлення прямо в застосунку",
+  "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
  },
  "radar": {
   "code": 185,
   "name": "1.0.191",
-  "url": "https://drive.usercontent.google.com/download?id=1VyJuv2PykLXUiLytI8ZBPhpili4HgPs-&export=download&confirm=t",
-  "notes": "Нова назва «Радар» і новий значок"
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-23/Radar.apk",
+  "notes": "Нова назва «Радар» і новий значок",
+  "drive": "https://drive.usercontent.google.com/download?id=1VyJuv2PykLXUiLytI8ZBPhpili4HgPs-&export=download&confirm=t"
  },
  "autosender": {
   "code": 41,
   "name": "5.0",
-  "url": "https://drive.usercontent.google.com/download?id=1jWaZ6Zj2lLzW3-EsjfzRyEnOOuy3Tk7z&export=download&confirm=t",
-  "notes": "Нова назва «Лінивець», новий значок і оновлення прямо в застосунку"
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-23/Linyvets.apk",
+  "notes": "Нова назва «Лінивець», новий значок і оновлення прямо в застосунку",
+  "drive": "https://drive.usercontent.google.com/download?id=1jWaZ6Zj2lLzW3-EsjfzRyEnOOuy3Tk7z&export=download&confirm=t"
  },
  "adblock": {
   "code": 4,
   "name": "1.3",
-  "url": "https://drive.usercontent.google.com/download?id=1zVQZt7YKIYPhMEqz6WBlSq5T--Vx7c1n&export=download&confirm=t",
-  "notes": "Новий значок і банер для ТБ, оновлення прямо в застосунку"
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-23/Blokuvalnyk-reklamy-TB.apk",
+  "notes": "Новий значок і банер для ТБ, оновлення прямо в застосунку",
+  "drive": "https://drive.usercontent.google.com/download?id=1zVQZt7YKIYPhMEqz6WBlSq5T--Vx7c1n&export=download&confirm=t"
  }
 }
