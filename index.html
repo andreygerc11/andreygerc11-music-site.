@@ -355,6 +355,36 @@
         /* Згасання всієї заставки */
         #introOverlay.hide { opacity: 0; transition: opacity 1s ease; pointer-events: none; }
         body.intro-lock { overflow: hidden; }
+
+        /* ==== БАНЕР ЗАСТОСУНКІВ ==== */
+        .apps-promo { max-width: 1200px; margin: 50px auto 0; padding: 0 20px; }
+        .ap-frame { position: relative; border-radius: 28px; padding: 2px; overflow: hidden;
+            background: linear-gradient(120deg,#20c997,#00d4ff,#8b5cf6,#ec4899,#20c997); background-size: 300% 300%; animation: apHolo 7s ease infinite; }
+        @keyframes apHolo { 50% { background-position: 100% 50%; } }
+        .ap-box { position: relative; border-radius: 26px; overflow: hidden; display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; align-items: center;
+            padding: 44px 44px; background: radial-gradient(ellipse at 90% 0%, rgba(139,92,246,.28), transparent 55%), radial-gradient(ellipse at 0% 100%, rgba(32,201,151,.22), transparent 55%), linear-gradient(160deg,#0c1322,#06090f); }
+        @media (max-width: 860px) { .ap-box { grid-template-columns: 1fr; padding: 34px 24px; text-align: center; } }
+        .ap-new { display: inline-flex; align-items: center; gap: 8px; font-size: .72rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+            padding: 7px 14px; border-radius: 30px; background: rgba(32,201,151,.12); border: 1px solid rgba(32,201,151,.45); color: #bff5e3; margin-bottom: 16px; }
+        .ap-new i { width: 8px; height: 8px; border-radius: 50%; background: #20c997; animation: apPing 1.8s infinite; }
+        @keyframes apPing { 0% { box-shadow: 0 0 0 0 rgba(32,201,151,.7); } 70%,100% { box-shadow: 0 0 0 10px rgba(32,201,151,0); } }
+        .ap-box h2 { font-family: 'Montserrat', sans-serif; font-size: clamp(1.9rem, 4.2vw, 3rem); font-weight: 900; line-height: 1.08; letter-spacing: -1px; margin-bottom: 14px; }
+        .ap-grad { background: linear-gradient(90deg,#20c997,#00d4ff,#8b5cf6,#ec4899,#20c997); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: apShine 8s linear infinite; }
+        @keyframes apShine { to { background-position: 300% 0; } }
+        .ap-box p { color: #c4ccd9; margin-bottom: 24px; max-width: 520px; }
+        @media (max-width: 860px) { .ap-box p { margin-left: auto; margin-right: auto; } }
+        .ap-cta { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 10px; padding: 16px 28px; border-radius: 14px; font-weight: 900;
+            text-decoration: none; color: #03130e; background: linear-gradient(135deg,#2ee6ae,#00d4ff); box-shadow: 0 10px 40px -10px rgba(0,212,255,.6); transition: transform .25s; }
+        .ap-cta:hover { transform: translateY(-3px); }
+        .ap-cta::after { content: ''; position: absolute; top: 0; left: -120%; width: 60%; height: 100%; background: linear-gradient(110deg,transparent,rgba(255,255,255,.65),transparent); animation: apSweep 3.2s ease-in-out infinite; }
+        @keyframes apSweep { 60%,100% { left: 140%; } }
+        .ap-icons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        @media (max-width: 860px) { .ap-icons { max-width: 320px; margin: 6px auto 0; } }
+        .ap-ic { aspect-ratio: 1; border-radius: 20px; display: grid; place-items: center; font-size: 1.7rem; color: #fff; box-shadow: 0 12px 30px -10px rgba(0,0,0,.7); animation: apBob 5s ease-in-out infinite; }
+        .ap-ic:nth-child(2) { animation-delay: -1s; } .ap-ic:nth-child(3) { animation-delay: -2s; } .ap-ic:nth-child(4) { animation-delay: -3s; } .ap-ic:nth-child(5) { animation-delay: -4s; } .ap-ic:nth-child(6) { animation-delay: -2.5s; }
+        @keyframes apBob { 50% { transform: translateY(-9px); } }
+        .ap-price { font-size: .78rem; color: #9aa4b5; margin-top: 12px; }
+        @media (prefers-reduced-motion: reduce) { .ap-frame, .ap-grad, .ap-cta::after, .ap-ic, .ap-new i { animation: none !important; } }
     </style>
 </head>
 <body>
@@ -369,6 +399,7 @@
             <li><a href="#team">Лікарі</a></li>
             <li><a href="medical_hub">Блог</a></li>
             <li><a href="music">Музика</a></li>
+            <li><a href="apps">Застосунки</a></li>
             <li><a href="#contacts">Контакти</a></li>
             <li><a href="https://t.me/golosprotyraku_bot" target="_blank" class="btn-book-nav">Запис</a></li>
             <li><a href="login" id="authBtn" class="auth-btn-nav"><i class="fas fa-sign-in-alt"></i> Увійти</a></li>
@@ -426,6 +457,28 @@
 </header>
 
 <main>
+    <div class="apps-promo">
+        <a href="apps" class="ap-frame" style="display:block;text-decoration:none;color:#fff">
+            <div class="ap-box">
+                <div>
+                    <span class="ap-new"><i></i> Новинка</span>
+                    <h2>Застосунки, що <span class="ap-grad">працюють за вас</span></h2>
+                    <p>Антиглушилка, Радар для родини, Автонадсилач повідомлень і телевізор без реклами. Ключ доступу — у Телеграмі за кілька секунд.</p>
+                    <span class="ap-cta"><i class="fas fa-bolt"></i> Дивитися застосунки</span>
+                    <div class="ap-price">від 79 ₴ на місяць · Джарвіс — скоро</div>
+                </div>
+                <div class="ap-icons" aria-hidden="true">
+                    <div class="ap-ic" style="background:linear-gradient(135deg,#20c997,#00a3c4)"><i class="fas fa-satellite-dish"></i></div>
+                    <div class="ap-ic" style="background:linear-gradient(135deg,#8b5cf6,#ec4899)"><i class="fas fa-map-location-dot"></i></div>
+                    <div class="ap-ic" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fas fa-paper-plane"></i></div>
+                    <div class="ap-ic" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)"><i class="fas fa-tv"></i></div>
+                    <div class="ap-ic" style="background:linear-gradient(135deg,#334155,#0f172a);border:1px solid rgba(255,255,255,.2)"><i class="fas fa-microphone-lines"></i></div>
+                    <div class="ap-ic" style="background:linear-gradient(135deg,#2ee6ae,#00d4ff)"><i class="fas fa-bolt"></i></div>
+                </div>
+            </div>
+        </a>
+    </div>
+
     <section id="about">
         <div class="about-wrap">
             <div class="about-figure" data-aos="fade-right">
