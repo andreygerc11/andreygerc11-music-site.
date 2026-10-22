@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><defs><filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000" flood-opacity=".30"/></filter><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2ee6ae"/><stop offset="1" stop-color="#0891b2"/></linearGradient><radialGradient id="gl" cx=".22" cy=".12" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="1024" height="1024" rx="228" fill="url(#bg)"/><rect width="1024" height="1024" rx="228" fill="url(#gl)"/>
+  <g filter="url(#sh)">
+   <path d="M512 250 L716 322 V520 C716 652 628 736 512 778 C396 736 308 652 308 520 V322 Z" fill="#fff"/>
+   <circle cx="512" cy="515" r="96" fill="none" stroke="#0b8f7c" stroke-width="30"/>
+   <g stroke="#0b8f7c" stroke-width="30" stroke-linecap="round">
+    <line x1="512" y1="372" x2="512" y2="404"/><line x1="512" y1="626" x2="512" y2="658"/>
+    <line x1="369" y1="515" x2="401" y2="515"/><line x1="623" y1="515" x2="655" y2="515"/>
+   </g>
+   <circle cx="512" cy="515" r="32" fill="#0b8f7c"/>
+  </g></svg>

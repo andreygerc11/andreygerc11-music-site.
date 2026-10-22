@@ -380,7 +380,7 @@
         @keyframes apSweep { 60%,100% { left: 140%; } }
         .ap-icons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
         @media (max-width: 860px) { .ap-icons { max-width: 320px; margin: 6px auto 0; } }
-        .ap-ic { aspect-ratio: 1; border-radius: 20px; display: grid; place-items: center; font-size: 1.7rem; color: #fff; box-shadow: 0 12px 30px -10px rgba(0,0,0,.7); animation: apBob 5s ease-in-out infinite; }
+        .ap-ic { width: 100%; aspect-ratio: 1; border-radius: 22%; display: grid; place-items: center; font-size: 1.7rem; color: #fff; box-shadow: 0 12px 30px -10px rgba(0,0,0,.7); animation: apBob 5s ease-in-out infinite; }
         .ap-ic:nth-child(2) { animation-delay: -1s; } .ap-ic:nth-child(3) { animation-delay: -2s; } .ap-ic:nth-child(4) { animation-delay: -3s; } .ap-ic:nth-child(5) { animation-delay: -4s; } .ap-ic:nth-child(6) { animation-delay: -2.5s; }
         @keyframes apBob { 50% { transform: translateY(-9px); } }
         .ap-price { font-size: .78rem; color: #9aa4b5; margin-top: 12px; }
@@ -463,16 +463,16 @@
                 <div>
                     <span class="ap-new"><i></i> Новинка</span>
                     <h2>Застосунки, що <span class="ap-grad">працюють за вас</span></h2>
-                    <p>Антиглушилка, Радар для родини, Автонадсилач повідомлень і телевізор без реклами. Ключ доступу — у Телеграмі за кілька секунд.</p>
+                    <p>Антиглушилка, Радар для родини, Лінивець — повідомлення за розкладом — і телевізор без реклами. Ключ доступу — у Телеграмі за кілька секунд.</p>
                     <span class="ap-cta"><i class="fas fa-bolt"></i> Дивитися застосунки</span>
                     <div class="ap-price">від 79 ₴ на місяць · Джарвіс — скоро</div>
                 </div>
                 <div class="ap-icons" aria-hidden="true">
-                    <div class="ap-ic" style="background:linear-gradient(135deg,#20c997,#00a3c4)"><i class="fas fa-satellite-dish"></i></div>
-                    <div class="ap-ic" style="background:linear-gradient(135deg,#8b5cf6,#ec4899)"><i class="fas fa-map-location-dot"></i></div>
-                    <div class="ap-ic" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fas fa-paper-plane"></i></div>
-                    <div class="ap-ic" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)"><i class="fas fa-tv"></i></div>
-                    <div class="ap-ic" style="background:linear-gradient(135deg,#334155,#0f172a);border:1px solid rgba(255,255,255,.2)"><i class="fas fa-microphone-lines"></i></div>
+                    <img class="ap-ic" src="icons/antijam.svg" alt="">
+                    <img class="ap-ic" src="icons/radar.svg" alt="">
+                    <img class="ap-ic" src="icons/sloth.svg" alt="">
+                    <img class="ap-ic" src="icons/adblock.svg" alt="">
+                    <img class="ap-ic" src="icons/jarvis.svg" alt="">
                     <div class="ap-ic" style="background:linear-gradient(135deg,#2ee6ae,#00d4ff)"><i class="fas fa-bolt"></i></div>
                 </div>
             </div>

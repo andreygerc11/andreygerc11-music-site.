@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Застосунки «Надії» — Антиглушилка, Радар, Автонадсилач, Блокувальник реклами ТБ</title>
-<meta name="description" content="Корисні застосунки для телефона, телевізора й комп'ютера: Антиглушилка, Радар для родини, Автонадсилач повідомлень, Блокувальник реклами для ТБ. Від 79 ₴ на місяць, ключ миттєво в Телеграмі.">
+<title>Застосунки «Надії» — Антиглушилка, Радар, Лінивець, Блокувальник реклами ТБ</title>
+<meta name="description" content="Корисні застосунки для телефона, телевізора й комп'ютера: Антиглушилка, Радар для родини, Лінивець — повідомлення за розкладом, Блокувальник реклами для ТБ. Від 79 ₴ на місяць, ключ миттєво в Телеграмі.">
 <link rel="canonical" href="https://nadiya.pp.ua/apps">
 <meta property="og:title" content="Застосунки «Надії» — технології, що працюють за вас">
-<meta property="og:description" content="Антиглушилка, Радар, Автонадсилач, Блокувальник реклами ТБ. Ключ миттєво в Телеграмі.">
+<meta property="og:description" content="Антиглушилка, Радар, Лінивець, Блокувальник реклами ТБ. Ключ миттєво в Телеграмі.">
 <meta property="og:url" content="https://nadiya.pp.ua/apps">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://nadiya.pp.ua/article_rehab.png">
@@ -82,13 +82,12 @@ nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(
 .ring{position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(255,255,255,.14);animation:spin 40s linear infinite}
 .ring.r2{inset:13%;animation-duration:28s;animation-direction:reverse;border-style:solid;border-color:rgba(255,255,255,.06)}
 @keyframes spin{to{transform:rotate(360deg)}}
-.sat{position:absolute;width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:1.45rem;color:#fff;
-  box-shadow:0 10px 30px -8px rgba(0,0,0,.6);animation:bob 5s ease-in-out infinite}
-.sat.a{top:2%;left:42%;background:linear-gradient(135deg,#20c997,#00a3c4)}
-.sat.b{top:34%;right:-2%;background:linear-gradient(135deg,#8b5cf6,#ec4899);animation-delay:-1s}
-.sat.c{bottom:4%;right:16%;background:linear-gradient(135deg,#f59e0b,#ef4444);animation-delay:-2s}
-.sat.d{bottom:8%;left:8%;background:linear-gradient(135deg,#3b82f6,#06b6d4);animation-delay:-3s}
-.sat.e{top:30%;left:-2%;background:linear-gradient(135deg,#334155,#0f172a);border:1px solid rgba(255,255,255,.2);animation-delay:-4s}
+.sat{position:absolute;width:74px;height:74px;border-radius:22%;box-shadow:0 14px 34px -8px rgba(0,0,0,.65);animation:bob 5s ease-in-out infinite}
+.sat.a{top:2%;left:42%;}
+.sat.b{top:34%;right:-2%;animation-delay:-1s}
+.sat.c{bottom:4%;right:16%;animation-delay:-2s}
+.sat.d{bottom:8%;left:8%;animation-delay:-3s}
+.sat.e{top:30%;left:-2%;animation-delay:-4s}
 @keyframes bob{50%{transform:translateY(-12px)}}
 
 /* ===== БІГУЧИЙ РЯДОК ===== */
@@ -122,8 +121,8 @@ section{max-width:1200px;margin:0 auto;padding:90px 20px}
   background:radial-gradient(circle,var(--g1),transparent 70%);opacity:.18;transition:opacity .35s}
 .card:hover .card-in::after{opacity:.35}
 .top{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-.ic{flex:0 0 64px;height:64px;border-radius:18px;display:grid;place-items:center;font-size:1.6rem;color:#fff;
-  background:linear-gradient(135deg,var(--g1),var(--g2));box-shadow:0 12px 30px -10px var(--g1)}
+.ic{flex:0 0 68px;width:68px;height:68px;border-radius:22%;box-shadow:0 14px 32px -10px var(--g1);transition:transform .35s}
+.card:hover .ic{transform:rotate(-6deg) scale(1.06)}
 .top h3{font-size:1.45rem;font-weight:900;line-height:1.15}
 .plat{display:inline-flex;gap:6px;align-items:center;font-size:.72rem;font-weight:700;color:#aeb8c8;margin-top:5px}
 .tag{position:absolute;top:22px;right:22px;font-size:.66rem;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;
@@ -165,6 +164,34 @@ section{max-width:1200px;margin:0 auto;padding:90px 20px}
 .btn-soon{color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);padding:14px 22px;border-radius:12px;font-weight:800;
   text-decoration:none;display:inline-flex;gap:9px;align-items:center;transition:.25s}
 .btn-soon:hover{background:rgba(255,255,255,.14)}
+
+
+/* ===== ЩО ВМІЄ КОЖЕН ===== */
+.more{display:inline-flex;gap:8px;align-items:center;color:var(--g1);font-weight:800;font-size:.86rem;text-decoration:none;margin:-8px 0 20px}
+.more:hover{text-decoration:underline}
+.fx{display:grid;gap:26px}
+.fx-app{--g1:#20c997;--g2:#00d4ff;position:relative;overflow:hidden;border-radius:26px;padding:36px;scroll-margin-top:90px;
+  background:linear-gradient(160deg,rgba(18,23,34,.92),rgba(9,12,19,.96));border:1px solid var(--line)}
+.fx-app::before{content:'';position:absolute;left:0;top:0;width:100%;height:4px;background:linear-gradient(90deg,var(--g1),var(--g2))}
+.fx-app::after{content:'';position:absolute;width:360px;height:360px;right:-140px;top:-160px;border-radius:50%;background:radial-gradient(circle,var(--g1),transparent 70%);opacity:.14;pointer-events:none}
+.fx-head{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.fx-head img{width:86px;height:86px;border-radius:22%;box-shadow:0 14px 34px -10px var(--g1)}
+.fx-head h3{font-size:1.75rem;font-weight:900;line-height:1.1}
+.fx-head .sl{display:block;color:#cfd8e6;font-weight:700;margin-top:4px}
+.fx-head .pl{display:inline-block;margin-top:8px;font-size:.74rem;font-weight:800;padding:5px 11px;border-radius:30px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#c7d0de}
+.fx-intro{color:#c9d1dd;font-size:1.03rem;margin-bottom:24px;max-width:860px}
+.fx-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 28px}
+.fx-it{display:flex;gap:14px;align-items:flex-start}
+.fx-it i{flex:0 0 42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:1rem;color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));box-shadow:0 8px 20px -8px var(--g1)}
+.fx-it p{font-size:.95rem;color:#dde4ee;padding-top:9px}
+.fx-note{margin-top:22px;font-size:.87rem;color:var(--muted);display:flex;gap:10px;align-items:flex-start}
+.fx-note i{color:var(--g1);margin-top:3px}
+.fx-cta{margin-top:26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.fx-cta b{font-size:1.5rem;font-weight:900}
+.fx-cta small{color:var(--muted);font-weight:600}
+.j-ic{width:78px;height:78px;border-radius:22%;display:block;margin-bottom:18px;box-shadow:0 14px 36px -10px #8b5cf6}
+@media(max-width:820px){.j-ic{margin-left:auto;margin-right:auto}}
+@media(max-width:760px){.fx-grid{grid-template-columns:1fr}.fx-app{padding:28px 20px}.fx-head{justify-content:center;text-align:center}}
 
 /* ===== ЯК ЦЕ ПРАЦЮЄ ===== */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;position:relative}
@@ -243,18 +270,18 @@ footer a:hover{color:var(--accent)}
   <div class="orbit" aria-hidden="true">
     <div class="ring"></div><div class="ring r2"></div>
     <div class="core"><i class="fas fa-bolt"></i></div>
-    <div class="sat a"><i class="fas fa-satellite-dish"></i></div>
-    <div class="sat b"><i class="fas fa-map-location-dot"></i></div>
-    <div class="sat c"><i class="fas fa-paper-plane"></i></div>
-    <div class="sat d"><i class="fas fa-tv"></i></div>
-    <div class="sat e"><i class="fas fa-microphone-lines"></i></div>
+    <img class="sat a" src="icons/antijam.svg" alt="">
+    <img class="sat b" src="icons/radar.svg" alt="">
+    <img class="sat c" src="icons/sloth.svg" alt="">
+    <img class="sat d" src="icons/adblock.svg" alt="">
+    <img class="sat e" src="icons/jarvis.svg" alt="">
   </div>
 </header>
 
 <div class="marquee" aria-hidden="true">
   <div class="track">
-    <span>Антиглушилка<i class="fas fa-star"></i></span><span>Радар для родини<i class="fas fa-star"></i></span><span>Автонадсилач<i class="fas fa-star"></i></span><span>Телевізор без реклами<i class="fas fa-star"></i></span><span>Джарвіс — скоро<i class="fas fa-star"></i></span>
-    <span>Антиглушилка<i class="fas fa-star"></i></span><span>Радар для родини<i class="fas fa-star"></i></span><span>Автонадсилач<i class="fas fa-star"></i></span><span>Телевізор без реклами<i class="fas fa-star"></i></span><span>Джарвіс — скоро<i class="fas fa-star"></i></span>
+    <span>Антиглушилка<i class="fas fa-star"></i></span><span>Радар для родини<i class="fas fa-star"></i></span><span>Лінивець<i class="fas fa-star"></i></span><span>Телевізор без реклами<i class="fas fa-star"></i></span><span>Джарвіс — скоро<i class="fas fa-star"></i></span>
+    <span>Антиглушилка<i class="fas fa-star"></i></span><span>Радар для родини<i class="fas fa-star"></i></span><span>Лінивець<i class="fas fa-star"></i></span><span>Телевізор без реклами<i class="fas fa-star"></i></span><span>Джарвіс — скоро<i class="fas fa-star"></i></span>
   </div>
 </div>
 
@@ -270,7 +297,7 @@ footer a:hover{color:var(--accent)}
       <div class="card-in">
         <span class="tag">Хіт</span>
         <div class="top">
-          <div class="ic"><i class="fas fa-satellite-dish"></i></div>
+          <img class="ic" src="icons/antijam.svg" alt="">
           <div><h3>Антиглушилка</h3><span class="plat"><i class="fab fa-android"></i> Телефон на Андроїді</span></div>
         </div>
         <div class="slogan">Навігація, яку не зламати</div>
@@ -280,6 +307,7 @@ footer a:hover{color:var(--accent)}
           <li><i class="fas fa-check"></i>Попереджає про підміну в реальному часі</li>
           <li><i class="fas fa-check"></i>Година безкоштовно — перевірте самі</li>
         </ul>
+        <a class="more" href="#f-antijam">Усі можливості <i class="fas fa-arrow-down"></i></a>
         <div class="buy">
           <div class="price"><b>99 ₴</b><small>на місяць · до 2 пристроїв</small></div>
           <a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_antijam" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a>
@@ -291,7 +319,7 @@ footer a:hover{color:var(--accent)}
       <div class="card-in">
         <span class="tag">Для родини</span>
         <div class="top">
-          <div class="ic"><i class="fas fa-map-location-dot"></i></div>
+          <img class="ic" src="icons/radar.svg" alt="">
           <div><h3>Радар</h3><span class="plat"><i class="fas fa-mobile-screen"></i> Телефон + <i class="fas fa-desktop"></i> комп'ютер</span></div>
         </div>
         <div class="slogan">Рідні завжди поруч</div>
@@ -301,6 +329,7 @@ footer a:hover{color:var(--accent)}
           <li><i class="fas fa-check"></i>Вбудований месенджер і дзвінки</li>
           <li><i class="fas fa-check"></i>Одна підписка — до 5 пристроїв на всю родину</li>
         </ul>
+        <a class="more" href="#f-radar">Усі можливості <i class="fas fa-arrow-down"></i></a>
         <div class="buy">
           <div class="price"><b>149 ₴</b><small>на місяць · до 5 пристроїв</small></div>
           <a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_radar" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a>
@@ -311,8 +340,8 @@ footer a:hover{color:var(--accent)}
     <article class="card c-auto rv">
       <div class="card-in">
         <div class="top">
-          <div class="ic"><i class="fas fa-paper-plane"></i></div>
-          <div><h3>Автонадсилач</h3><span class="plat"><i class="fab fa-android"></i> Телефон на Андроїді</span></div>
+          <img class="ic" src="icons/sloth.svg" alt="">
+          <div><h3>Лінивець</h3><span class="plat"><i class="fab fa-android"></i> Телефон на Андроїді</span></div>
         </div>
         <div class="slogan">Повідомлення вчасно — без вас</div>
         <ul class="feat">
@@ -320,6 +349,7 @@ footer a:hover{color:var(--accent)}
           <li><i class="fas fa-check"></i>Привітання, нагадування, розсилки клієнтам</li>
           <li><i class="fas fa-check"></i>Працює сам у фоні — навіть коли ви спите</li>
         </ul>
+        <a class="more" href="#f-sloth">Усі можливості <i class="fas fa-arrow-down"></i></a>
         <div class="buy">
           <div class="price"><b>99 ₴</b><small>на місяць · 1 пристрій</small></div>
           <a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_autosender" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a>
@@ -330,7 +360,7 @@ footer a:hover{color:var(--accent)}
     <article class="card c-tv rv">
       <div class="card-in">
         <div class="top">
-          <div class="ic"><i class="fas fa-tv"></i></div>
+          <img class="ic" src="icons/adblock.svg" alt="">
           <div><h3>Блокувальник реклами ТБ</h3><span class="plat"><i class="fas fa-tv"></i> Андроїд ТБ і приставки</span></div>
         </div>
         <div class="slogan">Телевізор без реклами</div>
@@ -339,6 +369,7 @@ footer a:hover{color:var(--accent)}
           <li><i class="fas fa-check"></i>Прибирає більшість банерів і спливаючої реклами</li>
           <li><i class="fas fa-check"></i>Без складних налаштувань — увімкнули й забули</li>
         </ul>
+        <a class="more" href="#f-adblock">Усі можливості <i class="fas fa-arrow-down"></i></a>
         <div class="buy">
           <div class="price"><b>79 ₴</b><small>на місяць · до 2 пристроїв</small></div>
           <a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_adblock" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a>
@@ -350,6 +381,7 @@ footer a:hover{color:var(--accent)}
   <div class="jarvis rv">
     <div class="j-in">
       <div>
+        <img class="j-ic" src="icons/jarvis.svg" alt="">
         <span class="soon"><i class="fas fa-hourglass-half"></i> Скоро вийде</span>
         <h3>Джарвіс — голосовий помічник для вашого комп'ютера</h3>
         <p>Говорите — він робить. Розуміє живу мову й відповідає людським голосом. Готуємо до запуску — будьте серед перших.</p>
@@ -366,6 +398,41 @@ footer a:hover{color:var(--accent)}
         <span style="animation-delay:-.15s"></span><span style="animation-delay:-.7s"></span><span style="animation-delay:-.35s"></span>
       </div>
     </div>
+  </div>
+</section>
+
+
+<section id="features">
+  <div class="sec-head rv">
+    <span class="eyebrow">Детально</span>
+    <h2>Що вміє кожен застосунок</h2>
+    <p>Без гучних обіцянок — лише те, що застосунки справді роблять.</p>
+  </div>
+  <div class="fx">
+    <article class="fx-app  rv" id="f-antijam">
+      <div class="fx-head"><img src="icons/antijam.svg" alt=""><div><h3>Антиглушилка</h3><span class="sl">Навігація, яку не зламати</span><span class="pl">Телефон на Андроїді</span></div></div>
+      <p class="fx-intro">Коли супутниковий сигнал глушать або підміняють і карти раптом «закидають» вас за тисячі кілометрів, Антиглушилка це помічає й підставляє для всього телефона справжнє місце.</p>
+      <div class="fx-grid"><div class="fx-it"><i class="fas fa-magnifying-glass-location"></i><p>Розпізнає підміну сигналу: «телепорти», завмерлу точку й зсув часу в супутниковому сигналі</p></div><div class="fx-it"><i class="fas fa-tower-cell"></i><p>Звіряє супутники з вежами мобільного зв'язку та вайфаєм — і вирішує, кому вірити</p></div><div class="fx-it"><i class="fas fa-map"></i><p>Виправляє місце для всіх карт на телефоні: Гугл Карти, Вейз та інших</p></div><div class="fx-it"><i class="fas fa-car-side"></i><p>У дорозі під час підміни плавно веде точку за швидкістю й поворотами, показує швидкість</p></div><div class="fx-it"><i class="fas fa-satellite"></i><p>Щойно справжні супутники повернулись — за кілька секунд знову працює на них</p></div><div class="fx-it"><i class="fas fa-rotate"></i><p>Працює у фоні й сама вмикається після перезавантаження телефона</p></div><div class="fx-it"><i class="fas fa-list-check"></i><p>Журнал подій українською і звіт одним натисканням</p></div><div class="fx-it"><i class="fas fa-wand-magic-sparkles"></i><p>Майстер налаштування з кроками саме для вашої марки телефона</p></div></div><div class="fx-note"><i class="fas fa-circle-info"></i><span>Глушіння програмно не пробити: у цей час застосунок тримає приблизне місце за вежами та рухом. Година безкоштовно — щоб перевірити на своєму телефоні.</span></div>
+      <div class="fx-cta"><div><b>99 ₴</b> <small>на місяць · до 2 пристроїв</small></div><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_antijam" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></div>
+    </article>
+    <article class="fx-app c-radar rv" id="f-radar">
+      <div class="fx-head"><img src="icons/radar.svg" alt=""><div><h3>Радар</h3><span class="sl">Рідні завжди поруч</span><span class="pl">Телефон + комп'ютер</span></div></div>
+      <p class="fx-intro">Сімейний застосунок: бачите, де ваші близькі, отримуєте сповіщення та спілкуєтесь у захищеному месенджері — усе в одному місці.</p>
+      <div class="fx-grid"><div class="fx-it"><i class="fas fa-location-dot"></i><p>Близькі на мапі в реальному часі — і заряд їхнього телефона</p></div><div class="fx-it"><i class="fas fa-house"></i><p>Сповіщення «прийшов / пішов» із дому, школи чи роботи — за розкладом</p></div><div class="fx-it"><i class="fas fa-user-shield"></i><p>Батьківський контроль: дитина не вимкне відстеження без вашого дозволу</p></div><div class="fx-it"><i class="fas fa-lock"></i><p>Месенджер із наскрізним шифруванням: текст, фото, голосові</p></div><div class="fx-it"><i class="fas fa-video"></i><p>Голосові та відеодзвінки — навіть на заблокованому екрані</p></div><div class="fx-it"><i class="fas fa-triangle-exclamation"></i><p>Кнопка тривоги: миттєвий сигнал усім близьким</p></div><div class="fx-it"><i class="fas fa-shield-halved"></i><p>Не передає рідним фальшиве місце під час підміни сигналу</p></div><div class="fx-it"><i class="fas fa-palette"></i><p>Понад 80 тем оформлення, 28 мов і версія для комп'ютера</p></div></div>
+      <div class="fx-cta"><div><b>149 ₴</b> <small>на місяць · до 5 пристроїв</small></div><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_radar" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></div>
+    </article>
+    <article class="fx-app c-auto rv" id="f-sloth">
+      <div class="fx-head"><img src="icons/sloth.svg" alt=""><div><h3>Лінивець</h3><span class="sl">Повідомлення вчасно — без вас</span><span class="pl">Телефон на Андроїді</span></div></div>
+      <p class="fx-intro">Пишете повідомлення один раз — Лінивець сам надішле його в потрібний час: щоранку, щовечора чи в обрані дні. Поки ви спите або зайняті.</p>
+      <div class="fx-grid"><div class="fx-it"><i class="fas fa-comments"></i><p>Ватсап, Телеграм, Вайбер і СМС, а також Сигнал, Месенджер, Інстаграм, Діскорд, Тімс і Гугл Чат</p></div><div class="fx-it"><i class="fas fa-users"></i><p>Контакту — за номером, у групу чи чат — за назвою</p></div><div class="fx-it"><i class="fas fa-repeat"></i><p>Повтор щодня або в обрані дні тижня</p></div><div class="fx-it"><i class="fas fa-calendar-xmark"></i><p>«Дні наряду»: позначте дати, коли надсилати не треба</p></div><div class="fx-it"><i class="fas fa-layer-group"></i><p>Кілька повідомлень на один час — надішле по черзі</p></div><div class="fx-it"><i class="fas fa-bell"></i><p>Будильник перед надсиланням: мелодія й нагадування розблокувати телефон</p></div><div class="fx-it"><i class="fas fa-mobile-screen"></i><p>Сам будить телефон і надсилає — навіть уночі</p></div><div class="fx-it"><i class="fas fa-wand-magic-sparkles"></i><p>Майстер налаштування й інструкція під вашу марку телефона</p></div></div><div class="fx-note"><i class="fas fa-circle-info"></i><span>Якщо на телефоні пароль чи відбиток — Лінивець розбудить вас будильником, щоб розблокувати й надіслати.</span></div>
+      <div class="fx-cta"><div><b>99 ₴</b> <small>на місяць · 1 пристрій</small></div><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_autosender" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></div>
+    </article>
+    <article class="fx-app c-tv rv" id="f-adblock">
+      <div class="fx-head"><img src="icons/adblock.svg" alt=""><div><h3>Блокувальник реклами ТБ</h3><span class="sl">Телевізор без реклами</span><span class="pl">Андроїд ТБ і приставки</span></div></div>
+      <p class="fx-intro">Прибирає рекламу на телевізорі чи приставці з Андроїдом — одразу для всіх застосунків і браузера.</p>
+      <div class="fx-grid"><div class="fx-it"><i class="fas fa-ban"></i><p>Понад 80 000 рекламних і стежачих адрес у вбудованому списку</p></div><div class="fx-it"><i class="fas fa-cloud-arrow-down"></i><p>Оновлення списку з інтернету одним натисканням</p></div><div class="fx-it"><i class="fas fa-tv"></i><p>Працює для всіх застосунків і браузера на ТБ</p></div><div class="fx-it"><i class="fas fa-route"></i><p>Перехоплює навіть застосунки з власними налаштуваннями адрес</p></div><div class="fx-it"><i class="fas fa-key"></i><p>Без рут-прав і складних налаштувань — увімкнули й забули</p></div><div class="fx-it"><i class="fas fa-wifi"></i><p>Безпечний режим: якщо щось піде не так — інтернет не зламається</p></div></div><div class="fx-note"><i class="fas fa-circle-info"></i><span>Рекламу всередині відео на ЮТубі не прибирає — це обмеження всіх подібних блокувальників. Не працює одночасно з іншим ВПН.</span></div>
+      <div class="fx-cta"><div><b>79 ₴</b> <small>на місяць · до 2 пристроїв</small></div><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_adblock" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></div>
+    </article>
   </div>
 </section>
 
@@ -394,7 +461,7 @@ footer a:hover{color:var(--accent)}
   </div>
   <div class="faq">
     <details class="rv"><summary>Як отримати застосунок після оплати?</summary><p>Бот одразу надішле ключ доступу та інструкцію з встановлення. Ключ вводиться в застосунку — і все працює.</p></details>
-    <details class="rv"><summary>На скількох пристроях можна користуватись?</summary><p>Радар — до 5 пристроїв (на всю родину), Антиглушилка й Блокувальник реклами — до 2, Автонадсилач — 1 пристрій.</p></details>
+    <details class="rv"><summary>На скількох пристроях можна користуватись?</summary><p>Радар — до 5 пристроїв (на всю родину), Антиглушилка й Блокувальник реклами — до 2, Лінивець — 1 пристрій.</p></details>
     <details class="rv"><summary>Що буде, коли місяць закінчиться?</summary><p>Автоматичних списань немає. Бот нагадає за 3 дні, а продовжити можна в кілька натискань.</p></details>
     <details class="rv"><summary>Чи працює без інтернету?</summary><p>Так, застосунок працює до 3 діб без зв'язку — ключ перевіряється, щойно з'явиться інтернет.</p></details>
     <details class="rv"><summary>На яких пристроях працює?</summary><p>Телефони на Андроїді (Сяомі, Самсунг та інші), Андроїд ТБ і приставки, комп'ютери з Віндовс (Радар, а згодом — Джарвіс).</p></details>
