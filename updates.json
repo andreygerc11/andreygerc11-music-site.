@@ -22,10 +22,10 @@
   "drive": "https://drive.usercontent.google.com/download?id=1jWaZ6Zj2lLzW3-EsjfzRyEnOOuy3Tk7z&export=download&confirm=t"
  },
  "adblock": {
-  "code": 7,
-  "name": "2.2",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/blokuvalnyk-2.2/Blokuvalnyk-reklamy-VPN.apk",
-  "notes": "Видно, що саме працює: позначка ● на сторінці й пояснення значка ключа"
+  "code": 8,
+  "name": "2.3",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/blokuvalnyk-2.3/Blokuvalnyk-reklamy-VPN.apk",
+  "notes": "Блок реклами і ВПН тепер працюють разом — незалежні кнопки"
  },
  "torrent": {
   "code": 120,
