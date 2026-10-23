@@ -27,5 +27,11 @@
   "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-23/Blokuvalnyk-reklamy-TB.apk",
   "notes": "Новий значок і банер для ТБ, оновлення прямо в застосунку",
   "drive": "https://drive.usercontent.google.com/download?id=1zVQZt7YKIYPhMEqz6WBlSq5T--Vx7c1n&export=download&confirm=t"
+ },
+ "torrent": {
+  "code": 120,
+  "name": "1.2.0",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.2.0/Torent-Vstanovlennia.exe",
+  "notes": "Торент для ПК: підписка, автооновлення, відкриває .torrent і magnet"
  }
 }
