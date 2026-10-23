@@ -1,10 +1,10 @@
 {
  "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
  "antijam": {
-  "code": 23,
-  "name": "2.7",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-23-b/Antyhlushylka.apk",
-  "notes": "Тепер Антиглушилка є у списку «фіктивного місця»; якщо налаштування злетить — сама підкаже, що виправити",
+  "code": 24,
+  "name": "2.8",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-24-a/Antyhlushylka.apk",
+  "notes": "Новий сучасний інтерфейс: живий щит стану, плитки показників, зручні налаштування",
   "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
  },
  "radar": {
