@@ -22,10 +22,10 @@
   "drive": "https://drive.usercontent.google.com/download?id=1jWaZ6Zj2lLzW3-EsjfzRyEnOOuy3Tk7z&export=download&confirm=t"
  },
  "adblock": {
-  "code": 14,
-  "name": "2.9",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-28-b/Blokuvalnyk-reklamy-VPN.apk",
-  "notes": "Нова назва «Блок реклами + ВПН», новий значок, блок реклами без значка ключа, ВПН окремо"
+  "code": 15,
+  "name": "3.0",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.0/NoAds-VPN.apk",
+  "notes": "Нова назва — NoAds VPN: блок реклами без значка ключа, ВПН окремо, новий значок"
  },
  "torrent": {
   "code": 140,
