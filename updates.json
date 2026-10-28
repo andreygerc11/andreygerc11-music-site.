@@ -28,9 +28,9 @@
   "notes": "Новий анімований вигляд: блок реклами — зелений, ВПН — помаранчевий"
  },
  "torrent": {
-  "code": 120,
-  "name": "1.2.0",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.2.0/Torent-Vstanovlennia.exe",
-  "notes": "Торент для ПК: підписка, автооновлення, відкриває .torrent і magnet"
+  "code": 130,
+  "name": "1.3.0",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.3.0/Torent-Vstanovlennia.exe",
+  "notes": "Виправлено завантаження: тепер знаходить пірів без трекерів (DHT) і через HTTP-трекери"
  }
 }
