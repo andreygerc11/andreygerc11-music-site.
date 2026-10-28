@@ -22,10 +22,10 @@
   "drive": "https://drive.usercontent.google.com/download?id=1jWaZ6Zj2lLzW3-EsjfzRyEnOOuy3Tk7z&export=download&confirm=t"
  },
  "adblock": {
-  "code": 10,
-  "name": "2.5",
+  "code": 12,
+  "name": "2.7",
   "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-28-b/Blokuvalnyk-reklamy-VPN.apk",
-  "notes": "Робота за підпискою через бота (ключ або година на пробу)"
+  "notes": "Блок реклами без значка ключа, ВПН окремо, застосунки повз захист, новий значок"
  },
  "torrent": {
   "code": 140,
