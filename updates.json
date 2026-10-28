@@ -15,17 +15,17 @@
   "drive": "https://drive.usercontent.google.com/download?id=1VyJuv2PykLXUiLytI8ZBPhpili4HgPs-&export=download&confirm=t"
  },
  "autosender": {
-  "code": 43,
-  "name": "5.2",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-28-b/Linyvets.apk",
-  "notes": "Робота за підпискою через бота (ключ або година на пробу)",
+  "code": 44,
+  "name": "5.3",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-5.3/Linyvets.apk",
+  "notes": "Банер інших застосунків Hertz Electronics у Налаштуваннях",
   "drive": "https://drive.usercontent.google.com/download?id=1jWaZ6Zj2lLzW3-EsjfzRyEnOOuy3Tk7z&export=download&confirm=t"
  },
  "adblock": {
-  "code": 15,
-  "name": "3.0",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.0/NoAds-VPN.apk",
-  "notes": "Нова назва — NoAds VPN: блок реклами без значка ключа, ВПН окремо, новий значок"
+  "code": 16,
+  "name": "3.1",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.1/NoAds-VPN.apk",
+  "notes": "Банер інших застосунків Hertz Electronics"
  },
  "torrent": {
   "code": 140,
