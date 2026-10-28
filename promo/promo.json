@@ -1,0 +1,36 @@
+{
+ "brand": "Hertz Electronics",
+ "title": "Інші застосунки Hertz Electronics",
+ "items": [
+  {
+   "code": "antijam",
+   "name": "Антиглушилка",
+   "img": "https://nadiya.pp.ua/promo/antijam.png",
+   "url": "https://t.me/nadiya_apps_bot?start=dl_antijam"
+  },
+  {
+   "code": "radar",
+   "name": "Радар",
+   "img": "https://nadiya.pp.ua/promo/radar.png",
+   "url": "https://t.me/nadiya_apps_bot?start=dl_radar"
+  },
+  {
+   "code": "autosender",
+   "name": "Лінивець",
+   "img": "https://nadiya.pp.ua/promo/autosender.png",
+   "url": "https://t.me/nadiya_apps_bot?start=dl_autosender"
+  },
+  {
+   "code": "adblock",
+   "name": "NoAds VPN",
+   "img": "https://nadiya.pp.ua/promo/adblock.png",
+   "url": "https://t.me/nadiya_apps_bot?start=dl_adblock"
+  },
+  {
+   "code": "torrent",
+   "name": "Торент",
+   "img": "https://nadiya.pp.ua/promo/torrent.png",
+   "url": "https://t.me/nadiya_apps_bot?start=dl_torrent"
+  }
+ ]
+}
