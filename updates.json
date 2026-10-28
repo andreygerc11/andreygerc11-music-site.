@@ -28,9 +28,9 @@
   "notes": "Банер інших застосунків Hertz Electronics"
  },
  "torrent": {
-  "code": 140,
-  "name": "1.4.0",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.4.0/Torent-Vstanovlennia.exe",
-  "notes": "Стабільна швидкість без провалів до нуля, швидше на хороших пірах"
+  "code": 150,
+  "name": "1.5.0",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.5.0/Torent-Vstanovlennia.exe",
+  "notes": "Банер інших застосунків Hertz Electronics"
  }
 }
