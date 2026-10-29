@@ -151,7 +151,7 @@
       h('div', { class: 'or', text: 'або' }), googleButton(err),
       h('div', { class: 'switch' }, 'Немає акаунта? ', h('button', { type: 'button', text: 'Зареєструватися', onclick: () => { location.hash = '#/register'; } })));
     $app.replaceChildren(topBar(), h('div', { class: 'center' }, form));
-    login.focus();
+    if (window.matchMedia && matchMedia('(pointer:fine)').matches) login.focus(); // на телефоні клавіатура не вискакує сама
   }
 
   function viewRegister() {
