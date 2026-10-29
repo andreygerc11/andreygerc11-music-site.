@@ -138,6 +138,7 @@
       h('label', { class: 'f' }, 'Пошта (лікарі — логін)', login),
       h('label', { class: 'f' }, 'Пароль', pass),
       err, btn,
+      h('div', { class: 'or', text: 'або' }), googleButton(err),
       h('div', { class: 'switch' }, 'Немає акаунта? ', h('button', { type: 'button', text: 'Зареєструватися', onclick: () => { location.hash = '#/register'; } })));
     $app.replaceChildren(topBar(), h('div', { class: 'center' }, form));
     login.focus();
@@ -175,6 +176,7 @@
       h('label', { class: 'check' }, agree, h('span', {}, 'Погоджуюсь на обробку персональних даних згідно з ',
         h('a', { href: '/privacy_policy', target: '_blank', rel: 'noopener', text: 'Політикою конфіденційності' }))),
       err, btn,
+      h('div', { class: 'or', text: 'або' }), googleButton(err),
       h('div', { class: 'switch' }, 'Вже є акаунт? ', h('button', { type: 'button', text: 'Увійти', onclick: () => { location.hash = '#/login'; } })));
     $app.replaceChildren(topBar(), h('div', { class: 'center' }, form));
   }
@@ -187,19 +189,22 @@
 
   // ---------- головний екран: список розмов ----------
   let $listPane, $chatPane;
-  function viewMain(threadId) {
+  function viewMain(threadId, section) {
+    S.section = section || 'chats';
     if (!$listPane || !$app.contains($listPane)) {
       const who = h('div', { class: 'grow' },
         h('div', { class: 'title', text: S.me.name }),
         h('div', { class: 'sub', text: S.me.role === 'patient' ? S.me.email : S.me.role === 'admin' ? 'Адміністратор' : 'Лікар' }));
       const head = h('div', { class: 'top' },
         h('div', { class: 'logo' }, h('img', { src: '/logo.png', alt: '' })), who,
-        h('button', { class: 'icon-btn', 'aria-label': 'Оновити', title: 'Оновити', onclick: () => loadThreads() }, h('i', { class: 'fa-solid fa-rotate' })),
+        isStaff() ? h('button', { class: 'icon-btn', 'aria-label': 'Кабінет лікаря на сайті', title: 'Медкартки пацієнтів і розклад (кабінет лікаря на сайті)', onclick: () => { location.href = '/doctor-dashboard'; } }, h('i', { class: 'fa-solid fa-hospital-user' })) : null,
+        h('button', { class: 'icon-btn', 'aria-label': 'Оновити', title: 'Оновити', onclick: () => { loadThreads(); if (S.section !== 'chats') renderSection(); } }, h('i', { class: 'fa-solid fa-rotate' })),
         h('button', { class: 'icon-btn', 'aria-label': 'Вийти', title: 'Вийти', onclick: () => { if (confirm('Вийти з акаунта?')) logout(); } }, h('i', { class: 'fa-solid fa-right-from-bracket' })));
       // ліва колонка (на телефоні ховається, коли відкрита розмова) і права — розмова
       $listPane = h('div', { class: 'pane-list' }, head);
       $listPane.$body = h('div', { class: 'list-body' });
       $listPane.append($listPane.$body);
+      if (S.me.role === 'patient') { $listPane.$nav = navBar(); $listPane.append($listPane.$nav); }
       $chatPane = h('div', { class: 'pane-chat empty' });
       $app.replaceChildren(h('div', { class: 'split two' }, $listPane, $chatPane));
       renderList();
@@ -213,8 +218,9 @@
       $listPane.classList.remove('has-chat'); $chatPane.classList.add('empty');
       if (S.cur) { clearTimeout(S.cur.timer); clearInterval(S.cur.clock); S.cur = null; }
       $chatPane.replaceChildren(h('div', { class: 'center muted', text: isStaff() ? 'Оберіть розмову зліва' : '' }));
-      renderList();
+      if (S.section === 'chats') renderList(); else renderSection();
     }
+    updateNav();
   }
 
   async function loadThreads() {
@@ -248,6 +254,8 @@
 
   function renderList() {
     if (!$listPane || !$listPane.$body) return;
+    updateNav();
+    if (S.me.role === 'patient' && S.section !== 'chats') return; // форми розділів не перемальовуємо щохвилини
     const body = $listPane.$body, kids = [];
     const ths = S.threads;
     if (S.me.role === 'patient') {
@@ -310,6 +318,228 @@
   async function openSupport() {
     try { const d = await api('GET', '/support'); location.hash = '#/t/' + d.thread.id; }
     catch (e) { toast(e.message); }
+  }
+
+  // ---------- кабінет пацієнта: вкладки як на сайті ----------
+  const SECTIONS = [['chats', '#/', 'fa-comments', 'Чати'], ['book', '#/book', 'fa-calendar-check', 'Запис'], ['card', '#/card', 'fa-notes-medical', 'Медкарта'], ['docs', '#/docs', 'fa-folder-open', 'Документи']];
+  function navBar() {
+    return h('nav', { class: 'navbar', 'aria-label': 'Розділи' }, SECTIONS.map(([k, href, icon, label]) =>
+      h('a', { href, 'data-sec': k }, h('i', { class: 'fa-solid ' + icon }), h('span', { text: label }), k === 'chats' ? h('b', { class: 'dot hidden' }) : null)));
+  }
+  function updateNav() {
+    const nav = $listPane && $listPane.$nav;
+    if (!nav) return;
+    for (const a of nav.querySelectorAll('a')) a.classList.toggle('on', a.dataset.sec === S.section);
+    const unread = S.threads.reduce((n, t) => n + (t.unread || 0), 0), dot = nav.querySelector('.dot');
+    dot.classList.toggle('hidden', !unread); dot.textContent = unread > 9 ? '9+' : String(unread);
+  }
+
+  function renderSection() {
+    const body = $listPane.$body;
+    body.replaceChildren(h('div', { class: 'center' }, h('div', { class: 'spin' })));
+    ({ book: secBook, card: secCard, docs: secDocs })[S.section](body);
+  }
+  const retry = (body, e) => body.replaceChildren(h('div', { class: 'wrap' }, h('div', { class: 'err', text: e.message }), h('button', { class: 'btn ghost', text: 'Спробувати ще', onclick: renderSection })));
+
+  async function loadProfile(body) {
+    try { return (await withWake(() => api('GET', '/profile'), h('div'))).profile; }
+    catch (e) { retry(body, e); return null; }
+  }
+
+  // Запис до лікаря (як на сайті: години Пн–Пт, до 60 днів наперед)
+  async function secBook(body) {
+    let docs, my;
+    try { [docs, my] = await Promise.all([withWake(() => api('GET', '/doctors'), h('div')), withWake(() => api('GET', '/appointments'), h('div'))]); }
+    catch (e) { retry(body, e); return; }
+    const pad = (n) => String(n).padStart(2, '0'), today = new Date();
+    const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const ua = (d) => d.split('-').reverse().join('.');
+    const doc = h('select', {}, docs.doctors.map((d) => h('option', { value: d.login, text: d.name })));
+    const date = h('input', { type: 'date', min: iso(today), max: iso(new Date(today.getTime() + 60 * 86400000)), value: iso(today) });
+    const slotsBox = h('div', { class: 'slots' });
+    const err = h('div', { class: 'err', role: 'alert' });
+    async function loadSlots() {
+      err.textContent = ''; slotsBox.replaceChildren(h('div', { class: 'spin' }));
+      try {
+        const r = await api('POST', '/appointments/slots', { body: { doctorLogin: doc.value, date: date.value } });
+        if (!r.weekday) { slotsBox.replaceChildren(h('div', { class: 'muted', text: 'Прийом лише з понеділка по п’ятницю — оберіть інший день.' })); return; }
+        const now = new Date(), nowT = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        slotsBox.replaceChildren(...r.slots.map((s) => h('button', { class: 'slot', disabled: s.taken || (date.value === iso(now) && s.time <= nowT), title: s.taken ? 'Зайнято' : 'Вільно', onclick: () => bookIt(s.time) }, s.time)));
+      } catch (e) { slotsBox.replaceChildren(); err.textContent = e.message; }
+    }
+    async function bookIt(time) {
+      if (!confirm(`Записатися до ${doc.options[doc.selectedIndex].text} на ${ua(date.value)} о ${time}?`)) return;
+      try { await api('POST', '/appointments/book', { body: { doctorLogin: doc.value, date: date.value, time } }); toast('Ви записані на прийом.'); renderSection(); }
+      catch (e) { err.textContent = e.message; loadSlots(); }
+    }
+    doc.addEventListener('change', loadSlots); date.addEventListener('change', loadSlots);
+    const mine = my.appointments.filter((a) => a.status !== 'cancelled').sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    const list = mine.length ? mine.map((a) => h('div', { class: 'item' },
+      h('div', { class: 'grow' }, h('div', { class: 'name', text: `${ua(a.date)} о ${a.time}` }), h('div', { class: 'muted', text: a.doctorName || '' })),
+      a.date >= iso(today) ? h('button', { class: 'btn danger', style: 'padding:7px 12px', onclick: async () => {
+        if (!confirm('Скасувати цей запис?')) return;
+        try { await api('POST', '/appointments/cancel', { body: { id: a.id } }); toast('Запис скасовано.'); renderSection(); } catch (e) { toast(e.message); }
+      } }, 'Скасувати') : h('span', { class: 'chip closed', text: 'Минув' }))) : [h('div', { class: 'muted', text: 'Записів поки немає.' })];
+    body.replaceChildren(h('div', { class: 'wrap' },
+      h('h2', { class: 'h', text: 'Запис на прийом' }),
+      h('p', { class: 'muted', text: 'Оберіть лікаря, день і вільну годину (Пн–Пт).' }),
+      h('label', { class: 'f' }, 'Лікар', doc), h('label', { class: 'f' }, 'День', date),
+      slotsBox, err, h('h2', { class: 'h', text: 'Мої записи' }), ...list));
+    if (docs.doctors.length) loadSlots(); else slotsBox.replaceChildren(h('div', { class: 'muted', text: 'Немає доступних лікарів.' }));
+  }
+
+  // Медкарта: мої дані, консультації на сайті, відгук
+  async function secCard(body) {
+    const p = await loadProfile(body);
+    if (!p) return;
+    const f = {
+      fullName: h('input', { type: 'text', value: p.fullName, maxlength: '200' }),
+      phone: h('input', { type: 'tel', value: p.phone, maxlength: '40' }),
+      birthDate: h('input', { type: 'date', value: p.birthDate }),
+      medicalHistory: h('textarea', { rows: '6', maxlength: '5000', value: p.medicalHistory, placeholder: 'Діагнози, операції, алергії, які ліки приймаєте…' }),
+    };
+    const err = h('div', { class: 'err', role: 'alert' });
+    const save = h('button', { class: 'btn primary', type: 'submit', text: 'Зберегти' });
+    const form = h('form', { class: 'card', onsubmit: async (e) => {
+      e.preventDefault(); err.textContent = ''; save.disabled = true;
+      try { await api('POST', '/profile', { body: { fullName: f.fullName.value.trim(), phone: f.phone.value.trim(), birthDate: f.birthDate.value, medicalHistory: f.medicalHistory.value } }); toast('Збережено.'); }
+      catch (ex) { err.textContent = ex.message; } finally { save.disabled = false; }
+    } }, h('label', { class: 'f' }, "Прізвище, ім'я, по батькові", f.fullName), h('label', { class: 'f' }, 'Телефон', f.phone),
+      h('label', { class: 'f' }, 'Дата народження', f.birthDate), h('label', { class: 'f' }, 'Історія хвороби, скарги', f.medicalHistory), err, save);
+    const ST = { pending_payment: ['Очікує оплати', 'pending_payment'], paid: ['Оплачено', 'active'], completed: ['Завершено', 'closed'] };
+    const hist = p.consultations.slice().reverse().map((c) => h('div', { class: 'card hist' },
+      h('div', { class: 'row-h' }, h('b', { text: c.createdAt ? fmtDay(Date.parse(c.createdAt)) : 'Консультація' }), h('span', { class: 'chip ' + (ST[c.status] || [, 'closed'])[1], text: (ST[c.status] || [c.status])[0] })),
+      c.doctorName ? h('div', { class: 'muted', text: 'Лікар: ' + c.doctorName }) : null,
+      c.notes ? h('div', {}, h('div', { class: 'lbl', text: 'Висновок' }), h('div', { class: 'pre', text: c.notes })) : null,
+      c.prescription ? h('div', {}, h('div', { class: 'lbl', text: 'Призначення' }), h('div', { class: 'pre', text: c.prescription })) : null));
+    const rv = h('textarea', { rows: '3', maxlength: '1000', placeholder: 'Як вам допомогли в «Надії»?' });
+    const rvBtn = h('button', { class: 'btn ghost', type: 'submit', text: 'Надіслати відгук' });
+    const review = h('form', { class: 'card', onsubmit: async (e) => {
+      e.preventDefault(); rvBtn.disabled = true;
+      try { await api('POST', '/review', { body: { text: rv.value.trim() } }); rv.value = ''; toast('Дякуємо! Відгук з’явиться на сайті після перевірки.'); }
+      catch (ex) { toast(ex.message); } finally { rvBtn.disabled = false; }
+    } }, h('label', { class: 'f' }, 'Відгук про клініку', rv), rvBtn);
+    body.replaceChildren(h('div', { class: 'wrap' }, h('h2', { class: 'h', text: 'Мої дані' }), form,
+      p.consultations.length ? h('h2', { class: 'h', text: 'Консультації на сайті' }) : null, ...hist,
+      h('h2', { class: 'h', text: 'Відгук' }), review));
+  }
+
+  // Документи: файли на Гугл Диску самого пацієнта (папка «Медичні документи»), лікар отримує лише перегляд — як на сайті
+  const GOOGLE_WEB_CLIENT = '724333690730-kjj7rl1tn72vq452flbdhb1ngq3q7dqd.apps.googleusercontent.com';
+  const DOCTOR_SHARE_EMAIL = 'andreygerc11@gmail.com';
+  const MEDICAL_FOLDER = 'Медичні документи';
+  let driveToken = null, driveTokenAt = 0;
+
+  function loadGsi() {
+    if (window.google && google.accounts) return Promise.resolve();
+    return new Promise((res, rej) => {
+      const sc = h('script', { src: 'https://accounts.google.com/gsi/client', async: true });
+      sc.onload = () => res(); sc.onerror = () => rej(new Error('Не вдалося завантажити вхід Гугла.'));
+      document.head.append(sc);
+    });
+  }
+
+  // Доступ до Диска: у застосунку — рідне вікно Гугла (у вбудованому браузері Гугл його забороняє), на ПК — вікно Гугла на сторінці
+  function getDriveToken() {
+    if (driveToken && Date.now() - driveTokenAt < 50 * 60000) return Promise.resolve(driveToken);
+    const done = (t) => { driveToken = t; driveTokenAt = Date.now(); return t; };
+    if (NA && NA.driveToken) {
+      return new Promise((res, rej) => {
+        window.__nadiyaDrive = (t, er) => { window.__nadiyaDrive = null; t ? res(done(t)) : rej(new Error(er || 'Доступ до Диска не надано.')); };
+        NA.driveToken();
+      });
+    }
+    return loadGsi().then(() => new Promise((res, rej) => {
+      google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_WEB_CLIENT, scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: (r) => (r.error ? rej(new Error('Доступ до Гугл Диска не надано.')) : res(done(r.access_token))),
+        error_callback: () => rej(new Error('Вікно Гугла закрито.')),
+      }).requestAccessToken();
+    }));
+  }
+
+  async function driveJson(url, opt) {
+    const r = await fetch(url, opt);
+    if (r.status === 401) { driveToken = null; throw new Error('Доступ до Диска минув — спробуйте ще раз.'); }
+    return r.json();
+  }
+
+  async function driveFolder(token) {
+    const q = encodeURIComponent(`name='${MEDICAL_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+    const s = await driveJson(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, { headers: { Authorization: 'Bearer ' + token } });
+    if (s.files && s.files.length) return s.files[0].id;
+    const c = await driveJson('https://www.googleapis.com/drive/v3/files', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: MEDICAL_FOLDER, mimeType: 'application/vnd.google-apps.folder' }) });
+    if (!c.id) throw new Error('Не вдалося створити папку на Диску.');
+    return c.id;
+  }
+
+  async function uploadToDrive(file, token, folder) {
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify({ name: file.name, parents: [folder] })], { type: 'application/json' }));
+    form.append('file', file);
+    const r = await driveJson('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,mimeType', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: form });
+    if (!r.id) throw new Error('Не вдалося завантажити «' + file.name + '» на Диск.');
+    try { await fetch(`https://www.googleapis.com/drive/v3/files/${r.id}/permissions?sendNotificationEmail=false`, { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'reader', type: 'user', emailAddress: DOCTOR_SHARE_EMAIL }) }); } catch {}
+    await api('POST', '/documents', { body: { name: file.name, driveFileId: r.id, webViewLink: r.webViewLink, mimeType: r.mimeType || file.type } });
+  }
+
+  const openLink = (url) => { if (NA && NA.openExternal) NA.openExternal(url); else window.open(url, '_blank', 'noopener'); };
+
+  async function secDocs(body) {
+    const p = await loadProfile(body);
+    if (!p) return;
+    const status = h('div', { class: 'muted', role: 'status', style: 'margin:10px 0' });
+    const input = h('input', { type: 'file', accept: 'image/*,application/pdf', multiple: true, class: 'hidden' });
+    const add = h('button', { class: 'btn primary', onclick: () => input.click() }, h('i', { class: 'fa-brands fa-google-drive' }), 'Додати документ');
+    input.addEventListener('change', async () => {
+      const files = [...input.files]; input.value = '';
+      if (!files.length) return;
+      add.disabled = true;
+      try {
+        status.textContent = 'Підключаю Гугл Диск…';
+        const token = await getDriveToken();
+        const folder = await driveFolder(token);
+        for (let i = 0; i < files.length; i++) {
+          status.textContent = `Завантажую ${i + 1} з ${files.length}: ${files[i].name}…`;
+          await uploadToDrive(files[i], token, folder);
+        }
+        toast('Документи на вашому Гугл Диску й у медкартці.');
+        renderSection();
+      } catch (e) { status.textContent = ''; toast(e.message); }
+      finally { add.disabled = false; }
+    });
+    const docs = p.documents.slice().reverse();
+    body.replaceChildren(h('div', { class: 'wrap' },
+      h('h2', { class: 'h', text: 'Медичні документи' }),
+      h('p', { class: 'muted', text: 'Аналізи, виписки, знімки. Файли зберігаються на вашому Гугл Диску (папка «Медичні документи»), лікар отримує лише перегляд.' }),
+      input, add, status,
+      ...(docs.length ? docs.map((d) => h('button', { class: 'item doc-row', onclick: () => (d.webViewLink ? openLink(d.webViewLink) : toast('Файл на вашому Гугл Диску, папка «Медичні документи».')) },
+        h('i', { class: 'fa-solid ' + (/pdf/.test(d.mimeType || '') ? 'fa-file-pdf' : /image/.test(d.mimeType || '') ? 'fa-file-image' : 'fa-file') }),
+        h('div', { class: 'grow' }, h('div', { class: 'name', text: d.name }), h('div', { class: 'muted', text: d.uploadedAt ? fmtDay(Date.parse(d.uploadedAt)) : '' })),
+        h('i', { class: 'fa-solid fa-arrow-up-right-from-square muted' }))) : [h('div', { class: 'empty-note', text: 'Документів поки немає.' })])));
+  }
+
+  // ---------- вхід через Гугл ----------
+  async function googleLogin(idToken, $err) {
+    try { saveAuth(await withWake(() => api('POST', '/google', { body: { idToken } }), $err)); location.hash = '#/'; }
+    catch (e) { $err.textContent = e.message; }
+  }
+  function googleButton($err) {
+    const box = h('div', { class: 'gbox' });
+    if (NA && NA.googleSignIn) {
+      if (NA.googleAvailable && !NA.googleAvailable()) return null;
+      box.append(h('button', { type: 'button', class: 'btn ghost block', onclick: () => {
+        $err.textContent = '';
+        window.__nadiyaGoogle = (t, er) => { window.__nadiyaGoogle = null; if (t) googleLogin(t, $err); else if (er) $err.textContent = er; };
+        NA.googleSignIn();
+      } }, h('i', { class: 'fa-brands fa-google' }), 'Увійти через Google'));
+      return box;
+    }
+    loadGsi().then(() => {
+      google.accounts.id.initialize({ client_id: GOOGLE_WEB_CLIENT, callback: (r) => googleLogin(r.credential, $err) });
+      google.accounts.id.renderButton(box, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', locale: 'uk', width: 300 });
+    }).catch(() => box.remove());
+    return box;
   }
 
   // ---------- нова консультація ----------
@@ -648,6 +878,8 @@
     }
     if (hash === '#/login' || hash === '#/register') { location.hash = '#/'; return; }
     if (hash === '#/new') return S.me.role === 'patient' ? viewNew() : (location.hash = '#/');
+    const sec = { '#/book': 'book', '#/card': 'card', '#/docs': 'docs' }[hash];
+    if (sec) return S.me.role === 'patient' ? viewMain(null, sec) : (location.hash = '#/');
     const m = /^#\/t\/(\d+)$/.exec(hash);
     viewMain(m ? Number(m[1]) : null);
   }

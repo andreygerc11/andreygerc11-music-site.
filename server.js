@@ -49,11 +49,33 @@ app.use(express.json({ limit: '50mb', verify: (req, res, buf) => { req.rawBody =
 
 const upload = multer({ dest: '/tmp/', limits: { fileSize: 50 * 1024 * 1024 } });
 
+// Запити від сервера застосунку «Надія» (пацієнта там уже перевірено) підписані його ключем Ed25519.
+// Усі вони йдуть з однієї адреси сервера, тому ліміт частоти для них не діє. Ключ — з адреси застосунку.
+const NADIYA_KEY_URL = 'https://family-radar-server.onrender.com/nadiya/api/site-key';
+let nadiyaKey = null, nadiyaKeyAt = 0;
+async function nadiyaPublicKey() {
+    if (nadiyaKey && Date.now() - nadiyaKeyAt < 3600000) return nadiyaKey;
+    const r = await axios.get(NADIYA_KEY_URL, { timeout: 15000 });
+    nadiyaKey = crypto.createPublicKey(r.data.key);
+    nadiyaKeyAt = Date.now();
+    return nadiyaKey;
+}
+async function isNadiyaServer(req) {
+    const ts = Number(req.get('x-nadiya-ts')), sig = req.get('x-nadiya-sig');
+    if (!ts || !sig || Math.abs(Date.now() - ts) > 120000) return false;
+    try {
+        const bodyHash = crypto.createHash('sha256').update(req.rawBody || Buffer.alloc(0)).digest('hex');
+        const msg = Buffer.from(`${ts}.${req.method}.${req.path}.${bodyHash}`);
+        return crypto.verify(null, msg, await nadiyaPublicKey(), Buffer.from(sig, 'base64'));
+    } catch (e) { return false; }
+}
+
 const authRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 30,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: isNadiyaServer,
     message: { error: "Забагато спроб. Спробуйте пізніше." }
 });
 
