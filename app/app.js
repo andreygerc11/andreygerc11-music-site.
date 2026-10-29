@@ -523,10 +523,26 @@
       h('h2', { class: 'h', text: 'Медичні документи' }),
       h('p', { class: 'muted', text: 'Аналізи, виписки, знімки. Файли зберігаються на вашому Гугл Диску (папка «Медичні документи»), лікар отримує лише перегляд.' }),
       input, add, status,
-      ...(docs.length ? docs.map((d) => h('button', { class: 'item doc-row', onclick: () => (d.webViewLink ? openLink(d.webViewLink) : toast('Файл на вашому Гугл Диску, папка «Медичні документи».')) },
-        h('i', { class: 'fa-solid ' + (/pdf/.test(d.mimeType || '') ? 'fa-file-pdf' : /image/.test(d.mimeType || '') ? 'fa-file-image' : 'fa-file') }),
-        h('div', { class: 'grow' }, h('div', { class: 'name', text: d.name }), h('div', { class: 'muted', text: d.uploadedAt ? fmtDay(Date.parse(d.uploadedAt)) : '' })),
-        h('i', { class: 'fa-solid fa-arrow-up-right-from-square muted' }))) : [h('div', { class: 'empty-note', text: 'Документів поки немає.' })])));
+      ...(docs.length ? docs.map((d) => h('div', { class: 'item doc-row' },
+        h('button', { class: 'doc-open', onclick: () => (d.webViewLink ? openLink(d.webViewLink) : toast('Файл на вашому Гугл Диску, папка «Медичні документи».')) },
+          h('i', { class: 'fa-solid ' + (/pdf/.test(d.mimeType || '') ? 'fa-file-pdf' : /image/.test(d.mimeType || '') ? 'fa-file-image' : 'fa-file') }),
+          h('div', { class: 'grow' }, h('div', { class: 'name', text: d.name }), h('div', { class: 'muted', text: d.uploadedAt ? fmtDay(Date.parse(d.uploadedAt)) : '' }))),
+        h('button', { class: 'icon-btn del', 'aria-label': 'Видалити документ', title: 'Видалити', onclick: () => deleteDoc(d) }, h('i', { class: 'fa-solid fa-trash-can' }))))
+        : [h('div', { class: 'empty-note', text: 'Документів поки немає.' })])));
+  }
+
+  // Прибрати з медкартки; файл, завантажений із застосунку, видаляється й з Диска (інші — лише вручну на Диску)
+  async function deleteDoc(d) {
+    if (!(await ask(`Видалити «${d.name}»?`, 'Видалити'))) return;
+    try { await api('POST', '/documents/delete', { body: { id: d.id } }); }
+    catch (e) { toast(e.message); return; }
+    let fromDrive = false;
+    try {
+      const token = NA && NA.driveToken ? await getDriveToken() : driveToken;
+      if (token && d.driveFileId) fromDrive = (await fetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(d.driveFileId), { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } })).ok;
+    } catch {}
+    toast(fromDrive ? 'Документ видалено з медкартки й Гугл Диска.' : 'Документ прибрано з медкартки. Сам файл лишився на вашому Гугл Диску.');
+    renderSection();
   }
 
   // ---------- вхід через Гугл ----------

@@ -474,9 +474,27 @@
                 <div class="doc-item">
                     <a href="${d.webViewLink || '#'}" target="_blank"><i class="fas fa-file-alt" style="color: var(--accent);"></i> ${(d.name || 'Документ').replace(/</g,'&lt;')}</a>
                     <span class="doc-date">${formatDate(d.uploadedAt)}</span>
+                    <button type="button" class="doc-del" data-id="${String(d.id).replace(/[^0-9a-zA-Z_-]/g, '')}" title="Прибрати з медкартки" style="background:none;border:0;color:#ff6b6b;cursor:pointer;font-size:1rem;"><i class="fas fa-trash-alt"></i></button>
                 </div>
             `).join('');
         }
+
+        // Прибрати документ із медкартки (файл лишається на Гугл Диску — його можна видалити там)
+        document.getElementById('docList').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.doc-del');
+            if (!btn || !currentUser) return;
+            if (!confirm('Прибрати цей документ із медкартки? Сам файл лишиться на вашому Гугл Диску.')) return;
+            btn.disabled = true;
+            try {
+                const res = await fetch(`${API}/api/patient/documents/delete`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentUser.email, id: btn.dataset.id })
+                });
+                const data = await res.json();
+                if (!res.ok || data.error) throw new Error(data.error || 'Помилка');
+                fetchPatientProfile();
+            } catch (err) { alert('Не вдалося прибрати документ: ' + err.message); btn.disabled = false; }
+        });
 
         // ==========================================
         // GOOGLE ДИСК: пацієнт підключає СВІЙ Диск, файли вантажаться

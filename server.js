@@ -1642,6 +1642,22 @@ app.post('/api/patient/documents', authRateLimiter, async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Помилка сервера" }); }
 });
 
+// Прибрати документ із медкартки (сам файл лишається на Гугл Диску пацієнта)
+app.post('/api/patient/documents/delete', authRateLimiter, async (req, res) => {
+    try {
+        const { email, id } = req.body;
+        if (!email || id == null) return res.status(400).json({ error: "Email і id обов'язкові" });
+        const record = await getPatientRecord(email);
+        const before = (record && record.documents) || [];
+        const left = before.filter(d => String(d.id) !== String(id));
+        if (!record || left.length === before.length) return res.status(404).json({ error: "Документ не знайдено" });
+        record.documents = left;
+        const saved = await savePatientRecord(email, record);
+        if (!saved) return res.status(500).json({ error: "Не вдалося видалити документ" });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Помилка сервера" }); }
+});
+
 app.post('/api/patient/review', authRateLimiter, async (req, res) => {
     try {
         const { email, name, text } = req.body;
