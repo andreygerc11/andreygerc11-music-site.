@@ -15,11 +15,10 @@
   "drive": "https://drive.usercontent.google.com/download?id=1VyJuv2PykLXUiLytI8ZBPhpili4HgPs-&export=download&confirm=t"
  },
  "autosender": {
-  "code": 45,
-  "name": "5.4",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-5.4/Linyvets.apk",
-  "notes": "Захист від злому; дрібні покращення",
-  "drive": "https://drive.usercontent.google.com/download?id=1jWaZ6Zj2lLzW3-EsjfzRyEnOOuy3Tk7z&export=download&confirm=t"
+  "code": 46,
+  "name": "5.5",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-5.5/Linyvets.apk",
+  "notes": "Автовідкриття вдома (Смарт Лок); будильники не зникають після оновлення"
  },
  "adblock": {
   "code": 17,
