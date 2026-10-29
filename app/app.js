@@ -49,6 +49,16 @@
     return hh ? `${hh} год ${mm} хв` : `${mm} хв`;
   }
   const initials = (n) => String(n || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
+  function ask(text, okText) {
+    return new Promise((res) => {
+      const done = (v) => { box.remove(); res(v); };
+      const ok = h('button', { class: 'btn primary', type: 'button', text: okText || 'Так', onclick: () => done(true) });
+      const box = h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', onclick: (e) => { if (e.target === box) done(false); } },
+        h('div', { class: 'card' }, h('p', { style: 'margin:0 0 18px;font-size:16px', text }),
+          h('div', { class: 'acts' }, h('button', { class: 'btn ghost', type: 'button', text: 'Ні', onclick: () => done(false) }), ok)));
+      document.body.append(box); ok.focus();
+    });
+  }
   const newClientId = () => 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   const isStaff = () => S.me && S.me.role !== 'patient';
   const STATUS = { pending_payment: 'Очікує оплати', active: 'Активна', closed: 'Завершена', expired: 'Час минув', open: '' };
@@ -199,7 +209,7 @@
         h('div', { class: 'logo' }, h('img', { src: '/logo.png', alt: '' })), who,
         isStaff() ? h('button', { class: 'icon-btn', 'aria-label': 'Кабінет лікаря на сайті', title: 'Медкартки пацієнтів і розклад (кабінет лікаря на сайті)', onclick: () => { location.href = '/doctor-dashboard'; } }, h('i', { class: 'fa-solid fa-hospital-user' })) : null,
         h('button', { class: 'icon-btn', 'aria-label': 'Оновити', title: 'Оновити', onclick: () => { loadThreads(); if (S.section !== 'chats') renderSection(); } }, h('i', { class: 'fa-solid fa-rotate' })),
-        h('button', { class: 'icon-btn', 'aria-label': 'Вийти', title: 'Вийти', onclick: () => { if (confirm('Вийти з акаунта?')) logout(); } }, h('i', { class: 'fa-solid fa-right-from-bracket' })));
+        h('button', { class: 'icon-btn', 'aria-label': 'Вийти', title: 'Вийти', onclick: async () => { if (await ask('Вийти з акаунта?', 'Вийти')) logout(); } }, h('i', { class: 'fa-solid fa-right-from-bracket' })));
       // ліва колонка (на телефоні ховається, коли відкрита розмова) і права — розмова
       $listPane = h('div', { class: 'pane-list' }, head);
       $listPane.$body = h('div', { class: 'list-body' });
@@ -368,7 +378,7 @@
       } catch (e) { slotsBox.replaceChildren(); err.textContent = e.message; }
     }
     async function bookIt(time) {
-      if (!confirm(`Записатися до ${doc.options[doc.selectedIndex].text} на ${ua(date.value)} о ${time}?`)) return;
+      if (!(await ask(`Записатися до ${doc.options[doc.selectedIndex].text} на ${ua(date.value)} о ${time}?`, 'Записатися'))) return;
       try { await api('POST', '/appointments/book', { body: { doctorLogin: doc.value, date: date.value, time } }); toast('Ви записані на прийом.'); renderSection(); }
       catch (e) { err.textContent = e.message; loadSlots(); }
     }
@@ -377,7 +387,7 @@
     const list = mine.length ? mine.map((a) => h('div', { class: 'item' },
       h('div', { class: 'grow' }, h('div', { class: 'name', text: `${ua(a.date)} о ${a.time}` }), h('div', { class: 'muted', text: a.doctorName || '' })),
       a.date >= iso(today) ? h('button', { class: 'btn danger', style: 'padding:7px 12px', onclick: async () => {
-        if (!confirm('Скасувати цей запис?')) return;
+        if (!(await ask('Скасувати цей запис?', 'Скасувати запис'))) return;
         try { await api('POST', '/appointments/cancel', { body: { id: a.id } }); toast('Запис скасовано.'); renderSection(); } catch (e) { toast(e.message); }
       } }, 'Скасувати') : h('span', { class: 'chip closed', text: 'Минув' }))) : [h('div', { class: 'muted', text: 'Записів поки немає.' })];
     body.replaceChildren(h('div', { class: 'wrap' },
