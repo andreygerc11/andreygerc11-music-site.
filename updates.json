@@ -15,10 +15,10 @@
   "drive": "https://drive.usercontent.google.com/download?id=1VyJuv2PykLXUiLytI8ZBPhpili4HgPs-&export=download&confirm=t"
  },
  "autosender": {
-  "code": 48,
-  "name": "5.7",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-5.7/Linyvets.apk",
-  "notes": "Смарт Лок: пряма кнопка й точні шляхи для різних телефонів"
+  "code": 56,
+  "name": "6.5",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-6.5/Linyvets.apk",
+  "notes": "Автовведення пін-коду — надсилає й уночі; відкласти/скасувати зі сповіщення"
  },
  "adblock": {
   "code": 17,
