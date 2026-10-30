@@ -740,6 +740,7 @@
       const t = encodeURIComponent(text);
       const both = encodeURIComponent(text + url);
       const items = [
+          ['Радар', 'fas fa-satellite-dish', '#8b5cf6', `https://family-radar-server.onrender.com/send?text=${both}`],
           ['Telegram', 'fab fa-telegram-plane', '#229ED9', `https://t.me/share/url?url=${u}&text=${t}`],
           ['WhatsApp', 'fab fa-whatsapp', '#25D366', `https://api.whatsapp.com/send?text=${both}`],
           ['Viber', 'fab fa-viber', '#7360F2', `viber://forward?text=${both}`],
