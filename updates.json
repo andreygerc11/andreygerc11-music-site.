@@ -15,10 +15,10 @@
   "drive": "https://drive.usercontent.google.com/download?id=1VyJuv2PykLXUiLytI8ZBPhpili4HgPs-&export=download&confirm=t"
  },
  "autosender": {
-  "code": 56,
-  "name": "6.5",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-6.5/Linyvets.apk",
-  "notes": "Автовведення пін-коду — надсилає й уночі; відкласти/скасувати зі сповіщення"
+  "code": 57,
+  "name": "6.6",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-6.6/Linyvets.apk",
+  "notes": "Підказки-рамки на всіх пунктах налаштувань, для різних марок телефонів"
  },
  "adblock": {
   "code": 17,
