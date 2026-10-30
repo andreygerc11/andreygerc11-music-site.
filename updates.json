@@ -1,10 +1,10 @@
 {
  "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
  "antijam": {
-  "code": 32,
-  "name": "3.6",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-29-f/Antyhlushylka.apk",
-  "notes": "Захист від злому; дрібні покращення",
+  "code": 33,
+  "name": "3.7",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.7/Antyhlushylka.apk",
+  "notes": "Помічник: рамки на кожному кроці; захист від присипання",
   "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
  },
  "radar": {
@@ -21,10 +21,10 @@
   "notes": "Підказки-рамки на всіх пунктах налаштувань, для різних марок телефонів"
  },
  "adblock": {
-  "code": 17,
-  "name": "3.2",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.2/NoAds-VPN.apk",
-  "notes": "Захист від злому; дрібні покращення"
+  "code": 18,
+  "name": "3.3",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.3/NoAds-VPN.apk",
+  "notes": "Помічник: рамки для «Приватного DNS» і автозапуску"
  },
  "torrent": {
   "code": 150,
