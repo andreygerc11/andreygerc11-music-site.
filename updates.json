@@ -1,35 +1,35 @@
 {
-  "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
-  "antijam": {
-    "code": 33,
-    "name": "3.7",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.7/Antyhlushylka.apk",
-    "notes": "Помічник: рамки на кожному кроці; захист від присипання",
-    "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
-  },
-  "radar": {
-    "code": 185,
-    "name": "1.0.191",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-23/Radar.apk",
-    "notes": "Новe: поділитися в Радар з будь-якого застосунку й сайту; групи й канали з наскрізним шифруванням; бізнес-акаунт; чат як у Ватсапі (редагувати, переслати, вибрати кілька, пошук, очистити); синхронізація телефон ↔ ПК; програма для Windows; копія на Гугл Диск; автоперемикання GPS ↔ вежі під час РЕБ.",
-    "drive": "https://drive.usercontent.google.com/download?id=1VyJuv2PykLXUiLytI8ZBPhpili4HgPs-&export=download&confirm=t"
-  },
-  "autosender": {
-    "code": 57,
-    "name": "6.6",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-6.6/Linyvets.apk",
-    "notes": "Підказки-рамки на всіх пунктах налаштувань, для різних марок телефонів"
-  },
-  "adblock": {
-    "code": 18,
-    "name": "3.3",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.3/NoAds-VPN.apk",
-    "notes": "Помічник: рамки для «Приватного DNS» і автозапуску"
-  },
-  "torrent": {
-    "code": 150,
-    "name": "1.5.0",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.5.0/Torent-Vstanovlennia.exe",
-    "notes": "Банер інших застосунків Hertz Electronics"
-  }
+ "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
+ "antijam": {
+  "code": 33,
+  "name": "3.7",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.7/Antyhlushylka.apk",
+  "notes": "Помічник: рамки на кожному кроці; захист від присипання",
+  "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
+ },
+ "radar": {
+  "code": 185,
+  "name": "1.0.191",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-10-23/Radar.apk",
+  "notes": "Новe: поділитися в Радар з будь-якого застосунку й сайту; групи й канали з наскрізним шифруванням; бізнес-акаунт; чат як у Ватсапі (редагувати, переслати, вибрати кілька, пошук, очистити); синхронізація телефон ↔ ПК; програма для Windows; копія на Гугл Диск; автоперемикання GPS ↔ вежі під час РЕБ.",
+  "drive": "https://drive.usercontent.google.com/download?id=1VyJuv2PykLXUiLytI8ZBPhpili4HgPs-&export=download&confirm=t"
+ },
+ "autosender": {
+  "code": 58,
+  "name": "6.7",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-6.7/Linyvets.apk",
+  "notes": "Рамка у вікні адміністратора — на кнопці «Активувати»"
+ },
+ "adblock": {
+  "code": 18,
+  "name": "3.3",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.3/NoAds-VPN.apk",
+  "notes": "Помічник: рамки для «Приватного DNS» і автозапуску"
+ },
+ "torrent": {
+  "code": 150,
+  "name": "1.5.0",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.5.0/Torent-Vstanovlennia.exe",
+  "notes": "Банер інших застосунків Hertz Electronics"
+ }
 }
