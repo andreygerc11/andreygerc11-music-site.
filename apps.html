@@ -169,6 +169,15 @@ section{max-width:1200px;margin:0 auto;padding:90px 20px}
 .btn-soon{color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);padding:14px 22px;border-radius:12px;font-weight:800;
   text-decoration:none;display:inline-flex;gap:9px;align-items:center;transition:.25s}
 .btn-soon:hover{background:rgba(255,255,255,.14)}
+.fx-how summary{list-style:none;outline:none}
+.fx-how summary::-webkit-details-marker{display:none}
+.fx-how summary::after{content:"▸";display:inline-block;margin-left:8px;transition:transform .2s}
+.fx-how[open] summary::after{transform:rotate(90deg)}
+.fx-how[open] summary small{display:none}
+.j-orb-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.j-orb{width:min(320px,72vw);aspect-ratio:1;display:block}
+.j-state{display:inline-flex;align-items:center;gap:8px;font-size:.74rem;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#c4ccd9}
+.j-state i{width:8px;height:8px;border-radius:50%;background:rgb(70,125,175);box-shadow:0 0 10px currentColor;color:rgb(70,125,175);transition:background .8s,color .8s}
 .btn-wait{background:linear-gradient(90deg,#20c997,#00d4ff);border:0;color:#04121f}
 .btn-wait:hover{filter:brightness(1.08);background:linear-gradient(90deg,#20c997,#00d4ff)}
 .j-offer{margin:0 0 14px;padding:14px 16px;border-radius:14px;background:rgba(32,201,151,.12);border:1px solid rgba(32,201,151,.45);color:#d7fff1;font-weight:700}
@@ -460,11 +469,93 @@ footer a:hover{color:var(--accent)}
         <p class="j-apply"><b>Приймаємо заявки.</b> Натисніть кнопку — бот у Телеграмі запише вас у чергу й одразу скаже ваш номер.</p>
         <a class="btn-soon btn-wait" href="https://t.me/nadiya_apps_bot?start=wait_jarvis" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Залишити заявку</a>
       </div>
-      <div class="wave" aria-hidden="true">
-        <span style="animation-delay:-.1s"></span><span style="animation-delay:-.5s"></span><span style="animation-delay:-.2s"></span><span style="animation-delay:-.8s"></span>
-        <span style="animation-delay:-.3s"></span><span style="animation-delay:-.9s"></span><span style="animation-delay:-.4s"></span><span style="animation-delay:-.6s"></span>
-        <span style="animation-delay:-.15s"></span><span style="animation-delay:-.7s"></span><span style="animation-delay:-.35s"></span>
+      <div class="j-orb-wrap" aria-hidden="true">
+        <canvas class="j-orb" width="320" height="320"></canvas>
+        <span class="j-state"><i></i><b>Сплю</b></span>
       </div>
+      <script>
+      /* Сфера Джарвіса: клубок дуг, волосинки й іскри; по колу проходить його стани (сплю → слухаю → думаю → говорю) з кольорами з програми */
+      (function () {
+        var cv = document.querySelector('.j-orb'); if (!cv || !cv.getContext) return;
+        var ctx = cv.getContext('2d'), lab = document.querySelector('.j-state b'), dot = document.querySelector('.j-state i');
+        var MODES = [['Сплю', [70, 125, 175], [150, 190, 230], .22, .05, 0, 3800],
+                     ['Слухаю', [255, 170, 55], [255, 232, 165], .42, .13, .55, 3000],
+                     ['Думаю', [255, 140, 30], [255, 205, 130], 1.2, .20, .25, 3000],
+                     ['Говорю', [255, 185, 75], [255, 245, 205], .6, .15, .95, 4200]];
+        var seed = 11; function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+        function norm(v) { var l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
+        function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+        var LAYERS = 7, ARCS = [], HAIRS = [], SPARKS = [], l, k, i;
+        for (l = 0; l < LAYERS; l++) {
+          var rr = .32 + .62 * l / (LAYERS - 1);
+          for (k = 0; k < 14 + l * 3; k++) {
+            var ax = norm([rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1]), tt = Math.abs(ax[0]) < .9 ? [1, 0, 0] : [0, 1, 0];
+            var u = norm(cross(ax, tt));
+            ARCS.push({ l: l, r: rr * (.92 + rnd() * .12), u: u, v: cross(ax, u), a0: rnd() * 6.283, len: .5 + rnd() * 1.9, w: .6 + rnd() * .9, ph: rnd() * 6.283 });
+          }
+        }
+        var NH = 110, GA = Math.PI * (3 - Math.sqrt(5));
+        for (i = 0; i < NH; i++) { var y = 1 - 2 * (i + .5) / NH, rad = Math.sqrt(1 - y * y); HAIRS.push({ d: [Math.cos(GA * i) * rad, y, Math.sin(GA * i) * rad], ph: rnd() * 6.283, k: .6 + rnd() * .8 }); }
+        for (i = 0; i < 160; i++) { var dd = norm([rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1]), rs = Math.pow(rnd(), .6) * .95; SPARKS.push({ p: [dd[0] * rs, dd[1] * rs, dd[2] * rs], ph: rnd() * 6.283, f: 1 + rnd() * 3 }); }
+        var dpr = Math.min(2, window.devicePixelRatio || 1), W = 320, R = 96;
+        function size() { var b = cv.getBoundingClientRect(); W = Math.max(120, Math.round((b.width || 320) * dpr)); cv.width = cv.height = W; R = W * .30; }
+        size(); window.addEventListener('resize', size);
+        var mi = 0, mt = 0, rot = 0, env = 0, last = performance.now(), running = false;
+        var cur = { c: MODES[0][1].slice(), b: MODES[0][2].slice(), sp: MODES[0][3], hl: MODES[0][4], g: MODES[0][5] };
+        function rgba(c, a) { return 'rgba(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ',' + a.toFixed(3) + ')'; }
+        function label() { var c = MODES[mi][1]; lab.textContent = MODES[mi][0]; dot.style.background = dot.style.color = 'rgb(' + c.join(',') + ')'; }
+        function frame(now) {
+          var dt = Math.min(.05, (now - last) / 1000); last = now; mt += dt * 1000;
+          if (mt > MODES[mi][6]) { mt = 0; mi = (mi + 1) % MODES.length; label(); }
+          var M = MODES[mi], kk = 1 - Math.pow(.02, dt), j;
+          for (j = 0; j < 3; j++) { cur.c[j] += (M[1][j] - cur.c[j]) * kk; cur.b[j] += (M[2][j] - cur.b[j]) * kk; }
+          cur.sp += (M[3] - cur.sp) * kk; cur.hl += (M[4] - cur.hl) * kk; cur.g += (M[5] - cur.g) * kk;
+          rot += dt * cur.sp * 1.6;
+          var t = now / 1000, voice = mi === 3 ? Math.max(0, Math.sin(t * 7.3)) * (.55 + .45 * Math.sin(t * 2.1)) : (mi === 1 ? .35 + .25 * Math.sin(t * 3.1) : .15);
+          env += (voice * cur.g - env) * (1 - Math.pow(.001, dt));
+          ctx.globalCompositeOperation = 'source-over'; ctx.clearRect(0, 0, W, W);
+          var cx = W / 2, cy = W / 2, pulse = 1 + env * .06;
+          var g = ctx.createRadialGradient(cx, cy, R * .1, cx, cy, R * 1.6);
+          g.addColorStop(0, rgba(cur.b, .35)); g.addColorStop(.45, rgba(cur.c, .16)); g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g; ctx.fillRect(0, 0, W, W);
+          ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+          for (var a = 0; a < ARCS.length; a++) {
+            var A = ARCS[a], ang = rot * (1.9 - A.l * .18) + A.ph, ca = Math.cos(ang), sa = Math.sin(ang), cb = Math.cos(ang * .6), sb = Math.sin(ang * .6), z0 = 0;
+            ctx.beginPath();
+            for (var q = 0; q <= 18; q++) {
+              var th = A.a0 + A.len * q / 18, c = Math.cos(th), s = Math.sin(th);
+              var x = (A.u[0] * c + A.v[0] * s) * A.r, yy = (A.u[1] * c + A.v[1] * s) * A.r, z = (A.u[2] * c + A.v[2] * s) * A.r;
+              var x1 = x * ca + z * sa, z1 = -x * sa + z * ca, y1 = yy * cb - z1 * sb, z2 = yy * sb + z1 * cb;
+              if (q === 0) { ctx.moveTo(cx + x1 * R * pulse, cy + y1 * R * pulse); z0 = z2; } else ctx.lineTo(cx + x1 * R * pulse, cy + y1 * R * pulse);
+            }
+            ctx.strokeStyle = rgba(A.l > 4 ? cur.b : cur.c, .10 + .22 * (.35 + .65 * (z0 + 1) / 2)); ctx.lineWidth = A.w * dpr; ctx.stroke();
+          }
+          var c2 = Math.cos(rot * .7), s2 = Math.sin(rot * .7);
+          ctx.lineWidth = .8 * dpr;
+          for (var h = 0; h < NH; h++) {
+            var Hh = HAIRS[h], dx = Hh.d[0] * c2 + Hh.d[2] * s2, dz = -Hh.d[0] * s2 + Hh.d[2] * c2, dy = Hh.d[1];
+            var len = (cur.hl + env * .35 * (.5 + .5 * Math.sin(t * 6 + Hh.ph))) * Hh.k, r0 = R * pulse, r1 = R * (1 + len) * pulse;
+            ctx.strokeStyle = rgba(cur.b, .18 + .4 * (dz + 1) / 2);
+            ctx.beginPath(); ctx.moveTo(cx + dx * r0, cy + dy * r0); ctx.lineTo(cx + dx * r1, cy + dy * r1); ctx.stroke();
+          }
+          var c3 = Math.cos(rot * 1.3), s3 = Math.sin(rot * 1.3);
+          for (var p = 0; p < SPARKS.length; p++) {
+            var S = SPARKS[p], sx = S.p[0] * c3 + S.p[2] * s3, sz = -S.p[0] * s3 + S.p[2] * c3, tw = .4 + .6 * Math.max(0, Math.sin(t * S.f + S.ph)), rr2 = (.7 + tw) * dpr;
+            ctx.fillStyle = rgba(cur.b, tw * (.35 + .4 * (sz + 1) / 2));
+            ctx.fillRect(cx + sx * R * pulse - rr2 / 2, cy + S.p[1] * R * pulse - rr2 / 2, rr2, rr2);
+          }
+          ctx.globalCompositeOperation = 'source-over';
+          if (running) requestAnimationFrame(frame);
+        }
+        function start() { if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
+        function stop() { running = false; }
+        label();
+        if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { frame(performance.now()); return; }
+        if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { (e[0].isIntersecting && !document.hidden) ? start() : stop(); }).observe(cv);
+        else start();
+        document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
+      })();
+      </script>
       <div class="j-req">
         <div>
           <h4><i class="fas fa-laptop"></i>Мінімальні вимоги для нормальної роботи</h4>
@@ -505,7 +596,7 @@ footer a:hover{color:var(--accent)}
       <div class="fx-head"><img src="icons/antijam.svg" alt=""><div><h3>Антиглушилка</h3><span class="sl">Навігація, яку не зламати</span><span class="pl">Телефон на Андроїді</span></div></div>
       <p class="fx-intro">Коли супутниковий сигнал глушать або підміняють і карти раптом «закидають» вас за тисячі кілометрів, Антиглушилка це помічає й підставляє для всього телефона справжнє місце.</p>
       <div class="fx-grid"><div class="fx-it"><i class="fas fa-magnifying-glass-location"></i><p>Розпізнає підміну сигналу: «телепорти», завмерлу точку й зсув часу в супутниковому сигналі</p></div><div class="fx-it"><i class="fas fa-tower-cell"></i><p>Звіряє супутники з вежами мобільного зв'язку та вайфаєм — і вирішує, кому вірити</p></div><div class="fx-it"><i class="fas fa-map"></i><p>Виправляє місце для всіх карт на телефоні: Гугл Карти, Вейз та інших</p></div><div class="fx-it"><i class="fas fa-car-side"></i><p>У дорозі під час підміни плавно веде точку за швидкістю й поворотами, показує швидкість</p></div><div class="fx-it"><i class="fas fa-satellite"></i><p>Щойно справжні супутники повернулись — за кілька секунд знову працює на них</p></div><div class="fx-it"><i class="fas fa-location-dot"></i><p>«Я тут»: поставте себе на карті — і точка поїде саме звідти</p></div><div class="fx-it"><i class="fas fa-hand"></i><p>Кнопки «Стою» / «Їду» для світлофорів і «Швидше» / «Повільніше» для точки</p></div><div class="fx-it"><i class="fas fa-rotate"></i><p>Працює у фоні й сама вмикається після перезавантаження телефона</p></div><div class="fx-it"><i class="fas fa-list-check"></i><p>Журнал подій українською і звіт одним натисканням</p></div><div class="fx-it"><i class="fas fa-wand-magic-sparkles"></i><p>Майстер налаштування з кроками саме для вашої марки телефона</p></div></div><div class="fx-note"><i class="fas fa-circle-info"></i><span>Глушіння програмно не пробити: у цей час застосунок тримає приблизне місце за вежами та рухом. Година безкоштовно — щоб перевірити на своєму телефоні.</span></div>
-      <div class="fx-note" style="display:block"><b style="font-size:17px"><i class="fas fa-list-ol"></i> Як почати — крок за кроком</b><ol style="margin:10px 0 0;padding-left:22px;line-height:1.55"><li style="margin-top:8px"><b>Скачайте.</b> Натисніть синю кнопку «Скачати» внизу. Відкриється Телеграм — бот сам надішле файл. Натисніть на файл, потім «Встановити». Якщо телефон спитає про дозвіл встановлювати — увімкніть перемикач і натисніть «Назад».</li><li style="margin-top:8px"><b>Відкрийте Антиглушилку.</b> Вона сама покаже список кроків для вашого телефона: спершу «Обов’язкові» (без них захист не запрацює), потім «Рекомендовані». Натискайте сині кнопки по черзі — виконаний крок сам стане зеленим ✓. Нічого шукати в налаштуваннях самому не треба.</li><li style="margin-top:8px"><b>«Режим розробника» — один раз.</b> Застосунок відкриє «О телефоне». Знайдіть рядок «Номер сборки» (на Сяомі — «Версия MIUI» або «Версия ОС») і натисніть на нього 7 разів поспіль, швидко. Якщо попросить — введіть PIN-код телефона. З’явиться напис «Вы стали разработчиком».</li><li style="margin-top:8px"><b>Виберіть Антиглушилку.</b> Натисніть «Відкрити параметри розробника». Телефон сам прокрутить до пункту «Приложение для фиктивных местоположений» (укр. «Програма для фіктивного місцезнаходження») і підсвітить його. Натисніть на нього і виберіть «Антиглушилка». Вибраним може бути лише один застосунок: якщо там стоїть інший (наприклад NoTeleport), замініть на Антиглушилку.</li><li style="margin-top:8px"><b>Дозволи.</b> На кожне вікно «Дозволити місцезнаходження», «Сповіщення», «Батарея без обмежень» натискайте «Разрешить» / «Дозволити». На місці виберіть «Завжди». Крок «Місце за Wi-Fi і мобільною мережею»: відкриється «Местоположение» — увімкніть його й увімкніть «Точность определения местоположения Google».</li><li style="margin-top:8px"><b>Ключ.</b> Натисніть «Отримати ключ» — відкриється бот → «Оплатити». Після оплати ключ прийде сам. Натисніть на ключ (він скопіюється), поверніться в застосунок → «Вставити скопійований ключ» → «Увімкнути ключ». Хочете спершу спробувати — «Спробувати 1 годину безкоштовно».</li><li style="margin-top:8px"><b>Увімкніть захист.</b> Натисніть велику зелену кнопку «Увімкнути захист». Усе! Далі просто користуйтесь Гугл Картами чи Вейзом, як завжди.</li></ol><p style="margin:12px 0 0;line-height:1.55"><b>Коли карти «стрибають» у дорозі:</b> натисніть «Я тут» і торкніться карти там, де ви зараз; на світлофорі — «Стою», рушили — «Їду».</p><p style="margin:12px 0 0;line-height:1.55"><b>Якщо їздите з Андроїд Авто:</b> у машині зі своїм GPS Андроїд Авто може брати місце з машини, а GPS машини теж підмінюють — його Антиглушилка виправити не може. Тому в кроці «Андроїд Авто» натисніть «Відкрити Андроїд Авто» → «Разрешения приложений» → «Местоположение» → «Запретить»: тоді він братиме місце з телефона. Не користуєтесь Андроїд Авто — натисніть «Пропустити».</p><p style="margin:8px 0 0;line-height:1.55"><b>Прийшло сповіщення «⚠ Антиглушилка не захищає»?</b> Телефон сам вимкнув «Режим розробника» або для фіктивного місця вибрано інший застосунок. Натисніть на сповіщення — застосунок покаже, що зробити.</p><p style="margin:8px 0 0;line-height:1.55">Щось незрозуміло — напишіть питання прямо в бот, відповімо.</p></div> <div class="fx-cta"><div><b>99 ₴</b> <small>на місяць · до 2 пристроїв</small></div><span class="acts"><a class="btn-dl" data-app="antijam" href="https://t.me/nadiya_apps_bot?start=dl_antijam" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_antijam" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span></div>
+      <details class="fx-note fx-how" style="display:block"><summary style="cursor:pointer;font-size:17px;font-weight:800"><i class="fas fa-list-ol"></i> Як почати — крок за кроком <small style="font-weight:600;opacity:.7">(натисніть, щоб розгорнути)</small></summary><ol style="margin:10px 0 0;padding-left:22px;line-height:1.55"><li style="margin-top:8px"><b>Скачайте.</b> Натисніть синю кнопку «Скачати» внизу. Відкриється Телеграм — бот сам надішле файл. Натисніть на файл, потім «Встановити». Якщо телефон спитає про дозвіл встановлювати — увімкніть перемикач і натисніть «Назад».</li><li style="margin-top:8px"><b>Відкрийте Антиглушилку.</b> Вона сама покаже список кроків для вашого телефона: спершу «Обов’язкові» (без них захист не запрацює), потім «Рекомендовані». Натискайте сині кнопки по черзі — виконаний крок сам стане зеленим ✓. Нічого шукати в налаштуваннях самому не треба.</li><li style="margin-top:8px"><b>«Режим розробника» — один раз.</b> Застосунок відкриє «О телефоне». Знайдіть рядок «Номер сборки» (на Сяомі — «Версия MIUI» або «Версия ОС») і натисніть на нього 7 разів поспіль, швидко. Якщо попросить — введіть PIN-код телефона. З’явиться напис «Вы стали разработчиком».</li><li style="margin-top:8px"><b>Виберіть Антиглушилку.</b> Натисніть «Відкрити параметри розробника». Телефон сам прокрутить до пункту «Приложение для фиктивных местоположений» (укр. «Програма для фіктивного місцезнаходження») і підсвітить його. Натисніть на нього і виберіть «Антиглушилка». Вибраним може бути лише один застосунок: якщо там стоїть інший (наприклад NoTeleport), замініть на Антиглушилку.</li><li style="margin-top:8px"><b>Дозволи.</b> На кожне вікно «Дозволити місцезнаходження», «Сповіщення», «Батарея без обмежень» натискайте «Разрешить» / «Дозволити». На місці виберіть «Завжди». Крок «Місце за Wi-Fi і мобільною мережею»: відкриється «Местоположение» — увімкніть його й увімкніть «Точность определения местоположения Google».</li><li style="margin-top:8px"><b>Ключ.</b> Натисніть «Отримати ключ» — відкриється бот → «Оплатити». Після оплати ключ прийде сам. Натисніть на ключ (він скопіюється), поверніться в застосунок → «Вставити скопійований ключ» → «Увімкнути ключ». Хочете спершу спробувати — «Спробувати 1 годину безкоштовно».</li><li style="margin-top:8px"><b>Увімкніть захист.</b> Натисніть велику зелену кнопку «Увімкнути захист». Усе! Далі просто користуйтесь Гугл Картами чи Вейзом, як завжди.</li></ol><p style="margin:12px 0 0;line-height:1.55"><b>Коли карти «стрибають» у дорозі:</b> натисніть «Я тут» і торкніться карти там, де ви зараз; на світлофорі — «Стою», рушили — «Їду».</p><p style="margin:12px 0 0;line-height:1.55"><b>Якщо їздите з Андроїд Авто:</b> у машині зі своїм GPS Андроїд Авто може брати місце з машини, а GPS машини теж підмінюють — його Антиглушилка виправити не може. Тому в кроці «Андроїд Авто» натисніть «Відкрити Андроїд Авто» → «Разрешения приложений» → «Местоположение» → «Запретить»: тоді він братиме місце з телефона. Не користуєтесь Андроїд Авто — натисніть «Пропустити».</p><p style="margin:8px 0 0;line-height:1.55"><b>Прийшло сповіщення «⚠ Антиглушилка не захищає»?</b> Телефон сам вимкнув «Режим розробника» або для фіктивного місця вибрано інший застосунок. Натисніть на сповіщення — застосунок покаже, що зробити.</p><p style="margin:8px 0 0;line-height:1.55">Щось незрозуміло — напишіть питання прямо в бот, відповімо.</p></details> <div class="fx-cta"><div><b>99 ₴</b> <small>на місяць · до 2 пристроїв</small></div><span class="acts"><a class="btn-dl" data-app="antijam" href="https://t.me/nadiya_apps_bot?start=dl_antijam" target="_blank" rel="noopener"><i class="fas fa-download"></i> Скачати <small class="v"></small></a><a class="btn-buy" href="https://t.me/nadiya_apps_bot?start=buy_antijam" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Отримати</a></span></div>
     </article>
     <article class="fx-app c-radar rv" id="f-radar">
       <div class="fx-head"><img src="icons/radar.svg" alt=""><div><h3>Радар</h3><span class="sl">Рідні завжди поруч</span><span class="pl">Телефон + комп'ютер</span></div></div>
