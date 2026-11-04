@@ -161,3 +161,14 @@ label.check input { margin-top: 2px; accent-color: var(--accent); }
 .or { text-align: center; color: var(--muted); font-size: 12px; margin: 14px 0 10px; }
 .gbox { display: flex; justify-content: center; min-height: 44px; }
 label.f select { display: block; width: 100%; margin-top: 6px; padding: 12px 14px; background: var(--input); border: 1px solid var(--line); border-radius: 10px; }
+
+/* кабінет лікаря */
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+.wrap .card .lbl { font-size: 11px; color: var(--accent); text-transform: uppercase; font-weight: 700; margin-top: 10px; }
+.wrap .card .pre { white-space: pre-wrap; }
+.move { display: flex; gap: 8px; width: 100%; margin-top: 10px; align-items: center; }
+.move.hidden { display: none; }
+.move input { flex: 1; padding: 9px 10px; background: var(--input); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.item.doc-open { cursor: pointer; }
+.item.doc-open > i:first-child { font-size: 22px; color: var(--accent); }
+.wrap input[type=search] { display: block; width: 100%; padding: 12px 14px; background: var(--input); border: 1px solid var(--line); border-radius: 10px; }

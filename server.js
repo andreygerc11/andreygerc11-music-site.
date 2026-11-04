@@ -79,6 +79,20 @@ const authRateLimiter = rateLimit({
     message: { error: "Забагато спроб. Спробуйте пізніше." }
 });
 
+// Лікар або адміністратор у застосунку «Надія»: пароль там уже перевірено при вході, сервер застосунку
+// підписує запит і каже, хто це (nadiyaDoctor) — підставляємо його облікові дані, далі діють звичайні перевірки.
+app.use('/api/doctor', async (req, res, next) => {
+    const who = req.body && req.body.nadiyaDoctor;
+    if (!who) return next();
+    delete req.body.nadiyaDoctor;
+    if (!(await isNadiyaServer(req))) return res.status(403).json({ error: "Невірний підпис запиту" });
+    if (who === 'administration@dev.com' && ADMIN_PASSWORD) { req.body.login = who; req.body.password = ADMIN_PASSWORD; return next(); }
+    const doc = doctorsList.find(d => d && typeof d.login === 'string' && d.login.toLowerCase() === String(who).toLowerCase());
+    if (!doc) return res.status(403).json({ error: "Лікаря не знайдено" });
+    req.body.login = doc.login; req.body.password = doc.password;
+    next();
+});
+
 // === ЗМІННІ З RENDER ===
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
