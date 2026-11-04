@@ -65,7 +65,8 @@ async function isNadiyaServer(req) {
     if (!ts || !sig || Math.abs(Date.now() - ts) > 120000) return false;
     try {
         const bodyHash = crypto.createHash('sha256').update(req.rawBody || Buffer.alloc(0)).digest('hex');
-        const msg = Buffer.from(`${ts}.${req.method}.${req.path}.${bodyHash}`);
+        // повний шлях: у підключеному через app.use("/api/doctor") обробнику req.path скорочений
+        const msg = Buffer.from(`${ts}.${req.method}.${req.originalUrl.split("?")[0]}.${bodyHash}`);
         return crypto.verify(null, msg, await nadiyaPublicKey(), Buffer.from(sig, 'base64'));
     } catch (e) { return false; }
 }

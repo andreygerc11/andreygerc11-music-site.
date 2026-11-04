@@ -193,7 +193,7 @@
 
   function topBar(extra) {
     return h('div', { class: 'top' },
-      h('div', { class: 'logo' }, h('img', { src: '/logo.png', alt: '' }), h('div', {}, 'Наді', h('span', { text: 'я' }))),
+      h(NA ? 'div' : 'a', { class: 'logo', href: NA ? null : '/', title: NA ? null : 'На головну сайту' }, h('img', { src: '/logo.png', alt: '' }), h('div', {}, 'Наді', h('span', { text: 'я' }))),
       h('div', { class: 'grow' }), extra || null);
   }
 
@@ -206,7 +206,7 @@
         h('div', { class: 'title', text: S.me.name }),
         h('div', { class: 'sub', text: S.me.role === 'patient' ? S.me.email : S.me.role === 'admin' ? 'Адміністратор' : 'Лікар' }));
       const head = h('div', { class: 'top' },
-        h('div', { class: 'logo' }, h('img', { src: '/logo.png', alt: '' })), who,
+        h(NA ? 'div' : 'a', { class: 'logo', href: NA ? null : '/', title: NA ? null : 'На головну сайту' }, h('img', { src: '/logo.png', alt: '' })), who,
         isStaff() ? h('button', { class: 'icon-btn', 'aria-label': 'Кабінет лікаря на сайті', title: 'Медкартки пацієнтів і розклад (кабінет лікаря на сайті)', onclick: () => { location.href = '/doctor-dashboard'; } }, h('i', { class: 'fa-solid fa-hospital-user' })) : null,
         h('button', { class: 'icon-btn', 'aria-label': 'Оновити', title: 'Оновити', onclick: () => { loadThreads(); if (S.section !== 'chats') renderSection(); } }, h('i', { class: 'fa-solid fa-rotate' })),
         h('button', { class: 'icon-btn', 'aria-label': 'Вийти', title: 'Вийти', onclick: async () => { if (await ask('Вийти з акаунта?', 'Вийти')) logout(); } }, h('i', { class: 'fa-solid fa-right-from-bracket' })));

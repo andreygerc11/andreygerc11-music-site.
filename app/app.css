@@ -172,3 +172,4 @@ label.f select { display: block; width: 100%; margin-top: 6px; padding: 12px 14p
 .item.doc-open { cursor: pointer; }
 .item.doc-open > i:first-child { font-size: 22px; color: var(--accent); }
 .wrap input[type=search] { display: block; width: 100%; padding: 12px 14px; background: var(--input); border: 1px solid var(--line); border-radius: 10px; }
+.top a.logo { color: inherit; text-decoration: none; }
