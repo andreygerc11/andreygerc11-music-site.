@@ -452,6 +452,7 @@
         <div class="hero-actions">
             <a href="https://t.me/golosprotyraku_bot" target="_blank" class="btn-circle-cta"><i class="fas fa-calendar-check"></i> <span data-cms="hero.cta">Записатися на прийом</span></a>
             <a href="#services" class="btn-circle-outline"><i class="fas fa-arrow-down"></i> Наші послуги</a>
+            <a href="https://github.com/andreygerc11/nadiya-apps/releases/download/nadiya-1.3/Nadiya.apk" class="btn-circle-outline btn-app-dl" data-app="nadiya"><i class="fab fa-android"></i> Скачати застосунок для Андроїд</a>
         </div>
     </div>
 </header>
@@ -860,5 +861,12 @@
 
 <script src="admin-edit.js"></script>
 <script src="bg.js"></script>
+<script>
+  // Кнопка «Скачати застосунок»: остання версія з updates.json (той самий файл читає застосунок для оновлень)
+  fetch('updates.json', { cache: 'no-store' }).then(r => r.json()).then(u => {
+    const x = u.nadiya; if (!x || !x.url) return;
+    document.querySelectorAll('.btn-app-dl').forEach(a => { a.href = x.url; a.title = 'Версія ' + x.name + ', безкоштовно'; });
+  }).catch(() => {});
+</script>
 </body>
 </html>

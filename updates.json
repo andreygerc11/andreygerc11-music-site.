@@ -31,5 +31,11 @@
   "name": "1.5.0",
   "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.5.0/Torent-Vstanovlennia.exe",
   "notes": "Банер інших застосунків Hertz Electronics"
+ },
+ "nadiya": {
+  "code": 4,
+  "name": "1.3",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/nadiya-1.3/Nadiya.apk",
+  "notes": "Чат з клінікою й лікарем, запис, медкарта, документи, нагадування про прийом"
  }
 }
