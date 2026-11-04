@@ -96,6 +96,7 @@
   }
   window.__nadiyaPushToken = (t) => registerPush(t);
   window.__nadiyaOpenThread = (id) => { if (id) location.hash = '#/t/' + id; };
+  window.__nadiyaOpenSection = (sec) => { if (/^(book|card|docs)$/.test(sec)) location.hash = '#/' + sec; };
 
   // ---------- вхід / вихід ----------
   function saveAuth(d) {
@@ -104,7 +105,11 @@
     registerPush();
   }
   function logout(silent) {
-    if (!silent && S.token) api('POST', '/logout').catch(() => {});
+    if (!silent && S.token) {
+      let pt = null;
+      try { pt = NA && NA.getPushToken ? NA.getPushToken() : null; } catch {}
+      api('POST', '/logout', { body: pt ? { pushToken: pt } : {} }).catch(() => {}); // і сповіщення цього акаунта на цей телефон більше не йдуть
+    }
     S.token = null; S.me = null; S.threads = [];
     store.set('nadiya_token', null); store.set('nadiya_me', null);
     stopTimers();
