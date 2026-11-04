@@ -473,87 +473,22 @@ footer a:hover{color:var(--accent)}
         <canvas class="j-orb" width="320" height="320"></canvas>
         <span class="j-state"><i></i><b>Сплю</b></span>
       </div>
+      <script src="jarvis-orb.js"></script>
       <script>
-      /* Сфера Джарвіса: клубок дуг, волосинки й іскри; по колу проходить його стани (сплю → слухаю → думаю → говорю) з кольорами з програми */
+      /* Сфера Джарвиса — той самий алгоритм, що й у програмі (jarvis-orb.js); по колу показує його стани */
       (function () {
-        var cv = document.querySelector('.j-orb'); if (!cv || !cv.getContext) return;
-        var ctx = cv.getContext('2d'), lab = document.querySelector('.j-state b'), dot = document.querySelector('.j-state i');
-        var MODES = [['Сплю', [70, 125, 175], [150, 190, 230], .22, .05, 0, 3800],
-                     ['Слухаю', [255, 170, 55], [255, 232, 165], .42, .13, .55, 3000],
-                     ['Думаю', [255, 140, 30], [255, 205, 130], 1.2, .20, .25, 3000],
-                     ['Говорю', [255, 185, 75], [255, 245, 205], .6, .15, .95, 4200]];
-        var seed = 11; function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
-        function norm(v) { var l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
-        function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
-        var LAYERS = 7, ARCS = [], HAIRS = [], SPARKS = [], l, k, i;
-        for (l = 0; l < LAYERS; l++) {
-          var rr = .32 + .62 * l / (LAYERS - 1);
-          for (k = 0; k < 14 + l * 3; k++) {
-            var ax = norm([rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1]), tt = Math.abs(ax[0]) < .9 ? [1, 0, 0] : [0, 1, 0];
-            var u = norm(cross(ax, tt));
-            ARCS.push({ l: l, r: rr * (.92 + rnd() * .12), u: u, v: cross(ax, u), a0: rnd() * 6.283, len: .5 + rnd() * 1.9, w: .6 + rnd() * .9, ph: rnd() * 6.283 });
-          }
-        }
-        var NH = 110, GA = Math.PI * (3 - Math.sqrt(5));
-        for (i = 0; i < NH; i++) { var y = 1 - 2 * (i + .5) / NH, rad = Math.sqrt(1 - y * y); HAIRS.push({ d: [Math.cos(GA * i) * rad, y, Math.sin(GA * i) * rad], ph: rnd() * 6.283, k: .6 + rnd() * .8 }); }
-        for (i = 0; i < 160; i++) { var dd = norm([rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1]), rs = Math.pow(rnd(), .6) * .95; SPARKS.push({ p: [dd[0] * rs, dd[1] * rs, dd[2] * rs], ph: rnd() * 6.283, f: 1 + rnd() * 3 }); }
-        var dpr = Math.min(2, window.devicePixelRatio || 1), W = 320, R = 96;
-        function size() { var b = cv.getBoundingClientRect(); W = Math.max(120, Math.round((b.width || 320) * dpr)); cv.width = cv.height = W; R = W * .30; }
-        size(); window.addEventListener('resize', size);
-        var mi = 0, mt = 0, rot = 0, env = 0, last = performance.now(), running = false;
-        var cur = { c: MODES[0][1].slice(), b: MODES[0][2].slice(), sp: MODES[0][3], hl: MODES[0][4], g: MODES[0][5] };
-        function rgba(c, a) { return 'rgba(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ',' + a.toFixed(3) + ')'; }
-        function label() { var c = MODES[mi][1]; lab.textContent = MODES[mi][0]; dot.style.background = dot.style.color = 'rgb(' + c.join(',') + ')'; }
-        function frame(now) {
-          var dt = Math.min(.05, (now - last) / 1000); last = now; mt += dt * 1000;
-          if (mt > MODES[mi][6]) { mt = 0; mi = (mi + 1) % MODES.length; label(); }
-          var M = MODES[mi], kk = 1 - Math.pow(.02, dt), j;
-          for (j = 0; j < 3; j++) { cur.c[j] += (M[1][j] - cur.c[j]) * kk; cur.b[j] += (M[2][j] - cur.b[j]) * kk; }
-          cur.sp += (M[3] - cur.sp) * kk; cur.hl += (M[4] - cur.hl) * kk; cur.g += (M[5] - cur.g) * kk;
-          rot += dt * cur.sp * 1.6;
-          var t = now / 1000, voice = mi === 3 ? Math.max(0, Math.sin(t * 7.3)) * (.55 + .45 * Math.sin(t * 2.1)) : (mi === 1 ? .35 + .25 * Math.sin(t * 3.1) : .15);
-          env += (voice * cur.g - env) * (1 - Math.pow(.001, dt));
-          ctx.globalCompositeOperation = 'source-over'; ctx.clearRect(0, 0, W, W);
-          var cx = W / 2, cy = W / 2, pulse = 1 + env * .06;
-          var g = ctx.createRadialGradient(cx, cy, R * .1, cx, cy, R * 1.6);
-          g.addColorStop(0, rgba(cur.b, .35)); g.addColorStop(.45, rgba(cur.c, .16)); g.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = g; ctx.fillRect(0, 0, W, W);
-          ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
-          for (var a = 0; a < ARCS.length; a++) {
-            var A = ARCS[a], ang = rot * (1.9 - A.l * .18) + A.ph, ca = Math.cos(ang), sa = Math.sin(ang), cb = Math.cos(ang * .6), sb = Math.sin(ang * .6), z0 = 0;
-            ctx.beginPath();
-            for (var q = 0; q <= 18; q++) {
-              var th = A.a0 + A.len * q / 18, c = Math.cos(th), s = Math.sin(th);
-              var x = (A.u[0] * c + A.v[0] * s) * A.r, yy = (A.u[1] * c + A.v[1] * s) * A.r, z = (A.u[2] * c + A.v[2] * s) * A.r;
-              var x1 = x * ca + z * sa, z1 = -x * sa + z * ca, y1 = yy * cb - z1 * sb, z2 = yy * sb + z1 * cb;
-              if (q === 0) { ctx.moveTo(cx + x1 * R * pulse, cy + y1 * R * pulse); z0 = z2; } else ctx.lineTo(cx + x1 * R * pulse, cy + y1 * R * pulse);
-            }
-            ctx.strokeStyle = rgba(A.l > 4 ? cur.b : cur.c, .10 + .22 * (.35 + .65 * (z0 + 1) / 2)); ctx.lineWidth = A.w * dpr; ctx.stroke();
-          }
-          var c2 = Math.cos(rot * .7), s2 = Math.sin(rot * .7);
-          ctx.lineWidth = .8 * dpr;
-          for (var h = 0; h < NH; h++) {
-            var Hh = HAIRS[h], dx = Hh.d[0] * c2 + Hh.d[2] * s2, dz = -Hh.d[0] * s2 + Hh.d[2] * c2, dy = Hh.d[1];
-            var len = (cur.hl + env * .35 * (.5 + .5 * Math.sin(t * 6 + Hh.ph))) * Hh.k, r0 = R * pulse, r1 = R * (1 + len) * pulse;
-            ctx.strokeStyle = rgba(cur.b, .18 + .4 * (dz + 1) / 2);
-            ctx.beginPath(); ctx.moveTo(cx + dx * r0, cy + dy * r0); ctx.lineTo(cx + dx * r1, cy + dy * r1); ctx.stroke();
-          }
-          var c3 = Math.cos(rot * 1.3), s3 = Math.sin(rot * 1.3);
-          for (var p = 0; p < SPARKS.length; p++) {
-            var S = SPARKS[p], sx = S.p[0] * c3 + S.p[2] * s3, sz = -S.p[0] * s3 + S.p[2] * c3, tw = .4 + .6 * Math.max(0, Math.sin(t * S.f + S.ph)), rr2 = (.7 + tw) * dpr;
-            ctx.fillStyle = rgba(cur.b, tw * (.35 + .4 * (sz + 1) / 2));
-            ctx.fillRect(cx + sx * R * pulse - rr2 / 2, cy + S.p[1] * R * pulse - rr2 / 2, rr2, rr2);
-          }
-          ctx.globalCompositeOperation = 'source-over';
-          if (running) requestAnimationFrame(frame);
-        }
-        function start() { if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
-        function stop() { running = false; }
-        label();
-        if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { frame(performance.now()); return; }
-        if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { (e[0].isIntersecting && !document.hidden) ? start() : stop(); }).observe(cv);
-        else start();
-        document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
+        var cv = document.querySelector('.j-orb'); if (!cv || !window.JarvisOrb) return;
+        var lab = document.querySelector('.j-state b'), dot = document.querySelector('.j-state i');
+        var M = [['sleep', 'Сплю', '#467daf', 3800], ['listen', 'Слухаю', '#ffaa37', 3000], ['think', 'Думаю', '#ff8c1e', 3000], ['speak', 'Говорю', '#ffb94b', 4200]];
+        var i = 0, vis = true, t0 = performance.now(), calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        function show() { lab.textContent = M[i][1]; dot.style.background = dot.style.color = M[i][2]; }
+        (function next() { setTimeout(function () { if (vis) { i = (i + 1) % M.length; show(); } next(); }, M[i][3]); })();
+        show();
+        if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { vis = e[0].isIntersecting; }).observe(cv);
+        JarvisOrb(cv, function () {
+          var t = (performance.now() - t0) / 1000, m = M[i][0];
+          return {mode: m, level: m === 'speak' ? Math.max(0, Math.sin(t * 7.3)) * (.55 + .45 * Math.sin(t * 2.1)) : m === 'listen' ? .25 + .2 * Math.sin(t * 3.1) : 0};
+        }, {fps: calm ? 6 : 24, max: 380, active: function () { return vis; }});
       })();
       </script>
       <div class="j-req">
