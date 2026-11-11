@@ -2249,6 +2249,10 @@ Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(),
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
 
         setTimeout(fetchAndRewriteBlog, 30000);
+        // перевірка ключа Groq при старті (видно в журналі Рендера)
+        if (GROQ_API_KEY) axios.get('https://api.groq.com/openai/v1/models', { headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` }, timeout: 15000 })
+            .then(r => console.log(`🤖 Ключ Groq працює (моделей доступно: ${(r.data.data || []).length})`))
+            .catch(e => console.error(`❌ Ключ Groq не працює: ${e.response ? e.response.status + ' ' + JSON.stringify(e.response.data).slice(0, 150) : e.message}`));
 
         function scheduleChecks() {
             const now = new Date();
