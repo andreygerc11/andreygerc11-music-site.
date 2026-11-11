@@ -122,12 +122,30 @@ async function groqChat(messages, maxTokens = 2000, temperature = 0.3) {
             lastErr = e;
             const code = e.response && e.response.data && e.response.data.error && e.response.data.error.code;
             const status = e.response && e.response.status;
-            // модель недоступна -> пробуємо наступну; інші помилки (ключ/ліміт) -> припиняємо
+            // модель недоступна -> пробуємо наступну; ключ не діє / ліміт -> запасний Gemini
             if (code === 'model_not_found' || code === 'model_decommissioned' || status === 400 || status === 404) continue;
+            if (GEMINI_API_KEY && (status === 401 || status === 403 || status === 429 || code === 'invalid_api_key')) return geminiChat(messages, maxTokens, temperature);
             throw e;
         }
     }
+    if (GEMINI_API_KEY) return geminiChat(messages, maxTokens, temperature);
     throw lastErr || new Error('Жодна модель Groq недоступна');
+}
+
+// Запасний генератор тексту (Google Gemini), коли Groq не працює (недійсний ключ або ліміт)
+let geminiNoted = false;
+async function geminiChat(messages, maxTokens = 2000, temperature = 0.3) {
+    const sys = messages.filter(m => m.role === 'system').map(m => m.content).join('\n\n');
+    const contents = messages.filter(m => m.role !== 'system').map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
+    const body = { contents, generationConfig: { maxOutputTokens: Math.max(1024, maxTokens * 2), temperature, thinkingConfig: { thinkingBudget: 0 } } };
+    if (sys) body.systemInstruction = { parts: [{ text: sys }] };
+    const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        body, { headers: { 'Content-Type': 'application/json' }, timeout: 90000 });
+    if (!geminiNoted) { geminiNoted = true; console.log('🤖 Groq недоступний — тексти пише Gemini'); }
+    const parts = (((res.data.candidates || [])[0] || {}).content || {}).parts || [];
+    const text = parts.map(p => p.text || '').join('').trim();
+    if (!text) throw new Error('Gemini повернув порожню відповідь');
+    return text;
 }
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
