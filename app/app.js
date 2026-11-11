@@ -213,6 +213,7 @@
       const head = h('div', { class: 'top' },
         h(NA ? 'div' : 'a', { class: 'logo', href: NA ? null : '/', title: NA ? null : 'На головну сайту' }, h('img', { src: '/logo.png', alt: '' })), who,
         isStaff() ? h('button', { class: 'icon-btn', 'aria-label': 'Кабінет лікаря на сайті', title: 'Медкартки пацієнтів і розклад (кабінет лікаря на сайті)', onclick: () => { location.href = '/doctor-dashboard'; } }, h('i', { class: 'fa-solid fa-hospital-user' })) : null,
+        S.me.role === 'admin' ? h('button', { class: 'icon-btn', 'aria-label': 'Редагувати сайт', title: 'Редагувати сайт (тексти й фото на сторінках)', onclick: () => { const u = location.origin + '/#admin'; if (NA && window.NadiyaApp && NadiyaApp.openExternal) NadiyaApp.openExternal(u); else location.href = u; } }, h('i', { class: 'fa-solid fa-pen-to-square' })) : null,
         h('button', { class: 'icon-btn', 'aria-label': 'Оновити', title: 'Оновити', onclick: () => { loadThreads(); if (S.section !== 'chats') renderSection(); } }, h('i', { class: 'fa-solid fa-rotate' })),
         h('button', { class: 'icon-btn', 'aria-label': 'Вийти', title: 'Вийти', onclick: async () => { if (await ask('Вийти з акаунта?', 'Вийти')) logout(); } }, h('i', { class: 'fa-solid fa-right-from-bracket' })));
       // ліва колонка (на телефоні ховається, коли відкрита розмова) і права — розмова

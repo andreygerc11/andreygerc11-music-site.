@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <!-- Кабінет тепер один — як у застосунку «Надія»: чати з лікарем і адміністратором, медкарта, запис, документи -->
-    <script>location.replace('/app/#/login');</script>
+    <script>if (!/admin/i.test(location.search + location.hash)) location.replace('/app/#/login'); // ?admin — вхід адміністратора для редагування сайту</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вхід у кабінет | Надія</title>
