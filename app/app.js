@@ -1012,7 +1012,12 @@
     if (S.cur) poll(S.cur);
     if ($listPane) loadThreads();
   });
-  route();
+  // кабінет власника (nadiya.pp.ua/#admin): той самий вхід — без повторного пароля
+  let ownerC = null;
+  try { ownerC = !S.token && JSON.parse(sessionStorage.getItem('nadiya_admin_creds')); } catch {}
+  if (ownerC && ownerC.login && ownerC.password) {
+    api('POST', '/login', { body: { login: ownerC.login, password: ownerC.password } }).then(saveAuth).catch(() => {}).finally(route);
+  } else route();
   if (S.token) {
     registerPush();
     api('GET', '/me').then((d) => { S.me = d.me; store.set('nadiya_me', JSON.stringify(d.me)); }).catch(() => {});

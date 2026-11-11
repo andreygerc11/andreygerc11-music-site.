@@ -116,8 +116,8 @@ input,select,textarea{width:100%;background:#08100d;color:var(--txt);border:1px 
     ['design', 'fa-palette', 'Дизайн (кольори, шрифти)', design],
     ['news', 'fa-newspaper', 'Новини й статті', news],
     ['doctors', 'fa-user-doctor', 'Лікарі й паролі', doctors],
-    ['clinic', 'fa-hospital-user', 'Пацієнти, записи, відгуки', () => frame('/doctor-dashboard', 'Медкартки пацієнтів, розклад прийомів, модерація відгуків.')],
-    ['chats', 'fa-comments', 'Чати з пацієнтами', () => frame('/app/', 'Листування з пацієнтами й лікарями (як у застосунку «Надія»). Увійдіть тим самим логіном, якщо попросить.')],
+    ['clinic', 'fa-hospital-user', 'Пацієнти, записи, відгуки', () => frame('/doctor-dashboard?t=' + Date.now(), 'Медкартки пацієнтів, розклад прийомів, модерація відгуків.')],
+    ['chats', 'fa-comments', 'Чати з пацієнтами', () => frame('/app/?t=' + Date.now(), 'Листування з пацієнтами й лікарями (як у застосунку «Надія»). Вхід — автоматично, тим самим паролем.')],
     ['apps', 'fa-mobile-screen', 'Застосунки', apps],
     ['music', 'fa-music', 'Музика', () => frame('/admin.html', 'Студія музики «Голос проти раку».')],
     ['services', 'fa-link', 'Сервіси й налаштування', services]
