@@ -194,13 +194,13 @@ input,select,textarea{width:100%;background:#08100d;color:var(--txt);border:1px 
     if (sub && sub.startsWith('p-')) {
       const sl = sub.slice(2);
       $('title').textContent = 'Редагування сторінки';
-      $('content').innerHTML = `<p class="hint">Додавайте блоки кнопкою «➕ Блок у кінець» внизу, змінюйте будь-що натиском, потім «Зберегти». Адреса: <a href="/p.html?s=${esc(sl)}" target="_blank">nadiya.pp.ua/p.html?s=${esc(sl)}</a> · <a href="#pages">← Усі сторінки</a></p><iframe class="frame" src="/p.html?s=${esc(sl)}#edit"></iframe>`;
+      $('content').innerHTML = `<p class="hint">Додавайте блоки кнопкою «➕ Блок у кінець» внизу, змінюйте будь-що натиском, потім «Зберегти». Адреса: <a href="/p.html?s=${esc(sl)}" target="_blank">nadiya.pp.ua/p.html?s=${esc(sl)}</a> · <a href="#pages">← Усі сторінки</a></p><iframe class="frame" src="/p.html?s=${esc(sl)}&t=${Date.now()}#edit"></iframe>`;
       return;
     }
     if (sub !== undefined) {
       const p = PAGES[+sub] || PAGES[0];
       $('title').textContent = 'Редагування: ' + p[0];
-      $('content').innerHTML = `<p class="hint">Натисніть на будь-який текст або фото на сторінці, щоб змінити. Потім — «Зберегти» внизу сторінки. <a href="#pages">← Усі сторінки</a></p><iframe class="frame" src="${p[1]}#edit"></iframe>`;
+      $('content').innerHTML = `<p class="hint">Натисніть на будь-який текст або фото на сторінці, щоб змінити. Потім — «Зберегти» внизу сторінки. <a href="#pages">← Усі сторінки</a></p><iframe class="frame" src="${p[1]}?t=${Date.now()}#edit"></iframe>`;
       return;
     }
     $('content').innerHTML = `<p class="hint">Оберіть сторінку — вона відкриється тут у режимі редагування: будь-який текст і будь-яке фото змінюються одним натиском.</p>
