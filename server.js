@@ -76,7 +76,8 @@ const authRateLimiter = rateLimit({
     max: 30,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: isNadiyaServer,
+    // власник (адмін) з правильним паролем — без обмеження; чужі спроби рахуються
+    skip: async (req) => (await isNadiyaServer(req)) || isValidWifeAuth(req.body && req.body.login, req.body && req.body.password),
     message: { error: "Забагато спроб. Спробуйте пізніше." }
 });
 
@@ -2155,6 +2156,17 @@ app.post('/api/wife-blog', async (req, res) => {
     aiBlogPosts.unshift(article);
     await saveBlogToGitHub();
     res.json({ success: true });
+});
+
+// Кабінет власника: згенерувати новини зараз (не чекаючи 08:00/20:00)
+let blogGenRunning = false;
+app.post('/api/admin/blog/generate', authRateLimiter, (req, res) => {
+    const { login, password } = req.body || {};
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Доступ лише для адміністратора" });
+    if (blogGenRunning) return res.json({ success: true, running: true });
+    blogGenRunning = true;
+    Promise.resolve().then(fetchAndRewriteBlog).catch(e => console.error('Генерація з кабінету:', e.message)).finally(() => { blogGenRunning = false; });
+    res.json({ success: true, started: true });
 });
 
 app.post('/api/wife-blog/delete', async (req, res) => {

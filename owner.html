@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Кабінет власника | Надія</title>
+<link rel="icon" type="image/png" href="favicon.png?v=2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{--bg:#070c0a;--panel:#0d1613;--panel2:#12201b;--line:#1d332b;--txt:#e8fff7;--mut:#86a89b;--acc:#20c997;--warn:#f59e0b;--bad:#ef4444}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--txt);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--acc)}button{font:inherit;cursor:pointer}
+.login{min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px}
+.login .box{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px}
+.login h1{font-size:22px;margin:0 0 4px}.login p{color:var(--mut);margin:0 0 18px}
+input,select,textarea{width:100%;background:#08100d;color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;margin-bottom:10px}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:700;background:var(--acc);color:#04140f}
+.btn.gh{background:transparent;color:var(--acc);border:1px solid #20c99755}.btn.red{background:transparent;color:#fca5a5;border:1px solid #ef444466}
+.btn.sm{padding:7px 11px;font-size:13px}
+.err{color:#fca5a5;min-height:20px;margin-bottom:8px}
+.app{display:none;height:100%}
+.side{position:fixed;top:0;left:0;bottom:0;width:240px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 10px;overflow:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:4px 8px 16px;font-weight:800}
+.brand img{width:36px;height:36px;border-radius:50%}
+.nav button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:var(--txt);padding:11px 12px;border-radius:10px;margin-bottom:2px}
+.nav button i{width:20px;text-align:center;color:var(--mut)}
+.nav button.on{background:var(--panel2);color:var(--acc)}.nav button.on i{color:var(--acc)}
+.side .sp{flex:1}
+.main{margin-left:240px;min-height:100%;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:5}
+.top h2{margin:0;font-size:19px;flex:1}
+.content{padding:20px 22px;flex:1;display:flex;flex-direction:column}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.card .n{font-size:28px;font-weight:800;color:var(--acc)}.card .l{color:var(--mut);font-size:13px}
+.card.link{display:flex;gap:12px;align-items:flex-start;text-decoration:none;color:var(--txt)}
+.card.link i{font-size:20px;color:var(--acc);margin-top:2px}.card.link small{display:block;color:var(--mut)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.list{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.item{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}.item .t{flex:1;min-width:0}.item .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .t small{color:var(--mut)}
+.frame{flex:1;min-height:calc(100vh - 140px);width:100%;border:1px solid var(--line);border-radius:14px;background:#fff}
+.hint{color:var(--mut);margin:0 0 14px}
+.tag{font-size:12px;padding:2px 8px;border-radius:20px;background:var(--panel2);color:var(--mut)}
+.menu-btn{display:none;background:transparent;border:0;color:var(--txt);font-size:20px}
+@media (max-width:800px){
+  .side{transform:translateX(-100%);transition:.2s;z-index:20;width:260px}.side.open{transform:none}
+  .main{margin-left:0}.menu-btn{display:block}.content{padding:14px}.top{padding:12px 14px}
+  .frame{min-height:calc(100vh - 120px)}
+}
+</style>
+</head>
+<body>
+
+<div class="login" id="login">
+  <div class="box">
+    <h1>⚙️ Кабінет власника</h1>
+    <p>Керування всім сайтом «Надія»: сторінки, новини, пацієнти, записи, чати, застосунки, музика.</p>
+    <input id="lg" placeholder="Логін" value="administration@dev.com" autocomplete="username">
+    <input id="pw" type="password" placeholder="Пароль" autocomplete="current-password">
+    <div class="err" id="lerr"></div>
+    <button class="btn" id="go" style="width:100%">Увійти</button>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <aside class="side" id="side">
+    <div class="brand"><img src="logo.png" alt=""> Надія · власник</div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sp"></div>
+    <button class="btn gh" id="out"><i class="fa-solid fa-right-from-bracket"></i> Вийти</button>
+  </aside>
+  <div class="main">
+    <div class="top"><button class="menu-btn" id="menu" aria-label="Меню"><i class="fa-solid fa-bars"></i></button><h2 id="title"></h2><a class="btn gh sm" href="/" target="_blank">Відкрити сайт</a></div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const API = 'https://andreygerc11-music-site.onrender.com';
+  const KEY = 'nadiya_admin_creds';
+  let creds = null;
+  try { creds = JSON.parse(sessionStorage.getItem(KEY)); } catch (e) {}
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const post = (p, b) => fetch(API + p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ login: creds.login, password: creds.password }, b || {})) });
+
+  const PAGES = [
+    ['Головна', '/index.html'], ['Застосунки', '/apps.html'], ['Блог і новини', '/blog.html'], ['Медичний хаб', '/medical_hub.html'],
+    ['Контакти', '/contacts.html'], ['Музика «Голос проти раку»', '/music.html'], ['Політика конфіденційності', '/privacy_policy.html'],
+    ['Публічна оферта', '/public_offer.html'], ['Оплата успішна', '/success.html'], ['Видалення акаунта', '/delete-account.html'],
+    ['Політика: Антиглушилка', '/privacy/antijam.html'], ['Політика: Надія', '/privacy/nadiya.html'], ['Політика: Радар', '/privacy/radar.html']
+  ];
+  const SERVICES = [
+    ['fa-brands fa-google-play', 'Плей Консоль', 'Застосунки в Google Play', 'https://play.google.com/console/u/0/developers/4657982797214093208/app-list'],
+    ['fa-solid fa-rectangle-ad', 'Рекламний кабінет (AdMob)', 'Доходи від реклами в застосунках', 'https://admob.google.com/v2/home'],
+    ['fa-solid fa-server', 'Рендер', 'Сервери сайту й застосунків', 'https://dashboard.render.com/'],
+    ['fa-solid fa-credit-card', 'Монобанк бізнес', 'Оплати консультацій і підписок', 'https://web.monobank.ua/'],
+    ['fa-brands fa-github', 'Код сайту (ГітХаб)', 'Сторінки, файли, випуски застосунків', 'https://github.com/andreygerc11/andreygerc11-music-site.'],
+    ['fa-solid fa-box-open', 'Файли застосунків', 'Випуски для завантаження з сайту', 'https://github.com/andreygerc11/nadiya-apps/releases'],
+    ['fa-solid fa-fire', 'Firebase', 'Сповіщення й вхід через Гугл', 'https://console.firebase.google.com/'],
+    ['fa-brands fa-google-drive', 'Гугл Диск', 'Музика й резервні копії', 'https://drive.google.com/'],
+    ['fa-solid fa-satellite-dish', 'Радар — адмінпанель', 'Користувачі сімейного радара', 'https://family-radar-server.onrender.com/admin'],
+    ['fa-brands fa-telegram', 'Бот клініки «Надія»', 'Запис і повідомлення', 'https://t.me/golosprotyraku_bot'],
+    ['fa-brands fa-telegram', 'Бот застосунків', 'Продаж ключів, файли', 'https://t.me/nadiya_apps_bot'],
+    ['fa-solid fa-envelope', 'Пошта (Resend)', 'Листи пацієнтам', 'https://resend.com/emails'],
+    ['fa-solid fa-globe', 'Домен (nic.ua)', 'Налаштування домену nadiya.pp.ua', 'https://nic.ua/']
+  ];
+  const SECTIONS = [
+    ['home', 'fa-gauge', 'Огляд', home],
+    ['pages', 'fa-pen-to-square', 'Сторінки сайту', pages],
+    ['news', 'fa-newspaper', 'Новини й статті', news],
+    ['clinic', 'fa-hospital-user', 'Пацієнти, записи, відгуки', () => frame('/doctor-dashboard', 'Медкартки пацієнтів, розклад прийомів, модерація відгуків.')],
+    ['chats', 'fa-comments', 'Чати з пацієнтами', () => frame('/app/', 'Листування з пацієнтами й лікарями (як у застосунку «Надія»). Увійдіть тим самим логіном, якщо попросить.')],
+    ['apps', 'fa-mobile-screen', 'Застосунки', apps],
+    ['music', 'fa-music', 'Музика', () => frame('/admin.html', 'Студія музики «Голос проти раку».')],
+    ['services', 'fa-link', 'Сервіси й налаштування', services]
+  ];
+
+  // ---- вхід ----
+  async function login() {
+    const lg = $('lg').value.trim(), pw = $('pw').value;
+    $('lerr').textContent = 'Перевірка…';
+    try {
+      const r = await fetch(API + '/api/wife-blog/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: lg, password: pw }) });
+      if (!r.ok) { $('lerr').textContent = r.status === 429 ? 'Забагато спроб — зачекайте кілька хвилин' : 'Невірний логін або пароль'; return; }
+      creds = { login: lg, password: pw };
+      start();
+    } catch (e) { $('lerr').textContent = 'Немає зв’язку із сервером (він міг заснути — спробуйте ще раз за хвилину)'; }
+  }
+  function start() {
+    sessionStorage.setItem(KEY, JSON.stringify(creds));
+    // той самий вхід — у кабінет лікаря/адміністратора
+    sessionStorage.setItem('nadiya_doctor_creds', JSON.stringify({ login: creds.login, password: creds.password, doctorName: 'Адміністратор' }));
+    $('login').style.display = 'none'; $('app').style.display = 'block';
+    $('nav').innerHTML = SECTIONS.map(s => `<button data-s="${s[0]}"><i class="fa-solid ${s[1]}"></i>${s[2]}</button>`).join('');
+    $('nav').onclick = e => { const b = e.target.closest('button[data-s]'); if (b) { location.hash = '#' + b.dataset.s; $('side').classList.remove('open'); } };
+    window.onhashchange = route; route();
+  }
+  function route() {
+    const id = (location.hash.slice(1) || 'home').split('/')[0];
+    const s = SECTIONS.find(x => x[0] === id) || SECTIONS[0];
+    document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.s === s[0]));
+    $('title').textContent = s[2];
+    $('content').innerHTML = '';
+    s[3]();
+  }
+  function frame(src, hint) {
+    $('content').innerHTML = (hint ? `<p class="hint">${esc(hint)} <a href="${src}" target="_blank">Відкрити окремо ↗</a></p>` : '') + `<iframe class="frame" src="${src}"></iframe>`;
+  }
+
+  // ---- огляд ----
+  async function home() {
+    const c = $('content');
+    c.innerHTML = `<div class="cards">
+      <div class="card"><div class="n" id="cNews">…</div><div class="l">новин і статей на сайті</div></div>
+      <div class="card"><div class="n" id="cAppt">…</div><div class="l">майбутніх записів на прийом</div></div>
+      <div class="card"><div class="n" id="cPat">…</div><div class="l">пацієнтів</div></div>
+      <div class="card"><div class="n" id="cRev">…</div><div class="l">відгуків чекають перевірки</div></div></div>
+      <div class="row" style="margin-bottom:18px">
+        <a class="btn" href="#pages">✏️ Редагувати сайт</a><a class="btn gh" href="#news">📰 Новини</a>
+        <a class="btn gh" href="#clinic">👩‍⚕️ Пацієнти й записи</a><a class="btn gh" href="#chats">💬 Чати</a></div>
+      <h3 style="margin:6px 0 10px">Найближчі записи</h3><div class="list" id="appts"><div class="item">Завантаження…</div></div>`;
+    fetch(API + '/api/blog').then(r => r.json()).then(l => { $('cNews').textContent = (l || []).length; }).catch(() => { $('cNews').textContent = '—'; });
+    post('/api/doctor/patients').then(r => r.json()).then(l => { $('cPat').textContent = Array.isArray(l) ? l.length : '—'; }).catch(() => { $('cPat').textContent = '—'; });
+    post('/api/doctor/reviews').then(r => r.json()).then(l => { $('cRev').textContent = Array.isArray(l) ? l.filter(x => x.status === 'pending').length : '—'; }).catch(() => { $('cRev').textContent = '—'; });
+    post('/api/doctor/appointments').then(r => r.json()).then(l => {
+      const today = new Date().toISOString().slice(0, 10);
+      const up = (Array.isArray(l) ? l : []).filter(a => a.date >= today);
+      $('cAppt').textContent = up.length;
+      $('appts').innerHTML = up.slice(0, 8).map(a => `<div class="item"><div class="t"><b>${esc(a.date)} ${esc(a.time)} — ${esc(a.patientName || a.patientEmail || '')}</b><small>${esc(a.doctorName || '')}</small></div></div>`).join('') || '<div class="item">Записів немає</div>';
+    }).catch(() => { $('cAppt').textContent = '—'; $('appts').innerHTML = '<div class="item">Не вдалося завантажити</div>'; });
+  }
+
+  // ---- сторінки ----
+  function pages() {
+    const sub = location.hash.split('/')[1];
+    if (sub !== undefined) {
+      const p = PAGES[+sub] || PAGES[0];
+      $('title').textContent = 'Редагування: ' + p[0];
+      $('content').innerHTML = `<p class="hint">Натисніть на будь-який текст або фото на сторінці, щоб змінити. Потім — «Зберегти» внизу сторінки. <a href="#pages">← Усі сторінки</a></p><iframe class="frame" src="${p[1]}#edit"></iframe>`;
+      return;
+    }
+    $('content').innerHTML = `<p class="hint">Оберіть сторінку — вона відкриється тут у режимі редагування: будь-який текст і будь-яке фото змінюються одним натиском.</p>
+      <div class="list">${PAGES.map((p, i) => `<div class="item"><i class="fa-regular fa-file-lines" style="color:var(--acc)"></i><div class="t"><b>${esc(p[0])}</b><small>nadiya.pp.ua${esc(p[1])}</small></div>
+      <a class="btn sm" href="#pages/${i}">✏️ Редагувати</a><a class="btn gh sm" href="${p[1]}" target="_blank">↗</a></div>`).join('')}</div>`;
+  }
+
+  // ---- новини ----
+  async function news() {
+    const c = $('content');
+    c.innerHTML = `<div class="row" style="margin-bottom:14px">
+        <button class="btn" id="gen">🤖 Згенерувати свіжі новини зараз</button><span class="hint" id="gmsg" style="margin:0"></span></div>
+      <details class="card" style="margin-bottom:14px"><summary style="cursor:pointer;font-weight:700">➕ Написати статтю самому</summary><div style="margin-top:12px">
+        <input id="nt" placeholder="Заголовок">
+        <select id="nc"><option value="rehab_wife">Порада терапевта (медичний хаб)</option><option value="news">Новини</option><option value="psychology">Психологія</option><option value="rehab">Реабілітація</option></select>
+        <textarea id="nx" rows="8" placeholder="Текст статті (**жирний** працює)"></textarea>
+        <button class="btn" id="npub">Опублікувати</button> <span id="nmsg" class="hint"></span></div></details>
+      <div class="list" id="nl"><div class="item">Завантаження…</div></div>`;
+    $('gen').onclick = async () => {
+      $('gmsg').textContent = 'Запускаю…';
+      try { const r = await post('/api/admin/blog/generate'); const j = await r.json(); $('gmsg').textContent = j.running ? 'Уже генерується — оновіть список за 2–3 хвилини' : (r.ok ? 'Генерація запущена — нові статті з’являться за 2–3 хвилини' : (j.error || 'Помилка')); }
+      catch (e) { $('gmsg').textContent = 'Немає зв’язку із сервером'; }
+    };
+    $('npub').onclick = async () => {
+      const title = $('nt').value.trim(), content = $('nx').value.trim();
+      if (!title || !content) { $('nmsg').textContent = 'Потрібні заголовок і текст'; return; }
+      $('nmsg').textContent = 'Публікую…';
+      try { const r = await post('/api/wife-blog', { title, content, category: $('nc').value }); const j = await r.json().catch(() => ({}));
+        if (r.ok) { $('nmsg').textContent = '✅ Опубліковано'; $('nt').value = ''; $('nx').value = ''; load(); } else $('nmsg').textContent = j.error || 'Помилка'; }
+      catch (e) { $('nmsg').textContent = 'Немає зв’язку'; }
+    };
+    const CAT = { news: 'Новини', psychology: 'Психологія', rehab: 'Реабілітація', rehab_wife: 'Порада терапевта' };
+    async function load() {
+      try {
+        const l = await (await fetch(API + '/api/blog', { cache: 'no-store' })).json();
+        $('nl').innerHTML = (l || []).map(p => `<div class="item"><div class="t"><b>${esc(p.title)}</b><small>${esc(p.date || '')} · <span class="tag">${esc(CAT[p.category] || p.category || '')}</span> ${p.author ? '· ' + esc(p.author) : ''}</small></div>
+          <a class="btn gh sm" href="/blog.html#${esc(p.id)}" target="_blank">↗</a><button class="btn red sm" data-del="${esc(p.id)}">Видалити</button></div>`).join('') || '<div class="item">Статей немає</div>';
+      } catch (e) { $('nl').innerHTML = '<div class="item">Не вдалося завантажити (сервер міг заснути — оновіть за хвилину)</div>'; }
+    }
+    $('nl').onclick = async e => {
+      const b = e.target.closest('[data-del]'); if (!b) return;
+      if (!confirm('Видалити статтю з сайту?')) return;
+      b.disabled = true;
+      const raw = b.dataset.del, id = /^\d+$/.test(raw) ? Number(raw) : raw;
+      try { const r = await post('/api/wife-blog/delete', { id }); if (r.ok) b.closest('.item').remove(); else { b.disabled = false; alert('Не вдалося видалити'); } }
+      catch (e) { b.disabled = false; alert('Немає зв’язку'); }
+    };
+    load();
+  }
+
+  // ---- застосунки ----
+  async function apps() {
+    const c = $('content');
+    c.innerHTML = `<p class="hint">Версії, які сайт пропонує для оновлення в застосунках, і рекламні банери. Нові версії викладаються випуском на ГітХабі + записом у updates.json.</p>
+      <div class="row" style="margin-bottom:14px"><a class="btn" href="#pages/1">✏️ Редагувати сторінку «Застосунки»</a>
+      <a class="btn gh" href="https://github.com/andreygerc11/nadiya-apps/releases" target="_blank">Файли застосунків ↗</a>
+      <a class="btn gh" href="https://github.com/andreygerc11/andreygerc11-music-site./edit/main/updates.json" target="_blank">Змінити updates.json ↗</a>
+      <a class="btn gh" href="https://play.google.com/console/u/0/developers/4657982797214093208/app-list" target="_blank">Плей Консоль ↗</a></div>
+      <div class="list" id="al"><div class="item">Завантаження…</div></div><h3 style="margin:18px 0 10px">Рекламні банери в застосунках</h3><div class="cards" id="pl"></div>`;
+    try {
+      const u = await (await fetch('/updates.json', { cache: 'no-store' })).json();
+      $('al').innerHTML = Object.entries(u).filter(([k, v]) => v && typeof v === 'object').map(([k, v]) => `<div class="item"><i class="fa-solid fa-mobile-screen" style="color:var(--acc)"></i><div class="t"><b>${esc(k)} — версія ${esc(v.name || '')}</b><small>${esc(v.notes || '')}</small></div>${v.url ? `<a class="btn gh sm" href="${esc(v.url)}">Файл ↗</a>` : ''}</div>`).join('');
+    } catch (e) { $('al').innerHTML = '<div class="item">Не вдалося прочитати updates.json</div>'; }
+    try {
+      const p = await (await fetch('/promo/promo.json', { cache: 'no-store' })).json();
+      $('pl').innerHTML = (p.items || []).map(x => `<div class="card"><img src="${esc(x.img)}" alt="" style="width:100%;border-radius:10px"><div style="margin-top:8px"><b>${esc(x.name || x.code)}</b></div></div>`).join('');
+    } catch (e) { $('pl').innerHTML = ''; }
+  }
+
+  // ---- сервіси ----
+  function services() {
+    $('content').innerHTML = `<p class="hint">Усі зовнішні кабінети, де живуть частини сайту й застосунків.</p><div class="cards">` +
+      SERVICES.map(s => `<a class="card link" href="${s[3]}" target="_blank" rel="noopener"><i class="${s[0]}"></i><div><b>${esc(s[1])}</b><small>${esc(s[2])}</small></div></a>`).join('') + `</div>`;
+  }
+
+  $('go').onclick = login;
+  $('pw').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  $('out').onclick = () => { sessionStorage.removeItem(KEY); sessionStorage.removeItem('nadiya_doctor_creds'); location.hash = ''; location.reload(); };
+  $('menu').onclick = () => $('side').classList.toggle('open');
+  if (creds) start();
+})();
+</script>
+</body>
+</html>
