@@ -113,13 +113,25 @@ input,select,textarea{width:100%;background:#08100d;color:var(--txt);border:1px 
   const SECTIONS = [
     ['home', 'fa-gauge', 'Огляд', home],
     ['pages', 'fa-pen-to-square', 'Сторінки сайту', pages],
+    ['design', 'fa-palette', 'Дизайн (кольори, шрифти)', design],
     ['news', 'fa-newspaper', 'Новини й статті', news],
+    ['doctors', 'fa-user-doctor', 'Лікарі й паролі', doctors],
     ['clinic', 'fa-hospital-user', 'Пацієнти, записи, відгуки', () => frame('/doctor-dashboard', 'Медкартки пацієнтів, розклад прийомів, модерація відгуків.')],
     ['chats', 'fa-comments', 'Чати з пацієнтами', () => frame('/app/', 'Листування з пацієнтами й лікарями (як у застосунку «Надія»). Увійдіть тим самим логіном, якщо попросить.')],
     ['apps', 'fa-mobile-screen', 'Застосунки', apps],
     ['music', 'fa-music', 'Музика', () => frame('/admin.html', 'Студія музики «Голос проти раку».')],
     ['services', 'fa-link', 'Сервіси й налаштування', services]
   ];
+
+  async function getContent() { try { return await (await fetch(API + '/api/site-content', { cache: 'no-store' })).json(); } catch (e) { return {}; } }
+  async function saveContent(patch) {
+    const cur = await getContent();
+    const r = await post('/api/admin/site-content', { content: Object.assign({}, cur, patch) });
+    const j = await r.json().catch(() => ({}));
+    return r.ok && j.success;
+  }
+  const TR = { 'а': 'a', 'б': 'b', 'в': 'v', 'г': 'h', 'ґ': 'g', 'д': 'd', 'е': 'e', 'є': 'ye', 'ж': 'zh', 'з': 'z', 'и': 'y', 'і': 'i', 'ї': 'yi', 'й': 'i', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ь': '', 'ю': 'yu', 'я': 'ya', "'": '', '’': '' };
+  const slugify = t => t.toLowerCase().split('').map(c => TR[c] != null ? TR[c] : c).join('').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || ('page-' + Date.now().toString(36));
 
   // ---- вхід ----
   async function login() {
@@ -179,6 +191,12 @@ input,select,textarea{width:100%;background:#08100d;color:var(--txt);border:1px 
   // ---- сторінки ----
   function pages() {
     const sub = location.hash.split('/')[1];
+    if (sub && sub.startsWith('p-')) {
+      const sl = sub.slice(2);
+      $('title').textContent = 'Редагування сторінки';
+      $('content').innerHTML = `<p class="hint">Додавайте блоки кнопкою «➕ Блок у кінець» внизу, змінюйте будь-що натиском, потім «Зберегти». Адреса: <a href="/p.html?s=${esc(sl)}" target="_blank">nadiya.pp.ua/p.html?s=${esc(sl)}</a> · <a href="#pages">← Усі сторінки</a></p><iframe class="frame" src="/p.html?s=${esc(sl)}#edit"></iframe>`;
+      return;
+    }
     if (sub !== undefined) {
       const p = PAGES[+sub] || PAGES[0];
       $('title').textContent = 'Редагування: ' + p[0];
@@ -187,7 +205,100 @@ input,select,textarea{width:100%;background:#08100d;color:var(--txt);border:1px 
     }
     $('content').innerHTML = `<p class="hint">Оберіть сторінку — вона відкриється тут у режимі редагування: будь-який текст і будь-яке фото змінюються одним натиском.</p>
       <div class="list">${PAGES.map((p, i) => `<div class="item"><i class="fa-regular fa-file-lines" style="color:var(--acc)"></i><div class="t"><b>${esc(p[0])}</b><small>nadiya.pp.ua${esc(p[1])}</small></div>
-      <a class="btn sm" href="#pages/${i}">✏️ Редагувати</a><a class="btn gh sm" href="${p[1]}" target="_blank">↗</a></div>`).join('')}</div>`;
+      <a class="btn sm" href="#pages/${i}">✏️ Редагувати</a><a class="btn gh sm" href="${p[1]}" target="_blank">↗</a></div>`).join('')}</div>
+      <h3 style="margin:22px 0 10px">Мої нові сторінки</h3>
+      <div class="row" style="margin-bottom:10px"><input id="npTitle" placeholder="Назва нової сторінки, напр. «Ціни»" style="flex:1;margin:0;min-width:220px"><button class="btn" id="npAdd">➕ Створити сторінку</button></div>
+      <div class="list" id="myPages"><div class="item">Завантаження…</div></div>`;
+    let list = [];
+    const draw = () => { $('myPages').innerHTML = list.map(p => `<div class="item"><i class="fa-regular fa-file" style="color:var(--acc)"></i><div class="t"><b>${esc(p.title)}</b><small>nadiya.pp.ua/p.html?s=${esc(p.slug)}</small></div>
+      <a class="btn sm" href="#pages/p-${esc(p.slug)}">✏️ Редагувати</a><a class="btn gh sm" href="/p.html?s=${esc(p.slug)}" target="_blank">↗</a><button class="btn red sm" data-delp="${esc(p.slug)}">Видалити</button></div>`).join('') || '<div class="item">Ще немає. Створіть першу — напр. «Ціни», «Акції», «Вакансії».</div>'; };
+    getContent().then(c => { try { list = JSON.parse(c.pages || '[]'); } catch (e) { list = []; } draw(); });
+    $('npAdd').onclick = async () => {
+      const t = $('npTitle').value.trim(); if (!t) return;
+      let sl = slugify(t); while (list.some(p => p.slug === sl)) sl += '-2';
+      list.push({ slug: sl, title: t });
+      if (await saveContent({ pages: JSON.stringify(list) })) location.hash = '#pages/p-' + sl; else alert('Не вдалося зберегти');
+    };
+    $('myPages').onclick = async e => {
+      const b = e.target.closest('[data-delp]'); if (!b || !confirm('Видалити сторінку разом з її блоками?')) return;
+      list = list.filter(p => p.slug !== b.dataset.delp);
+      if (await saveContent({ pages: JSON.stringify(list), ['b:pg_' + b.dataset.delp]: '[]' })) draw(); else alert('Не вдалося видалити');
+    };
+  }
+
+  // ---- дизайн ----
+  const FONTS = ['', 'Montserrat', 'Playfair Display', 'Roboto', 'Open Sans', 'Inter', 'Nunito', 'Raleway', 'Lora', 'Merriweather', 'PT Sans', 'PT Serif', 'Ubuntu', 'Fira Sans', 'Rubik', 'Comfortaa', 'Oswald', 'Manrope', 'Exo 2', 'Cormorant Garamond'];
+  async function design() {
+    const c = await getContent();
+    let t = {}; try { t = JSON.parse(c.theme || '{}'); } catch (e) {}
+    const opt = (sel) => FONTS.map(f => `<option value="${esc(f)}"${f === (sel || '') ? ' selected' : ''}>${f ? esc(f) : 'Як зараз'}</option>`).join('');
+    $('content').innerHTML = `<p class="hint">Зміни діють на всіх сторінках сайту. Порожнє поле — лишається як зараз.</p>
+      <div class="cards" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
+        <div class="card"><b>Основний колір (кнопки, акценти)</b><div class="row" style="margin-top:8px"><input type="color" id="dAcc" value="${esc(t.accent || '#20c997')}" style="width:60px;padding:2px;margin:0"><label><input type="checkbox" id="dAccOn" ${t.accent ? 'checked' : ''} style="width:auto;margin:0"> змінити</label></div></div>
+        <div class="card"><b>Фон сторінок</b><div class="row" style="margin-top:8px"><input type="color" id="dBg" value="${esc(t.bg || '#0a0a0b')}" style="width:60px;padding:2px;margin:0"><label><input type="checkbox" id="dBgOn" ${t.bg ? 'checked' : ''} style="width:auto;margin:0"> змінити</label></div></div>
+        <div class="card"><b>Колір тексту</b><div class="row" style="margin-top:8px"><input type="color" id="dTx" value="${esc(t.text || '#f2f2f0')}" style="width:60px;padding:2px;margin:0"><label><input type="checkbox" id="dTxOn" ${t.text ? 'checked' : ''} style="width:auto;margin:0"> змінити</label></div></div>
+        <div class="card"><b>Шрифт тексту</b><select id="dFont" style="margin-top:8px">${opt(t.font)}</select></div>
+        <div class="card"><b>Шрифт заголовків</b><select id="dHead" style="margin-top:8px">${opt(t.head)}</select></div>
+        <div class="card"><b>Розмір тексту: <span id="dSzV">${esc(t.size || 100)}</span>%</b><input type="range" id="dSz" min="85" max="125" step="5" value="${esc(t.size || 100)}" style="margin-top:12px"></div>
+      </div>
+      <details class="card" style="margin-bottom:14px"><summary style="cursor:pointer;font-weight:700">Для досвідчених: власні стилі (CSS)</summary><textarea id="dCss" rows="6" style="margin-top:10px" placeholder=".hero h1 { letter-spacing: 2px; }">${esc(t.css || '')}</textarea></details>
+      <div class="row" style="margin-bottom:14px"><button class="btn" id="dSave">💾 Зберегти дизайн</button><button class="btn gh" id="dReset">Повернути як було</button><span class="hint" id="dMsg" style="margin:0"></span></div>
+      <iframe class="frame" id="dPrev" src="/index.html?preview=${Date.now()}"></iframe>`;
+    $('dSz').oninput = () => { $('dSzV').textContent = $('dSz').value; };
+    const collect = () => ({
+      accent: $('dAccOn').checked ? $('dAcc').value : '', bg: $('dBgOn').checked ? $('dBg').value : '', text: $('dTxOn').checked ? $('dTx').value : '',
+      font: $('dFont').value, head: $('dHead').value, size: $('dSz').value === '100' ? '' : $('dSz').value, css: $('dCss').value.trim()
+    });
+    $('dSave').onclick = async () => {
+      $('dMsg').textContent = 'Зберігаю…';
+      const th = collect(); Object.keys(th).forEach(k => { if (!th[k]) delete th[k]; });
+      if (await saveContent({ theme: JSON.stringify(th) })) { $('dMsg').textContent = '✅ Збережено — дизайн уже на сайті'; $('dPrev').src = '/index.html?preview=' + Date.now(); }
+      else $('dMsg').textContent = 'Не вдалося зберегти';
+    };
+    $('dReset').onclick = async () => {
+      if (!confirm('Повернути дизайн сайту як був спочатку?')) return;
+      if (await saveContent({ theme: '{}' })) { $('dMsg').textContent = '✅ Повернуто'; design(); }
+    };
+  }
+
+  // ---- лікарі ----
+  async function doctors() {
+    $('content').innerHTML = `<p class="hint">Лікарі входять у кабінет лікаря й застосунок «Надія» своїм логіном і паролем. Пароль показується лише при введенні — збережені паролі не видно нікому.</p>
+      <div class="row" style="margin-bottom:14px"><button class="btn" id="drAdd">➕ Додати лікаря</button><span class="hint" id="drMsg" style="margin:0"></span></div>
+      <div id="drForm"></div><div class="list" id="drList"><div class="item">Завантаження…</div></div>`;
+    let list = [];
+    const load = async () => {
+      try { const r = await post('/api/admin/doctors'); list = await r.json(); if (!Array.isArray(list)) throw 0; }
+      catch (e) { $('drList').innerHTML = '<div class="item">Не вдалося завантажити (сервер міг заснути — спробуйте за хвилину)</div>'; return; }
+      $('drList').innerHTML = list.map((d, i) => `<div class="item"><i class="fa-solid fa-user-doctor" style="color:var(--acc)"></i><div class="t"><b>${esc(d.name)}</b><small>логін: ${esc(d.login)}</small></div>
+        <button class="btn gh sm" data-ed="${i}">✏️ Змінити / новий пароль</button><button class="btn red sm" data-dl="${i}">Видалити</button></div>`).join('') || '<div class="item">Лікарів ще немає</div>';
+    };
+    const form = (d) => {
+      $('drForm').innerHTML = `<div class="card" style="margin-bottom:14px"><b>${d ? 'Змінити лікаря' : 'Новий лікар'}</b>
+        <input id="fName" placeholder="Прізвище Ім'я По батькові" value="${esc(d ? d.name : '')}" style="margin-top:10px">
+        <input id="fLogin" placeholder="Логін (напр. email лікаря)" value="${esc(d ? d.login : '')}">
+        <input id="fPass" placeholder="${d ? 'Новий пароль (порожньо — не змінювати)' : 'Пароль (щонайменше 6 символів)'}" autocomplete="new-password">
+        <div class="row"><button class="btn" id="fSave">Зберегти</button><button class="btn gh" id="fCancel">Скасувати</button></div></div>`;
+      $('fCancel').onclick = () => { $('drForm').innerHTML = ''; };
+      $('fSave').onclick = async () => {
+        $('drMsg').textContent = 'Зберігаю…';
+        try {
+          const r = await post('/api/admin/doctors/save', { doctor: { name: $('fName').value.trim(), login: $('fLogin').value.trim(), password: $('fPass').value, origLogin: d ? d.login : '' } });
+          const j = await r.json().catch(() => ({}));
+          if (r.ok && j.success) { $('drMsg').textContent = '✅ Збережено'; $('drForm').innerHTML = ''; load(); } else $('drMsg').textContent = j.error || 'Не вдалося зберегти';
+        } catch (e) { $('drMsg').textContent = 'Немає зв’язку'; }
+      };
+    };
+    $('drAdd').onclick = () => form(null);
+    $('drList').onclick = async e => {
+      const ed = e.target.closest('[data-ed]'), dl = e.target.closest('[data-dl]');
+      if (ed) form(list[+ed.dataset.ed]);
+      if (dl) {
+        const d = list[+dl.dataset.dl]; if (!confirm('Видалити лікаря «' + d.name + '»? Він більше не зможе увійти.')) return;
+        const r = await post('/api/admin/doctors/delete', { doctorLogin: d.login }); if (r.ok) load(); else alert('Не вдалося видалити');
+      }
+    };
+    load();
   }
 
   // ---- новини ----

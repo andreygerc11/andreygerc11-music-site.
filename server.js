@@ -1529,6 +1529,64 @@ try {
 }
 console.log(`👩‍⚕️ Завантажено лікарів з індивідуальним доступом: ${doctorsList.length}`);
 
+// Лікарі, яких додав/змінив власник у кабінеті, — doctors.json у ПРИВАТНОМУ репозиторії (перекриває DOCTORS_JSON)
+let doctorsSha = null;
+async function syncDoctorsFromGitHub() {
+    if (!GITHUB_TOKEN || !PATIENTS_REPO) return;
+    try {
+        const res = await axios.get(`https://api.github.com/repos/${PATIENTS_REPO}/contents/doctors.json`, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        const list = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
+        if (Array.isArray(list)) { doctorsList = list; doctorsSha = res.data.sha; console.log(`👩‍⚕️ Лікарі з кабінету власника: ${list.length}`); }
+    } catch (e) { /* файлу ще немає — лишаються лікарі з DOCTORS_JSON */ }
+}
+async function saveDoctorsToGitHub() {
+    if (!GITHUB_TOKEN || !PATIENTS_REPO) return false;
+    const url = `https://api.github.com/repos/${PATIENTS_REPO}/contents/doctors.json`;
+    try {
+        let sha = doctorsSha;
+        if (!sha) { try { sha = (await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } })).data.sha; } catch (e) {} }
+        const res = await axios.put(url, { message: 'Лікарі (кабінет власника)', content: Buffer.from(JSON.stringify(doctorsList, null, 2), 'utf8').toString('base64'), sha: sha || undefined },
+            { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        doctorsSha = res.data.content.sha;
+        return true;
+    } catch (e) { console.error('Збереження лікарів:', e.message); return false; }
+}
+app.post('/api/admin/doctors', authRateLimiter, (req, res) => {
+    const { login, password } = req.body || {};
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Доступ лише для адміністратора" });
+    res.json(doctorsList.map(d => ({ login: d.login, name: d.name || '', hasPassword: !!d.password })));
+});
+app.post('/api/admin/doctors/save', authRateLimiter, async (req, res) => {
+    const { login, password, doctor } = req.body || {};
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Доступ лише для адміністратора" });
+    const d = doctor || {};
+    const newLogin = String(d.login || '').trim().slice(0, 80), name = String(d.name || '').trim().slice(0, 120);
+    const orig = String(d.origLogin || '').trim();
+    if (!newLogin || !name) return res.status(400).json({ error: "Потрібні ім'я та логін лікаря" });
+    if (newLogin.toLowerCase() === 'administration@dev.com') return res.status(400).json({ error: "Цей логін зайнятий адміністратором" });
+    const clash = doctorsList.find(x => x.login.toLowerCase() === newLogin.toLowerCase() && x.login !== orig);
+    if (clash) return res.status(400).json({ error: "Лікар з таким логіном уже є" });
+    const ex = orig ? doctorsList.find(x => x.login === orig) : null;
+    const pass = String(d.password || '');
+    if (!ex && pass.length < 6) return res.status(400).json({ error: "Пароль нового лікаря — щонайменше 6 символів" });
+    if (pass && pass.length < 6) return res.status(400).json({ error: "Пароль — щонайменше 6 символів" });
+    if (ex) {
+        if (ex.login !== newLogin) appointments.forEach(a => { if (a.doctorLogin === ex.login) a.doctorLogin = newLogin; });
+        ex.login = newLogin; ex.name = name; if (pass) ex.password = pass;
+    } else doctorsList.push({ login: newLogin, password: pass, name });
+    const ok = await saveDoctorsToGitHub();
+    if (ex && orig !== newLogin) await saveAppointmentsToGitHub();
+    res.json({ success: ok, saved: ok });
+});
+app.post('/api/admin/doctors/delete', authRateLimiter, async (req, res) => {
+    const { login, password, doctorLogin } = req.body || {};
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Доступ лише для адміністратора" });
+    const before = doctorsList.length;
+    doctorsList = doctorsList.filter(x => x.login !== doctorLogin);
+    if (doctorsList.length === before) return res.status(404).json({ error: "Лікаря не знайдено" });
+    res.json({ success: await saveDoctorsToGitHub() });
+});
+
 // Повертає { name, isAdmin } для валідних креденшлів лікаря або адміна, інакше null.
 // Кожен лікар бачить усіх пацієнтів (спільний доступ), але заходить під своїм паролем,
 // щоб нотатки й призначення підписувалися його іменем.
@@ -1730,7 +1788,8 @@ app.post('/api/admin/site-content', authRateLimiter, async (req, res) => {
     // Зберігаємо лише рядкові значення (плоский ключ→текст), обрізаємо надто довгі.
     const cleaned = {};
     for (const [k, v] of Object.entries(content)) {
-        if (typeof v === 'string') cleaned[String(k).slice(0, 100)] = v.slice(0, 4000);
+        const big = /^(b:|o:|theme$|pages$)/.test(String(k));   // блоки/порядок/дизайн/сторінки — JSON
+        if (typeof v === 'string') cleaned[String(k).slice(0, 100)] = v.slice(0, big ? 60000 : 4000);
     }
     siteContent = cleaned;
     const saved = await saveSiteContentToGitHub();
@@ -2184,7 +2243,7 @@ app.post('/api/wife-blog/delete', async (req, res) => {
 // ==========================================
 const PORT = process.env.PORT || 10000;
 
-Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(), syncReviewsFromGitHub(), syncSiteContentFromGitHub(), syncAppointmentsFromGitHub()]).then(() => {
+Promise.all([syncBlogFromGitHub(), fetchMusicFromDrive(), syncUsersFromGitHub(), syncReviewsFromGitHub(), syncSiteContentFromGitHub(), syncAppointmentsFromGitHub(), syncDoctorsFromGitHub()]).then(() => {
     migrateCategoryBanners().catch(e => console.error('Помилка міграції банерів:', e.message));
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Сервер успішно запущено на порту ${PORT}`);
