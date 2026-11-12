@@ -237,7 +237,7 @@
       $app.replaceChildren(h('div', { class: 'split two' }, $listPane, $chatPane));
       renderList();
       loadThreads();
-      if (S.me.role === 'patient' && !S.promo) loadPromo();
+      if (S.me.role === 'patient' && !S.promo && !/NadiyaPlay/.test(navigator.userAgent)) loadPromo(); // у версії з Google Play реклами інших застосунків нема
       clearInterval(S.listTimer);
       S.listTimer = setInterval(() => { if (!document.hidden) loadThreads(); }, 15000);
     }
