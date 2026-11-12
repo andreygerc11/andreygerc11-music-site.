@@ -104,6 +104,16 @@
     store.set('nadiya_token', d.token); store.set('nadiya_me', JSON.stringify(d.me));
     registerPush();
   }
+  // Запит на видалення акаунта й даних (вимога Google Play): іде адміністратору в чат підтримки
+  async function deleteAccount() {
+    if (!(await ask('Видалити ваш акаунт, листування, файли й медичну картку? Ми видалимо все протягом 30 днів (крім записів, які клініка зобовʼязана зберігати за законом). Скасувати буде неможливо.', 'Видалити акаунт'))) return;
+    try {
+      const d = await api('GET', '/support');
+      await api('POST', `/threads/${d.thread.id}/messages`, { body: { clientId: newClientId(), text: '🗑 ЗАПИТ НА ВИДАЛЕННЯ АКАУНТА: прошу видалити мій акаунт і всі мої дані (' + (S.me.email || '') + ').' } });
+      toast('Запит на видалення надіслано. Ми видалимо акаунт і дані протягом 30 днів і повідомимо вас.', 7000);
+    } catch (e) { toast('Не вдалося надіслати запит. Напишіть на andriyherts@gmail.com з темою «Видалити акаунт».', 8000); }
+  }
+
   function logout(silent) {
     if (!silent && S.token) {
       let pt = null;
@@ -216,6 +226,7 @@
         isStaff() ? h('button', { class: 'icon-btn', 'aria-label': 'Кабінет лікаря на сайті', title: 'Медкартки пацієнтів і розклад (кабінет лікаря на сайті)', onclick: () => { location.href = '/doctor-dashboard'; } }, h('i', { class: 'fa-solid fa-hospital-user' })) : null,
         S.me.role === 'admin' ? h('button', { class: 'icon-btn', 'aria-label': 'Редагувати сайт', title: 'Редагувати сайт (тексти й фото на сторінках)', onclick: () => { const u = location.origin + '/#admin'; if (NA && window.NadiyaApp && NadiyaApp.openExternal) NadiyaApp.openExternal(u); else location.href = u; } }, h('i', { class: 'fa-solid fa-pen-to-square' })) : null,
         h('button', { class: 'icon-btn', 'aria-label': 'Оновити', title: 'Оновити', onclick: () => { loadThreads(); if (S.section !== 'chats') renderSection(); } }, h('i', { class: 'fa-solid fa-rotate' })),
+        S.me.role === 'patient' ? h('button', { class: 'icon-btn', 'aria-label': 'Видалити акаунт і дані', title: 'Видалити акаунт і дані', onclick: deleteAccount }, h('i', { class: 'fa-solid fa-user-xmark' })) : null,
         h('button', { class: 'icon-btn', 'aria-label': 'Вийти', title: 'Вийти', onclick: async () => { if (await ask('Вийти з акаунта?', 'Вийти')) logout(); } }, h('i', { class: 'fa-solid fa-right-from-bracket' })));
       // ліва колонка (на телефоні ховається, коли відкрита розмова) і права — розмова
       $listPane = h('div', { class: 'pane-list' }, head);
