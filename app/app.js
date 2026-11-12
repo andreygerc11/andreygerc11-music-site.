@@ -189,7 +189,8 @@
       h('label', { class: 'f' }, 'Дата народження', f.birthDate),
       h('label', { class: 'f' }, 'Пароль (від 6 символів)', f.password),
       h('label', { class: 'check' }, agree, h('span', {}, 'Погоджуюсь на обробку персональних даних згідно з ',
-        h('a', { href: '/privacy_policy', target: '_blank', rel: 'noopener', text: 'Політикою конфіденційності' }))),
+        h('a', { href: '/privacy_policy', target: '_blank', rel: 'noopener', text: 'Політикою конфіденційності' }), ' і приймаю ',
+        h('a', { href: '/public_offer', target: '_blank', rel: 'noopener', text: 'публічну оферту' }))),
       err, btn,
       h('div', { class: 'or', text: 'або' }), googleButton(err),
       h('div', { class: 'switch' }, 'Вже є акаунт? ', h('button', { type: 'button', text: 'Увійти', onclick: () => { location.hash = '#/login'; } })));

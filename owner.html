@@ -90,7 +90,7 @@ input,select,textarea{width:100%;background:#08100d;color:var(--txt);border:1px 
   const post = (p, b) => fetch(API + p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ login: creds.login, password: creds.password }, b || {})) });
 
   const PAGES = [
-    ['Головна', '/index.html'], ['Застосунки', '/apps.html'], ['Блог і новини', '/blog.html'], ['Медичний хаб', '/medical_hub.html'],
+    ['Головна', '/index.html'], ['Hertz Electronics: розробка й застосунки', '/apps.html'], ['Блог і новини', '/blog.html'], ['Медичний хаб', '/medical_hub.html'],
     ['Контакти', '/contacts.html'], ['Музика «Голос проти раку»', '/music.html'], ['Політика конфіденційності', '/privacy_policy.html'],
     ['Публічна оферта', '/public_offer.html'], ['Оплата успішна', '/success.html'], ['Видалення акаунта', '/delete-account.html'],
     ['Політика: Антиглушилка', '/privacy/antijam.html'], ['Політика: Надія', '/privacy/nadiya.html'], ['Політика: Радар', '/privacy/radar.html']

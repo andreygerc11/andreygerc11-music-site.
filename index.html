@@ -386,25 +386,99 @@
         @keyframes apBob { 50% { transform: translateY(-9px); } }
         .ap-price { font-size: .78rem; color: #9aa4b5; margin-top: 12px; }
         @media (prefers-reduced-motion: reduce) { .ap-frame, .ap-grad, .ap-cta::after, .ap-ic, .ap-new i { animation: none !important; } }
+
+        /* ==== ВИЇЗНЕ МЕНЮ ==== */
+        .nav-container { flex-wrap: nowrap !important; }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .nav-right .auth-btn-nav { text-decoration: none; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+        @media (max-width: 480px) { .nav-right { gap: 6px; } .nav-right .btn-book-nav, .nav-right .auth-btn-nav { padding: 7px 11px; font-size: .72rem; } .nav-toggle { padding: 7px 11px !important; } .nav-toggle .t { display: none; } .logo { font-size: 1.3rem; } }
+        .nav-left { display: flex; align-items: center; gap: 22px; }
+        .nav-hertz { display: flex; align-items: center; gap: 10px; text-decoration: none; padding-left: 22px; border-left: 1px solid rgba(255,255,255,.12); }
+        .nav-hertz img { width: 34px; height: 34px; border-radius: 9px; object-fit: cover; object-position: 50% 28%; box-shadow: 0 0 14px rgba(46,196,182,.3); transition: .3s; }
+        .nav-hertz span { font-size: .78rem; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; color: #9aa3ad; transition: .3s; }
+        .nav-hertz:hover img { box-shadow: 0 0 20px rgba(46,196,182,.6); }
+        .nav-hertz:hover span { color: #2ec4b6; }
+        @media (max-width: 900px) { .nav-hertz span { display: none; } }
+        @media (max-width: 480px) { .nav-container { padding: 0 10px !important; gap: 6px !important; } .nav-left { gap: 8px; } .nav-hertz { padding-left: 10px; } .nav-hertz img { width: 28px; height: 28px; } }
+        .nav-right .btn-book-nav { text-decoration: none; font-size: .8rem; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-toggle { display: inline-flex !important; position: static !important; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.25) !important; border-radius: 30px; padding: 8px 16px !important; font-size: .8rem !important; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; font-family: inherit; }
+        .nav-toggle i { font-size: 1.1rem; }
+        .nav-toggle:hover { border-color: var(--accent) !important; color: var(--accent); }
+        .drawer-bg { position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: .3s; z-index: 9998; }
+        .drawer-bg.open { opacity: 1; pointer-events: auto; }
+        .nav-links { position: fixed !important; top: 0; right: 0; height: 100vh; width: min(360px, 88vw); margin: 0 !important;
+            display: flex !important; flex-direction: column; align-items: stretch !important; gap: 2px !important; padding: 22px 20px 30px;
+            background: #0e0f12; border-left: 1px solid rgba(255,255,255,.08); box-shadow: -20px 0 60px rgba(0,0,0,.6);
+            transform: translateX(105%); transition: transform .35s cubic-bezier(.2,.8,.2,1); z-index: 10001; overflow-y: auto; }
+        .nav-links.open { transform: none; }
+        .nav-links li { width: 100%; list-style: none; }
+        .nav-links a { display: flex !important; align-items: center; gap: 12px; padding: 12px 12px !important; border-radius: 12px; font-size: .9rem !important; }
+        .nav-links a:hover { background: rgba(255,255,255,.05); }
+        .nav-links a i { width: 20px; text-align: center; color: var(--accent); }
+        .nav-links .dr-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .nav-links .dr-close { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 6px 10px; }
+        .nav-links .dr-group { font-size: .7rem; letter-spacing: 3px; text-transform: uppercase; color: #777; font-weight: 800; padding: 16px 12px 6px; }
+        .nav-links .dr-hertz { display: flex; align-items: center; gap: 10px; }
+        .nav-links .dr-hertz img { width: 26px; height: 26px; border-radius: 7px; object-fit: cover; object-position: 50% 28%; }
+        .nav-links .auth-btn-nav, .nav-links .btn-book-nav { justify-content: center; margin-top: 8px; }
+        body.drawer-lock { overflow: hidden; }
+
+        /* ==== НИЖНІЙ БЛОК: розробка, застосунки, музика ==== */
+        .more-sec { max-width: 1200px; margin: 0 auto; padding: 90px 20px 30px; }
+        .more-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; }
+        @media (max-width: 860px) { .more-grid { grid-template-columns: 1fr; } }
+        .more-card { position: relative; border-radius: 26px; padding: 34px; overflow: hidden; border: 1px solid rgba(255,255,255,.08); }
+        .more-hz { background: radial-gradient(ellipse at 100% 0%, rgba(46,196,182,.22), transparent 60%), radial-gradient(ellipse at 0% 100%, rgba(30,111,179,.25), transparent 60%), #0b1220; }
+        .more-mu { background: radial-gradient(ellipse at 100% 0%, rgba(236,72,153,.22), transparent 60%), radial-gradient(ellipse at 0% 100%, rgba(139,92,246,.22), transparent 60%), #120b18; }
+        .more-card h3 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 900; margin: 10px 0 10px; line-height: 1.15; }
+        .more-card p { color: #b8c0cc; margin-bottom: 22px; }
+        .more-top { display: flex; align-items: center; gap: 14px; }
+        .more-top img { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; object-position: 50% 28%; box-shadow: 0 0 24px rgba(46,196,182,.3); }
+        .more-tag { font-size: .7rem; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; color: #8fe9dd; }
+        .more-mu .more-tag { color: #f5b3d6; }
+        .more-icons { display: flex; gap: 10px; margin: 0 0 22px; flex-wrap: wrap; }
+        .more-icons img { width: 42px; height: 42px; border-radius: 11px; }
+        .more-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+        .more-btn { display: inline-flex; align-items: center; gap: 9px; padding: 13px 20px; border-radius: 14px; font-weight: 800; font-size: .9rem; text-decoration: none; color: #fff; border: 1px solid rgba(255,255,255,.2); transition: .25s; }
+        .more-btn:hover { border-color: #2ec4b6; background: rgba(46,196,182,.12); }
+        .more-btn.main { border: none; color: #04140f; background: linear-gradient(135deg, #2ec4b6, #4facfe); }
+        .more-mu .more-btn.main { background: linear-gradient(135deg, #ec4899, #8b5cf6); color: #fff; }
+        .more-mu .eq { position: absolute; right: 24px; top: 26px; display: flex; gap: 4px; align-items: flex-end; height: 40px; opacity: .7; }
+        .more-mu .eq i { width: 5px; background: linear-gradient(#ec4899, #8b5cf6); border-radius: 3px; animation: eq 1.2s ease-in-out infinite; }
+        .more-mu .eq i:nth-child(2) { animation-delay: -.3s } .more-mu .eq i:nth-child(3) { animation-delay: -.6s } .more-mu .eq i:nth-child(4) { animation-delay: -.9s }
+        @keyframes eq { 0%,100% { height: 10px } 50% { height: 40px } }
     </style>
 </head>
 <body>
 
+<div class="drawer-bg" id="drawerBg"></div>
 <nav class="header-nav">
     <div class="nav-container">
-        <a href="/" class="logo">Надія<span>.</span></a>
-        <button class="nav-toggle" id="navToggle" aria-label="Меню" aria-expanded="false"><i class="fas fa-bars"></i></button>
+        <div class="nav-left">
+            <a href="/" class="logo">Надія<span>.</span></a>
+            <a href="apps" class="nav-hertz" title="Hertz Electronics — розробка й застосунки"><img src="icons/hertz-logo.png" alt="Hertz Electronics"><span>Hertz Electronics</span></a>
+        </div>
+        <div class="nav-right">
+            <a href="https://t.me/golosprotyraku_bot" target="_blank" class="btn-book-nav">Запис</a>
+            <a href="login" id="authBtn" class="auth-btn-nav"><i class="fas fa-sign-in-alt"></i> Увійти</a>
+            <a href="profile" id="userProfileBtn" class="auth-btn-nav" style="display:none;"><i class="fas fa-user"></i> Кабінет</a>
+            <button class="nav-toggle" id="navToggle" aria-label="Меню" aria-expanded="false"><i class="fas fa-bars"></i><span class="t"> Меню</span></button>
+        </div>
         <ul class="nav-links" id="navLinks">
-            <li><a href="#about">Про центр</a></li>
-            <li><a href="#services">Послуги</a></li>
-            <li><a href="#team">Лікарі</a></li>
-            <li><a href="medical_hub">Блог</a></li>
-            <li><a href="music">Музика</a></li>
-            <li><a href="apps">Застосунки</a></li>
-            <li><a href="#contacts">Контакти</a></li>
-            <li><a href="https://t.me/golosprotyraku_bot" target="_blank" class="btn-book-nav">Запис</a></li>
-            <li><a href="login" id="authBtn" class="auth-btn-nav"><i class="fas fa-sign-in-alt"></i> Увійти</a></li>
-            <li><a href="profile" id="userProfileBtn" class="auth-btn-nav" style="display:none;"><i class="fas fa-user"></i> Кабінет</a></li>
+            <li class="dr-head"><a href="/" class="logo" style="padding:0!important">Надія<span>.</span></a><button class="dr-close" id="navClose" aria-label="Закрити"><i class="fas fa-xmark"></i></button></li>
+            <li class="dr-group">Клініка</li>
+            <li><a href="#about"><i class="fas fa-hospital"></i> Про центр</a></li>
+            <li><a href="#services"><i class="fas fa-hand-holding-medical"></i> Послуги</a></li>
+            <li><a href="#team"><i class="fas fa-user-doctor"></i> Лікарі</a></li>
+            <li><a href="medical_hub"><i class="fas fa-newspaper"></i> Блог</a></li>
+            <li><a href="#contacts"><i class="fas fa-location-dot"></i> Контакти</a></li>
+            <li class="dr-group"><span class="dr-hertz"><img src="icons/hertz-logo.png" alt=""> Hertz Electronics</span></li>
+            <li><a href="apps#services"><i class="fas fa-code"></i> Розробка на замовлення</a></li>
+            <li><a href="apps#prices"><i class="fas fa-tags"></i> Ціни й калькулятор</a></li>
+            <li><a href="apps#apps"><i class="fas fa-mobile-alt"></i> Готові застосунки</a></li>
+            <li class="dr-group">Творчість</li>
+            <li><a href="music"><i class="fas fa-music"></i> Голос проти раку (музика)</a></li>
+            <li><a href="https://t.me/golosprotyraku_bot" target="_blank" class="btn-book-nav">Записатися на прийом</a></li>
         </ul>
     </div>
 </nav>
@@ -459,28 +533,6 @@
 </header>
 
 <main>
-    <div class="apps-promo">
-        <a href="apps" class="ap-frame" style="display:block;text-decoration:none;color:#fff">
-            <div class="ap-box">
-                <div>
-                    <span class="ap-new"><i></i> Новинка — ВПН + блок реклами</span>
-                    <h2>Застосунки, що <span class="ap-grad">працюють за вас</span></h2>
-                    <p>Антиглушилка, Радар для родини, Лінивець — повідомлення за розкладом, ВПН з блокуванням реклами для телефона й ТБ, Торент для комп'ютера. Жодної набридливої реклами. Ключ доступу — у Телеграмі за кілька секунд.</p>
-                    <span class="ap-cta"><i class="fas fa-bolt"></i> Дивитися застосунки</span>
-                    <div class="ap-price">від 55 ₴ на місяць · Джарвіс — старт після Нового року, заявки вже приймаємо</div>
-                </div>
-                <div class="ap-icons" aria-hidden="true">
-                    <img class="ap-ic" src="icons/antijam.svg" alt="">
-                    <img class="ap-ic" src="icons/radar.svg" alt="">
-                    <img class="ap-ic" src="icons/sloth.svg" alt="">
-                    <img class="ap-ic" src="icons/adblock.svg" alt="">
-                    <img class="ap-ic" src="icons/jarvis.svg" alt="">
-                    <img class="ap-ic" src="icons/torrent.svg" alt="">
-                </div>
-            </div>
-        </a>
-    </div>
-
     <section id="about">
         <div class="about-wrap">
             <div class="about-figure" data-aos="fade-right">
@@ -675,6 +727,33 @@
             </div>
         </div>
     </section>
+
+    <section class="more-sec" id="more">
+        <span class="eyebrow">Більше від нас</span>
+        <div class="more-grid">
+            <div class="more-card more-hz">
+                <div class="more-top"><img src="icons/hertz-logo.png" alt="Hertz Electronics"><div><div class="more-tag">Hertz Electronics</div><h3>Розробка й застосунки</h3></div></div>
+                <p>Робимо застосунки для Андроїда, сайти, програми для Віндовс і автоматизацію — під вашу задачу, з цінами в гривнях. Є й готові застосунки за підпискою.</p>
+                <div class="more-icons" aria-hidden="true">
+                    <img src="icons/antijam.svg" alt=""><img src="icons/radar.svg" alt=""><img src="icons/sloth.svg" alt=""><img src="icons/adblock.svg" alt=""><img src="icons/torrent.svg" alt=""><img src="icons/jarvis.svg" alt="">
+                </div>
+                <div class="more-btns">
+                    <a class="more-btn main" href="apps#services"><i class="fas fa-code"></i> Замовити розробку</a>
+                    <a class="more-btn" href="apps#prices"><i class="fas fa-calculator"></i> Ціни й калькулятор</a>
+                    <a class="more-btn" href="apps#apps"><i class="fas fa-mobile-alt"></i> Готові застосунки</a>
+                </div>
+            </div>
+            <div class="more-card more-mu">
+                <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                <div class="more-tag">Музика</div>
+                <h3>Голос проти раку</h3>
+                <p>Благодійний музичний проєкт Андрія Герца на підтримку онкохворих. Слухайте пісні й підтримуйте тих, хто бореться.</p>
+                <div class="more-btns">
+                    <a class="more-btn main" href="music"><i class="fas fa-play"></i> Слухати музику</a>
+                </div>
+            </div>
+        </div>
+    </section>
 </main>
 
 <footer>
@@ -702,15 +781,18 @@
       const toggle = document.getElementById('navToggle');
       const links = document.getElementById('navLinks');
       if (!toggle || !links) return;
-      toggle.addEventListener('click', () => {
-          const open = links.classList.toggle('open');
+      const bg = document.getElementById('drawerBg'), cl = document.getElementById('navClose');
+      const setOpen = (open) => {
+          links.classList.toggle('open', open); bg.classList.toggle('open', open);
+          document.body.classList.toggle('drawer-lock', open);
           toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      });
+      };
+      toggle.addEventListener('click', () => setOpen(!links.classList.contains('open')));
+      bg.addEventListener('click', () => setOpen(false));
+      cl.addEventListener('click', () => setOpen(false));
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
       // Закриваємо меню після кліку по пункту
-      links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-          links.classList.remove('open');
-          toggle.setAttribute('aria-expanded', 'false');
-      }));
+      links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setOpen(false)));
   })();
 
   // Показуємо "Кабінет" замість "Увійти", якщо користувач уже авторизований
