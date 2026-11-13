@@ -7,7 +7,10 @@
       "text": "Реклама від партнерів",
       "img": "https://nadiya.pp.ua/promo/ad_partner.png",
       "url": "https://asiafilm.org/4/e24c9d15ef3fdedd0295b7119ce52be2",
-      "weight": 4
+      "weight": 4,
+      "name_en": "Deal of the day",
+      "text_en": "Sponsored offer",
+      "img_en": "https://nadiya.pp.ua/promo/ad_partner_en.png"
     }
   ],
   "network": null
