@@ -26,10 +26,10 @@
     "notes": "Помічник: рамки для «Приватного DNS» і автозапуску"
   },
   "torrent": {
-    "code": 151,
-    "name": "1.5.1",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.5.1/Torent-Vstanovlennia.exe",
-    "notes": "Виправлено безкінечне оновлення і злітання ключа"
+    "code": 160,
+    "name": "1.6.0",
+    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-1.6.0/Torent-Vstanovlennia.exe",
+    "notes": "Безкоштовно з рекламою; підписка прибирає рекламу"
   },
   "nadiya": {
     "code": 4,
