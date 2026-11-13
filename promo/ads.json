@@ -1,5 +1,14 @@
 {
   "rotate_sec": 45,
-  "items": [],
+  "items": [
+    {
+      "kind": "network",
+      "name": "Пропозиція дня",
+      "text": "Реклама від партнерів",
+      "img": "https://nadiya.pp.ua/promo/ad_partner.png",
+      "url": "https://asiafilm.org/4/e24c9d15ef3fdedd0295b7119ce52be2",
+      "weight": 4
+    }
+  ],
   "network": null
 }
