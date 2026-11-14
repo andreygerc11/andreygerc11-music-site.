@@ -1,10 +1,10 @@
 {
   "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
   "antijam": {
-    "code": 35,
-    "name": "3.8",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.8/Antyhlushylka.apk",
-    "notes": "Своя карта вайфаїв і веж — місце навіть без інтернету; частіший пошук Wi-Fi під час підміни; попередження про слабкі супутники; захист годинника від підміни часового поясу",
+    "code": 36,
+    "name": "3.8.1",
+    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.8.1/Antyhlushylka.apk",
+    "notes": "Помічник сам прокручує налаштування до потрібного пункту (зокрема на Самсунгах); екран підписки більше не закривається сам; Своя карта вайфаїв і веж — місце навіть без інтернету; частіший пошук Wi-Fi під час підміни; попередження про слабкі супутники; захист годинника від підміни часового поясу",
     "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
   },
   "radar": {
