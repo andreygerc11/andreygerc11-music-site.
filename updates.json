@@ -1,45 +1,45 @@
 {
-  "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
-  "antijam": {
-    "code": 38,
-    "name": "3.8.3",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.8.3/Antyhlushylka.apk",
-    "notes": "Помічник обводить лише те, що важко знайти; рамка зникає після повернення; батарея на Сяомі відкривається одразу",
-    "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
-  },
-  "radar": {
-    "code": 191,
-    "name": "1.0.197",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-11-13/Radar.apk",
-    "notes": "Нове: фото й файли в чаті відкриваються на весь екран і зберігаються в Галерею та Завантаження; ваше місце бачать лише ті, кому ви дозволили; стабільний звук у дзвінках, мікрофон працює з вимкненим екраном; дзвінки й листування одразу видно на комп'ютері."
-  },
-  "autosender": {
-    "code": 59,
-    "name": "6.8",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-6.8/Linyvets.apk",
-    "notes": "Вмикач «Підтримувати Смарт Лок» — вимкніть, щоб економити батарею"
-  },
-  "adblock": {
-    "code": 18,
-    "name": "3.3",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.3/NoAds-VPN.apk",
-    "notes": "Помічник: рамки для «Приватного DNS» і автозапуску"
-  },
-  "torrent": {
-    "code": 222,
-    "name": "2.2.2",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-2.2.2/Torent-Vstanovlennia.exe",
-    "notes": "Захист від злому",
-    "builds": {
-      "2.2.0": "d0f03e2a21b32d30a86cf494a54ee2113623c052a45e5b5e4c744e39ff143b81",
-      "2.2.1": "41716599ccb94bf0725a12e8b30bdd2ca4f1a622c5cfa2e8b31c00a18d162952",
-      "2.2.2": "19c9c64dfbea8bf9a08ffc5e5ac9195f17b8324e828cfd71aee835dc35d47f1a"
-    }
-  },
-  "nadiya": {
-    "code": 4,
-    "name": "1.3",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/nadiya-1.3/Nadiya.apk",
-    "notes": "Чат з клінікою й лікарем, запис, медкарта, документи, нагадування про прийом"
+ "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
+ "antijam": {
+  "code": 38,
+  "name": "3.8.3",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.8.3/Antyhlushylka.apk",
+  "notes": "Помічник обводить лише те, що важко знайти; рамка зникає після повернення; батарея на Сяомі відкривається одразу",
+  "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
+ },
+ "radar": {
+  "code": 191,
+  "name": "1.0.197",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-11-13/Radar.apk",
+  "notes": "Нове: фото й файли в чаті відкриваються на весь екран і зберігаються в Галерею та Завантаження; ваше місце бачать лише ті, кому ви дозволили; стабільний звук у дзвінках, мікрофон працює з вимкненим екраном; дзвінки й листування одразу видно на комп'ютері."
+ },
+ "autosender": {
+  "code": 61,
+  "name": "7.0",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/linyvets-7.0/Linyvets.apk",
+  "notes": "Телеграм за номером виправлено; розсилка всім контактам; журнал файлом"
+ },
+ "adblock": {
+  "code": 18,
+  "name": "3.3",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.3/NoAds-VPN.apk",
+  "notes": "Помічник: рамки для «Приватного DNS» і автозапуску"
+ },
+ "torrent": {
+  "code": 222,
+  "name": "2.2.2",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-2.2.2/Torent-Vstanovlennia.exe",
+  "notes": "Захист від злому",
+  "builds": {
+   "2.2.0": "d0f03e2a21b32d30a86cf494a54ee2113623c052a45e5b5e4c744e39ff143b81",
+   "2.2.1": "41716599ccb94bf0725a12e8b30bdd2ca4f1a622c5cfa2e8b31c00a18d162952",
+   "2.2.2": "19c9c64dfbea8bf9a08ffc5e5ac9195f17b8324e828cfd71aee835dc35d47f1a"
   }
+ },
+ "nadiya": {
+  "code": 4,
+  "name": "1.3",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/nadiya-1.3/Nadiya.apk",
+  "notes": "Чат з клінікою й лікарем, запис, медкарта, документи, нагадування про прийом"
+ }
 }
