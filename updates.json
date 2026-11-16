@@ -26,12 +26,13 @@
     "notes": "Помічник: рамки для «Приватного DNS» і автозапуску"
   },
   "torrent": {
-    "code": 220,
-    "name": "2.2.0",
-    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-2.2.0/Torent-Vstanovlennia.exe",
+    "code": 221,
+    "name": "2.2.1",
+    "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/torent-2.2.1/Torent-Vstanovlennia.exe",
     "notes": "Захист від злому",
     "builds": {
-      "2.2.0": "d0f03e2a21b32d30a86cf494a54ee2113623c052a45e5b5e4c744e39ff143b81"
+      "2.2.0": "d0f03e2a21b32d30a86cf494a54ee2113623c052a45e5b5e4c744e39ff143b81",
+      "2.2.1": "41716599ccb94bf0725a12e8b30bdd2ca4f1a622c5cfa2e8b31c00a18d162952"
     }
   },
   "nadiya": {
