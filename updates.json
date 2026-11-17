@@ -7,12 +7,7 @@
   "notes": "Журнал подій більше не обнуляється; «Поділитися журналом» одразу надсилає файл розробнику",
   "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
  },
- "radar": {
-  "code": 191,
-  "name": "1.0.197",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-11-13/Radar.apk",
-  "notes": "Нове: фото й файли в чаті відкриваються на весь екран і зберігаються в Галерею та Завантаження; ваше місце бачать лише ті, кому ви дозволили; стабільний звук у дзвінках, мікрофон працює з вимкненим екраном; дзвінки й листування одразу видно на комп'ютері."
- },
+ "radar": {"code": 193, "name": "1.0.199", "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-11-17-radar/Radar.apk", "notes": "Виправлено: Радар більше не закривається, якщо відмовити в дозволі на камеру чи мікрофон. Нове: безкоштовна версія, Преміум на всю родину й історія місць за 30 днів."},
  "autosender": {
   "code": 61,
   "name": "7.0",
