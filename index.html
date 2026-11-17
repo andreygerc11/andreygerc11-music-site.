@@ -908,7 +908,8 @@
               return !(cancerRe.test(t) || cancerRe.test(c));
           });
           // Спершу статті терапевтів (rehab_wife, підписані), потім реабілітація — найновіші зверху.
-          const byNew = (a, b) => (b.id || 0) - (a.id || 0);
+          const pt = p => { const m = String(p.date || '').match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0; };
+          const byNew = (a, b) => (pt(b) - pt(a)) || ((b.id || 0) - (a.id || 0));
           const tips = hubPosts.filter(p => p.category === 'rehab_wife').sort(byNew);
           const rest = hubPosts.filter(p => p.category !== 'rehab_wife').sort(byNew);
           const latest = [...tips, ...rest].slice(0, 3);

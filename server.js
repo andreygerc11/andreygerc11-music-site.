@@ -1538,8 +1538,13 @@ async function fetchAndRewriteBlog() {
     }
 }
 
+function postTime(p) {
+    const m = String(p.date || '').match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0;
+}
+
 app.get('/api/blog', (req, res) => {
-    res.json(aiBlogPosts); 
+    res.json(aiBlogPosts.slice().sort((a, b) => (postTime(b) - postTime(a)) || ((b.id || 0) - (a.id || 0))));
 });
 
 // === НОВІ ШЛЯХИ ДЛЯ БЛОГУ ДРУЖИНИ ===
