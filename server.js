@@ -1342,14 +1342,25 @@ const allBlogSources = [
     { type: "rehab", url: "https://news.google.com/rss/search?q=rehabilitation+technology+breakthrough&hl=en-US&gl=US&ceid=US:en" }
 ];
 
+function freshItems(r, days) {
+    const xml = typeof r.data === 'string' ? r.data : '';
+    const items = (xml.match(/<item>[\s\S]*?<\/item>/g) || []).map(it => {
+        const m = it.match(/<pubDate>(.*?)<\/pubDate>/);
+        return { it, t: m ? new Date(m[1]).getTime() : 0 };
+    }).filter(x => x.t && Date.now() - x.t <= days * 86400000 && x.t <= Date.now() + 86400000).sort((x, y) => y.t - x.t);
+    r.data = '<rss><channel>' + items.map(x => x.it).join('') + '</channel></rss>';
+    return r;
+}
+
 async function rssGet(u) {
     try {
         const r = await axios.get(u, { timeout: 10000 });
-        if (typeof r.data === 'string' && /<(item|entry)>/.test(r.data)) return r;
+        if (typeof r.data === 'string' && /<(item|entry)>/.test(r.data)) return freshItems(r, 7);
     } catch (e) {}
     const q = (u.match(/[?&]q=([^&]+)/) || [])[1] || '';
     const mkt = /hl=uk/.test(u) ? 'uk-UA' : 'en-US';
-    return await axios.get('https://www.bing.com/news/search?q=' + q + '&format=rss&setmkt=' + mkt, { timeout: 12000, headers: { 'User-Agent': 'Mozilla/5.0' }, responseType: 'text' });
+    const r = await axios.get('https://www.bing.com/news/search?q=' + q + '&format=rss&setmkt=' + mkt + '&qft=interval%3d%227%22', { timeout: 12000, headers: { 'User-Agent': 'Mozilla/5.0' }, responseType: 'text' });
+    return freshItems(r, 7);
 }
 
 async function postToChannel(icon, title, content) {
