@@ -1,10 +1,10 @@
 {
  "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
  "antijam": {
-  "code": 38,
-  "name": "3.8.3",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.8.3/Antyhlushylka.apk",
-  "notes": "Помічник обводить лише те, що важко знайти; рамка зникає після повернення; батарея на Сяомі відкривається одразу",
+  "code": 39,
+  "name": "3.8.4",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.8.4/Antyhlushylka.apk",
+  "notes": "«Поділитися журналом» одразу надсилає розробнику файл з повним журналом",
   "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
  },
  "radar": {
