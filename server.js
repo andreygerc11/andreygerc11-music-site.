@@ -1352,6 +1352,19 @@ async function rssGet(u) {
     return await axios.get('https://www.bing.com/news/search?q=' + q + '&format=rss&setmkt=' + mkt, { timeout: 12000, headers: { 'User-Agent': 'Mozilla/5.0' }, responseType: 'text' });
 }
 
+async function postToChannel(icon, title, content) {
+    if (!bot || !CHANNEL_ID) return;
+    try {
+        const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const short = String(content).replace(/<[^>]+>/g, ' ').replace(/[*#]/g, '').replace(/\s+/g, ' ').trim().substring(0, 280);
+        await bot.sendMessage(CHANNEL_ID, `${icon} <b>${esc(title)}</b>
+
+${esc(short)}...
+
+👉 <a href="https://nadiya.pp.ua/blog">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
+    } catch (e) { console.error('❌ Телеграм-канал:', e.message); }
+}
+
 async function fetchAndRewriteBlog() {
     if (!GROQ_API_KEY) { console.log("❌ GROQ_API_KEY не налаштований"); return; }
     console.log("🔄 Запуск автоматичної генерації блогу (5 новин + 3 психологія)...");
@@ -1407,13 +1420,7 @@ async function fetchAndRewriteBlog() {
                 });
                 addedCount++; newsAddedThisRun++;
 
-                if (bot && CHANNEL_ID) {
-                    try {
-                        // Прибираємо ЦІЛІ HTML-теги (щоб <h2>…</h2> не перетворювалось на "h2…/h2"), markdown і зайві пробіли.
-                        const shortText = articleContent.replace(/<[^>]+>/g, ' ').replace(/[*#]/g, '').replace(/\s+/g, ' ').trim().substring(0, 280);
-                        await bot.sendMessage(CHANNEL_ID, `📰 <b>${translatedTitle}</b>\n\n${shortText}...\n\n👉 <a href="https://nadiya.pp.ua/blog">Читати повністю на сайті</a>`, { parse_mode: 'HTML' });
-                    } catch (e) {}
-                }
+                await postToChannel('📰', translatedTitle, articleContent);
                 await new Promise(r => setTimeout(r, 6000));
             }
         } catch (e) { console.error('❌ Новини (RSS/Groq):', e.response && e.response.data ? JSON.stringify(e.response.data).slice(0,400) : e.message); }
@@ -1459,6 +1466,7 @@ async function fetchAndRewriteBlog() {
                     title: translatedTitle || cleanTitle, content: articleContent, imageUrl: pickBanner('psychology', translatedTitle || cleanTitle, articleContent)
                 });
                 addedCount++; psychAddedThisRun++;
+                await postToChannel('🫂', translatedTitle || cleanTitle, articleContent);
 
                 await new Promise(r => setTimeout(r, 6000));
             }
@@ -1504,6 +1512,7 @@ async function fetchAndRewriteBlog() {
                     title: translatedTitle, content: articleContent, imageUrl: pickBanner('rehab', translatedTitle, articleContent)
                 });
                 addedCount++; rehabAddedThisRun++;
+                await postToChannel('💪', translatedTitle || cleanTitle, articleContent);
 
                 await new Promise(r => setTimeout(r, 6000));
             }
