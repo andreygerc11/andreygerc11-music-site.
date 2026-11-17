@@ -1342,6 +1342,16 @@ const allBlogSources = [
     { type: "rehab", url: "https://news.google.com/rss/search?q=rehabilitation+technology+breakthrough&hl=en-US&gl=US&ceid=US:en" }
 ];
 
+async function rssGet(u) {
+    try {
+        const r = await axios.get(u, { timeout: 10000 });
+        if (typeof r.data === 'string' && /<(item|entry)>/.test(r.data)) return r;
+    } catch (e) {}
+    const q = (u.match(/[?&]q=([^&]+)/) || [])[1] || '';
+    const mkt = /hl=uk/.test(u) ? 'uk-UA' : 'en-US';
+    return await axios.get('https://www.bing.com/news/search?q=' + q + '&format=rss&setmkt=' + mkt, { timeout: 12000, headers: { 'User-Agent': 'Mozilla/5.0' }, responseType: 'text' });
+}
+
 async function fetchAndRewriteBlog() {
     if (!GROQ_API_KEY) { console.log("❌ GROQ_API_KEY не налаштований"); return; }
     console.log("🔄 Запуск автоматичної генерації блогу (5 новин + 3 психологія)...");
@@ -1364,7 +1374,7 @@ async function fetchAndRewriteBlog() {
     for (const rssUrl of shuffledRss) {
         if (newsAddedThisRun >= 5) break; 
         try {
-            const response = await axios.get(rssUrl, { timeout: 10000 }); 
+            const response = await rssGet(rssUrl); 
             const xml = response.data;
             const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
             if (!itemMatch) continue;
@@ -1417,7 +1427,7 @@ async function fetchAndRewriteBlog() {
     for (const rssUrl of shuffledPsychRss) {
         if (psychAddedThisRun >= 3) break; 
         try {
-            const response = await axios.get(rssUrl, { timeout: 10000 });
+            const response = await rssGet(rssUrl);
             const xml = response.data;
             const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
             if (!itemMatch) continue;
@@ -1463,7 +1473,7 @@ async function fetchAndRewriteBlog() {
     for (const rssUrl of shuffledRehabRss) {
         if (rehabAddedThisRun >= 2) break; 
         try {
-            const response = await axios.get(rssUrl, { timeout: 10000 });
+            const response = await rssGet(rssUrl);
             const xml = response.data;
             const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/) || xml.match(/<entry>([\s\S]*?)<\/entry>/);
             if (!itemMatch) continue;
