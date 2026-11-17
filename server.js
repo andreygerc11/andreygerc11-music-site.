@@ -1283,21 +1283,29 @@ async function migrateCategoryBanners() {
     }
 }
 
+let blogLoaded = false;
+
 async function syncBlogFromGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
-    try {
-        const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-        });
-        aiBlogPosts = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
-        console.log(`📚 Завантажено ${aiBlogPosts.length} постів з GitHub`);
-    } catch (e) {
-        aiBlogPosts = [];
+    for (let i = 0; i < 3 && !blogLoaded; i++) {
+        try {
+            const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            aiBlogPosts = JSON.parse(Buffer.from(res.data.content, 'base64').toString('utf8'));
+            blogLoaded = true;
+            console.log(`📚 Завантажено ${aiBlogPosts.length} постів з GitHub`);
+        } catch (e) {
+            if (e.response && e.response.status === 404) { aiBlogPosts = []; blogLoaded = true; return; }
+            console.error('❌ Не вдалося завантажити блог з GitHub:', e.message);
+            await new Promise(r => setTimeout(r, 4000));
+        }
     }
 }
 
 async function saveBlogToGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return;
+    if (!blogLoaded) { console.error('❌ Блог не збережено: дані з GitHub ще не завантажені'); return; }
     try {
         const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/blog_posts.json`;
         let sha = null;
@@ -1544,7 +1552,8 @@ function postTime(p) {
 }
 
 app.get('/api/blog', (req, res) => {
-    res.json(aiBlogPosts.slice().sort((a, b) => (postTime(b) - postTime(a)) || ((b.id || 0) - (a.id || 0))));
+    const tip = p => (p.isWifeTip || p.category === 'rehab_wife') ? 1 : 0;
+    res.json(aiBlogPosts.slice().sort((a, b) => (tip(b) - tip(a)) || (postTime(b) - postTime(a)) || ((b.id || 0) - (a.id || 0))));
 });
 
 // === НОВІ ШЛЯХИ ДЛЯ БЛОГУ ДРУЖИНИ ===
