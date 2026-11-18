@@ -1,6 +1,6 @@
 (function () {
     var TEAL = '32,201,151';
-    var CYAN = '56,208,240';
+    var CYAN = '32,201,151';
     var cv = document.createElement('canvas');
     cv.id = 'musicBg';
     cv.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;';
@@ -8,7 +8,7 @@
     var W = 0, H = 0, DPR = 1;
     var ROWS = 26, COLS = 38, BANDS = 48, NP = 260;
 
-    var st = { playing: false, bass: 0, mid: 0, treb: 0, lvl: 0, kick: 0, speed: 0, phase: 0, amp: 0.45, ema: 0.2, lastKick: 0, breathe: 0, sp: new Float32Array(BANDS) };
+    var st = { playing: false, bass: 0, mid: 0, treb: 0, lvl: 0, kick: 0, speed: 0, phase: 0, amp: 0.45, ema: 0.2, lastKick: 0, breathe: 0, K: 0.22, sp: new Float32Array(BANDS) };
     var ctx = null, an = null, srcNode = null, data = null, audioEl = null, real = false, errs = 0, last = 0;
     var ridge = null;
     var rs = 7;
@@ -75,6 +75,7 @@
         var tgtAmp = st.playing ? 0.6 + st.lvl * 1.15 + st.kick * 0.35 : 0.5;
         st.amp = ease(st.amp, tgtAmp, 6, dt);
         st.breathe = 0.5 + 0.5 * Math.sin(t * 0.8);
+        st.K = ease(st.K, st.playing ? Math.min(0.85, 0.3 + 0.5 * st.lvl + 0.25 * st.kick) : 0.2, 5, dt);
         var rt = document.documentElement.style;
         rt.setProperty('--bass', st.bass.toFixed(3));
         rt.setProperty('--lvl', st.lvl.toFixed(3));
@@ -110,20 +111,20 @@
             var h = val * hz * 0.95;
             var x = i * bw;
             var g = cx.createLinearGradient(0, hz, 0, hz - h);
-            g.addColorStop(0, 'rgba(' + TEAL + ',0.5)');
-            g.addColorStop(1, 'rgba(' + CYAN + ',0.04)');
+            g.addColorStop(0, 'rgba(' + TEAL + ',' + (0.42 * st.K + 0.03) + ')');
+            g.addColorStop(1, 'rgba(' + CYAN + ',0.01)');
             cx.fillStyle = g;
             cx.fillRect(x + bw * 0.18, hz - h, bw * 0.64, h);
             peaks[i] = Math.max(peaks[i] - 0.004, val);
             var ph = peaks[i] * hz * 0.95;
-            cx.fillStyle = 'rgba(210,255,246,' + (0.35 + 0.4 * st.lvl) + ')';
+            cx.fillStyle = 'rgba(190,235,225,' + (0.55 * st.K + 0.04) + ')';
             cx.fillRect(x + bw * 0.18, hz - ph - 3, bw * 0.64, 2);
         }
     }
 
     function drawGlow() {
         var hz = H * 0.52;
-        var ga = 0.07 + 0.08 * st.breathe + 0.26 * st.lvl + 0.2 * st.kick;
+        var ga = (0.03 + 0.03 * st.breathe + 0.14 * st.lvl + 0.1 * st.kick) * st.K * 2;
         var g = cx.createRadialGradient(W / 2, hz, 0, W / 2, hz, Math.max(W, H) * 0.62);
         g.addColorStop(0, 'rgba(' + TEAL + ',' + ga + ')');
         g.addColorStop(0.45, 'rgba(' + CYAN + ',' + (ga * 0.25) + ')');
@@ -148,19 +149,19 @@
                     + Math.sin(x * 0.012 - t * (0.55 + r * 0.1) + r) * H * 0.07 * (0.12 + band * 1.5) * drive;
                 pts.push([x, y]);
             }
-            var a = 0.35 + 0.5 * st.lvl + 0.3 * st.kick;
+            var a = (0.35 + 0.5 * st.lvl + 0.3 * st.kick) * st.K;
             var col = r % 2 ? CYAN : TEAL;
             cx.beginPath();
             for (var i = 0; i < pts.length; i++) { if (i === 0) cx.moveTo(pts[i][0], pts[i][1]); else cx.lineTo(pts[i][0], pts[i][1]); }
-            cx.strokeStyle = 'rgba(' + col + ',' + (0.09 * a + 0.03) + ')';
+            cx.strokeStyle = 'rgba(' + col + ',' + (0.08 * a + 0.006) + ')';
             cx.lineWidth = 7; cx.stroke();
-            cx.strokeStyle = 'rgba(' + col + ',' + Math.min(0.85, 0.22 + 0.5 * a) + ')';
+            cx.strokeStyle = 'rgba(' + col + ',' + Math.min(0.7, 0.35 * a + 0.04) + ')';
             cx.lineWidth = 1.2; cx.stroke();
             var q = ((t * (0.05 + st.speed * 0.05) + r * 0.31) % 1);
             var idx = Math.min(pts.length - 1, Math.floor(q * (pts.length - 1)));
             var dx = pts[idx][0], dy = pts[idx][1];
             var rg = cx.createRadialGradient(dx, dy, 0, dx, dy, 14 + 18 * st.kick);
-            rg.addColorStop(0, 'rgba(220,255,248,' + (0.55 + 0.35 * st.lvl) + ')');
+            rg.addColorStop(0, 'rgba(190,235,225,' + (0.5 * st.K + 0.06) + ')');
             rg.addColorStop(1, 'rgba(' + col + ',0)');
             cx.fillStyle = rg; cx.fillRect(dx - 34, dy - 34, 68, 68);
         }
@@ -205,8 +206,8 @@
             cx.globalCompositeOperation = 'source-over';
             rowPath(pts, true);
             cx.fillStyle = 'rgba(6,14,19,0.93)'; cx.fill();
-            var a = 0.14 + 0.86 * Math.pow(d, 0.7);
-            var br = Math.min(1, st.kick * 0.8);
+            var a = (0.1 + 0.9 * Math.pow(d, 0.7)) * (0.22 + 0.9 * st.K);
+            var br = Math.min(1, st.kick * 0.35);
             var cr = Math.round(32 + 190 * br), cg = Math.round(201 + 40 * br), cb = Math.round(151 + 90 * br);
             cx.globalCompositeOperation = 'lighter';
             if (prev) {
@@ -217,7 +218,7 @@
                 cx.stroke();
             }
             rowPath(pts, false);
-            cx.strokeStyle = 'rgba(' + cr + ',' + cg + ',' + cb + ',' + (a * 0.14) + ')';
+            cx.strokeStyle = 'rgba(' + cr + ',' + cg + ',' + cb + ',' + (a * 0.1) + ')';
             cx.lineWidth = 4 + d * 7; cx.stroke();
             cx.strokeStyle = 'rgba(' + cr + ',' + cg + ',' + cb + ',' + Math.min(1, a * (0.8 + 0.2 * st.lvl)) + ')';
             cx.lineWidth = 0.8 + d * 1.2; cx.stroke();
@@ -226,7 +227,7 @@
             cx.beginPath();
             cx.moveTo(pts[c0][0], pts[c0][1]);
             for (c = c0 + 1; c <= c0 + 5; c++) cx.lineTo(pts[c][0], pts[c][1]);
-            cx.strokeStyle = 'rgba(225,255,248,' + Math.min(1, a * (0.35 + 0.65 * st.lvl + 0.4 * st.kick)) + ')';
+            cx.strokeStyle = 'rgba(190,235,225,' + Math.min(0.85, a * (0.3 + 0.5 * st.lvl + 0.3 * st.kick)) + ')';
             cx.lineWidth = 1.2 + d * 1.8; cx.stroke();
             prev = pts;
         }
@@ -255,11 +256,11 @@
             p.x += p.vx * dt; p.y += p.vy * dt;
             p.vx *= 1 - 0.4 * dt; p.vy *= 1 - 0.25 * dt;
             var k = p.life / p.max;
-            var al = Math.sin(Math.min(1, k) * Math.PI) * (0.55 + 0.4 * Math.sin(t * 5 + i));
+            var al = Math.sin(Math.min(1, k) * Math.PI) * (0.55 + 0.4 * Math.sin(t * 5 + i)) * (0.3 + 0.7 * st.K);
             if (al <= 0.02) continue;
             cx.fillStyle = 'rgba(' + (p.hue ? CYAN : TEAL) + ',' + (al * 0.28) + ')';
             cx.beginPath(); cx.arc(p.x, p.y, p.s * 3.2, 0, 6.2832); cx.fill();
-            cx.fillStyle = 'rgba(225,255,250,' + al + ')';
+            cx.fillStyle = 'rgba(190,235,225,' + al + ')';
             cx.beginPath(); cx.arc(p.x, p.y, p.s * 0.8, 0, 6.2832); cx.fill();
         }
     }
