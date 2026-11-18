@@ -8,7 +8,7 @@
     var W = 0, H = 0, DPR = 1;
     var ROWS = 26, COLS = 38, BANDS = 48, NP = 260;
 
-    var st = { playing: false, bass: 0, mid: 0, treb: 0, lvl: 0, kick: 0, speed: 0, phase: 0, amp: 0.45, ema: 0.2, lastKick: 0, breathe: 0, K: 0.22, sp: new Float32Array(BANDS) };
+    var st = { playing: false, bass: 0, mid: 0, treb: 0, lvl: 0, kick: 0, speed: 0, phase: 0, amp: 0.45, ema: 0.2, lastKick: 0, breathe: 0, K: 0.22, sp: new Float32Array(BANDS), ss: new Float32Array(BANDS) };
     var ctx = null, an = null, srcNode = null, data = null, audioEl = null, real = false, errs = 0, last = 0;
     var ridge = null;
     var rs = 7;
@@ -59,7 +59,7 @@
                 sp[i] = ease(sp[i], f, f > sp[i] ? 14 : 5, dt);
             }
         } else {
-            for (i = 0; i < BANDS; i++) sp[i] = ease(sp[i], 0.1 + 0.05 * Math.sin(t * 0.6 + i * 0.4), 3, dt);
+            for (i = 0; i < BANDS; i++) sp[i] = ease(sp[i], 0.3 + 0.22 * Math.sin(t * 0.5 + i * 0.5), 3, dt);
         }
         st.bass = ease(st.bass, bass, bass > st.bass ? 22 : 5, dt);
         st.mid = ease(st.mid, mid, mid > st.mid ? 16 : 5, dt);
@@ -69,7 +69,7 @@
         var kicked = false;
         if (st.playing && bass > 0.3 && bass > st.ema * 1.22 + 0.04 && t - st.lastKick > 0.2) { st.kick = 1; st.lastKick = t; kicked = true; }
         st.kick = Math.max(0, st.kick - dt * 3.2);
-        var tgtSpeed = st.playing ? 0.45 + st.bass * 2.2 + st.kick * 1.4 : 0.05;
+        var tgtSpeed = st.playing ? 0.45 + st.bass * 2.2 + st.kick * 1.4 : 0.3;
         st.speed = ease(st.speed, tgtSpeed, st.playing ? 5 : 2.2, dt);
         st.phase += st.speed * dt;
         var tgtAmp = st.playing ? 0.6 + st.lvl * 1.15 + st.kick * 0.35 : 0.5;
@@ -90,10 +90,29 @@
 
     var scene = '1c', relief = 0, nowT = 0;
 
+    function curve(xs, ys, move) {
+        if (move) cx.moveTo(xs[0], ys[0]); else cx.lineTo(xs[0], ys[0]);
+        for (var i = 1; i < xs.length - 1; i++) cx.quadraticCurveTo(xs[i], ys[i], (xs[i] + xs[i + 1]) / 2, (ys[i] + ys[i + 1]) / 2);
+        cx.lineTo(xs[xs.length - 1], ys[ys.length - 1]);
+    }
+
+    function smoothBands() {
+        var a = st.sp, b = st.ss, i, pass, n = BANDS;
+        for (i = 0; i < n; i++) b[i] = a[i];
+        for (pass = 0; pass < 3; pass++) {
+            var c = b.slice();
+            for (i = 0; i < n; i++) {
+                var l = Math.max(0, i - 2), r = Math.min(n - 1, i + 2), sum = 0, k;
+                for (k = l; k <= r; k++) sum += c[k];
+                b[i] = sum / (r - l + 1);
+            }
+        }
+    }
+
     function bandAt(u) {
         var x = Math.min(1, Math.abs(u - 0.5) * 2) * 0.92 * (BANDS - 1);
         var lo = Math.floor(x), hi = Math.min(BANDS - 1, lo + 1);
-        return st.sp[lo] + (st.sp[hi] - st.sp[lo]) * (x - lo);
+        return st.ss[lo] + (st.ss[hi] - st.ss[lo]) * (x - lo);
     }
     function lerp(a, b, t) { return a + (b - a) * t; }
     function hsl(h, sat, l, a) { return 'hsla(' + Math.round(h) + ',' + sat + '%,' + l + '%,' + a + ')'; }
@@ -111,7 +130,7 @@
         var rows = 150, top = H * 0.08, bot = H * 1.05;
         var f = st.phase % 1, base = Math.floor(st.phase);
         var bgc = color ? '#050716' : '#000';
-        var step = Math.max(4, W / 220);
+        var step = Math.max(6, W / 120);
         var kb = Math.min(1, st.kick * 0.5);
         for (var k = 0; k < rows; k++) {
             var q = (k + f) / rows;
@@ -121,16 +140,16 @@
             var xs = [], ys = [], x, u, n, sp, spike, h;
             for (x = -step; x <= W + step; x += step) {
                 u = x / W;
-                n = 0.55 * vnoise(u * 2.3 + 1.7, id * 0.085) + 0.3 * vnoise(u * 4.9 + 8, id * 0.17) + 0.15 * vnoise(u * 10.5 + 3, id * 0.34);
+                n = 0.6 * vnoise(u * 2.1 + 1.7, id * 0.085) + 0.32 * vnoise(u * 4.2 + 8, id * 0.17) + 0.08 * vnoise(u * 7 + 3, id * 0.3);
                 sp = vnoise(u * 3.3 + 9, id * 0.11);
-                spike = sp > 0.78 ? (sp - 0.78) * 7 : 0;
-                h = (Math.pow(n, 2.1) * 2.2 + spike) * amp * (0.5 + 0.9 * Math.min(1, bandAt(u)));
+                spike = sp > 0.72 ? Math.pow((sp - 0.72) * 3.2, 2) : 0;
+                h = (Math.pow(n, 1.8) * 2.0 + spike) * amp * (0.5 + 0.9 * Math.min(1, bandAt(u)));
                 xs.push(x); ys.push(y - h);
             }
             cx.globalCompositeOperation = 'source-over';
             cx.beginPath();
             cx.moveTo(xs[0], H + 6);
-            for (var i = 0; i < xs.length; i++) cx.lineTo(xs[i], ys[i]);
+            curve(xs, ys, false);
             cx.lineTo(xs[xs.length - 1], H + 6);
             cx.closePath();
             cx.fillStyle = bgc; cx.fill();
@@ -139,7 +158,7 @@
             else cx.strokeStyle = 'rgba(255,255,255,' + Math.min(1, a + kb * 0.2) + ')';
             cx.lineWidth = 0.9 + q * 0.6;
             cx.beginPath();
-            for (i = 0; i < xs.length; i++) { if (i === 0) cx.moveTo(xs[i], ys[i]); else cx.lineTo(xs[i], ys[i]); }
+            curve(xs, ys, true);
             cx.stroke();
         }
     }
@@ -168,7 +187,7 @@
                 var y = H * (0.34 + 0.34 * q) - (w1 + w2) * H * 0.12 * (0.45 + 0.8 * q) * (0.4 + relief * 0.85) - bandAt(u) * H * 0.24 * relief * (1 - q * 0.45) * Math.sin(Math.min(1, Math.max(0, u)) * Math.PI);
                 xs.push(x); ys.push(y);
             }
-            var path = function () { cx.beginPath(); for (var i = 0; i < xs.length; i++) { if (i === 0) cx.moveTo(xs[i], ys[i]); else cx.lineTo(xs[i], ys[i]); } };
+            var path = function () { cx.beginPath(); curve(xs, ys, true); };
             path(); cx.strokeStyle = hsl(hue, 100, 60, 0.07 + 0.05 * st.kick); cx.lineWidth = 7 + q * 6; cx.stroke();
             path(); cx.strokeStyle = hsl(hue, 100, 68, 0.5 + 0.4 * q); cx.lineWidth = 1 + q * 1.6; cx.stroke();
         }
@@ -204,7 +223,9 @@
             for (var i = 0; i < N; i++) {
                 var fr = i / (N - 1);
                 cx.beginPath();
-                for (var j = 0; j < xs.length; j++) { var yy = A[j] + (B[j] - A[j]) * fr; if (j === 0) cx.moveTo(xs[j], yy); else cx.lineTo(xs[j], yy); }
+                var yl = [];
+                for (var j = 0; j < xs.length; j++) yl.push(A[j] + (B[j] - A[j]) * fr);
+                curve(xs, yl, true);
                 cx.globalAlpha = 0.45 + 0.25 * st.lvl;
                 cx.stroke();
             }
@@ -242,15 +263,19 @@
                 cx.globalCompositeOperation = 'lighter';
                 var gr = cx.createLinearGradient(0, hz - H * 0.4, 0, hz);
                 gr.addColorStop(0, 'rgba(' + col + ',' + (0.34 * ga) + ')'); gr.addColorStop(1, 'rgba(' + col + ',0.02)');
+                var yh = [];
+                for (var i = 0; i < xs.length; i++) yh.push(hz - hs[i]);
                 cx.beginPath(); cx.moveTo(xs[0], hz);
-                for (var i = 0; i < xs.length; i++) cx.lineTo(xs[i], hz - hs[i]);
+                curve(xs, yh, false);
                 cx.lineTo(xs[xs.length - 1], hz); cx.closePath();
                 cx.fillStyle = gr; cx.fill();
                 for (var m = 0; m < 16; m++) {
                     var sc = Math.pow(1 - m / 16, 1.15);
                     cx.beginPath();
                     var sh = Math.round(m * 0.9 * lc[6]);
-                    for (i = 0; i < xs.length; i++) { var si = Math.max(0, Math.min(xs.length - 1, i + sh)); var yy = hz - hs[si] * sc; if (i === 0) cx.moveTo(xs[i], yy); else cx.lineTo(xs[i], yy); }
+                    var yc = [];
+                    for (i = 0; i < xs.length; i++) { var si = Math.max(0, Math.min(xs.length - 1, i + sh)); yc.push(hz - hs[si] * sc); }
+                    curve(xs, yc, true);
                     cx.strokeStyle = 'rgba(' + col + ',' + ((0.75 - m * 0.04) * ga) + ')';
                     cx.lineWidth = m === 0 ? 2 : 0.8;
                     cx.stroke();
@@ -305,7 +330,9 @@
             var cols = ['rgba(180,90,255,', 'rgba(255,60,140,', 'rgba(255,200,60,', 'rgba(60,230,255,', 'rgba(255,255,255,'];
             for (var s2 = 0; s2 <= 4; s2++) g.addColorStop(s2 / 4, cols[(s2 + q * 2) % 5] + '0.95)');
             cx.beginPath();
-            for (c = 0; c < pts.length; c++) { if (c === 0) cx.moveTo(pts[c][0], pts[c][1]); else cx.lineTo(pts[c][0], pts[c][1]); }
+            var px = [], py = [];
+            for (c = 0; c < pts.length; c++) { px.push(pts[c][0]); py.push(pts[c][1]); }
+            curve(px, py, true);
             cx.strokeStyle = g; cx.globalAlpha = 0.16 + 0.1 * st.lvl; cx.lineWidth = 9; cx.stroke();
             cx.globalAlpha = 0.55 + 0.35 * st.lvl; cx.lineWidth = 1.6; cx.stroke();
             cx.globalAlpha = 1;
@@ -318,7 +345,8 @@
         var t = now / 1000, dt = Math.min(0.05, last ? t - last : 0.016);
         last = t; nowT = t;
         readAudio(dt, t);
-        relief = ease(relief, st.playing ? 0.5 + 1.2 * st.lvl + 0.5 * st.kick : 0.28, 6, dt);
+        relief = ease(relief, st.playing ? 0.5 + 1.2 * st.lvl + 0.5 * st.kick : 0.8, 6, dt);
+        smoothBands();
         cx.setTransform(DPR, 0, 0, DPR, 0, 0);
         if (scene === '1c') drawRidges(true);
         else if (scene === '2') drawNeon(t);
