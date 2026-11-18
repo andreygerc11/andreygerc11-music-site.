@@ -88,7 +88,7 @@
         p.x = x; p.y = y; p.vx = vx; p.vy = vy; p.life = life; p.max = life; p.s = s; p.hue = hue; p.on = true;
     }
 
-    var scene = '1', relief = 0, nowT = 0;
+    var scene = '1c', relief = 0, nowT = 0;
 
     function bandAt(u) {
         var x = Math.min(1, Math.abs(u - 0.5) * 2) * 0.92 * (BANDS - 1);
@@ -107,37 +107,37 @@
     }
 
     function drawRidges(color) {
-        paintBg(color ? '#0a0d2a' : '#000', color ? '#04050f' : '#000', 'linear');
-        var rows = 66, top = H * 0.26, bot = H * 1.03;
+        paintBg(color ? '#0a0d2a' : '#0c0c0c', color ? '#04050f' : '#000', 'linear');
+        var rows = 150, top = H * 0.08, bot = H * 1.05;
         var f = st.phase % 1, base = Math.floor(st.phase);
-        var bg = color ? '#050716' : '#000';
-        var step = Math.max(5, W / 190);
+        var bgc = color ? '#050716' : '#000';
+        var step = Math.max(4, W / 220);
+        var kb = Math.min(1, st.kick * 0.5);
         for (var k = 0; k < rows; k++) {
             var q = (k + f) / rows;
-            var y = top + (bot - top) * Math.pow(q, 1.6);
+            var y = top + (bot - top) * Math.pow(q, 1.25);
             var id = base - k;
-            var amp = (0.2 + q * 0.95) * H * 0.13 * (0.3 + relief * 0.9);
-            cx.globalCompositeOperation = 'source-over';
-            var x, u, h, nv, pk;
-            var xs = [], ys = [];
+            var amp = (0.25 + q * 0.9) * H * 0.17 * (0.3 + relief * 0.75);
+            var xs = [], ys = [], x, u, n, sp, spike, h;
             for (x = -step; x <= W + step; x += step) {
                 u = x / W;
-                nv = vnoise(u * 5.2 + 3, id * 0.33);
-                pk = Math.pow(nv, 2.5) * 1.75 + vnoise(u * 14, id * 0.5) * 0.22;
-                h = pk * amp * (0.42 + Math.min(1, bandAt(u)) * 0.95);
+                n = 0.55 * vnoise(u * 2.3 + 1.7, id * 0.085) + 0.3 * vnoise(u * 4.9 + 8, id * 0.17) + 0.15 * vnoise(u * 10.5 + 3, id * 0.34);
+                sp = vnoise(u * 3.3 + 9, id * 0.11);
+                spike = sp > 0.78 ? (sp - 0.78) * 7 : 0;
+                h = (Math.pow(n, 2.1) * 2.2 + spike) * amp * (0.5 + 0.9 * Math.min(1, bandAt(u)));
                 xs.push(x); ys.push(y - h);
             }
+            cx.globalCompositeOperation = 'source-over';
             cx.beginPath();
             cx.moveTo(xs[0], H + 6);
             for (var i = 0; i < xs.length; i++) cx.lineTo(xs[i], ys[i]);
             cx.lineTo(xs[xs.length - 1], H + 6);
             cx.closePath();
-            cx.fillStyle = bg; cx.fill();
-            var a = 0.4 + 0.6 * q;
-            var kb = Math.min(1, st.kick * 0.5);
+            cx.fillStyle = bgc; cx.fill();
+            var a = 0.5 + 0.5 * q;
             if (color) cx.strokeStyle = hsl(lerp(188, 318, q), 90, 58 + kb * 20, a);
             else cx.strokeStyle = 'rgba(255,255,255,' + Math.min(1, a + kb * 0.2) + ')';
-            cx.lineWidth = 0.9 + q * 1.1;
+            cx.lineWidth = 0.9 + q * 0.6;
             cx.beginPath();
             for (i = 0; i < xs.length; i++) { if (i === 0) cx.moveTo(xs[i], ys[i]); else cx.lineTo(xs[i], ys[i]); }
             cx.stroke();
@@ -174,30 +174,38 @@
         }
     }
 
+    function lowBand() { return (st.sp[1] + st.sp[2] + st.sp[3] + st.sp[4]) / 4; }
+
     function drawHair(t) {
-        paintBg('#041326', '#02101c', 'linear');
+        paintBg('#051630', '#04122a', 'linear');
         cx.globalCompositeOperation = 'lighter';
-        var R = 3, N = 52, spd = 0.35 + st.speed * 0.4, step = Math.max(8, W / 100);
-        for (var r = 0; r < R; r++) {
-            var by = H * (0.26 + 0.24 * r), ph = r * 2.3;
+        var N = 46, spd = 0.25 + st.speed * 0.28, step = Math.max(6, W / 120);
+        var am = 0.7 + 0.45 * st.lvl + 0.35 * lowBand();
+        var P2 = Math.PI * 2;
+        var rbs = [
+            { cy: 0.3, phA: 0.0, phB: 1.9, per: 1.15, amp: 0.26, hue: 0 },
+            { cy: 0.56, phA: 2.6, phB: 4.4, per: 0.95, amp: 0.3, hue: 1 },
+            { cy: 0.76, phA: 5.1, phB: 0.7, per: 1.35, amp: 0.22, hue: 2 }
+        ];
+        for (var r = 0; r < rbs.length; r++) {
+            var rb = rbs[r];
             var xs = [], A = [], B = [];
             for (var x = -step; x <= W + step; x += step) {
                 var u = x / W;
-                var band = bandAt(u);
-                var a = by + Math.sin(u * 3.1 * Math.PI + t * spd * 0.5 + ph) * H * 0.09 * (0.5 + relief * 0.8) + Math.sin(u * 8 - t * spd * 0.7 + ph) * H * 0.03 * (0.4 + band * relief * 2);
-                var gap = Math.sin(u * 2.3 * Math.PI + t * spd * 0.33 + ph * 1.7) * H * (0.07 + 0.1 * relief) * (0.5 + band * 1.2);
-                xs.push(x); A.push(a); B.push(a + gap);
+                var a = H * rb.cy + Math.sin(u * P2 / rb.per + t * spd * 0.6 + rb.phA) * H * rb.amp * am + Math.sin(u * P2 * 2.3 / rb.per - t * spd * 0.9 + rb.phA * 1.3) * H * 0.035 * am;
+                var b = H * (rb.cy + 0.07) + Math.sin(u * P2 / (rb.per * 1.12) + t * spd * 0.5 + rb.phB) * H * rb.amp * am * 0.95 + Math.sin(u * P2 * 1.9 / rb.per + t * spd * 0.7 + rb.phB) * H * 0.04 * am;
+                xs.push(x); A.push(a); B.push(b);
             }
             var g = cx.createLinearGradient(0, 0, W, 0);
-            var h0 = 215 + r * 30;
-            g.addColorStop(0, hsl(h0, 100, 62, 0.75)); g.addColorStop(0.35, hsl(190, 90, 70, 0.7)); g.addColorStop(0.68, hsl(300, 70, 68, 0.65)); g.addColorStop(1, hsl(335, 80, 66, 0.7));
-            cx.strokeStyle = g; cx.lineWidth = 0.7;
+            if (rb.hue === 0) { g.addColorStop(0, 'rgba(40,90,255,0.95)'); g.addColorStop(0.4, 'rgba(80,210,255,0.85)'); g.addColorStop(0.75, 'rgba(200,215,255,0.75)'); g.addColorStop(1, 'rgba(255,90,200,0.9)'); }
+            else if (rb.hue === 1) { g.addColorStop(0, 'rgba(200,225,255,0.7)'); g.addColorStop(0.35, 'rgba(90,150,255,0.85)'); g.addColorStop(0.7, 'rgba(170,110,230,0.8)'); g.addColorStop(1, 'rgba(255,80,190,0.9)'); }
+            else { g.addColorStop(0, 'rgba(60,110,255,0.9)'); g.addColorStop(0.5, 'rgba(110,225,255,0.8)'); g.addColorStop(1, 'rgba(220,160,255,0.75)'); }
+            cx.strokeStyle = g; cx.lineWidth = 0.8;
             for (var i = 0; i < N; i++) {
                 var fr = i / (N - 1);
-                fr = fr * fr * (3 - 2 * fr) * 0.35 + fr * 0.65;
                 cx.beginPath();
                 for (var j = 0; j < xs.length; j++) { var yy = A[j] + (B[j] - A[j]) * fr; if (j === 0) cx.moveTo(xs[j], yy); else cx.lineTo(xs[j], yy); }
-                cx.globalAlpha = 0.35 + 0.35 * st.lvl + 0.25 * Math.sin(fr * 3.14);
+                cx.globalAlpha = 0.45 + 0.25 * st.lvl;
                 cx.stroke();
             }
             cx.globalAlpha = 1;
@@ -205,19 +213,21 @@
     }
 
     function drawGlowWaves(t) {
-        paintBg('#010204', '#03070d', 'linear');
-        var hz = H * 0.64;
-        var layers = [[30, 215, 255, 0.0], [255, 175, 50, 2.1], [255, 70, 50, 4.2]];
-        var step = Math.max(8, W / 110);
+        paintBg('#000', '#02050a', 'linear');
+        var hz = H * 0.66;
+        var layers = [[255, 70, 50, 0.0, 1.0, 0.7, 1], [255, 175, 45, 2.1, 1.35, 0.85, -1], [40, 215, 255, 4.4, 1.7, 1.0, 1]];
+        var step = Math.max(8, W / 120), P2 = Math.PI * 2;
+        var am = 0.65 + 0.5 * st.lvl + 0.3 * lowBand();
         for (var pass = 0; pass < 2; pass++) {
             for (var L = 0; L < layers.length; L++) {
                 var lc = layers[L], col = lc[0] + ',' + lc[1] + ',' + lc[2];
                 var hs = [], xs = [];
                 for (var x = -step; x <= W + step; x += step) {
                     var u = x / W;
-                    var env = 0.45 + 0.55 * Math.sin(u * Math.PI * (1.2 + L * 0.5) + t * 0.12 + lc[3]);
-                    var w = Math.sin(u * 5.2 + t * (0.3 + st.speed * 0.3) * (L + 1) * 0.6 + lc[3]) * 0.5 + 0.5;
-                    var h = H * 0.3 * (0.12 + 0.46 * env * w * (0.55 + relief * 0.7) + bandAt(u) * relief * (0.8 - L * 0.1) * (0.4 + env));
+                    var th = u * P2 * lc[4] + t * (0.18 + st.speed * 0.2) + lc[3];
+                    var c1 = 0.5 + 0.5 * Math.sin(th + 0.7 * Math.sin(th * 0.5 + 1));
+                    var c2 = 0.65 + 0.35 * Math.sin(u * P2 * lc[4] * 0.6 - t * 0.13 + lc[3] * 1.7);
+                    var h = H * 0.4 * lc[5] * am * (0.1 + Math.pow(c1, 1.6) * c2) + H * 0.05 * relief * bandAt(u);
                     xs.push(x); hs.push(h);
                 }
                 for (var bp = 0; bp < 3; bp++) {
@@ -227,21 +237,22 @@
                 }
                 var refl = pass === 1;
                 cx.save();
-                if (refl) cx.setTransform(DPR, 0, 0, -0.32 * DPR, 0, 1.32 * hz * DPR);
-                var ga = refl ? 0.28 : 1;
+                if (refl) cx.setTransform(DPR, 0, 0, -0.3 * DPR, 0, 1.3 * hz * DPR);
+                var ga = refl ? 0.25 : 1;
                 cx.globalCompositeOperation = 'lighter';
-                var gr = cx.createLinearGradient(0, hz - H * 0.35, 0, hz);
-                gr.addColorStop(0, 'rgba(' + col + ',' + (0.3 * ga) + ')'); gr.addColorStop(1, 'rgba(' + col + ',0)');
+                var gr = cx.createLinearGradient(0, hz - H * 0.4, 0, hz);
+                gr.addColorStop(0, 'rgba(' + col + ',' + (0.34 * ga) + ')'); gr.addColorStop(1, 'rgba(' + col + ',0.02)');
                 cx.beginPath(); cx.moveTo(xs[0], hz);
                 for (var i = 0; i < xs.length; i++) cx.lineTo(xs[i], hz - hs[i]);
                 cx.lineTo(xs[xs.length - 1], hz); cx.closePath();
                 cx.fillStyle = gr; cx.fill();
-                for (var m = 0; m < 14; m++) {
-                    var sc = 1 - m / 14 * 0.94;
+                for (var m = 0; m < 16; m++) {
+                    var sc = Math.pow(1 - m / 16, 1.15);
                     cx.beginPath();
-                    for (i = 0; i < xs.length; i++) { var yy = hz - hs[i] * sc; if (i === 0) cx.moveTo(xs[i], yy); else cx.lineTo(xs[i], yy); }
-                    cx.strokeStyle = 'rgba(' + col + ',' + ((0.5 - m * 0.028 + 0.2 * st.lvl) * ga) + ')';
-                    cx.lineWidth = m === 0 ? 1.8 : 0.9;
+                    var sh = Math.round(m * 0.9 * lc[6]);
+                    for (i = 0; i < xs.length; i++) { var si = Math.max(0, Math.min(xs.length - 1, i + sh)); var yy = hz - hs[si] * sc; if (i === 0) cx.moveTo(xs[i], yy); else cx.lineTo(xs[i], yy); }
+                    cx.strokeStyle = 'rgba(' + col + ',' + ((0.75 - m * 0.04) * ga) + ')';
+                    cx.lineWidth = m === 0 ? 2 : 0.8;
                     cx.stroke();
                 }
                 cx.restore();
@@ -257,8 +268,7 @@
         readAudio(dt, t);
         relief = ease(relief, st.playing ? 0.5 + 1.2 * st.lvl + 0.5 * st.kick : 0.28, 6, dt);
         cx.setTransform(DPR, 0, 0, DPR, 0, 0);
-        if (scene === '1') drawRidges(false);
-        else if (scene === '1c') drawRidges(true);
+        if (scene === '1c') drawRidges(true);
         else if (scene === '2') drawNeon(t);
         else if (scene === '3') drawHair(t);
         else drawGlowWaves(t);
@@ -302,7 +312,7 @@
                 if (!srcNode && errs >= 2 && audio.crossOrigin) audio.removeAttribute('crossorigin');
             });
         },
-        setScene: function (n) { scene = String(n); },
+        setScene: function (n) { scene = String(n) === '1' ? '1c' : String(n); },
         isReal: function () { return real; }
     };
 

@@ -825,11 +825,12 @@
 })();
 </script>
 
-<div class="skin-switch bg-switch" id="bgSwitch"><b>Фон</b><button data-b="1">1 Ч/Б</button><button data-b="1c">1 Колір</button><button data-b="2">2</button><button data-b="3">3</button><button data-b="4">4</button></div>
+<div class="skin-switch bg-switch" id="bgSwitch"><b>Фон</b><button data-b="1c">1</button><button data-b="2">2</button><button data-b="3">3</button><button data-b="4">4</button></div>
 <script>
 (function(){
   var q=(location.search.match(/[?&]bg=(\w+)/)||[])[1];
-  var cur=q||localStorage.getItem('musicBg')||'1';
+  var cur=q||localStorage.getItem('musicBg')||'1c';
+  if(cur==='1')cur='1c';
   function set(n){cur=String(n);localStorage.setItem('musicBg',cur);if(window.MusicBG)MusicBG.setScene(cur);
     document.querySelectorAll('#bgSwitch button').forEach(function(b){b.classList.toggle('on',b.dataset.b===cur);});}
   document.getElementById('bgSwitch').addEventListener('click',function(e){var b=e.target.closest('button');if(b)set(b.dataset.b);});
