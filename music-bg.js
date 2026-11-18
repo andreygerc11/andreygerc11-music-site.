@@ -69,7 +69,7 @@
         var kicked = false;
         if (st.playing && bass > 0.3 && bass > st.ema * 1.22 + 0.04 && t - st.lastKick > 0.2) { st.kick = 1; st.lastKick = t; kicked = true; }
         st.kick = Math.max(0, st.kick - dt * 3.2);
-        var tgtSpeed = st.playing ? 0.35 + st.bass * 2.4 + st.kick * 1.6 : 0;
+        var tgtSpeed = st.playing ? 0.45 + st.bass * 2.2 + st.kick * 1.4 : 0.05;
         st.speed = ease(st.speed, tgtSpeed, st.playing ? 5 : 2.2, dt);
         st.phase += st.speed * dt;
         var tgtAmp = st.playing ? 0.6 + st.lvl * 1.15 + st.kick * 0.35 : 0.5;
@@ -96,9 +96,14 @@
     }
 
     var peaks = new Float32Array(256);
+    var gScroll = 0, relief = 0;
+
+    function gk() { return Math.max(0, Math.min(1.3, (st.K - 0.2) / 0.65)); }
 
     function drawSpectrum(t) {
-        var hz = H * 0.52;
+        var g0 = gk();
+        if (g0 < 0.02) return;
+        var hz = H * 0.5;
         var N = Math.max(24, Math.min(160, Math.floor(W / 8)));
         var bw = W / N;
         cx.globalCompositeOperation = 'lighter';
@@ -106,162 +111,71 @@
             var u = i / (N - 1);
             var fi = u * (BANDS - 1), lo = Math.floor(fi), hi = Math.min(BANDS - 1, lo + 1);
             var v = st.sp[lo] + (st.sp[hi] - st.sp[lo]) * (fi - lo);
-            var idle = 0.05 + 0.035 * Math.sin(t * 1.4 + i * 0.35) + 0.02 * Math.sin(t * 0.7 + i * 0.12);
-            var val = Math.max(idle, v * (0.75 + 0.5 * (1 - u) * st.kick + 0.3 * st.lvl));
-            var h = val * hz * 0.95;
+            var val = v * (0.75 + 0.3 * st.lvl + 0.4 * (1 - u) * st.kick);
+            var h = val * hz * 0.9;
             var x = i * bw;
             var g = cx.createLinearGradient(0, hz, 0, hz - h);
-            g.addColorStop(0, 'rgba(' + TEAL + ',' + (0.42 * st.K + 0.03) + ')');
-            g.addColorStop(1, 'rgba(' + CYAN + ',0.01)');
+            g.addColorStop(0, 'rgba(' + TEAL + ',' + (0.32 * g0) + ')');
+            g.addColorStop(1, 'rgba(' + TEAL + ',0)');
             cx.fillStyle = g;
-            cx.fillRect(x + bw * 0.18, hz - h, bw * 0.64, h);
+            cx.fillRect(x + bw * 0.2, hz - h, bw * 0.6, h);
             peaks[i] = Math.max(peaks[i] - 0.004, val);
-            var ph = peaks[i] * hz * 0.95;
-            cx.fillStyle = 'rgba(190,235,225,' + (0.55 * st.K + 0.04) + ')';
-            cx.fillRect(x + bw * 0.18, hz - ph - 3, bw * 0.64, 2);
+            cx.fillStyle = 'rgba(190,235,225,' + (0.4 * g0) + ')';
+            cx.fillRect(x + bw * 0.2, hz - peaks[i] * hz * 0.9 - 3, bw * 0.6, 2);
         }
     }
 
-    function drawGlow() {
-        var hz = H * 0.52;
-        var ga = (0.03 + 0.03 * st.breathe + 0.14 * st.lvl + 0.1 * st.kick) * st.K * 2;
-        var g = cx.createRadialGradient(W / 2, hz, 0, W / 2, hz, Math.max(W, H) * 0.62);
-        g.addColorStop(0, 'rgba(' + TEAL + ',' + ga + ')');
-        g.addColorStop(0.45, 'rgba(' + CYAN + ',' + (ga * 0.25) + ')');
-        g.addColorStop(1, 'rgba(' + TEAL + ',0)');
+    function drawGrid(dt, t) {
+        var g0 = gk();
+        gScroll += (2.5 + st.speed * 42) * dt;
+        relief = ease(relief, st.playing ? 0.4 + 1.2 * st.lvl + 0.5 * st.kick : 0, 6, dt);
+        var CS = 50, off = gScroll % CS, base = Math.floor(gScroll / CS);
+        var VMAX = 480, VMIN = -H * 1.0;
+        var alpha = 0.045 + 0.5 * g0;
+        function lift(u, v) {
+            var ax = Math.min(1, Math.abs(u) / W);
+            var wall = smooth(0.1, 0.7, ax);
+            var r = (v - off) / CS - base;
+            var n = vnoise(u / 120 + 7, r * 0.55);
+            var band = st.sp[Math.min(BANDS - 1, Math.floor(ax * 0.9 * (BANDS - 1)))];
+            return relief * wall * (0.2 + n) * (26 + band * 260);
+        }
+        function proj(u, v) {
+            var z = v * 0.866;
+            if (z >= 430) return null;
+            var sc = 500 / (500 - z);
+            return [W / 2 + u * sc, H / 2 + v * 0.5 * sc - lift(u, v) * sc, sc];
+        }
+        var bright = st.kick * 0.5;
+        var col = 'rgba(' + Math.round(32 + 160 * bright) + ',' + Math.round(201 + 34 * bright) + ',' + Math.round(151 + 74 * bright) + ',';
         cx.globalCompositeOperation = 'lighter';
-        cx.fillStyle = g; cx.fillRect(0, 0, W, H);
-    }
-
-    function drawRibbons(t) {
-        cx.globalCompositeOperation = 'lighter';
-        cx.lineCap = 'round';
-        var drive = st.playing ? 1 : 0.35;
-        for (var r = 0; r < 5; r++) {
-            var by = H * (0.07 + 0.085 * r);
-            var step = Math.max(8, W / 90);
-            var pts = [];
-            for (var x = -step; x <= W + step; x += step) {
-                var u = x / W;
-                var band = st.sp[Math.min(BANDS - 1, Math.floor(Math.abs(u - 0.5) * 2 * (BANDS - 1)))];
-                var y = by
-                    + Math.sin(x * 0.0042 * (1 + r * 0.25) + t * (0.32 + r * 0.11) + r * 2.1) * H * 0.028 * (0.8 + st.amp * 0.4)
-                    + Math.sin(x * 0.012 - t * (0.55 + r * 0.1) + r) * H * 0.07 * (0.12 + band * 1.5) * drive;
-                pts.push([x, y]);
-            }
-            var a = (0.35 + 0.5 * st.lvl + 0.3 * st.kick) * st.K;
-            var col = r % 2 ? CYAN : TEAL;
+        cx.lineJoin = 'round';
+        for (var pass = 0; pass < 2; pass++) {
+            if (pass === 0 && g0 < 0.12) continue;
+            var A = pass === 0 ? alpha * 0.16 : alpha;
             cx.beginPath();
-            for (var i = 0; i < pts.length; i++) { if (i === 0) cx.moveTo(pts[i][0], pts[i][1]); else cx.lineTo(pts[i][0], pts[i][1]); }
-            cx.strokeStyle = 'rgba(' + col + ',' + (0.08 * a + 0.006) + ')';
-            cx.lineWidth = 7; cx.stroke();
-            cx.strokeStyle = 'rgba(' + col + ',' + Math.min(0.7, 0.35 * a + 0.04) + ')';
-            cx.lineWidth = 1.2; cx.stroke();
-            var q = ((t * (0.05 + st.speed * 0.05) + r * 0.31) % 1);
-            var idx = Math.min(pts.length - 1, Math.floor(q * (pts.length - 1)));
-            var dx = pts[idx][0], dy = pts[idx][1];
-            var rg = cx.createRadialGradient(dx, dy, 0, dx, dy, 14 + 18 * st.kick);
-            rg.addColorStop(0, 'rgba(190,235,225,' + (0.5 * st.K + 0.06) + ')');
-            rg.addColorStop(1, 'rgba(' + col + ',0)');
-            cx.fillStyle = rg; cx.fillRect(dx - 34, dy - 34, 68, 68);
-        }
-    }
-
-    function rowPath(pts, closeDown) {
-        cx.beginPath();
-        if (closeDown) cx.moveTo(pts[0][0], H + 4); else cx.moveTo(pts[0][0], pts[0][1]);
-        if (closeDown) cx.lineTo(pts[0][0], pts[0][1]);
-        for (var c = 0; c < pts.length - 1; c++) {
-            var mx = (pts[c][0] + pts[c + 1][0]) / 2, my = (pts[c][1] + pts[c + 1][1]) / 2;
-            cx.quadraticCurveTo(pts[c][0], pts[c][1], mx, my);
-        }
-        cx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
-        if (closeDown) { cx.lineTo(pts[pts.length - 1][0], H + 4); cx.closePath(); }
-    }
-
-    var nowT = 0;
-
-    function drawTerrain() {
-        var hz = H * 0.52, span = H - hz;
-        var f = st.phase % 1, base = Math.floor(st.phase);
-        var prev = null;
-        var midRow = Math.floor(ROWS * 0.62);
-        for (var k = 0; k < ROWS; k++) {
-            var d = (k + f + 0.15) / (ROWS + 0.15);
-            var y = hz + span * d * d;
-            var sw = (1.04 + d * 0.95) * W * 0.5;
-            var rid = base - k;
-            var pts = [];
-            for (var c = 0; c < COLS; c++) {
-                var xw = (c / (COLS - 1)) * 2 - 1, ax = Math.abs(xw);
-                var edge = 0.3 + 0.7 * smooth(0.04, 0.8, ax);
-                var n = vnoise(xw * 3.1 + 11, rid * 0.5);
-                n = 0.3 + n * n * 1.5;
-                var band = st.sp[Math.min(BANDS - 1, Math.floor((1 - ax) * (BANDS - 1)))];
-                var hh = edge * n * (0.35 + band * 1.25) * st.amp;
-                var hp = hh * span * 0.42 * (0.15 + d * 1.05);
-                pts.push([W / 2 + xw * sw, y - hp]);
+            var jmin = Math.floor(VMIN / CS) - 1, jmax = Math.ceil(VMAX / CS);
+            var uStep = 40, i, p;
+            for (var j = jmin; j <= jmax; j++) {
+                var v = j * CS + off, started = false;
+                for (var u = -W; u <= W + 1; u += uStep) {
+                    p = proj(u, v);
+                    if (!p) { started = false; continue; }
+                    if (!started) { cx.moveTo(p[0], p[1]); started = true; } else cx.lineTo(p[0], p[1]);
+                }
             }
-            if (k === midRow) ridge = pts;
-            cx.globalCompositeOperation = 'source-over';
-            rowPath(pts, true);
-            cx.fillStyle = 'rgba(6,14,19,0.93)'; cx.fill();
-            var a = (0.1 + 0.9 * Math.pow(d, 0.7)) * (0.22 + 0.9 * st.K);
-            var br = Math.min(1, st.kick * 0.35);
-            var cr = Math.round(32 + 190 * br), cg = Math.round(201 + 40 * br), cb = Math.round(151 + 90 * br);
-            cx.globalCompositeOperation = 'lighter';
-            if (prev) {
-                cx.strokeStyle = 'rgba(' + TEAL + ',' + (a * 0.32) + ')';
-                cx.lineWidth = 0.6 + d * 0.5;
-                cx.beginPath();
-                for (c = 0; c < COLS; c++) { cx.moveTo(prev[c][0], prev[c][1]); cx.lineTo(pts[c][0], pts[c][1]); }
-                cx.stroke();
+            var imax = Math.ceil(W / CS);
+            for (i = -imax; i <= imax; i++) {
+                var uu = i * CS, st2 = false;
+                for (var vv = VMIN + off; vv <= VMAX; vv += 25) {
+                    p = proj(uu, vv);
+                    if (!p) { st2 = false; continue; }
+                    if (!st2) { cx.moveTo(p[0], p[1]); st2 = true; } else cx.lineTo(p[0], p[1]);
+                }
             }
-            rowPath(pts, false);
-            cx.strokeStyle = 'rgba(' + cr + ',' + cg + ',' + cb + ',' + (a * 0.1) + ')';
-            cx.lineWidth = 4 + d * 7; cx.stroke();
-            cx.strokeStyle = 'rgba(' + cr + ',' + cg + ',' + cb + ',' + Math.min(1, a * (0.8 + 0.2 * st.lvl)) + ')';
-            cx.lineWidth = 0.8 + d * 1.2; cx.stroke();
-            var u0 = (nowT * (0.1 + (k % 4) * 0.035) + k * 0.137) % 1;
-            var c0 = Math.floor(u0 * (COLS - 6));
-            cx.beginPath();
-            cx.moveTo(pts[c0][0], pts[c0][1]);
-            for (c = c0 + 1; c <= c0 + 5; c++) cx.lineTo(pts[c][0], pts[c][1]);
-            cx.strokeStyle = 'rgba(190,235,225,' + Math.min(0.85, a * (0.3 + 0.5 * st.lvl + 0.3 * st.kick)) + ')';
-            cx.lineWidth = 1.2 + d * 1.8; cx.stroke();
-            prev = pts;
-        }
-    }
-
-    function drawParticles(dt, t, kicked) {
-        var rate = (st.playing ? 36 + st.lvl * 120 : 10) * dt;
-        var i, n = Math.floor(rate) + (Math.random() < rate % 1 ? 1 : 0);
-        for (i = 0; i < n; i++) {
-            var px = Math.random() * W, py = H * (0.3 + Math.random() * 0.7);
-            spawn(px, py, (Math.random() - 0.5) * 14, -(10 + Math.random() * 34) * (st.playing ? 1 + st.lvl * 2 : 0.6), 2 + Math.random() * 3, 0.6 + Math.random() * 1.6, Math.random() < 0.7 ? 0 : 1);
-        }
-        if (kicked && ridge) {
-            for (i = 0; i < 46; i++) {
-                var rp = ridge[Math.floor(Math.random() * ridge.length)];
-                var ang = -Math.PI / 2 + (Math.random() - 0.5) * 2.2, sp = 40 + Math.random() * 150;
-                spawn(rp[0], rp[1], Math.cos(ang) * sp, Math.sin(ang) * sp, 0.9 + Math.random() * 1.3, 0.9 + Math.random() * 1.9, Math.random() < 0.5 ? 0 : 1);
-            }
-        }
-        cx.globalCompositeOperation = 'lighter';
-        for (i = 0; i < NP; i++) {
-            var p = P[i];
-            if (!p.on) continue;
-            p.life -= dt;
-            if (p.life <= 0) { p.on = false; continue; }
-            p.x += p.vx * dt; p.y += p.vy * dt;
-            p.vx *= 1 - 0.4 * dt; p.vy *= 1 - 0.25 * dt;
-            var k = p.life / p.max;
-            var al = Math.sin(Math.min(1, k) * Math.PI) * (0.55 + 0.4 * Math.sin(t * 5 + i)) * (0.3 + 0.7 * st.K);
-            if (al <= 0.02) continue;
-            cx.fillStyle = 'rgba(' + (p.hue ? CYAN : TEAL) + ',' + (al * 0.28) + ')';
-            cx.beginPath(); cx.arc(p.x, p.y, p.s * 3.2, 0, 6.2832); cx.fill();
-            cx.fillStyle = 'rgba(190,235,225,' + al + ')';
-            cx.beginPath(); cx.arc(p.x, p.y, p.s * 0.8, 0, 6.2832); cx.fill();
+            cx.strokeStyle = col + Math.min(0.9, A) + ')';
+            cx.lineWidth = pass === 0 ? 5 : 1;
+            cx.stroke();
         }
     }
 
@@ -270,14 +184,10 @@
         if (document.hidden) { last = now; return; }
         var t = now / 1000, dt = Math.min(0.05, last ? t - last : 0.016);
         last = t;
-        var kicked = readAudio(dt, t);
+        readAudio(dt, t);
         drawSky();
-        nowT = t;
-        drawGlow();
         drawSpectrum(t);
-        drawRibbons(t);
-        drawTerrain();
-        drawParticles(dt, t, kicked);
+        drawGrid(dt, t);
         cx.globalCompositeOperation = 'source-over';
     }
 
