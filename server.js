@@ -1823,6 +1823,22 @@ app.get('/api/site-content', (req, res) => {
     res.json(siteContent || {});
 });
 
+const radarTickets = new Map();
+app.post('/api/admin/radar-ticket', authRateLimiter, (req, res) => {
+    const { login, password } = req.body || {};
+    if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Доступ лише для адміністратора" });
+    const now = Date.now();
+    for (const [k, exp] of radarTickets) if (exp < now) radarTickets.delete(k);
+    const ticket = crypto.randomBytes(24).toString('base64url');
+    radarTickets.set(ticket, now + 120000);
+    res.json({ ticket });
+});
+app.get('/api/radar-ticket/:t', (req, res) => {
+    const exp = radarTickets.get(req.params.t);
+    radarTickets.delete(req.params.t);
+    res.json({ ok: !!exp && exp > Date.now() });
+});
+
 app.post('/api/admin/site-content', authRateLimiter, async (req, res) => {
     const { login, password, content } = req.body;
     if (!isValidWifeAuth(login, password)) return res.status(403).json({ error: "Доступ лише для адміністратора" });

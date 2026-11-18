@@ -366,7 +366,14 @@ input,select,textarea{width:100%;background:#08100d;color:var(--txt);border:1px 
   // ---- сервіси ----
   function services() {
     $('content').innerHTML = `<p class="hint">Усі зовнішні кабінети, де живуть частини сайту й застосунків.</p><div class="cards">` +
-      SERVICES.map(s => `<a class="card link" href="${s[3]}" target="_blank" rel="noopener"><i class="${s[0]}"></i><div><b>${esc(s[1])}</b><small>${esc(s[2])}</small></div></a>`).join('') + `</div>`;
+      SERVICES.map(s => `<a class="card link" href="${s[3]}"${s[3].indexOf('family-radar-server.onrender.com/admin') > -1 ? ' data-radar="1"' : ''} target="_blank" rel="noopener"><i class="${s[0]}"></i><div><b>${esc(s[1])}</b><small>${esc(s[2])}</small></div></a>`).join('') + `</div>`;
+    document.querySelectorAll('a[data-radar]').forEach(a => a.addEventListener('click', async ev => {
+      ev.preventDefault();
+      const w = window.open('', '_blank');
+      let url = a.href;
+      try { const r = await post('/api/admin/radar-ticket'); const j = await r.json(); if (r.ok && j.ticket) url += '#ticket=' + j.ticket; } catch (e) {}
+      if (w) w.location.href = url; else location.href = url;
+    }));
   }
 
   $('go').onclick = login;
