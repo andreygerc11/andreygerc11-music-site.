@@ -59,7 +59,7 @@
                 sp[i] = ease(sp[i], f, f > sp[i] ? 14 : 5, dt);
             }
         } else {
-            for (i = 0; i < BANDS; i++) sp[i] = ease(sp[i], 0.3 + 0.22 * Math.sin(t * 0.5 + i * 0.5), 3, dt);
+            for (i = 0; i < BANDS; i++) sp[i] = ease(sp[i], 0, 3, dt);
         }
         st.bass = ease(st.bass, bass, bass > st.bass ? 22 : 5, dt);
         st.mid = ease(st.mid, mid, mid > st.mid ? 16 : 5, dt);
@@ -69,7 +69,7 @@
         var kicked = false;
         if (st.playing && bass > 0.3 && bass > st.ema * 1.22 + 0.04 && t - st.lastKick > 0.2) { st.kick = 1; st.lastKick = t; kicked = true; }
         st.kick = Math.max(0, st.kick - dt * 3.2);
-        var tgtSpeed = st.playing ? 0.45 + st.bass * 2.2 + st.kick * 1.4 : 0.3;
+        var tgtSpeed = st.playing ? 0.45 + st.bass * 2.2 + st.kick * 1.4 : 0;
         st.speed = ease(st.speed, tgtSpeed, st.playing ? 5 : 2.2, dt);
         st.phase += st.speed * dt;
         var tgtAmp = st.playing ? 0.6 + st.lvl * 1.15 + st.kick * 0.35 : 0.5;
@@ -88,7 +88,7 @@
         p.x = x; p.y = y; p.vx = vx; p.vy = vy; p.life = life; p.max = life; p.s = s; p.hue = hue; p.on = true;
     }
 
-    var scene = '1c', relief = 0, nowT = 0;
+    var scene = '1c', relief = 0, nowT = 0, act = 0, tm = 0;
 
     function curve(xs, ys, move) {
         if (move) cx.moveTo(xs[0], ys[0]); else cx.lineTo(xs[0], ys[0]);
@@ -136,7 +136,7 @@
             var q = (k + f) / rows;
             var y = top + (bot - top) * Math.pow(q, 1.25);
             var id = base - k;
-            var amp = (0.25 + q * 0.9) * H * 0.17 * (0.3 + relief * 0.75);
+            var amp = (0.25 + q * 0.9) * H * 0.17 * (0.3 + relief * 0.75) * act;
             var xs = [], ys = [], x, u, n, sp, spike, h;
             for (x = -step; x <= W + step; x += step) {
                 u = x / W;
@@ -185,6 +185,7 @@
                 var w1 = Math.sin(u * 3.4 * Math.PI + t * spd * 0.7 + q * 2.2);
                 var w2 = Math.sin(u * 7.3 - t * spd * 0.5 + q * 3.1) * 0.45;
                 var y = H * (0.34 + 0.34 * q) - (w1 + w2) * H * 0.12 * (0.45 + 0.8 * q) * (0.4 + relief * 0.85) - bandAt(u) * H * 0.24 * relief * (1 - q * 0.45) * Math.sin(Math.min(1, Math.max(0, u)) * Math.PI);
+                y = H * (0.34 + 0.34 * q) + (y - H * (0.34 + 0.34 * q)) * act;
                 xs.push(x); ys.push(y);
             }
             var path = function () { cx.beginPath(); curve(xs, ys, true); };
@@ -199,7 +200,7 @@
         paintBg('#051630', '#04122a', 'linear');
         cx.globalCompositeOperation = 'lighter';
         var N = 46, spd = 0.25 + st.speed * 0.28, step = Math.max(6, W / 120);
-        var am = 0.7 + 0.45 * st.lvl + 0.35 * lowBand();
+        var am = (0.7 + 0.45 * st.lvl + 0.35 * lowBand()) * act;
         var P2 = Math.PI * 2;
         var rbs = [
             { cy: 0.3, phA: 0.0, phB: 1.9, per: 1.15, amp: 0.26, hue: 0 },
@@ -238,7 +239,7 @@
         var hz = H * 0.66;
         var layers = [[255, 70, 50, 0.0, 1.0, 0.7, 1], [255, 175, 45, 2.1, 1.35, 0.85, -1], [40, 215, 255, 4.4, 1.7, 1.0, 1]];
         var step = Math.max(8, W / 120), P2 = Math.PI * 2;
-        var am = 0.65 + 0.5 * st.lvl + 0.3 * lowBand();
+        var am = (0.65 + 0.5 * st.lvl + 0.3 * lowBand()) * act;
         for (var pass = 0; pass < 2; pass++) {
             for (var L = 0; L < layers.length; L++) {
                 var lc = layers[L], col = lc[0] + ',' + lc[1] + ',' + lc[2];
@@ -290,7 +291,7 @@
         cx.globalCompositeOperation = 'lighter';
         var NR = 46, NC = Math.max(80, Math.min(260, Math.floor(W / 4)));
         var P2 = Math.PI * 2, f = st.phase % 1;
-        var am = 0.6 + 0.55 * st.lvl + 0.3 * lowBand();
+        var am = (0.6 + 0.55 * st.lvl + 0.3 * lowBand()) * act;
         var rowsY = [], k, c;
         var ridgeRows = { 9: 0, 21: 1, 35: 2 };
         var ridges = [[], [], []];
@@ -345,14 +346,16 @@
         var t = now / 1000, dt = Math.min(0.05, last ? t - last : 0.016);
         last = t; nowT = t;
         readAudio(dt, t);
-        relief = ease(relief, st.playing ? 0.5 + 1.2 * st.lvl + 0.5 * st.kick : 0.8, 6, dt);
+        act = ease(act, st.playing ? 1 : 0, 3, dt);
+        tm += dt * act;
+        relief = ease(relief, st.playing ? 0.5 + 1.2 * st.lvl + 0.5 * st.kick : 0, 6, dt);
         smoothBands();
         cx.setTransform(DPR, 0, 0, DPR, 0, 0);
         if (scene === '1c') drawRidges(true);
-        else if (scene === '2') drawNeon(t);
-        else if (scene === '3') drawHair(t);
-        else if (scene === '5') drawDots(t);
-        else drawGlowWaves(t);
+        else if (scene === '2') drawNeon(tm);
+        else if (scene === '3') drawHair(tm);
+        else if (scene === '5') drawDots(tm);
+        else drawGlowWaves(tm);
         cx.globalCompositeOperation = 'source-over';
         cx.globalAlpha = 1;
     }
