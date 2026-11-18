@@ -116,7 +116,7 @@
             var q = (k + f) / rows;
             var y = top + (bot - top) * Math.pow(q, 1.6);
             var id = base - k;
-            var amp = (0.2 + q * 0.95) * H * 0.2 * (0.25 + relief * 1.25);
+            var amp = (0.2 + q * 0.95) * H * 0.13 * (0.3 + relief * 0.9);
             cx.globalCompositeOperation = 'source-over';
             var x, u, h, nv, pk;
             var xs = [], ys = [];
