@@ -4,8 +4,6 @@
     cv.id = 'musicBg';
     cv.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;';
     var cx = cv.getContext('2d');
-    var sunCv = document.createElement('canvas');
-    var sx = sunCv.getContext('2d');
     var W = 0, H = 0, DPR = 1;
     var ROWS = 26, COLS = 38, BANDS = 48;
 
@@ -92,29 +90,13 @@
         cx.globalAlpha = 1;
     }
 
-    function drawSun(t) {
+    function drawGlow() {
         var hz = H * 0.58;
-        var R = Math.min(W, H) * 0.17 * (1 + 0.05 * st.bass + 0.08 * st.kick);
-        var scx = W / 2, scy = hz - R * 0.42;
-        var halo = cx.createRadialGradient(scx, scy, R * 0.6, scx, scy, R * 2.6);
-        var ha = 0.16 + 0.3 * st.lvl + 0.2 * st.kick;
-        halo.addColorStop(0, 'rgba(255,150,40,' + ha + ')'); halo.addColorStop(1, 'rgba(255,150,40,0)');
-        cx.fillStyle = halo; cx.fillRect(0, 0, W, H);
-        var S = Math.ceil(R * 2);
-        if (sunCv.width !== S) { sunCv.width = S; sunCv.height = S; }
-        sx.clearRect(0, 0, S, S);
-        sx.globalCompositeOperation = 'source-over';
-        var lg = sx.createLinearGradient(0, 0, 0, S);
-        lg.addColorStop(0, '#ffe14d'); lg.addColorStop(0.5, '#ff9f1c'); lg.addColorStop(1, '#ff3f7f');
-        sx.fillStyle = lg; sx.beginPath(); sx.arc(R, R, R, 0, 6.2832); sx.fill();
-        sx.globalCompositeOperation = 'destination-out';
-        var shift = ((t * 0.05) % 1) * R * 0.2;
-        for (var i = 0; i < 7; i++) {
-            var th = R * (0.03 + i * 0.022);
-            var y0 = R * 1.05 + i * R * 0.2 + shift - th;
-            sx.fillRect(0, y0, S, th);
-        }
-        cx.drawImage(sunCv, scx - R, scy - R);
+        var ga = 0.05 + 0.22 * st.lvl + 0.18 * st.kick;
+        var g = cx.createRadialGradient(W / 2, hz, 0, W / 2, hz, Math.max(W, H) * 0.6);
+        g.addColorStop(0, 'rgba(' + TEAL + ',' + ga + ')');
+        g.addColorStop(1, 'rgba(' + TEAL + ',0)');
+        cx.fillStyle = g; cx.fillRect(0, 0, W, H);
     }
 
     function drawTerrain() {
@@ -170,7 +152,7 @@
         last = t;
         readAudio(dt, t);
         drawSky(t);
-        drawSun(t);
+        drawGlow();
         drawTerrain();
     }
 
