@@ -6,7 +6,7 @@
     var W = 0, H = 0, DPR = 1, BASEDPR = 1, Q = 1;
     var NB = 64, FMIN = 45, FMAX = 14000, RANGE = 40, P2 = Math.PI * 2;
     var ctx = null, an = null, srcNode = null, audioEl = null, fd = null, real = false, errs = 0;
-    var scene = '1c', last = 0, tm = 0, fe = 16.7, qTimer = 0, qUp = 0, agc = -30;
+    var lastResume = 0, scene = '1c', last = 0, tm = 0, fe = 16.7, qTimer = 0, qUp = 0, agc = -30;
 
     var st = { kn: 0, hn: 0, fl: [0, 0, 0], thr: [0, 0, 0], js: 0, playing: false, bass: 0, mid: 0, treb: 0, lvl: 0, kick: 0, hat: 0, sp: new Float32Array(NB), pk: new Float32Array(NB) };
     var raw = new Float32Array(NB), rawPrev = new Float32Array(NB), dbs = new Float32Array(NB), bref = new Float32Array(NB), sm = new Float32Array(NB);
@@ -411,6 +411,7 @@
             else qUp = 0;
         }
         tm += dt * (st.playing ? 1 : 0.4);
+        if (srcNode && ctx && ctx.state !== 'running' && st.playing && now - lastResume > 1500) { lastResume = now; try { ctx.resume(); } catch (e) {} }
         var t0 = performance.now();
         analyze(dt, t);
         pushHist(dt);
@@ -430,20 +431,35 @@
         document.body.classList.toggle('is-playing', v);
     }
 
+    function makeCtx() {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!ctx) ctx = new AC();
+        return ctx;
+    }
+
+    function unlock() {
+        try { var c = makeCtx(); if (c && c.state !== 'running') c.resume(); } catch (e) {}
+    }
+    ['pointerdown', 'touchstart', 'keydown', 'click'].forEach(function (ev) { document.addEventListener(ev, unlock, { capture: true, passive: true }); });
+
     function ensureGraph() {
         try {
-            var AC = window.AudioContext || window.webkitAudioContext;
-            if (!AC) return;
-            if (!ctx) ctx = new AC();
-            if (ctx.state === 'suspended') ctx.resume();
-            if (!srcNode && audioEl.crossOrigin) {
-                srcNode = ctx.createMediaElementSource(audioEl);
-                an = ctx.createAnalyser();
-                an.fftSize = 4096; an.smoothingTimeConstant = 0.45; an.minDecibels = -100; an.maxDecibels = -10;
-                fd = new Float32Array(an.frequencyBinCount);
-                srcNode.connect(an); an.connect(ctx.destination);
-                real = true;
+            var c = makeCtx();
+            if (!c) return;
+            if (srcNode) { if (c.state !== 'running') c.resume(); return; }
+            if (!audioEl.crossOrigin) return;
+            if (c.state !== 'running') {
+                var pr = c.resume();
+                if (pr && pr.then) pr.then(function () { if (c.state === 'running') ensureGraph(); }, function () {});
+                return;
             }
+            srcNode = c.createMediaElementSource(audioEl);
+            an = c.createAnalyser();
+            an.fftSize = 4096; an.smoothingTimeConstant = 0.45; an.minDecibels = -100; an.maxDecibels = -10;
+            fd = new Float32Array(an.frequencyBinCount);
+            srcNode.connect(an); an.connect(c.destination);
+            real = true;
         } catch (e) { real = false; }
     }
 
@@ -462,7 +478,7 @@
             });
         },
         getState: function () { return st; },
-        perf: function () { return { ms: fe, js: st.js, q: Q, agc: agc }; },
+        perf: function () { return { ms: fe, js: st.js, q: Q, agc: agc, ctx: ctx ? ctx.state : 'none' }; },
         setScene: function (n) { scene = String(n) === '1' ? '1c' : String(n); },
         isReal: function () { return real; }
     };

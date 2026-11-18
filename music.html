@@ -110,7 +110,7 @@
         .ap-share-btn h4 { font-size: 0.7rem; margin: 0 0 2px 0; font-weight: 700; color: #fff;}
         .ap-share-btn p { font-size: 0.55rem; margin: 0; color: #888;}
         .ap-cover { width: 100%; padding: 0; background: #000; overflow: hidden; }
-        .ap-cover img { width: 100%; aspect-ratio: 1/1; object-fit: cover; filter: none; transition: 0.5s; }
+        .ap-cover img, .ap-cover canvas { width: 100%; aspect-ratio: 1/1; object-fit: cover; filter: none; transition: 0.5s; }
         .ap-info { padding: 20px 20px 10px; background: #000; }
         .ap-info h3 { font-size: 1.4rem; margin-bottom: 5px; color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;}
         .ap-info p { color: var(--accent); font-size: 0.9rem; font-weight: 600; margin: 0; text-align: left;}
@@ -232,6 +232,7 @@
             .tg-eco-grid { grid-template-columns: 1fr; }
         }
     </style>
+<link rel="stylesheet" href="music-skins.css">
 </head>
 <body>
 
@@ -800,7 +801,42 @@
   })();
 </script>
 
-<script src="bg.js"></script>
+<script src="music-bg.js"></script>
+<script src="cover-live.js"></script>
+<script>
+(function(){var a=document.getElementById("apAudio");if(a&&window.MusicBG)MusicBG.attach(a);})();
+</script>
 <script src="/cms.js?v=2"></script>
+
+<div class="skin-name" id="skinName"></div>
+<div class="skin-switch" id="skinSwitch"><b>Дизайн</b><button data-s="1">1</button><button data-s="2">2</button><button data-s="3">3</button><button data-s="4">4</button><button data-s="5">5</button></div>
+<script>
+(function(){
+  var names={1:'1 · Скло',2:'2 · Вініл',3:'3 · Неон',4:'4 · Редакційний',5:'5 · Док'};
+  var q=(location.search.match(/[?&]v=(\d)/)||[])[1];
+  var cur=q||localStorage.getItem('musicSkin')||'1';
+  function set(n){cur=String(n);document.body.setAttribute('data-skin',cur);localStorage.setItem('musicSkin',cur);
+    document.querySelectorAll('#skinSwitch button').forEach(function(b){b.classList.toggle('on',b.dataset.s===cur);});
+    var el=document.getElementById('skinName');el.textContent=names[cur];el.style.opacity=1;clearTimeout(set.t);set.t=setTimeout(function(){el.style.opacity=0;},1800);
+    if(cur!=='5')document.body.classList.remove('dock-open');}
+  document.getElementById('skinSwitch').addEventListener('click',function(e){var b=e.target.closest('button');if(b)set(b.dataset.s);});
+  document.addEventListener('click',function(e){if(cur==='5'&&e.target.closest('.ap-info'))document.body.classList.toggle('dock-open');});
+  set(cur);
+})();
+</script>
+
+<div class="skin-switch bg-switch" id="bgSwitch"><b>Фон</b><button data-b="5">Точки</button><button data-b="1c">1</button><button data-b="2">2</button><button data-b="3">3</button><button data-b="4">4</button></div>
+<script>
+(function(){
+  var q=(location.search.match(/[?&]bg=(\w+)/)||[])[1];
+  var cur=q||localStorage.getItem('musicBg')||'5';
+  if(cur==='1')cur='1c';
+  function set(n){cur=String(n);localStorage.setItem('musicBg',cur);if(window.MusicBG)MusicBG.setScene(cur);
+    document.querySelectorAll('#bgSwitch button').forEach(function(b){b.classList.toggle('on',b.dataset.b===cur);});}
+  document.getElementById('bgSwitch').addEventListener('click',function(e){var b=e.target.closest('button');if(b)set(b.dataset.b);});
+  set(cur);
+})();
+</script>
+
 </body>
 </html>
