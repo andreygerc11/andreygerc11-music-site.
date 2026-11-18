@@ -1,5 +1,5 @@
 (function () {
-    var img, cv, gl, prog, loc = {}, tex = null, texFor = null, S = 0, clock = 0, last = 0, ok = false;
+    var img, tim = null, ready = false, srcNow = '', cv, gl, prog, loc = {}, tex = null, texFor = null, S = 0, clock = 0, last = 0, ok = false;
 
     var VS = 'attribute vec2 a;varying vec2 uv;void main(){uv=a*0.5+0.5;gl_Position=vec4(a,0.0,1.0);}';
     var FS = [
@@ -42,10 +42,19 @@
         return true;
     }
 
+    function loadTex() {
+        var s = img.getAttribute('src');
+        if (!s || s === srcNow) return;
+        srcNow = s; ready = false;
+        var im = new Image();
+        im.onload = function () { tim = im; ready = true; };
+        im.src = img.src;
+    }
+
     function upload() {
-        var side = Math.min(img.naturalWidth, img.naturalHeight);
+        var side = Math.min(tim.naturalWidth, tim.naturalHeight);
         var tc = document.createElement('canvas'); tc.width = tc.height = 1024;
-        tc.getContext('2d').drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, 1024, 1024);
+        tc.getContext('2d').drawImage(tim, (tim.naturalWidth - side) / 2, (tim.naturalHeight - side) / 2, side, side, 0, 0, 1024, 1024);
         if (!tex) tex = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, tex);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -54,15 +63,17 @@
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        texFor = img.currentSrc || img.src;
+        texFor = srcNow;
     }
 
     function frame(now) {
         requestAnimationFrame(frame);
-        if (!ok || !img || !img.complete || !img.naturalWidth || document.hidden) { last = now; return; }
+        if (!ok || !img || document.hidden) { last = now; return; }
+        loadTex();
+        if (!ready) { last = now; return; }
         var dt = Math.min(0.05, last ? (now - last) / 1000 : 0.016);
         last = now;
-        if (texFor !== (img.currentSrc || img.src)) upload();
+        if (texFor !== srcNow) upload();
         var st = window.MusicBG && MusicBG.getState ? MusicBG.getState() : null;
         var playing = !!(st && st.playing);
         clock += dt * (playing ? 1 : 0.35);
