@@ -623,9 +623,20 @@
       audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
   });
 
+  function buyPromptShown() {
+      try { return localStorage.getItem('buyPromptShown') === '1'; } catch (e) { return window.__buyShown === true; }
+  }
+  function markBuyPromptShown() {
+      window.__buyShown = true;
+      try { localStorage.setItem('buyPromptShown', '1'); } catch (e) {}
+  }
+
   audio.addEventListener('play', () => {
       clearTimeout(previewTimer);
+      if (buyPromptShown()) return;
       previewTimer = setTimeout(() => {
+          if (buyPromptShown()) return;
+          markBuyPromptShown();
           document.getElementById('modalBuyBtn').onclick = function() { buyTrackHandler(songsData[currentIndex].fullId, songsData[currentIndex].name, this); };
           document.getElementById('limitModal').style.display = 'flex';
       }, 30000);
