@@ -260,6 +260,58 @@
         }
     }
 
+    function drawDots(t) {
+        paintBg('#000', '#010103', 'linear');
+        cx.globalCompositeOperation = 'lighter';
+        var NR = 46, NC = Math.max(80, Math.min(260, Math.floor(W / 4)));
+        var P2 = Math.PI * 2, f = st.phase % 1;
+        var am = 0.6 + 0.55 * st.lvl + 0.3 * lowBand();
+        var rowsY = [], k, c;
+        var ridgeRows = { 9: 0, 21: 1, 35: 2 };
+        var ridges = [[], [], []];
+        for (k = 0; k < NR; k++) {
+            var v = (k + f) / NR;
+            var z = v * 3.2 - st.phase * 0.05;
+            var by = H * (0.4 + 0.58 * Math.pow(v, 1.25));
+            var ampv = H * 0.12 * (0.35 + 0.95 * v) * am;
+            var hue;
+            if (v < 0.25) hue = lerp(300, 350, v / 0.25);
+            else if (v < 0.5) hue = lerp(350, 385, (v - 0.25) / 0.25);
+            else if (v < 0.72) hue = lerp(25, 55, (v - 0.5) / 0.22);
+            else hue = lerp(190, 215, (v - 0.72) / 0.28);
+            if (hue >= 360) hue -= 360;
+            var r = 1.1 + v * 1.7;
+            var al = 0.5 + 0.45 * v;
+            var big = v > 0.74;
+            for (c = 0; c < NC; c++) {
+                var u = c / (NC - 1);
+                var h = Math.sin(u * P2 * 1.1 + z * 1.9 + t * 0.21) * 0.5 + Math.sin(u * P2 * 2.3 - z * 2.4 + t * 0.15) * 0.3 + Math.sin(u * P2 * 0.6 + z * 0.9 - t * 0.1) * 0.4 + bandAt(u) * relief * 0.55;
+                var x = u * W, y = by - h * ampv;
+                if (ridgeRows[k] !== undefined) ridges[ridgeRows[k]].push([x, y]);
+                cx.fillStyle = hsl(hue, 100, 58, al * (0.7 + 0.3 * st.lvl));
+                cx.fillRect(x - r * 0.5, y - r * 0.5, r, r);
+                if (big && (c & 1) === 0) {
+                    cx.fillStyle = hsl(hue, 100, 55, 0.07);
+                    cx.beginPath(); cx.arc(x, y, r * 3.4, 0, 6.2832); cx.fill();
+                }
+            }
+        }
+        cx.lineCap = 'round'; cx.lineJoin = 'round';
+        for (var q = 0; q < 3; q++) {
+            var pts = ridges[q];
+            if (!pts.length) continue;
+            var g = cx.createLinearGradient(0, 0, W, 0);
+            var off = (t * 0.03 + q * 0.33) % 1;
+            var cols = ['rgba(180,90,255,', 'rgba(255,60,140,', 'rgba(255,200,60,', 'rgba(60,230,255,', 'rgba(255,255,255,'];
+            for (var s2 = 0; s2 <= 4; s2++) g.addColorStop(s2 / 4, cols[(s2 + q * 2) % 5] + '0.95)');
+            cx.beginPath();
+            for (c = 0; c < pts.length; c++) { if (c === 0) cx.moveTo(pts[c][0], pts[c][1]); else cx.lineTo(pts[c][0], pts[c][1]); }
+            cx.strokeStyle = g; cx.globalAlpha = 0.16 + 0.1 * st.lvl; cx.lineWidth = 9; cx.stroke();
+            cx.globalAlpha = 0.55 + 0.35 * st.lvl; cx.lineWidth = 1.6; cx.stroke();
+            cx.globalAlpha = 1;
+        }
+    }
+
     function frame(now) {
         requestAnimationFrame(frame);
         if (document.hidden) { last = now; return; }
@@ -271,6 +323,7 @@
         if (scene === '1c') drawRidges(true);
         else if (scene === '2') drawNeon(t);
         else if (scene === '3') drawHair(t);
+        else if (scene === '5') drawDots(t);
         else drawGlowWaves(t);
         cx.globalCompositeOperation = 'source-over';
         cx.globalAlpha = 1;
