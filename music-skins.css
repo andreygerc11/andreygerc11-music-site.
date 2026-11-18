@@ -125,3 +125,8 @@ main h1, main h2, main p, .page-subtitle, .section-desc { text-shadow: 0 2px 12p
     .skin-name { left: 50%; transform: translateX(-50%); bottom: 58px; }
     body[data-skin="5"] .ap-widget { bottom: 66px; }
 }
+
+.bg-switch { bottom: 62px; }
+.bg-switch button { width: auto; min-width: 34px; padding: 0 9px; border-radius: 17px; font-size: .72rem; }
+.skin-name { bottom: 112px; }
+@media (max-width: 600px) { .bg-switch { bottom: 56px; } .skin-name { bottom: 106px; } }

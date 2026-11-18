@@ -88,94 +88,164 @@
         p.x = x; p.y = y; p.vx = vx; p.vy = vy; p.life = life; p.max = life; p.s = s; p.hue = hue; p.on = true;
     }
 
-    function drawSky() {
-        var g = cx.createRadialGradient(W / 2, H * 0.5, 0, W / 2, H * 0.5, Math.max(W, H) * 0.75);
-        g.addColorStop(0, '#12202b'); g.addColorStop(1, '#08090b');
+    var scene = '1', relief = 0, nowT = 0;
+
+    function bandAt(u) {
+        var x = Math.min(1, Math.abs(u - 0.5) * 2) * 0.92 * (BANDS - 1);
+        var lo = Math.floor(x), hi = Math.min(BANDS - 1, lo + 1);
+        return st.sp[lo] + (st.sp[hi] - st.sp[lo]) * (x - lo);
+    }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function hsl(h, sat, l, a) { return 'hsla(' + Math.round(h) + ',' + sat + '%,' + l + '%,' + a + ')'; }
+
+    function paintBg(c0, c1, mode) {
+        var g = mode === 'radial' ? cx.createRadialGradient(W / 2, H * 0.55, 0, W / 2, H * 0.55, Math.max(W, H) * 0.8) : cx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, c0); g.addColorStop(1, c1);
         cx.globalCompositeOperation = 'source-over';
+        cx.globalAlpha = 1;
         cx.fillStyle = g; cx.fillRect(0, 0, W, H);
     }
 
-    var peaks = new Float32Array(256);
-    var gScroll = 0, relief = 0;
-
-    function gk() { return Math.max(0, Math.min(1.3, (st.K - 0.2) / 0.65)); }
-
-    function drawSpectrum(t) {
-        var g0 = gk();
-        if (g0 < 0.02) return;
-        var hz = H * 0.5;
-        var N = Math.max(24, Math.min(160, Math.floor(W / 8)));
-        var bw = W / N;
-        cx.globalCompositeOperation = 'lighter';
-        for (var i = 0; i < N; i++) {
-            var u = i / (N - 1);
-            var fi = u * (BANDS - 1), lo = Math.floor(fi), hi = Math.min(BANDS - 1, lo + 1);
-            var v = st.sp[lo] + (st.sp[hi] - st.sp[lo]) * (fi - lo);
-            var val = v * (0.75 + 0.3 * st.lvl + 0.4 * (1 - u) * st.kick);
-            var h = val * hz * 0.9;
-            var x = i * bw;
-            var g = cx.createLinearGradient(0, hz, 0, hz - h);
-            g.addColorStop(0, 'rgba(' + TEAL + ',' + (0.32 * g0) + ')');
-            g.addColorStop(1, 'rgba(' + TEAL + ',0)');
-            cx.fillStyle = g;
-            cx.fillRect(x + bw * 0.2, hz - h, bw * 0.6, h);
-            peaks[i] = Math.max(peaks[i] - 0.004, val);
-            cx.fillStyle = 'rgba(190,235,225,' + (0.4 * g0) + ')';
-            cx.fillRect(x + bw * 0.2, hz - peaks[i] * hz * 0.9 - 3, bw * 0.6, 2);
+    function drawRidges(color) {
+        paintBg(color ? '#0a0d2a' : '#000', color ? '#04050f' : '#000', 'linear');
+        var rows = 66, top = H * 0.26, bot = H * 1.03;
+        var f = st.phase % 1, base = Math.floor(st.phase);
+        var bg = color ? '#050716' : '#000';
+        var step = Math.max(5, W / 190);
+        for (var k = 0; k < rows; k++) {
+            var q = (k + f) / rows;
+            var y = top + (bot - top) * Math.pow(q, 1.6);
+            var id = base - k;
+            var amp = (0.2 + q * 0.95) * H * 0.2 * (0.25 + relief * 1.25);
+            cx.globalCompositeOperation = 'source-over';
+            var x, u, h, nv, pk;
+            var xs = [], ys = [];
+            for (x = -step; x <= W + step; x += step) {
+                u = x / W;
+                nv = vnoise(u * 5.2 + 3, id * 0.33);
+                pk = Math.pow(nv, 2.5) * 1.75 + vnoise(u * 14, id * 0.5) * 0.22;
+                h = pk * amp * (0.42 + Math.min(1, bandAt(u)) * 0.95);
+                xs.push(x); ys.push(y - h);
+            }
+            cx.beginPath();
+            cx.moveTo(xs[0], H + 6);
+            for (var i = 0; i < xs.length; i++) cx.lineTo(xs[i], ys[i]);
+            cx.lineTo(xs[xs.length - 1], H + 6);
+            cx.closePath();
+            cx.fillStyle = bg; cx.fill();
+            var a = 0.4 + 0.6 * q;
+            var kb = Math.min(1, st.kick * 0.5);
+            if (color) cx.strokeStyle = hsl(lerp(188, 318, q), 90, 58 + kb * 20, a);
+            else cx.strokeStyle = 'rgba(255,255,255,' + Math.min(1, a + kb * 0.2) + ')';
+            cx.lineWidth = 0.9 + q * 1.1;
+            cx.beginPath();
+            for (i = 0; i < xs.length; i++) { if (i === 0) cx.moveTo(xs[i], ys[i]); else cx.lineTo(xs[i], ys[i]); }
+            cx.stroke();
         }
     }
 
-    function drawGrid(dt, t) {
-        var g0 = gk();
-        gScroll += (2.5 + st.speed * 42) * dt;
-        relief = ease(relief, st.playing ? 0.4 + 1.2 * st.lvl + 0.5 * st.kick : 0, 6, dt);
-        var CS = 50, off = gScroll % CS, base = Math.floor(gScroll / CS);
-        var VMAX = 480, VMIN = -H * 1.0;
-        var alpha = 0.045 + 0.5 * g0;
-        function lift(u, v) {
-            var ax = Math.min(1, Math.abs(u) / W);
-            var wall = smooth(0.1, 0.7, ax);
-            var r = (v - off) / CS - base;
-            var n = vnoise(u / 120 + 7, r * 0.55);
-            var band = st.sp[Math.min(BANDS - 1, Math.floor(ax * 0.9 * (BANDS - 1)))];
-            return relief * wall * (0.2 + n) * (26 + band * 260);
-        }
-        function proj(u, v) {
-            var z = v * 0.866;
-            if (z >= 430) return null;
-            var sc = 500 / (500 - z);
-            return [W / 2 + u * sc, H / 2 + v * 0.5 * sc - lift(u, v) * sc, sc];
-        }
-        var bright = st.kick * 0.5;
-        var col = 'rgba(' + Math.round(32 + 160 * bright) + ',' + Math.round(201 + 34 * bright) + ',' + Math.round(151 + 74 * bright) + ',';
+    function drawNeon(t) {
+        paintBg('#1c0e5e', '#05041f', 'radial');
         cx.globalCompositeOperation = 'lighter';
-        cx.lineJoin = 'round';
+        var blobs = [[0.15, 0.35, 255, 150, 60, 0.2], [0.85, 0.3, 140, 90, 255, 0.22], [0.5, 0.75, 255, 60, 200, 0.16]];
+        for (var b = 0; b < blobs.length; b++) {
+            var bx = (blobs[b][0] + 0.06 * Math.sin(t * 0.13 + b * 2)) * W, by = (blobs[b][1] + 0.05 * Math.cos(t * 0.11 + b)) * H;
+            var bg = cx.createRadialGradient(bx, by, 0, bx, by, Math.max(W, H) * (0.3 + 0.05 * st.lvl));
+            bg.addColorStop(0, 'rgba(' + blobs[b][2] + ',' + blobs[b][3] + ',' + blobs[b][4] + ',' + (blobs[b][5] + 0.12 * st.lvl) + ')');
+            bg.addColorStop(1, 'rgba(0,0,0,0)');
+            cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
+        }
+        var S = 36, spd = 0.5 + st.speed * 0.55;
+        cx.lineCap = 'round'; cx.lineJoin = 'round';
+        for (var s = 0; s < S; s++) {
+            var q = s / (S - 1);
+            var hue = q < 0.45 ? lerp(32, 315, q / 0.45) : lerp(315, 250, (q - 0.45) / 0.55);
+            var xs = [], ys = [];
+            for (var x = -12; x <= W + 12; x += 9) {
+                var u = x / W;
+                var w1 = Math.sin(u * 3.4 * Math.PI + t * spd * 0.7 + q * 2.2);
+                var w2 = Math.sin(u * 7.3 - t * spd * 0.5 + q * 3.1) * 0.45;
+                var y = H * (0.34 + 0.34 * q) - (w1 + w2) * H * 0.12 * (0.45 + 0.8 * q) * (0.4 + relief * 0.85) - bandAt(u) * H * 0.24 * relief * (1 - q * 0.45) * Math.sin(Math.min(1, Math.max(0, u)) * Math.PI);
+                xs.push(x); ys.push(y);
+            }
+            var path = function () { cx.beginPath(); for (var i = 0; i < xs.length; i++) { if (i === 0) cx.moveTo(xs[i], ys[i]); else cx.lineTo(xs[i], ys[i]); } };
+            path(); cx.strokeStyle = hsl(hue, 100, 60, 0.07 + 0.05 * st.kick); cx.lineWidth = 7 + q * 6; cx.stroke();
+            path(); cx.strokeStyle = hsl(hue, 100, 68, 0.5 + 0.4 * q); cx.lineWidth = 1 + q * 1.6; cx.stroke();
+        }
+    }
+
+    function drawHair(t) {
+        paintBg('#041326', '#02101c', 'linear');
+        cx.globalCompositeOperation = 'lighter';
+        var R = 3, N = 52, spd = 0.35 + st.speed * 0.4, step = Math.max(8, W / 100);
+        for (var r = 0; r < R; r++) {
+            var by = H * (0.26 + 0.24 * r), ph = r * 2.3;
+            var xs = [], A = [], B = [];
+            for (var x = -step; x <= W + step; x += step) {
+                var u = x / W;
+                var band = bandAt(u);
+                var a = by + Math.sin(u * 3.1 * Math.PI + t * spd * 0.5 + ph) * H * 0.09 * (0.5 + relief * 0.8) + Math.sin(u * 8 - t * spd * 0.7 + ph) * H * 0.03 * (0.4 + band * relief * 2);
+                var gap = Math.sin(u * 2.3 * Math.PI + t * spd * 0.33 + ph * 1.7) * H * (0.07 + 0.1 * relief) * (0.5 + band * 1.2);
+                xs.push(x); A.push(a); B.push(a + gap);
+            }
+            var g = cx.createLinearGradient(0, 0, W, 0);
+            var h0 = 215 + r * 30;
+            g.addColorStop(0, hsl(h0, 100, 62, 0.75)); g.addColorStop(0.35, hsl(190, 90, 70, 0.7)); g.addColorStop(0.68, hsl(300, 70, 68, 0.65)); g.addColorStop(1, hsl(335, 80, 66, 0.7));
+            cx.strokeStyle = g; cx.lineWidth = 0.7;
+            for (var i = 0; i < N; i++) {
+                var fr = i / (N - 1);
+                fr = fr * fr * (3 - 2 * fr) * 0.35 + fr * 0.65;
+                cx.beginPath();
+                for (var j = 0; j < xs.length; j++) { var yy = A[j] + (B[j] - A[j]) * fr; if (j === 0) cx.moveTo(xs[j], yy); else cx.lineTo(xs[j], yy); }
+                cx.globalAlpha = 0.35 + 0.35 * st.lvl + 0.25 * Math.sin(fr * 3.14);
+                cx.stroke();
+            }
+            cx.globalAlpha = 1;
+        }
+    }
+
+    function drawGlowWaves(t) {
+        paintBg('#010204', '#03070d', 'linear');
+        var hz = H * 0.64;
+        var layers = [[30, 215, 255, 0.0], [255, 175, 50, 2.1], [255, 70, 50, 4.2]];
+        var step = Math.max(8, W / 110);
         for (var pass = 0; pass < 2; pass++) {
-            if (pass === 0 && g0 < 0.12) continue;
-            var A = pass === 0 ? alpha * 0.16 : alpha;
-            cx.beginPath();
-            var jmin = Math.floor(VMIN / CS) - 1, jmax = Math.ceil(VMAX / CS);
-            var uStep = 40, i, p;
-            for (var j = jmin; j <= jmax; j++) {
-                var v = j * CS + off, started = false;
-                for (var u = -W; u <= W + 1; u += uStep) {
-                    p = proj(u, v);
-                    if (!p) { started = false; continue; }
-                    if (!started) { cx.moveTo(p[0], p[1]); started = true; } else cx.lineTo(p[0], p[1]);
+            for (var L = 0; L < layers.length; L++) {
+                var lc = layers[L], col = lc[0] + ',' + lc[1] + ',' + lc[2];
+                var hs = [], xs = [];
+                for (var x = -step; x <= W + step; x += step) {
+                    var u = x / W;
+                    var env = 0.45 + 0.55 * Math.sin(u * Math.PI * (1.2 + L * 0.5) + t * 0.12 + lc[3]);
+                    var w = Math.sin(u * 5.2 + t * (0.3 + st.speed * 0.3) * (L + 1) * 0.6 + lc[3]) * 0.5 + 0.5;
+                    var h = H * 0.3 * (0.12 + 0.46 * env * w * (0.55 + relief * 0.7) + bandAt(u) * relief * (0.8 - L * 0.1) * (0.4 + env));
+                    xs.push(x); hs.push(h);
                 }
-            }
-            var imax = Math.ceil(W / CS);
-            for (i = -imax; i <= imax; i++) {
-                var uu = i * CS, st2 = false;
-                for (var vv = VMIN + off; vv <= VMAX; vv += 25) {
-                    p = proj(uu, vv);
-                    if (!p) { st2 = false; continue; }
-                    if (!st2) { cx.moveTo(p[0], p[1]); st2 = true; } else cx.lineTo(p[0], p[1]);
+                for (var bp = 0; bp < 3; bp++) {
+                    var hb = hs.slice();
+                    for (var bi = 2; bi < hs.length - 2; bi++) hb[bi] = (hs[bi - 2] + hs[bi - 1] + hs[bi] + hs[bi + 1] + hs[bi + 2]) / 5;
+                    hs = hb;
                 }
+                var refl = pass === 1;
+                cx.save();
+                if (refl) cx.setTransform(DPR, 0, 0, -0.32 * DPR, 0, 1.32 * hz * DPR);
+                var ga = refl ? 0.28 : 1;
+                cx.globalCompositeOperation = 'lighter';
+                var gr = cx.createLinearGradient(0, hz - H * 0.35, 0, hz);
+                gr.addColorStop(0, 'rgba(' + col + ',' + (0.3 * ga) + ')'); gr.addColorStop(1, 'rgba(' + col + ',0)');
+                cx.beginPath(); cx.moveTo(xs[0], hz);
+                for (var i = 0; i < xs.length; i++) cx.lineTo(xs[i], hz - hs[i]);
+                cx.lineTo(xs[xs.length - 1], hz); cx.closePath();
+                cx.fillStyle = gr; cx.fill();
+                for (var m = 0; m < 14; m++) {
+                    var sc = 1 - m / 14 * 0.94;
+                    cx.beginPath();
+                    for (i = 0; i < xs.length; i++) { var yy = hz - hs[i] * sc; if (i === 0) cx.moveTo(xs[i], yy); else cx.lineTo(xs[i], yy); }
+                    cx.strokeStyle = 'rgba(' + col + ',' + ((0.5 - m * 0.028 + 0.2 * st.lvl) * ga) + ')';
+                    cx.lineWidth = m === 0 ? 1.8 : 0.9;
+                    cx.stroke();
+                }
+                cx.restore();
             }
-            cx.strokeStyle = col + Math.min(0.9, A) + ')';
-            cx.lineWidth = pass === 0 ? 5 : 1;
-            cx.stroke();
         }
     }
 
@@ -183,12 +253,17 @@
         requestAnimationFrame(frame);
         if (document.hidden) { last = now; return; }
         var t = now / 1000, dt = Math.min(0.05, last ? t - last : 0.016);
-        last = t;
+        last = t; nowT = t;
         readAudio(dt, t);
-        drawSky();
-        drawSpectrum(t);
-        drawGrid(dt, t);
+        relief = ease(relief, st.playing ? 0.5 + 1.2 * st.lvl + 0.5 * st.kick : 0.28, 6, dt);
+        cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        if (scene === '1') drawRidges(false);
+        else if (scene === '1c') drawRidges(true);
+        else if (scene === '2') drawNeon(t);
+        else if (scene === '3') drawHair(t);
+        else drawGlowWaves(t);
         cx.globalCompositeOperation = 'source-over';
+        cx.globalAlpha = 1;
     }
 
     function setPlaying(v) {
@@ -227,6 +302,7 @@
                 if (!srcNode && errs >= 2 && audio.crossOrigin) audio.removeAttribute('crossorigin');
             });
         },
+        setScene: function (n) { scene = String(n); },
         isReal: function () { return real; }
     };
 
