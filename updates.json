@@ -20,10 +20,10 @@
   "notes": "Телеграм за номером виправлено; розсилка всім контактам; журнал файлом"
  },
  "adblock": {
-  "code": 18,
-  "name": "3.3",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-3.3/NoAds-VPN.apk",
-  "notes": "Помічник: рамки для «Приватного DNS» і автозапуску"
+  "code": 19,
+  "name": "4.0",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/noads-vpn-4.0/NoAds-VPN.apk",
+  "notes": "Безкоштовна версія: ВПН з рекламою. Преміум — блок реклами всюди й без реклами. Новий вигляд для ТБ"
  },
  "torrent": {
   "code": 230,
