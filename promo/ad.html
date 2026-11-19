@@ -47,6 +47,7 @@ button{font:inherit;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
       <div id="container-4392b4b58ca1f836104b146733046dc2"></div>
     </div>
   </div>
+  <a class="offer" id="offer" href="https://asiafilm.org/4/e24c9d15ef3fdedd0295b7119ce52be2"><img src="ad_partner.png" alt=""><b>Пропозиція дня від партнерів</b><span>Відкрити →</span></a>
   <p class="hint" id="hint">Набридла реклама? Підписка прибирає її повністю.</p>
 </div>
 <script>
@@ -65,12 +66,10 @@ button{font:inherit;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
   var t=setInterval(function(){left--;lbl();if(left<=0)clearInterval(t)},1000);
   function api(){return window.pywebview&&window.pywebview.api}
   c.onclick=function(){if(left<=0&&api())api().close()};
-  setTimeout(function(){
-    if(document.querySelector('.wrap iframe')||document.getElementById('container-4392b4b58ca1f836104b146733046dc2').children.length)return;
-    var a=document.createElement('a');a.href='https://asiafilm.org/4/e24c9d15ef3fdedd0295b7119ce52be2';a.className='offer';
-    a.innerHTML='<img src="'+(uk?'ad_partner.png':'ad_partner_en.png')+'" alt=""><b>'+(uk?'Пропозиція дня від партнерів':'Deal of the day from our partners')+'</b><span>'+(uk?'Відкрити →':'Open →')+'</span>';
-    document.querySelector('.row').replaceWith(a);
-  },4500);
+  var a=document.getElementById('offer');
+  a.querySelector('img').src=uk?'ad_partner.png':'ad_partner_en.png';
+  a.querySelector('b').textContent=uk?'Пропозиція дня від партнерів':'Deal of the day from our partners';
+  a.querySelector('span').textContent=uk?'Відкрити →':'Open →';
   document.getElementById('buy').onclick=function(){if(api())api().buy();else location.href='https://t.me/nadiya_apps_bot?start=buy_torrent'};
 })();
 </script>
