@@ -7,7 +7,12 @@
   "notes": "Журнал подій більше не обнуляється; «Поділитися журналом» одразу надсилає файл розробнику",
   "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
  },
- "radar": {"code": 194, "name": "1.0.200", "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-11-17-radar2/Radar.apk", "notes": "Нове: після перевстановлення чати й контакти самі повертаються з Гугл Диска; усі дозволи — одразу на старті; SOS іде навіть без зв'язку."},
+ "radar": {
+  "code": 195,
+  "name": "1.0.201",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-11-19-radar/Radar.apk",
+  "notes": "Захист від шахраїв: вхід лише з підтвердженням номера в Телеграмі, попередження в чатах, блокування й скарги, захист від підробленого застосунку."
+ },
  "autosender": {
   "code": 61,
   "name": "7.0",
