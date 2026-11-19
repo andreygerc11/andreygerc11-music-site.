@@ -19,6 +19,10 @@ button{font:inherit;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
 .slot{min-height:90px;display:flex;justify-content:center}
 .native{flex:1;min-width:260px;max-width:460px}
 .hint{color:#8a8a8a;text-align:center;margin:4px 0 0}
+.offer{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px;border-radius:14px;background:#1f1f1f;color:#fff;text-decoration:none;max-width:520px;width:100%}
+.offer img{max-width:100%;border-radius:10px}
+.offer b{font-size:20px}
+.offer span{background:#2fd16a;color:#08240f;font-weight:700;padding:10px 22px;border-radius:9px}
 @media(max-width:760px){.wide{display:none}}
 </style>
 </head>
@@ -61,6 +65,12 @@ button{font:inherit;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
   var t=setInterval(function(){left--;lbl();if(left<=0)clearInterval(t)},1000);
   function api(){return window.pywebview&&window.pywebview.api}
   c.onclick=function(){if(left<=0&&api())api().close()};
+  setTimeout(function(){
+    if(document.querySelector('.wrap iframe')||document.getElementById('container-4392b4b58ca1f836104b146733046dc2').children.length)return;
+    var a=document.createElement('a');a.href='https://asiafilm.org/4/e24c9d15ef3fdedd0295b7119ce52be2';a.className='offer';
+    a.innerHTML='<img src="'+(uk?'ad_partner.png':'ad_partner_en.png')+'" alt=""><b>'+(uk?'Пропозиція дня від партнерів':'Deal of the day from our partners')+'</b><span>'+(uk?'Відкрити →':'Open →')+'</span>';
+    document.querySelector('.row').replaceWith(a);
+  },4500);
   document.getElementById('buy').onclick=function(){if(api())api().buy();else location.href='https://t.me/nadiya_apps_bot?start=buy_torrent'};
 })();
 </script>
