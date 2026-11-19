@@ -305,7 +305,7 @@
                 body: JSON.stringify({ login: creds.login, password: creds.password, content: Object.assign({}, cur, changed) }) });
             const j = await r.json().catch(() => ({}));
             if (r.ok && j.success) { Object.keys(changed).forEach(k => delete changed[k]); document.getElementById('hzSave').textContent = '💾 Зберегти (0)'; msg('✅ Збережено — зміни вже на сайті'); }
-            else if (r.status === 403) msg('Сесія недійсна — увійдіть у кабінет знову');
+            else if (r.status === 403) msg('Зберігати може лише адміністратор — увійдіть у кабінет з логіном і паролем адміністратора');
             else msg(j.error || 'Не вдалося зберегти');
         } catch (e) { msg('Немає зв’язку із сервером'); }
     }
