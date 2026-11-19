@@ -4,6 +4,8 @@
    • пересунути блок ↑↓, сховати/показати, додати новий блок (заголовок, текст, фото, кнопка, відео) і видалити його;
    • дизайн (кольори, шрифти, розмір) — у кабінеті, розділ «Дизайн»; нові сторінки — /p.html?s=назва. */
 (function () {
+    if (window.__hzCms) return;
+    window.__hzCms = 1;
     const API = 'https://andreygerc11-music-site.onrender.com';
     const KEY = 'nadiya_admin_creds';
     if (/^#admin\b/i.test(location.hash) && !/owner/.test(location.pathname)) { location.replace('/owner.html'); return; }
@@ -59,6 +61,7 @@
     let content = {};
     const J = (k, d) => { try { return content[k] ? JSON.parse(content[k]) : d; } catch (e) { return d; } };
     let blocks = [];
+    const pv = {};
 
     // ---- нові блоки ----
     function ytId(u) { const m = String(u || '').match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : null; }
@@ -69,7 +72,7 @@
         if (b.bg) s.style.background = b.bg;
         const v = ytId(b.video);
         s.innerHTML = '<div class="hz-bw" style="text-align:' + (b.align === 'center' ? 'center' : 'left') + '">' +
-            (b.img ? '<img src="' + esc(b.img) + '" alt="">' : '') + (b.title ? '<h2>' + esc(b.title) + '</h2>' : '') +
+            (b.img ? '<img src="' + esc(pv[b.img] || b.img) + '" alt="">' : '') + (b.title ? '<h2>' + esc(b.title) + '</h2>' : '') +
             (b.text ? '<div class="hz-bt">' + fmt(b.text) + '</div>' : '') +
             (v ? '<div class="hz-vid"><iframe src="https://www.youtube.com/embed/' + v + '" allowfullscreen loading="lazy"></iframe></div>' : '') +
             (b.btn && b.url ? '<a class="hz-bb" href="' + esc(b.url) + '">' + esc(b.btn) + '</a>' : '') + '</div>';
@@ -190,7 +193,7 @@
             '<div class="act"><button class="pri">Готово</button><button class="gh">Скасувати</button>' + (extra ? '<button class="red">' + esc(extra.label) + '</button>' : '') + '</div></div>';
         document.body.appendChild(d);
         fields.forEach(f => { const el = d.querySelector('[data-f="' + f.k + '"]'); el.value = f.v == null ? '' : f.v; });
-        d.querySelectorAll('[data-up]').forEach(b => b.onclick = () => uploadFile('image/*', url => { d.querySelector('[data-f="' + b.dataset.up + '"]').value = url; }, 'blk_' + page));
+        d.querySelectorAll('[data-up]').forEach(b => b.onclick = () => uploadFile('image/*', (url, p) => { pv[url] = p; d.querySelector('[data-f="' + b.dataset.up + '"]').value = url; }, 'blk_' + page));
         d.querySelector('.act .gh').onclick = () => d.remove();
         if (extra) d.querySelector('.act .red').onclick = () => { d.remove(); extra.run(); };
         d.querySelector('.act .pri').onclick = () => {
@@ -210,7 +213,7 @@
                 const r = await fetch(API + '/api/admin/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ login: creds.login, password: creds.password, dataUrl, key: (keyHint || 'img').replace(/[^a-zA-Z0-9_.-]/g, '_').slice(0, 30) }) });
                 const j = await r.json().catch(() => ({}));
-                if (r.ok && j.url) { done(j.url); msg('Файл завантажено'); } else msg(j.error || 'Не вдалося завантажити');
+                if (r.ok && j.url) { pv[j.url] = dataUrl; done(j.url, dataUrl); msg('Файл завантажено — натисніть «Зберегти»'); } else msg(j.error || 'Не вдалося завантажити');
             } catch (e) { msg('Немає зв’язку із сервером'); }
         };
         inp.click();
@@ -331,14 +334,14 @@
                 e.preventDefault(); e.stopPropagation();
                 const n = (av || dip).getAttribute(av ? 'data-team-avatar' : 'data-team-diploma');
                 const key = av ? 'team' + n + '.photo' : 'team' + n + '.diploma';
-                return uploadFile(av ? 'image/*' : 'image/*,application/pdf', url => {
-                    if (av) { av.textContent = ''; av.style.backgroundImage = "url('" + url + "')"; av.style.backgroundSize = 'cover'; av.style.backgroundPosition = 'center'; }
+                return uploadFile(av ? 'image/*' : 'image/*,application/pdf', (url, p) => {
+                    if (av) { av.textContent = ''; av.style.backgroundImage = "url('" + p + "')"; av.style.backgroundSize = 'cover'; av.style.backgroundPosition = 'center'; }
                     else dip.innerHTML = '<a href="' + url + '" target="_blank" rel="noopener" style="color:#20c997">📎 Диплом / сертифікат</a>';
                     mark(key, url);
                 }, key);
             }
             const img = e.target.closest('img[data-hz-i]');
-            if (img) { e.preventDefault(); e.stopPropagation(); return uploadFile('image/*', url => { img.src = url; mark(img.dataset.hzI, url); }, 'img_' + page); }
+            if (img) { e.preventDefault(); e.stopPropagation(); return uploadFile('image/*', (url, p) => { img.src = p; mark(img.dataset.hzI, url); }, 'img_' + page); }
             const t = e.target.closest('[data-hz-t]');
             if (t) { e.preventDefault(); e.stopPropagation(); return editText(t); }
             const a = e.target.closest('a[data-hz-h]');

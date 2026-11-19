@@ -151,6 +151,10 @@ async function geminiChat(messages, maxTokens = 2000, temperature = 0.3) {
 const MONO_TOKEN = process.env.MONO_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO;
+const SITE_REPO = process.env.SITE_REPO || 'andreygerc11/andreygerc11-music-site.';
+const SELF_URL = process.env.RENDER_EXTERNAL_URL || 'https://andreygerc11-music-site.onrender.com';
+let sitePush = true;
+const ghErr = e => e.response ? e.response.status + ' ' + ((e.response.data && e.response.data.message) || '') : e.message;
 // Окремий ПРИВАТНИЙ репозиторій для медичних даних пацієнтів — НЕ той, що обслуговує
 // GitHub Pages для сайту. Формат: "власник/репозиторій", напр. "andreygerc11/nadiya-patients-private".
 const PATIENTS_REPO = process.env.PATIENTS_REPO;
@@ -638,24 +642,21 @@ async function syncSiteContentFromGitHub() {
 
 async function saveSiteContentToGitHub() {
     if (!GITHUB_TOKEN || !GITHUB_REPO) return false;
-    try {
-        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/site_content.json`;
-        let sha = siteContentSha;
-        if (!sha) {
-            try {
-                const getRes = await axios.get(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-                sha = getRes.data.sha;
-            } catch (e) {}
-        }
-        const contentEncoded = Buffer.from(JSON.stringify(siteContent, null, 2), 'utf8').toString('base64');
-        const res = await axios.put(url, {
-            message: `Оновлення контенту сайту (адмін-панель)`,
-            content: contentEncoded,
-            sha: sha || undefined
-        }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-        siteContentSha = res.data.content.sha;
-        return true;
-    } catch (e) { return false; }
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/site_content.json`;
+    const h = { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } };
+    const contentEncoded = Buffer.from(JSON.stringify(siteContent, null, 2), 'utf8').toString('base64');
+    for (let i = 0; i < 2; i++) {
+        try {
+            if (!siteContentSha || i) {
+                try { siteContentSha = (await axios.get(url, h)).data.sha; }
+                catch (e) { if (!(e.response && e.response.status === 404)) throw e; siteContentSha = ''; }
+            }
+            const res = await axios.put(url, { message: `Оновлення контенту сайту (адмін-панель)`, content: contentEncoded, sha: siteContentSha || undefined }, h);
+            siteContentSha = res.data.content.sha;
+            return true;
+        } catch (e) { console.error('❌ Збереження контенту сайту:', ghErr(e)); }
+    }
+    return false;
 }
 
 async function syncAppointmentsFromGitHub() {
@@ -1851,9 +1852,10 @@ app.post('/api/admin/site-content', authRateLimiter, async (req, res) => {
         const big = /^(b:|o:|theme$|pages$)/.test(String(k));   // блоки/порядок/дизайн/сторінки — JSON
         if (typeof v === 'string') cleaned[String(k).slice(0, 100)] = v.slice(0, big ? 60000 : 4000);
     }
+    const prev = siteContent;
     siteContent = cleaned;
     const saved = await saveSiteContentToGitHub();
-    if (!saved) return res.status(500).json({ error: "Не вдалося зберегти" });
+    if (!saved) { siteContent = prev; return res.status(500).json({ error: "Не вдалося зберегти — спробуйте ще раз за хвилину" }); }
     res.json({ success: true });
 });
 
@@ -1878,15 +1880,47 @@ app.post('/api/admin/upload', authRateLimiter, async (req, res) => {
 
     const safeKey = String(key || 'file').replace(/[^a-zA-Z0-9_.-]/g, '_').slice(0, 40);
     const path = `uploads/${safeKey}-${Date.now()}.${ext}`;
+    const body = { message: `Завантаження ${path} (адмін-панель)`, content: b64 };
+    const h = { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } };
+    if (sitePush) {
+        try {
+            await axios.put(`https://api.github.com/repos/${SITE_REPO}/contents/${path}`, body, h);
+            return res.json({ success: true, url: `https://nadiya.pp.ua/${path}` });
+        } catch (e) {
+            console.error('❌ Фото в репо сайту:', ghErr(e));
+            if (e.response && [401, 403, 404].includes(e.response.status)) sitePush = false;
+        }
+    }
     try {
-        await axios.put(`https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`, {
-            message: `Завантаження ${path} (адмін-панель)`,
-            content: b64
-        }, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-        res.json({ success: true, url: `https://nadiya.pp.ua/${path}` });
+        await axios.put(`https://api.github.com/repos/${GITHUB_REPO}/contents/${path}`, body, h);
+        res.json({ success: true, url: `${SELF_URL}/${path}` });
     } catch (e) {
+        console.error('❌ Завантаження файлу:', ghErr(e));
         res.status(500).json({ error: "Не вдалося завантажити файл" });
     }
+});
+
+const uploadCache = new Map();
+let uploadCacheBytes = 0;
+const UPLOAD_TYPES = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', pdf: 'application/pdf' };
+app.get('/uploads/:file', async (req, res) => {
+    const f = String(req.params.file || '');
+    const m = f.match(/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]{0,90}\.(jpg|png|webp|gif|pdf)$/);
+    if (!m || !GITHUB_TOKEN || !GITHUB_REPO) return res.status(404).end();
+    try {
+        let buf = uploadCache.get(f);
+        if (!buf) {
+            const r = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/contents/uploads/${f}`, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.raw' }, responseType: 'arraybuffer'
+            });
+            buf = Buffer.from(r.data);
+            uploadCache.set(f, buf); uploadCacheBytes += buf.length;
+            while (uploadCacheBytes > 40 * 1024 * 1024 && uploadCache.size > 1) {
+                const k = uploadCache.keys().next().value; uploadCacheBytes -= uploadCache.get(k).length; uploadCache.delete(k);
+            }
+        }
+        res.set({ 'Content-Type': UPLOAD_TYPES[m[1]], 'Cache-Control': 'public, max-age=31536000, immutable', 'Cross-Origin-Resource-Policy': 'cross-origin' }).send(buf);
+    } catch (e) { res.status(404).end(); }
 });
 
 // ==========================================
