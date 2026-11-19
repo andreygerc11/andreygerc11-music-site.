@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Реклама</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:#141414;color:#e8e8e8;font:14px "Segoe UI",system-ui,sans-serif}
+.bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:10px 14px;background:#1f1f1f;border-bottom:1px solid #2c2c2c}
+.tag{color:#9a9a9a;flex:1}
+button{font:inherit;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+#buy{background:#2f81f7;color:#fff;font-weight:600}
+#close{background:#333;color:#ddd}
+#close[disabled]{opacity:.55;cursor:default}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px}
+.row{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;align-items:flex-start;width:100%}
+.slot{min-height:90px;display:flex;justify-content:center}
+.native{flex:1;min-width:260px;max-width:460px}
+.hint{color:#8a8a8a;text-align:center;margin:4px 0 0}
+@media(max-width:760px){.wide{display:none}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <span class="tag" id="tag">Реклама · Торент безкоштовний завдяки рекламі</span>
+  <button id="buy">Прибрати рекламу — 136 ₴/міс</button>
+  <button id="close" disabled>Закрити (5)</button>
+</div>
+<div class="wrap">
+  <div class="slot wide">
+    <script>atOptions={'key':'f686d3880b610118e6aac1f52ffc8800','format':'iframe','height':90,'width':728,'params':{}};</script>
+    <script src="https://bauval.org/22/f686d3880b610118e6aac1f52ffc8800"></script>
+  </div>
+  <div class="row">
+    <div class="slot">
+      <script>atOptions={'key':'fa2c87c11a171c9ee03bf3d42790da0a','format':'iframe','height':250,'width':300,'params':{}};</script>
+      <script src="https://bauval.org/22/fa2c87c11a171c9ee03bf3d42790da0a"></script>
+    </div>
+    <div class="native">
+      <script async="async" data-cfasync="false" src="https://bauval.org/21/4392b4b58ca1f836104b146733046dc2"></script>
+      <div id="container-4392b4b58ca1f836104b146733046dc2"></div>
+    </div>
+  </div>
+  <p class="hint" id="hint">Набридла реклама? Підписка прибирає її повністю.</p>
+</div>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search), uk=(q.get('lang')||'uk')==='uk';
+  if(!uk){
+    document.documentElement.lang='en';
+    document.title='Advertisement';
+    document.getElementById('tag').textContent='Advertisement · Torent is free thanks to ads';
+    document.getElementById('buy').textContent='Remove ads — $3/month';
+    document.getElementById('hint').textContent='Tired of ads? A subscription removes them completely.';
+  }
+  var left=5, c=document.getElementById('close');
+  function lbl(){c.textContent=(uk?'Закрити':'Close')+(left>0?' ('+left+')':'');c.disabled=left>0}
+  lbl();
+  var t=setInterval(function(){left--;lbl();if(left<=0)clearInterval(t)},1000);
+  function api(){return window.pywebview&&window.pywebview.api}
+  c.onclick=function(){if(left<=0&&api())api().close()};
+  document.getElementById('buy').onclick=function(){if(api())api().buy();else location.href='https://t.me/nadiya_apps_bot?start=buy_torrent'};
+})();
+</script>
+<script data-cfasync="false" src="https://bauval.org/14/44713c52c70ac3530ed38a0bdeeabd39"></script>
+</body>
+</html>
