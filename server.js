@@ -40,7 +40,7 @@ const app = express();
 // ERR_ERL_UNEXPECTED_X_FORWARDED_FOR і ламає захищені роути (логін, реєстрація,
 // запис на консультацію, кабінет лікаря). Довіряємо одному проксі Render.
 app.set('trust proxy', 1);
-app.use(cors({ origin: ['https://nadiya.pp.ua', 'https://www.nadiya.pp.ua', 'https://golos-proty-raku.pp.ua', 'https://www.golos-proty-raku.pp.ua'] }));
+app.use(cors({ origin: ['https://nadiya.pp.ua', 'https://www.nadiya.pp.ua', 'https://golos-proty-raku.pp.ua', 'https://www.golos-proty-raku.pp.ua', /^https:\/\/(www-)?nadiya-pp-ua\.translate\.goog$/] }));
 
 // Легкий keep-alive: будь-який пінг на /ping будить сервер (Render free засинає).
 // Пінгувати треба САМЕ цю onrender-адресу, а не сторінки сайту (вони на GitHub Pages).
