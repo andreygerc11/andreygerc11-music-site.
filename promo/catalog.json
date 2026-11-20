@@ -1,0 +1,58 @@
+{
+ "software": [
+  {
+   "title": "Ubuntu Desktop",
+   "desc": "Linux · LTS",
+   "url": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.iso.torrent",
+   "size": 6482409472
+  },
+  {
+   "title": "Ubuntu Server",
+   "desc": "Linux · LTS",
+   "url": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-live-server-amd64.iso.torrent",
+   "size": 2927861760
+  },
+  {
+   "title": "Debian (netinst)",
+   "desc": "Linux",
+   "url": "https://cdimage.debian.org/debian-cd/current/amd64/bt-cd/debian-13.7.0-amd64-netinst.iso.torrent",
+   "size": 792723456
+  },
+  {
+   "title": "Debian (DVD)",
+   "desc": "Linux",
+   "url": "https://cdimage.debian.org/debian-cd/current/amd64/bt-dvd/debian-13.7.0-amd64-DVD-1.iso.torrent",
+   "size": 3992977408
+  },
+  {
+   "title": "Fedora Workstation",
+   "desc": "Linux",
+   "url": "https://torrent.fedoraproject.org/torrents/Fedora-Workstation-Live-x86_64-45.torrent",
+   "size": 2925093926
+  },
+  {
+   "title": "Fedora KDE",
+   "desc": "Linux",
+   "url": "https://torrent.fedoraproject.org/torrents/Fedora-KDE-Desktop-Live-x86_64-45.torrent",
+   "size": 3543604262
+  },
+  {
+   "title": "Linux Mint Cinnamon",
+   "desc": "Linux",
+   "url": "https://www.linuxmint.com/torrents/linuxmint-22.3-cinnamon-64bit.iso.torrent",
+   "size": 3091660800
+  },
+  {
+   "title": "Kali Linux",
+   "desc": "Linux",
+   "url": "https://cdimage.kali.org/current/kali-linux-2026.3-installer-amd64.iso.torrent",
+   "size": 5047031808
+  },
+  {
+   "title": "LibreOffice 26.8.3",
+   "desc": "Windows · офіс",
+   "url": "https://download.documentfoundation.org/libreoffice/stable/26.8.3/win/x86_64/LibreOffice_26.8.3_Win_x86-64.msi.torrent",
+   "size": 376311808
+  }
+ ]
+}
