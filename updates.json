@@ -8,10 +8,10 @@
   "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
  },
  "radar": {
-  "code": 197,
-  "name": "1.0.203",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-11-19-radar2/Radar.apk",
-  "notes": "Захист від глушіння й підміни GPS (як в Антиглушилці): хибне чи застаріле місце більше не надсилається, в історії приблизні точки позначені. Тумблер — Опції → Місцезнаходження."
+  "code": 198,
+  "name": "1.0.204",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/2026-11-25-radar/Radar.apk",
+  "notes": "Захист від глушіння GPS точніший у дорозі: без стрибків на кілометри, сумнівні точки веж перевіряються, точка не зупиняється між вежами."
  },
  "autosender": {
   "code": 61,
