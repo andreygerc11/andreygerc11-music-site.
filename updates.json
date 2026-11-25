@@ -1,10 +1,10 @@
 {
  "_": "Нова версія: новий випуск на github.com/andreygerc11/nadiya-apps (латинські назви файлів), копія на Гугл Диск, тут — url/code/name. Застосунки самі покажуть «Оновити», бот і кнопки сайту беруть файл звідси.",
  "antijam": {
-  "code": 40,
-  "name": "3.8.5",
-  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.8.5/Antyhlushylka.apk",
-  "notes": "Журнал подій більше не обнуляється; «Поділитися журналом» одразу надсилає файл розробнику",
+  "code": 41,
+  "name": "3.8.6",
+  "url": "https://github.com/andreygerc11/nadiya-apps/releases/download/antijam-3.8.6/Antyhlushylka.apk",
+  "notes": "Точніша точка в дорозі під час глушіння: без стрибків на кілометри, сумнівні точки мережі перевіряються, карти рідше перемикаються на сирі вежі",
   "drive": "https://drive.usercontent.google.com/download?id=1Xg7Lb7CC1zb5-ljpcGsurJch8IsbBLv3&export=download&confirm=t"
  },
  "radar": {
