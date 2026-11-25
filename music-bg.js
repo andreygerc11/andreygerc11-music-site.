@@ -130,6 +130,19 @@
         rt.setProperty('--kick', st.kick.toFixed(3));
     }
 
+    function heal() {
+        var i;
+        raw.fill(0); rawPrev.fill(0); dbs.fill(0); sm.fill(0); bref.fill(-60); pkVel.fill(0); pkHold.fill(0);
+        st.sp.fill(0); st.pk.fill(0);
+        for (i = 0; i < hist.length; i++) hist[i].fill(0);
+        for (i = 0; i < groups.length; i++) { groups[i].v = 0; groups[i].lo = 0.1; groups[i].hi = 0.7; groups[i].last = 0; groups[i].ring.fill(0); }
+        st.fl = [0, 0, 0]; st.thr = [0, 0, 0];
+        st.bass = st.mid = st.treb = st.lvl = st.kick = st.hat = 0;
+        agc = -30; fe = 16.7; qTimer = 0; histAcc = 0; histFrac = 0;
+        var rt = document.documentElement.style;
+        rt.setProperty('--bass', '0'); rt.setProperty('--lvl', '0'); rt.setProperty('--kick', '0');
+    }
+
     function pushHist(dt) {
         var iv = st.playing ? 0.05 : 0.16;
         histAcc += dt;
@@ -399,8 +412,10 @@
 
     function frame(now) {
         requestAnimationFrame(frame);
-        if (document.hidden) { last = now; return; }
-        var t = now / 1000, dt = Math.min(0.05, last ? t - last : 0.016);
+        if (document.hidden) { last = now / 1000; return; }
+        var t = now / 1000, dt = last ? t - last : 0.016;
+        if (!(dt >= 0.001)) dt = 0.016;
+        if (dt > 0.05) dt = 0.05;
         last = t;
         fe += (dt * 1000 - fe) * 0.06;
         qTimer += dt;
@@ -414,6 +429,7 @@
         if (srcNode && ctx && ctx.state !== 'running' && st.playing && now - lastResume > 1500) { lastResume = now; try { ctx.resume(); } catch (e) {} }
         var t0 = performance.now();
         analyze(dt, t);
+        if (!(st.lvl >= 0 && st.lvl < 10 && st.pk[0] >= 0 && st.pk[0] < 10)) heal();
         pushHist(dt);
         cx.setTransform(DPR, 0, 0, DPR, 0, 0);
         if (scene === '1c') drawRidge();

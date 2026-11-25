@@ -66,9 +66,11 @@
         texFor = srcNow;
     }
 
+    function fin(x) { return isFinite(x) ? x : 0; }
+
     function frame(now) {
         requestAnimationFrame(frame);
-        if (!ok || !img || document.hidden) { last = now; return; }
+        if (!ok || !img || document.hidden || (gl && gl.isContextLost())) { last = now; return; }
         loadTex();
         if (!ready) { last = now; return; }
         var dt = Math.min(0.05, last ? (now - last) / 1000 : 0.016);
@@ -81,11 +83,11 @@
         if (cv.width !== size) { cv.width = size; cv.height = size; }
         gl.viewport(0, 0, size, size);
         gl.uniform1f(loc.t, clock);
-        gl.uniform1f(loc.bass, st ? st.bass : 0);
-        gl.uniform1f(loc.mid, st ? Math.min(1, st.mid * 1.5) : 0);
-        gl.uniform1f(loc.treb, st ? Math.min(1, st.treb * 2.6) : 0);
-        gl.uniform1f(loc.kick, st ? st.kick : 0);
-        gl.uniform1f(loc.lvl, st ? st.lvl : 0);
+        gl.uniform1f(loc.bass, st ? fin(st.bass) : 0);
+        gl.uniform1f(loc.mid, st ? Math.min(1, fin(st.mid) * 1.5) : 0);
+        gl.uniform1f(loc.treb, st ? Math.min(1, fin(st.treb) * 2.6) : 0);
+        gl.uniform1f(loc.kick, st ? fin(st.kick) : 0);
+        gl.uniform1f(loc.lvl, st ? fin(st.lvl) : 0);
         gl.uniform1i(loc.tex, 0);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
@@ -96,6 +98,15 @@
         cv = document.createElement('canvas');
         cv.id = 'apCoverLive';
         img.parentNode.insertBefore(cv, img);
+        cv.addEventListener('webglcontextlost', function (e) {
+            e.preventDefault(); ok = false; cv.style.display = 'none';
+            img.parentNode.classList.remove('live');
+        });
+        cv.addEventListener('webglcontextrestored', function () {
+            tex = null; texFor = null; ready = false; srcNow = '';
+            ok = setup();
+            if (ok) { cv.style.display = ''; img.parentNode.classList.add('live'); }
+        });
         ok = setup();
         if (!ok) { cv.remove(); return; }
         img.parentNode.classList.add('live');
